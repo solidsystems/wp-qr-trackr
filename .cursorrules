@@ -2,4 +2,9 @@
 - All plugins are developed with professional WordPress best practices and excellent security standards.
 - Functionality is implemented in an elegant, maintainable, and efficient manner.
 - Debug logging is available upon request and should be implemented where appropriate.
-- UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices. 
+- UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices.
+
+# Contribution Workflow Standards
+- Every code change or new feature must be accompanied by updated documentation (e.g., README.md, inline comments).
+- All changes must be made on a feature branch and submitted via a pull request (PR) before merging to main.
+- PRs should not be merged unless documentation is up to date and reviewed. 
