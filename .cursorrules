@@ -7,4 +7,7 @@
 # Contribution Workflow Standards
 - Every code change or new feature must be accompanied by updated documentation (e.g., README.md, inline comments).
 - All changes must be made on a feature branch and submitted via a pull request (PR) before merging to main.
-- PRs should not be merged unless documentation is up to date and reviewed. 
+- PRs should not be merged unless documentation is up to date and reviewed.
+
+# Environment Variable Standards
+- Every time a new environment variable is added to provide dependencies or flexibility, the .env.example file must be updated to reflect the change. 
