@@ -63,3 +63,36 @@ To maintain high standards and clear project history, follow this workflow for a
    - Reviewers should verify that documentation is up to date before merging.
 
 This workflow ensures code and documentation remain synchronized, improving maintainability and onboarding for new contributors.
+
+## Local Development with Docker
+
+You can run this WordPress plugin template locally using Docker. This will spin up both a WordPress instance and a MySQL database, making it easy to test your plugin in a real environment.
+
+### Prerequisites
+- [Docker](https://www.digitalocean.com/community/tutorial_series/docker-explained) must be installed on your system. If you need help, see this guide: [How To Install and Use Docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-mac-os-x).
+
+### Steps
+1. **Copy the example environment file:**
+   ```sh
+   cp .env.example .env
+   # Edit .env to set your local secrets if needed
+   ```
+2. **Initialize the Docker environment:**
+   ```sh
+   ./scripts/init-docker.sh
+   ```
+   This script will check if port 8080 is free, stop any Docker container using it, and start the environment.
+
+3. **Access WordPress:**
+   - Open your browser and go to [http://localhost:8080](http://localhost:8080)
+   - Complete the WordPress setup wizard if prompted.
+
+4. **Develop Your Plugin:**
+   - Place your plugin code in `wp-content/plugins` (mounted automatically).
+   - Activate and test your plugin from the WordPress admin panel.
+
+### Stopping the Environment
+To stop the containers, press `Ctrl+C` in the terminal running Docker, or run:
+```sh
+docker-compose down
+```
