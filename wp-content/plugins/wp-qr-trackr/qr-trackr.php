@@ -37,14 +37,36 @@ function qr_trackr_activate() {
     ) $charset_collate;";
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
     dbDelta( $sql );
+
+    // Create table for tracking links
+    $links_table = $wpdb->prefix . 'qr_trackr_links';
+    $sql_links = "CREATE TABLE $links_table (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        post_id BIGINT UNSIGNED NOT NULL,
+        destination_url TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY post_id (post_id)
+    ) $charset_collate;";
+    dbDelta( $sql_links );
 }
 register_activation_hook( __FILE__, 'qr_trackr_activate' );
+
+// On plugin activation, check for pretty permalinks and store a flag if not set
+register_activation_hook( __FILE__, function() {
+    if ( get_option('permalink_structure') === '' ) {
+        update_option('qr_trackr_permalinks_plain', '1');
+    } else {
+        delete_option('qr_trackr_permalinks_plain');
+    }
+});
 
 // Register admin menu
 add_action( 'admin_menu', function() {
     add_menu_page(
-        __( 'QR Trackr', 'qr-trackr' ),
-        'QR Trackr',
+        __( 'QR Trackr Stats', 'qr-trackr' ),
+        'QR Trackr Stats',
         'manage_options',
         'qr-trackr',
         'qr_trackr_admin_overview',
@@ -61,27 +83,173 @@ add_action( 'admin_menu', function() {
     );
     add_submenu_page(
         'qr-trackr',
-        __( 'Individual Stats', 'qr-trackr' ),
-        __( 'Individual Stats', 'qr-trackr' ),
+        __( 'Stats', 'qr-trackr' ),
+        __( 'Stats', 'qr-trackr' ),
         'manage_options',
         'qr-trackr-individual',
         'qr_trackr_admin_individual'
     );
+    add_submenu_page(
+        'qr-trackr',
+        __( 'Debug', 'qr-trackr' ),
+        __( 'Debug', 'qr-trackr' ),
+        'manage_options',
+        'qr-trackr-debug',
+        'qr_trackr_debug_settings_page'
+    );
 });
 
 function qr_trackr_admin_overview() {
-    echo '<div class="wrap"><h1>QR Trackr Overview</h1><p>Stats and usage overview will appear here.</p></div>';
+    global $wpdb;
+    $links_table = $wpdb->prefix . 'qr_trackr_links';
+    $scans_table = $wpdb->prefix . 'qr_trackr_scans';
+    $links = $wpdb->get_results( "SELECT * FROM $links_table ORDER BY created_at DESC" );
+    $preselect_post_id = isset($_GET['new_post_id']) ? intval($_GET['new_post_id']) : 0;
+    echo '<div class="wrap"><h1>QR Trackr Overview</h1>';
+
+    // --- New QR code creation form ---
+    if ( isset($_POST['qr_trackr_admin_new_qr_nonce'], $_POST['qr_trackr_admin_new_post_id']) ) {
+        if ( wp_verify_nonce( $_POST['qr_trackr_admin_new_qr_nonce'], 'qr_trackr_admin_new_qr' ) ) {
+            $new_post_id = intval($_POST['qr_trackr_admin_new_post_id']);
+            if (get_post($new_post_id)) {
+                // Create QR code for this post/page
+                $link = qr_trackr_get_or_create_tracking_link($new_post_id);
+                $qr_url = function_exists('qr_trackr_generate_qr_image_for_link') ? qr_trackr_generate_qr_image_for_link($link->id, 300) : '';
+                $tracking_link = trailingslashit(home_url()) . 'qr-trackr/redirect/' . intval($link->id);
+                echo '<div class="notice notice-success is-dismissible"><p>New QR code created for <a href="' . esc_url(get_permalink($new_post_id)) . '" target="_blank">' . esc_html(get_the_title($new_post_id)) . '</a>.';
+                if ($qr_url) {
+                    echo '<br><img src="' . esc_url($qr_url) . '" class="qr-trackr-qr-image" alt="QR Code">';
+                    echo '<br><a href="' . esc_url($qr_url) . '" download class="button">Download QR Code</a>';
+                }
+                echo '<br><strong>Tracking Link:</strong> <a href="' . esc_url($tracking_link) . '" target="_blank">' . esc_html($tracking_link) . '</a>';
+                echo '</p></div>';
+            } else {
+                echo '<div class="notice notice-error is-dismissible"><p>Invalid post or page selected.</p></div>';
+            }
+        }
+    }
+    echo '<form method="post" style="margin-bottom:2em; background:#fafafa; padding:1em; border:1px solid #eee; max-width:600px;">';
+    wp_nonce_field('qr_trackr_admin_new_qr', 'qr_trackr_admin_new_qr_nonce');
+    echo '<label for="qr_trackr_admin_new_post_id"><strong>Create QR code for:</strong></label> ';
+    echo '<select name="qr_trackr_admin_new_post_id" id="qr_trackr_admin_new_post_id" required style="min-width:250px;">';
+    echo '<option value="">Select a post or page...</option>';
+    $posts = get_posts(['post_type'=>['post','page'],'numberposts'=>-1,'orderby'=>'title','order'=>'ASC']);
+    foreach ($posts as $post) {
+        $selected = ($preselect_post_id && $preselect_post_id == $post->ID) ? ' selected' : '';
+        echo '<option value="' . intval($post->ID) . '"' . $selected . '>' . esc_html($post->post_title) . ' (' . esc_html(ucfirst($post->post_type)) . ')</option>';
+    }
+    echo '</select> ';
+    echo '<button type="submit" class="button button-primary">Create QR Code</button>';
+    echo '</form>';
+    // --- End new QR code creation form ---
+
+    if ( $links ) {
+        echo '<table class="widefat qr-trackr-stats-table"><thead><tr>';
+        echo '<th>ID</th><th>Post/Page</th><th>Post Link</th><th>Tracking Link</th><th>QR Code</th><th>Destination URL</th><th>Created</th><th>Scans</th><th>Update Destination</th>';
+        echo '</tr></thead><tbody>';
+        foreach ( $links as $link ) {
+            $post = get_post( $link->post_id );
+            $tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $link->id );
+            $qr_url = function_exists('qr_trackr_generate_qr_image_for_link') ? qr_trackr_generate_qr_image_for_link($link->id, 150) : '';
+            $scan_count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $scans_table WHERE post_id = %d AND scan_time >= %s", $link->post_id, $link->created_at ) );
+            echo '<tr>';
+            echo '<td>' . intval( $link->id ) . '</td>';
+            echo '<td>';
+            if ( $post ) {
+                echo esc_html( $post->post_title ) . ' <br><a href="' . esc_url( get_edit_post_link( $post->ID ) ) . '" target="_blank">Edit</a>';
+            } else {
+                echo '<em>Post not found</em>';
+            }
+            echo '</td>';
+            echo '<td><a href="' . esc_url( get_permalink($link->post_id) ) . '" target="_blank">' . esc_html( get_permalink($link->post_id) ) . '</a></td>';
+            echo '<td><a href="' . esc_url( $tracking_link ) . '" target="_blank">' . esc_html( $tracking_link ) . '</a></td>';
+            echo '<td>';
+            if ( $qr_url ) {
+                echo '<img src="' . esc_url( $qr_url ) . '" style="max-width:80px; display:block; margin-bottom:4px;" alt="QR Code">';
+                echo '<a href="' . esc_url( $qr_url ) . '" download class="button">Download</a>';
+            }
+            echo '</td>';
+            echo '<td>' . esc_html( $link->destination_url ) . '</td>';
+            echo '<td>' . esc_html( $link->created_at ) . '</td>';
+            echo '<td>' . intval( $scan_count ) . '</td>';
+            echo '<td>';
+            echo '<form method="post">';
+            wp_nonce_field( 'qr_trackr_admin_update_dest_' . $link->id, 'qr_trackr_admin_dest_nonce' );
+            echo '<input type="url" name="qr_trackr_admin_dest_url" value="' . esc_attr( $link->destination_url ) . '" style="width:90%" required>';
+            echo '<input type="hidden" name="qr_trackr_admin_link_id" value="' . intval( $link->id ) . '">';
+            echo '<button type="submit" class="button">Update</button>';
+            echo '</form>';
+            echo '</td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table>';
+    } else {
+        echo '<p>No tracking links found.</p>';
+    }
+    echo '</div>';
 }
 
 function qr_trackr_admin_individual() {
-    echo '<div class="wrap"><h1>QR Trackr Individual Stats</h1><p>Individual QR code stats will appear here.</p></div>';
+    global $wpdb;
+    $links_table = $wpdb->prefix . 'qr_trackr_links';
+    $scans_table = $wpdb->prefix . 'qr_trackr_scans';
+    echo '<div class="wrap"><h1>QR Trackr Stats</h1>';
+    // General stats
+    $total_scans = $wpdb->get_var("SELECT COUNT(*) FROM $scans_table");
+    $most_popular = $wpdb->get_row("SELECT post_id, COUNT(*) as scan_count FROM $scans_table GROUP BY post_id ORDER BY scan_count DESC LIMIT 1");
+    $most_popular_post = $most_popular ? get_post($most_popular->post_id) : null;
+    echo '<div style="margin-bottom:2em; background:#fafafa; padding:1em; border:1px solid #eee; max-width:600px;">';
+    echo '<strong>Total QR Scans:</strong> ' . intval($total_scans) . '<br>';
+    if ($most_popular && $most_popular_post) {
+        echo '<strong>Most Popular QR:</strong> <a href="' . esc_url(get_permalink($most_popular_post->ID)) . '" target="_blank">' . esc_html($most_popular_post->post_title) . '</a> (' . intval($most_popular->scan_count) . ' scans)';
+    }
+    echo '</div>';
+    // Table of all QR codes and their scan counts
+    $links = $wpdb->get_results("SELECT * FROM $links_table ORDER BY created_at DESC");
+    if ($links) {
+        echo '<table class="widefat qr-trackr-stats-table"><thead><tr>';
+        echo '<th>ID</th><th>Post/Page</th><th>Post Link</th><th>Tracking Link</th><th>QR Code</th><th>Destination URL</th><th>Created</th><th>Scans</th>';
+        echo '</tr></thead><tbody>';
+        foreach ($links as $link) {
+            $post = get_post($link->post_id);
+            $tracking_link = trailingslashit(home_url()) . 'qr-trackr/redirect/' . intval($link->id);
+            $qr_url = function_exists('qr_trackr_generate_qr_image_for_link') ? qr_trackr_generate_qr_image_for_link($link->id, 150) : '';
+            $scan_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $scans_table WHERE post_id = %d AND scan_time >= %s", $link->post_id, $link->created_at));
+            echo '<tr>';
+            echo '<td>' . intval($link->id) . '</td>';
+            echo '<td>';
+            if ($post) {
+                echo esc_html($post->post_title) . ' <br><a href="' . esc_url(get_edit_post_link($post->ID)) . '" target="_blank">Edit</a>';
+            } else {
+                echo '<em>Post not found</em>';
+            }
+            echo '</td>';
+            echo '<td><a href="' . esc_url(get_permalink($link->post_id)) . '" target="_blank">' . esc_html(get_permalink($link->post_id)) . '</a></td>';
+            echo '<td><a href="' . esc_url($tracking_link) . '" target="_blank">' . esc_html($tracking_link) . '</a></td>';
+            echo '<td>';
+            if ($qr_url) {
+                echo '<img src="' . esc_url($qr_url) . '" style="max-width:80px; display:block; margin-bottom:4px;" alt="QR Code">';
+                echo '<a href="' . esc_url($qr_url) . '" download class="button">Download</a>';
+            }
+            echo '</td>';
+            echo '<td>' . esc_html($link->destination_url) . '</td>';
+            echo '<td>' . esc_html($link->created_at) . '</td>';
+            echo '<td>' . intval($scan_count) . '</td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table>';
+    } else {
+        echo '<p>No tracking links found.</p>';
+    }
+    echo '</div>';
 }
 
-// Enqueue admin scripts and styles
+// Enqueue admin scripts and styles, pass debug mode to JS
 add_action( 'admin_enqueue_scripts', function($hook) {
-    if ( strpos($hook, 'qr-trackr') !== false ) {
+    if ( strpos($hook, 'qr-trackr') !== false || $hook === 'post.php' || $hook === 'post-new.php' ) {
         wp_enqueue_style( 'qr-trackr-admin', QR_TRACKR_PLUGIN_URL . 'assets/admin.css' );
         wp_enqueue_script( 'qr-trackr-admin', QR_TRACKR_PLUGIN_URL . 'assets/admin.js', array('jquery'), null, true );
+        wp_localize_script( 'qr-trackr-admin', 'qrTrackrDebugMode', array('debug' => get_option('qr_trackr_debug_mode', '0') === '1' ? true : false) );
     }
 });
 
@@ -90,10 +258,8 @@ add_filter( 'post_row_actions', 'qr_trackr_row_action', 10, 2 );
 add_filter( 'page_row_actions', 'qr_trackr_row_action', 10, 2 );
 function qr_trackr_row_action( $actions, $post ) {
     if ( current_user_can( 'manage_options' ) ) {
-        $url = add_query_arg( [
-            'qr_trackr_generate' => 1,
-            'post' => $post->ID,
-        ], admin_url( 'edit.php' ) );
+        // Link to QR Trackr overview with ?new_post_id=ID to pre-select in the dropdown
+        $url = admin_url( 'admin.php?page=qr-trackr&new_post_id=' . intval($post->ID) );
         $actions['qr_trackr'] = '<a href="' . esc_url( $url ) . '">' . __( 'QR Trackr', 'qr-trackr' ) . '</a>';
     }
     return $actions;
@@ -103,15 +269,21 @@ function qr_trackr_row_action( $actions, $post ) {
 add_action( 'admin_init', function() {
     if ( isset( $_GET['qr_trackr_generate'], $_GET['post'] ) && current_user_can( 'manage_options' ) ) {
         $post_id = intval( $_GET['post'] );
-        $url = get_permalink( $post_id );
-        $qr_url = qr_trackr_generate_qr_image( $url, 300, $post_id );
-        add_action( 'admin_notices', function() use ( $qr_url ) {
-            echo '<div class="notice notice-success is-dismissible"><p>';
-            echo __( 'QR Code generated:', 'qr-trackr' ) . '<br>';
-            echo '<img src="' . esc_url( $qr_url ) . '" class="qr-trackr-qr-image" alt="QR Code">';
-            echo '<br><a href="' . esc_url( $qr_url ) . '" download class="button">' . __( 'Download QR Code', 'qr-trackr' ) . '</a>';
-            echo '</p></div>';
-        });
+        $link = qr_trackr_get_most_recent_tracking_link( $post_id );
+        if ( $link ) {
+            $qr_url = qr_trackr_generate_qr_image_for_link( $link->id, 300 );
+            $tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $link->id );
+            $post_link = get_permalink( $post_id );
+            add_action( 'admin_notices', function() use ( $qr_url, $tracking_link, $post_link ) {
+                echo '<div class="notice notice-success is-dismissible"><p>';
+                echo __( 'QR Code generated:', 'qr-trackr' ) . '<br>';
+                echo '<img src="' . esc_url( $qr_url ) . '" class="qr-trackr-qr-image" alt="QR Code">';
+                echo '<br><a href="' . esc_url( $qr_url ) . '" download class="button">' . __( 'Download QR Code', 'qr-trackr' ) . '</a>';
+                echo '<br><strong>Post Link:</strong> <a href="' . esc_url( $post_link ) . '" target="_blank">' . esc_html( $post_link ) . '</a>';
+                echo '<br><strong>Tracking Link:</strong> <a href="' . esc_url( $tracking_link ) . '" target="_blank">' . esc_html( $tracking_link ) . '</a>';
+                echo '</p></div>';
+            });
+        }
     }
 });
 
@@ -134,47 +306,205 @@ function qr_trackr_column_content( $column, $post_id ) {
 }
 
 // Add QR code generator to post/page edit screen
-add_action( 'add_meta_boxes', function() {
-    add_meta_box( 'qr_trackr_box', __( 'QR Trackr', 'qr-trackr' ), 'qr_trackr_meta_box', ['post', 'page'], 'side', 'default' );
-});
-function qr_trackr_meta_box( $post ) {
-    $url = get_permalink( $post->ID );
-    $qr_url = qr_trackr_generate_qr_image( $url, 300, $post->ID );
-    echo '<p>' . __( 'Download this QR code for your page/post:', 'qr-trackr' ) . '</p>';
-    echo '<img src="' . esc_url( $qr_url ) . '" class="qr-trackr-qr-image" alt="QR Code">';
-    echo '<br><a href="' . esc_url( $qr_url ) . '" download class="button">' . __( 'Download QR Code', 'qr-trackr' ) . '</a>';
-    // Show scan count
+// (Removed: add_action( 'add_meta_boxes', ... ) and qr_trackr_meta_box function)
+
+// AJAX handler for QR code creation
+add_action('wp_ajax_qr_trackr_create_qr_ajax', function() {
+    $post_id = intval($_POST['post_id'] ?? 0);
+    $nonce = $_POST['qr_trackr_new_qr_nonce'] ?? '';
+    if (!$post_id || !wp_verify_nonce($nonce, 'qr_trackr_new_qr_' . $post_id)) {
+        wp_send_json_error(['message' => 'Invalid nonce or post ID.']);
+    }
+    if (!current_user_can('edit_post', $post_id)) {
+        wp_send_json_error(['message' => 'You do not have permission to edit this post.']);
+    }
     global $wpdb;
-    $table = $wpdb->prefix . 'qr_trackr_scans';
-    $count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE post_id = %d", $post->ID ) );
-    echo '<p><strong>' . __( 'Scans:', 'qr-trackr' ) . '</strong> ' . intval( $count ) . '</p>';
+    $links_table = $wpdb->prefix . 'qr_trackr_links';
+    $destination_url = get_permalink($post_id);
+    if (!$destination_url) {
+        wp_send_json_error(['message' => 'Could not determine permalink for this post.']);
+    }
+    $result = $wpdb->insert( $links_table, [
+        'post_id' => $post_id,
+        'destination_url' => esc_url_raw($destination_url),
+    ] );
+    if ($result === false) {
+        wp_send_json_error(['message' => 'Insert failed: ' . $wpdb->last_error]);
+    }
+    $link_id = $wpdb->insert_id;
+    // Generate QR code image and get URLs
+    if (function_exists('qr_trackr_generate_qr_image_for_link')) {
+        $qr_url = qr_trackr_generate_qr_image_for_link($link_id, 300);
+        $tracking_link = trailingslashit(home_url()) . 'qr-trackr/redirect/' . intval($link_id);
+    } else {
+        $qr_url = '';
+        $tracking_link = '';
+    }
+    $html = qr_trackr_render_qr_list_html($post_id);
+    $qr_image_html = $qr_url ? '<div class="qr-trackr-ajax-qr"><img src="' . esc_url($qr_url) . '" class="qr-trackr-qr-image" alt="QR Code"><br><a href="' . esc_url($qr_url) . '" download class="button">Download QR Code</a><br><strong>Tracking Link:</strong> <a href="' . esc_url($tracking_link) . '" target="_blank">' . esc_html($tracking_link) . '</a></div>' : '';
+    wp_send_json_success(['html' => $html, 'qr_image_html' => $qr_image_html]);
+});
+// Helper: log debug output to PHP error log if debug mode is enabled
+function qr_trackr_debug_log($msg, $data = null) {
+    if (get_option('qr_trackr_debug_mode', '0') === '1') {
+        $out = '[QR Trackr Debug] ' . date('Y-m-d H:i:s') . ' ' . $msg;
+        if ($data !== null) {
+            $out .= ' ' . (is_string($data) ? $data : json_encode($data));
+        }
+        error_log($out);
+    }
 }
+// Handle destination URL update
+add_action( 'save_post', function( $post_id ) {
+    if ( isset( $_POST['qr_trackr_dest_nonce'], $_POST['qr_trackr_dest_url'], $_POST['qr_trackr_link_id'] ) ) {
+        if ( ! wp_verify_nonce( $_POST['qr_trackr_dest_nonce'], 'qr_trackr_update_dest_' . $post_id ) ) return;
+        if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+        global $wpdb;
+        $links_table = $wpdb->prefix . 'qr_trackr_links';
+        $link_id = intval( $_POST['qr_trackr_link_id'] );
+        $dest_url = esc_url_raw( $_POST['qr_trackr_dest_url'] );
+        $wpdb->update( $links_table, [ 'destination_url' => $dest_url ], [ 'id' => $link_id ] );
+    }
+});
 
 // Register QR scan endpoint
 add_action( 'init', function() {
     add_rewrite_rule( '^qr-trackr/scan/([0-9]+)/?$', 'index.php?qr_trackr_scan=$matches[1]', 'top' );
+    add_rewrite_rule( '^qr-trackr/redirect/([0-9]+)/?$', 'index.php?qr_trackr_redirect=$matches[1]', 'top' );
 });
 add_filter( 'query_vars', function( $vars ) {
     $vars[] = 'qr_trackr_scan';
+    $vars[] = 'qr_trackr_redirect';
     return $vars;
 });
 add_action( 'template_redirect', function() {
-    $post_id = get_query_var( 'qr_trackr_scan' );
-    if ( $post_id ) {
+    $redirect_id = get_query_var( 'qr_trackr_redirect' );
+    if ( $redirect_id ) {
         global $wpdb;
-        $table = $wpdb->prefix . 'qr_trackr_scans';
-        $wpdb->insert( $table, [
-            'post_id' => intval( $post_id ),
-            'scan_time' => current_time( 'mysql', 1 ),
-            'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ) : '',
-            'ip_address' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( $_SERVER['REMOTE_ADDR'] ) : '',
-        ] );
-        $url = get_permalink( $post_id );
-        if ( $url ) {
-            wp_redirect( $url );
+        $links_table = $wpdb->prefix . 'qr_trackr_links';
+        $scans_table = $wpdb->prefix . 'qr_trackr_scans';
+        $link = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $links_table WHERE id = %d", $redirect_id ) );
+        if ( $link ) {
+            // Log the scan
+            $wpdb->insert( $scans_table, [
+                'post_id' => intval( $link->post_id ),
+                'scan_time' => current_time( 'mysql', 1 ),
+                'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ) : '',
+                'ip_address' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( $_SERVER['REMOTE_ADDR'] ) : '',
+            ] );
+            // Redirect to destination URL
+            wp_redirect( $link->destination_url );
+            exit;
+        } else {
+            status_header( 404 );
+            nocache_headers();
+            include( get_404_template() );
             exit;
         }
     }
 });
 
-// TODO: Add QR code generation, tracking, and UI integration 
+// TODO: Add QR code generation, tracking, and UI integration
+
+add_action('init', function() {
+    global $wp_rewrite;
+    $permalink_structure = get_option('permalink_structure');
+    error_log('[QR Trackr] Permalink structure: ' . $permalink_structure);
+    if ( function_exists('get_permalink') ) {
+        $sample_post = get_posts(['numberposts' => 1, 'post_type' => 'post']);
+        $sample_page = get_posts(['numberposts' => 1, 'post_type' => 'page']);
+        if ($sample_post) {
+            error_log('[QR Trackr] Example post permalink: ' . get_permalink($sample_post[0]->ID));
+        }
+        if ($sample_page) {
+            error_log('[QR Trackr] Example page permalink: ' . get_permalink($sample_page[0]->ID));
+        }
+    }
+});
+
+function qr_trackr_get_most_recent_tracking_link( $post_id ) {
+    global $wpdb;
+    $links_table = $wpdb->prefix . 'qr_trackr_links';
+    return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $links_table WHERE post_id = %d ORDER BY created_at DESC LIMIT 1", $post_id ) );
+}
+
+// Add debug mode option and toggle UI in admin
+function qr_trackr_debug_settings_page() {
+    if ( isset($_POST['qr_trackr_debug_nonce']) && wp_verify_nonce($_POST['qr_trackr_debug_nonce'], 'qr_trackr_debug_save') ) {
+        update_option('qr_trackr_debug_mode', isset($_POST['qr_trackr_debug_mode']) ? '1' : '0');
+        echo '<div class="notice notice-success is-dismissible"><p>Debug mode updated.</p></div>';
+    }
+    $debug_mode = get_option('qr_trackr_debug_mode', '0');
+    echo '<div class="wrap"><h1>QR Trackr Debug Settings</h1>';
+    echo '<form method="post">';
+    wp_nonce_field('qr_trackr_debug_save', 'qr_trackr_debug_nonce');
+    echo '<label><input type="checkbox" name="qr_trackr_debug_mode" value="1"' . checked($debug_mode, '1', false) . '> Enable Debug Mode (output to JS console)</label><br><br>';
+    echo '<button type="submit" class="button button-primary">Save</button>';
+    echo '</form>';
+    echo '</div>';
+}
+// Output timestamped debug info to JS console if debug mode is enabled, and log button click
+add_action('admin_footer', function() {
+    global $post, $pagenow;
+    $now = date('Y-m-d H:i:s');
+    $debug = [
+        'timestamp' => $now,
+        'pagenow' => $pagenow,
+        'post_id' => isset($post->ID) ? $post->ID : null,
+        'user' => wp_get_current_user()->user_login,
+    ];
+    $qr_links = [];
+    if (isset($post->ID)) {
+        $links = qr_trackr_get_all_tracking_links_for_post($post->ID);
+        foreach ($links as $link) {
+            $qr_links[] = [
+                'id' => $link->id,
+                'tracking_link' => trailingslashit(home_url()) . 'qr-trackr/redirect/' . intval($link->id),
+                'destination_url' => $link->destination_url,
+                'created_at' => $link->created_at,
+            ];
+        }
+    }
+    $debug['qr_trackr_links'] = $qr_links;
+    // No debug <script> output here
+    // Robust button click logging (optional, can be removed if not needed)
+});
+
+// Migration/verification for qr_trackr_links table schema
+add_action('init', function() {
+    global $wpdb;
+    $links_table = $wpdb->prefix . 'qr_trackr_links';
+    $columns = $wpdb->get_results("SHOW COLUMNS FROM $links_table", ARRAY_A);
+    $expected = ['id', 'post_id', 'destination_url', 'created_at', 'updated_at'];
+    $actual = array_map(function($col){return $col['Field'];}, $columns);
+    $missing = array_diff($expected, $actual);
+    if ($missing) {
+        error_log('[QR Trackr MIGRATE] Missing columns in qr_trackr_links: ' . implode(', ', $missing));
+        // Try to add missing columns
+        if (in_array('created_at', $missing)) {
+            $wpdb->query("ALTER TABLE $links_table ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
+        }
+        if (in_array('updated_at', $missing)) {
+            $wpdb->query("ALTER TABLE $links_table ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+        }
+    } else {
+        error_log('[QR Trackr MIGRATE] qr_trackr_links schema OK: ' . implode(', ', $actual));
+    }
+});
+
+// On admin_init, check permalinks and show notice if needed
+add_action('admin_init', function() {
+    if ( get_option('permalink_structure') === '' ) {
+        update_option('qr_trackr_permalinks_plain', '1');
+    } else {
+        delete_option('qr_trackr_permalinks_plain');
+    }
+});
+add_action('admin_notices', function() {
+    if ( get_option('qr_trackr_permalinks_plain') === '1' ) {
+        $permalink_url = admin_url('options-permalink.php');
+        echo '<div class="notice notice-warning"><p>';
+        echo '<strong>QR Trackr:</strong> Your WordPress site is using <strong>Plain</strong> permalinks. For user-friendly QR code links, please <a href="' . esc_url($permalink_url) . '"><strong>update your permalink settings</strong></a> to "Post name" and save.';
+        echo '</p></div>';
+    }
+}); 
