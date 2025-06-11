@@ -32,3 +32,34 @@ This repository serves as a professional starting point for developing secure, e
 ## About the Template Author
 
 This template is maintained by a professional WordPress developer specializing in secure, elegant, and mobile-first plugin development. For questions or contributions, please open an issue or pull request.
+
+## Recommended Workflow: Branching, Documentation, and PRs
+
+To maintain high standards and clear project history, follow this workflow for all changes:
+
+1. **Create a New Branch**
+   - For each new feature or fix, create a dedicated branch from `main`:
+     ```sh
+     git checkout -b feature/your-feature-name
+     ```
+2. **Update Documentation**
+   - Update the `README.md` and other relevant documentation files with every code change or new feature.
+   - Ensure documentation accurately reflects the current state of the codebase.
+3. **Commit Changes**
+   - Write clear, descriptive commit messages.
+   - Example:
+     ```sh
+     git add .
+     git commit -m "Add feature X with updated documentation"
+     ```
+4. **Push to Remote**
+   - Push your branch to the remote repository:
+     ```sh
+     git push origin feature/your-feature-name
+     ```
+5. **Open or Update a Pull Request (PR)**
+   - Open a PR from your branch into `main`.
+   - If you make further changes, push them to the same branch; the PR will update automatically.
+   - Reviewers should verify that documentation is up to date before merging.
+
+This workflow ensures code and documentation remain synchronized, improving maintainability and onboarding for new contributors.
