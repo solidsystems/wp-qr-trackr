@@ -1,0 +1,5 @@
+# WordPress Plugin Development Standards
+- All plugins are developed with professional WordPress best practices and excellent security standards.
+- Functionality is implemented in an elegant, maintainable, and efficient manner.
+- Debug logging is available upon request and should be implemented where appropriate.
+- UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices. 
