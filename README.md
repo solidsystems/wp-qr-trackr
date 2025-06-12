@@ -1,52 +1,170 @@
-# Welcome to the QR Trackr Plugin Template 🚀
+# QR Trackr Plugin Template 🚀
 
-## Onboarding & Project Overview
+A modern, production-ready WordPress plugin template—featuring QR Trackr as an example. Built for professional development, extensibility, and team/enterprise adoption.
 
-Welcome! This repository is more than just the QR Trackr plugin—it's a modern, production-ready **WordPress plugin template** designed for professional development. Whether you're here to contribute to QR Trackr or to kickstart your own plugin, you'll find everything you need for a robust, maintainable, and extensible WordPress project.
+---
 
-### What You Get in This Template
-- **Modern WordPress Plugin Structure:** Clean, organized, and scalable codebase.
-- **Best Practices:** Security, performance, and maintainability are built-in.
-- **Extensibility:** Hooks, filters, and clear separation for free/pro features.
-- **Automated Setup:** Scripts for macOS (ARM & x86) to get you started fast.
-- **Testing:** PHPUnit setup and example tests for high code quality.
-- **Documentation:** Inline comments, usage guides, and contribution standards.
-- **CI/CD Ready:** Easily integrate with your preferred pipelines.
-- **DigitalOcean App Platform Compatibility:** Out-of-the-box support for managed PostgreSQL and OpenSearch logging.
+## Table of Contents
+1. [Project Overview](#project-overview)
+2. [Quick Start / Onboarding](#quick-start--onboarding)
+3. [Usage](#usage)
+4. [Development & Contribution](#development--contribution)
+5. [Infrastructure & Plumbing](#infrastructure--plumbing)
+6. [For Engineering & IT Leadership](#for-engineering--it-leadership)
+7. [Troubleshooting & FAQ](#troubleshooting--faq)
+8. [Links & Further Reading](#links--further-reading)
 
-### Getting Started
+---
+
+## Project Overview
+
+**QR Trackr** is a WordPress plugin for generating and tracking QR codes for posts, pages, and custom URLs. This repository also serves as a robust template for building any modern WordPress plugin.
+
+**Key Features:**
+- Modern, scalable plugin structure
+- Secure, maintainable, and extensible codebase
+- Hooks/filters for free/pro separation
+- Mobile-first, accessible admin UI
+- Automated setup and testing
+- DigitalOcean App Platform compatibility
+- Example project plans and automation scripts
+
+---
+
+## Quick Start / Onboarding
+
+### Prerequisites
+- macOS (ARM or x86), Linux, or Windows (see project plans for cross-platform support)
+- [Homebrew](https://brew.sh/) (macOS)
+- [Yarn](https://yarnpkg.com/)
+- [Composer](https://getcomposer.org/)
+- Docker (for local dev/testing)
+
+### Setup Steps
 1. **Clone the repository:**
    ```sh
    git clone <your-fork-or-this-repo-url>
    cd wp-qr-trackr
    ```
-2. **Run the macOS setup script:**
+2. **Run the setup script (macOS):**
    ```sh
    chmod +x setup-macos.sh
    ./setup-macos.sh
    ```
-   This will install Homebrew, PHP, and Xdebug, and fix common PECL issues.
-3. **Set up your environment variables:**
-   Copy `.env.example` to `.env` and update as needed.
-4. **Install dependencies:**
+3. **Install dependencies:**
    ```sh
    yarn install
+   composer install
+   ```
+4. **Set up your environment:**
+   ```sh
+   cp .env.example .env
+   # Edit .env as needed
    ```
 5. **Run tests:**
    ```sh
    ./vendor/bin/phpunit
    ```
+6. **Start Docker for local WordPress:**
+   ```sh
+   docker compose up --build
+   ```
 
-### What Can You Build With This?
-- **Your Own WordPress Plugin:** Use this as a foundation for any plugin—just swap out the QR code logic for your own features.
-- **Premium/Pro Extensions:** Clean separation and hooks make it easy to add paid features.
-- **Admin UI & Analytics:** Mobile-first, modern admin panels and stats dashboards.
-- **Robust, Secure, and Maintainable Code:** Built for teams and open source.
+---
 
-### Contributing & Standards
+## Usage
+
+### As a QR Trackr User
+- Access the QR Trackr admin panel in WordPress to generate and track QR codes.
+- Use the `[qr_trackr]` shortcode to generate QR codes on the frontend (see documentation for parameters).
+- View analytics and performance at a glance in the admin dashboard.
+
+### As a Plugin Template
+- Use this structure as a starting point for any WordPress plugin.
+- Swap out QR code logic for your own features.
+- Extend with premium/pro features using the provided hooks and filters.
+
+---
+
+## Development & Contribution
+
 - All changes must be made on a feature branch and submitted via PR.
 - Documentation and tests are required for all new features.
 - See `.cursorrules` for project standards and best practices.
+- Use the provided project plans and automation scripts for team/project management.
+- Run `./scripts/pr-summary-comment.sh <PR_NUMBER> [SUMMARY_TEXT]` to automate PR summary comments.
+- See `CONTRIBUTING.md` for more details and a living task tracker.
+
+---
+
+## Infrastructure & Plumbing
+
+**Core Components:** Homebrew, PHP, Yarn, Composer, Xdebug, Docker
+
+**Cloud Integrations:** DigitalOcean App Platform, Managed PostgreSQL, OpenSearch
+
+**Scripts:**
+- `setup-macos.sh`: Automated setup for macOS
+- `fix-pecl-xdebug.sh`: Ensures Xdebug installs cleanly
+- `create-github-project-tasks.sh`: Automates project board population
+- `pr-summary-comment.sh`: Automates PR summary comments
+
+**How it fits together:**
+- Setup scripts check/install all dependencies
+- `.env.example` documents all required environment variables
+- CI/CD (planned) will enforce requirements and run tests
+
+---
+
+## For Engineering & IT Leadership
+
+### Architecture Diagram
+```mermaid
+flowchart TD
+    User["User (Admin/Frontend)"]
+    WP["WordPress + QR Trackr Plugin"]
+    DB[("Managed PostgreSQL")] 
+    OS[("OpenSearch Logs")] 
+    DO["DigitalOcean App Platform"]
+    FE["Frontend (Shortcode/Block)"]
+    User -- Admin UI/API --> WP
+    FE -- Shortcode/Block --> WP
+    WP -- Store/Retrieve --> DB
+    WP -- Log Events --> OS
+    WP -- Deploys on --> DO
+```
+
+### Compliance & Security
+- Data privacy: All sensitive data in managed PostgreSQL, access via env vars
+- Audit logging: All events/errors to OpenSearch
+- Access control: Only authenticated admins access analytics/settings
+- Secrets management: No hardcoded secrets; all via env vars
+- Code review: All changes require PRs, review, and up-to-date docs
+- Cloud compliance: DigitalOcean services, adaptable to other providers
+
+### Scalability, Maintainability, Team Building
+- Modular, extensible architecture
+- Hooks/filters for easy extension
+- Automated onboarding and project/task board scripts
+- Supports cross-functional teams and mentorship
+
+---
+
+## Troubleshooting & FAQ
+- **Xdebug/PECL issues:** Run `fix-pecl-xdebug.sh`
+- **Database/logging issues:** Check `.env` values and DigitalOcean status
+- **Docker issues:** Ensure Docker is running and ports are available
+- **General:** See CONTRIBUTING.md or open an issue
+
+---
+
+## Links & Further Reading
+- [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform/)
+- [WordPress Plugin Handbook](https://developer.wordpress.org/plugins/)
+- [Yarn](https://yarnpkg.com/)
+- [Composer](https://getcomposer.org/)
+- [PHPUnit](https://phpunit.de/)
+- [OpenSearch](https://opensearch.org/)
 
 ---
 
@@ -257,7 +375,10 @@ This section explains the underlying infrastructure, dependencies, and how every
 4. **Install PHP dependencies** with `composer install`.
 5. **Set up your environment** by copying `.env.example` to `.env` and filling in any required secrets or connection strings (e.g., PostgreSQL, OpenSearch).
 6. **Run tests** to verify your environment: `./vendor/bin/phpunit`.
-7. **Start developing!**
+7. **Start Docker for local WordPress:**
+   ```sh
+   docker compose up --build
+   ```
 
 ### Required Components & How They're Enforced
 - **Scripts check for required tools** (Homebrew, PHP, Yarn, Composer) and prompt to install if missing.
