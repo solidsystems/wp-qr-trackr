@@ -1,3 +1,57 @@
+# Welcome to the QR Trackr Plugin Template 🚀
+
+## Onboarding & Project Overview
+
+Welcome! This repository is more than just the QR Trackr plugin—it's a modern, production-ready **WordPress plugin template** designed for professional development. Whether you're here to contribute to QR Trackr or to kickstart your own plugin, you'll find everything you need for a robust, maintainable, and extensible WordPress project.
+
+### What You Get in This Template
+- **Modern WordPress Plugin Structure:** Clean, organized, and scalable codebase.
+- **Best Practices:** Security, performance, and maintainability are built-in.
+- **Extensibility:** Hooks, filters, and clear separation for free/pro features.
+- **Automated Setup:** Scripts for macOS (ARM & x86) to get you started fast.
+- **Testing:** PHPUnit setup and example tests for high code quality.
+- **Documentation:** Inline comments, usage guides, and contribution standards.
+- **CI/CD Ready:** Easily integrate with your preferred pipelines.
+- **DigitalOcean App Platform Compatibility:** Out-of-the-box support for managed PostgreSQL and OpenSearch logging.
+
+### Getting Started
+1. **Clone the repository:**
+   ```sh
+   git clone <your-fork-or-this-repo-url>
+   cd wp-qr-trackr
+   ```
+2. **Run the macOS setup script:**
+   ```sh
+   chmod +x setup-macos.sh
+   ./setup-macos.sh
+   ```
+   This will install Homebrew, PHP, and Xdebug, and fix common PECL issues.
+3. **Set up your environment variables:**
+   Copy `.env.example` to `.env` and update as needed.
+4. **Install dependencies:**
+   ```sh
+   yarn install
+   ```
+5. **Run tests:**
+   ```sh
+   ./vendor/bin/phpunit
+   ```
+
+### What Can You Build With This?
+- **Your Own WordPress Plugin:** Use this as a foundation for any plugin—just swap out the QR code logic for your own features.
+- **Premium/Pro Extensions:** Clean separation and hooks make it easy to add paid features.
+- **Admin UI & Analytics:** Mobile-first, modern admin panels and stats dashboards.
+- **Robust, Secure, and Maintainable Code:** Built for teams and open source.
+
+### Contributing & Standards
+- All changes must be made on a feature branch and submitted via PR.
+- Documentation and tests are required for all new features.
+- See `.cursorrules` for project standards and best practices.
+
+---
+
+Whether you're here to improve QR Trackr or to launch your own plugin, you're set up for success. Happy coding!
+
 # WordPress Plugin Template
 
 This repository serves as a professional starting point for developing secure, elegant, and mobile-first WordPress plugins.
@@ -140,3 +194,131 @@ The Pro add-on can:
 - Integrate with the shape system via the documented filters.
 
 See the Pro plugin documentation for more details.
+
+## Xdebug Installation on macOS (ARM & x86)
+
+### Why This Script is Needed
+On macOS, especially with Homebrew-managed PHP installations (both Apple Silicon/ARM and Intel/x86), PECL sometimes fails to install extensions like Xdebug due to symlinked directories. Homebrew creates a symlink for the `pecl` directory (e.g., `/opt/homebrew/Cellar/php/8.4.8/pecl`), which points to a shared location (e.g., `/opt/homebrew/lib/php/pecl`). When PECL tries to create subdirectories for extensions, it may encounter errors if the directory already exists or if there are permission issues, resulting in errors like:
+
+```
+Warning: mkdir(): File exists in System.php on line 294
+ERROR: failed to mkdir /opt/homebrew/Cellar/php/8.4.8/pecl/20240924
+```
+
+This affects both ARM (Apple Silicon) and x86 (Intel) Macs using Homebrew.
+
+### How It Was Fixed
+The `fix-pecl-xdebug.sh` script:
+- Checks that the `pecl` path is a symlink.
+- Ensures the target directory exists and has the correct permissions.
+- Attempts to install Xdebug via PECL.
+- Falls back to Homebrew installation if PECL fails.
+
+### Usage
+1. Make the script executable:
+   ```sh
+   chmod +x fix-pecl-xdebug.sh
+   ```
+2. Run the script:
+   ```sh
+   ./fix-pecl-xdebug.sh
+   ```
+
+This script is compatible with both ARM and x86 Homebrew installations. It should be included as part of the standard setup for local development on macOS.
+
+## Infrastructure & Project Plumbing
+
+This section explains the underlying infrastructure, dependencies, and how everything fits together so anyone can run the project from scratch.
+
+### Core Components
+- **Homebrew**: Used for installing system dependencies (macOS).
+- **PHP**: The main runtime for WordPress and the plugin. Installed via Homebrew.
+- **Yarn**: JavaScript package manager for frontend/admin assets. Required for building and managing JS dependencies.
+- **Composer**: PHP dependency manager. Used for installing PHP libraries and tools (e.g., PHPUnit).
+- **Xdebug**: PHP extension for debugging and code coverage. Installed via PECL/Homebrew, with setup scripts to fix common macOS issues.
+
+### Cloud & Platform Integrations
+- **DigitalOcean App Platform**: The recommended deployment target. Ensures compatibility for cloud hosting.
+- **DigitalOcean Managed PostgreSQL**: Used for plugin data storage and analytics.
+- **OpenSearch (DigitalOcean Managed)**: For forwarding and searching system logs.
+
+### Project Scripts & Automation
+- **setup-macos.sh**: One-step setup for macOS (ARM & x86). Installs Homebrew, PHP, Xdebug, and runs all required fixes.
+- **fix-pecl-xdebug.sh**: Ensures Xdebug installs cleanly with Homebrew PHP/PECL on macOS.
+- **create-github-project-tasks.sh**: Automates project board population for GitHub Projects.
+
+### Environment Variables
+- All required environment variables are documented in `.env.example`. Copy this to `.env` and fill in your values.
+
+### How It All Fits Together
+1. **Clone the repository**
+2. **Run the setup script** (`./setup-macos.sh`) to install all system dependencies and fix PHP/Xdebug issues.
+3. **Install JS dependencies** with `yarn install`.
+4. **Install PHP dependencies** with `composer install`.
+5. **Set up your environment** by copying `.env.example` to `.env` and filling in any required secrets or connection strings (e.g., PostgreSQL, OpenSearch).
+6. **Run tests** to verify your environment: `./vendor/bin/phpunit`.
+7. **Start developing!**
+
+### Required Components & How They're Enforced
+- **Scripts check for required tools** (Homebrew, PHP, Yarn, Composer) and prompt to install if missing.
+- **.env.example** lists all required environment variables; setup scripts can check for their presence.
+- **CI/CD pipelines** (planned) will verify that all dependencies are installed and configured before allowing merges.
+
+### Troubleshooting
+- If you hit issues with Xdebug or PECL, always run `fix-pecl-xdebug.sh`.
+- For database or logging issues, check your `.env` values and DigitalOcean service status.
+
+---
+
+## For Engineering & IT Leadership
+
+This project is designed with professional, enterprise, and organizational needs in mind. Key considerations for Directors of Engineering, IT, and similar roles:
+
+### Architecture Diagram
+
+Below is a high-level overview of the infrastructure and data flow for QR Trackr:
+
+```mermaid
+flowchart TD
+    User["User (Admin/Frontend)"]
+    WP["WordPress + QR Trackr Plugin"]
+    DB[("Managed PostgreSQL")] 
+    OS[("OpenSearch Logs")] 
+    DO["DigitalOcean App Platform"]
+    FE["Frontend (Shortcode/Block)"]
+
+    User -- Admin UI/API --> WP
+    FE -- Shortcode/Block --> WP
+    WP -- Store/Retrieve --> DB
+    WP -- Log Events --> OS
+    WP -- Deploys on --> DO
+```
+
+- **User** interacts with the admin or frontend UI.
+- **WordPress + QR Trackr** handles QR code generation, analytics, and admin features.
+- **Managed PostgreSQL** stores QR code data and analytics.
+- **OpenSearch** receives logs for monitoring and audit.
+- **DigitalOcean App Platform** hosts the application.
+- **Frontend** can generate QR codes via shortcodes or blocks.
+
+### Compliance Considerations
+- **Data Privacy:** All sensitive data (e.g., analytics, user info) is stored in managed PostgreSQL with access controlled via environment variables.
+- **Audit Logging:** All significant events and errors are forwarded to OpenSearch for centralized, tamper-evident logging.
+- **Access Control:** Only authenticated WordPress admins can access plugin settings and analytics. Frontend QR code generation is permissioned via shortcode attributes.
+- **Secrets Management:** No secrets are hardcoded; all credentials are managed via environment variables and `.env` files (never committed).
+- **Code Quality & Review:** All changes require PRs, code review, and up-to-date documentation, supporting traceability and compliance audits.
+- **Cloud Compliance:** DigitalOcean services are used for managed, compliant infrastructure. The project can be adapted for other compliant cloud providers.
+
+### Team Building & Collaboration Opportunities
+- **Modular Codebase:** Teams can own different modules (admin UI, analytics, frontend, integrations) and contribute independently.
+- **Extensible Template:** Use this as a base for new plugins, fostering shared standards and reusable components across projects.
+- **Automated Onboarding:** New team members can get started quickly with setup scripts and clear documentation.
+- **Project Board Automation:** Use the provided scripts to create and manage project boards, making it easy to assign, track, and celebrate team contributions.
+- **Mentorship & Growth:** Encourage junior developers to take on well-defined tasks (see CONTRIBUTING.md and project plans) and learn best practices in WordPress, PHP, and cloud development.
+- **Cross-Functional Collaboration:** The project's structure supports collaboration between backend, frontend, DevOps, and QA roles.
+
+---
+
+This project is ready for adoption by teams and organizations that value security, maintainability, and modern development practices. For further details or to discuss enterprise integration, please open an issue or contact the maintainers.
+
+---
