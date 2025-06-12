@@ -114,7 +114,7 @@ function qr_trackr_admin_overview() {
             if (get_post($new_post_id)) {
                 // Create QR code for this post/page
                 $link = qr_trackr_get_or_create_tracking_link($new_post_id);
-                $qr_url = function_exists('qr_trackr_generate_qr_image_for_link') ? qr_trackr_generate_qr_image_for_link($link->id, 300) : '';
+                $qr_url = function_exists('qr_trackr_generate_qr_image_for_link_with_pro') ? qr_trackr_generate_qr_image_for_link_with_pro($link->id) : '';
                 $tracking_link = trailingslashit(home_url()) . 'qr-trackr/redirect/' . intval($link->id);
                 echo '<div class="notice notice-success is-dismissible"><p>New QR code created for <a href="' . esc_url(get_permalink($new_post_id)) . '" target="_blank">' . esc_html(get_the_title($new_post_id)) . '</a>.';
                 if ($qr_url) {
@@ -150,7 +150,7 @@ function qr_trackr_admin_overview() {
         foreach ( $links as $link ) {
             $post = get_post( $link->post_id );
             $tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $link->id );
-            $qr_url = function_exists('qr_trackr_generate_qr_image_for_link') ? qr_trackr_generate_qr_image_for_link($link->id, 150) : '';
+            $qr_url = function_exists('qr_trackr_generate_qr_image_for_link_with_pro') ? qr_trackr_generate_qr_image_for_link_with_pro($link->id) : '';
             $scan_count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $scans_table WHERE post_id = %d AND scan_time >= %s", $link->post_id, $link->created_at ) );
             echo '<tr>';
             echo '<td>' . intval( $link->id ) . '</td>';
@@ -213,7 +213,7 @@ function qr_trackr_admin_individual() {
         foreach ($links as $link) {
             $post = get_post($link->post_id);
             $tracking_link = trailingslashit(home_url()) . 'qr-trackr/redirect/' . intval($link->id);
-            $qr_url = function_exists('qr_trackr_generate_qr_image_for_link') ? qr_trackr_generate_qr_image_for_link($link->id, 150) : '';
+            $qr_url = function_exists('qr_trackr_generate_qr_image_for_link_with_pro') ? qr_trackr_generate_qr_image_for_link_with_pro($link->id) : '';
             $scan_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $scans_table WHERE post_id = %d AND scan_time >= %s", $link->post_id, $link->created_at));
             echo '<tr>';
             echo '<td>' . intval($link->id) . '</td>';
@@ -271,7 +271,7 @@ add_action( 'admin_init', function() {
         $post_id = intval( $_GET['post'] );
         $link = qr_trackr_get_most_recent_tracking_link( $post_id );
         if ( $link ) {
-            $qr_url = qr_trackr_generate_qr_image_for_link( $link->id, 300 );
+            $qr_url = qr_trackr_generate_qr_image_for_link_with_pro( $link->id );
             $tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $link->id );
             $post_link = get_permalink( $post_id );
             add_action( 'admin_notices', function() use ( $qr_url, $tracking_link, $post_link ) {
@@ -333,8 +333,8 @@ add_action('wp_ajax_qr_trackr_create_qr_ajax', function() {
     }
     $link_id = $wpdb->insert_id;
     // Generate QR code image and get URLs
-    if (function_exists('qr_trackr_generate_qr_image_for_link')) {
-        $qr_url = qr_trackr_generate_qr_image_for_link($link_id, 300);
+    if (function_exists('qr_trackr_generate_qr_image_for_link_with_pro')) {
+        $qr_url = qr_trackr_generate_qr_image_for_link_with_pro($link_id);
         $tracking_link = trailingslashit(home_url()) . 'qr-trackr/redirect/' . intval($link_id);
     } else {
         $qr_url = '';
