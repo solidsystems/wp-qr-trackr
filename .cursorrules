@@ -10,4 +10,10 @@
 - PRs should not be merged unless documentation is up to date and reviewed.
 
 # Environment Variable Standards
-- Every time a new environment variable is added to provide dependencies or flexibility, the .env.example file must be updated to reflect the change. 
+- Every time a new environment variable is added to provide dependencies or flexibility, the .env.example file must be updated to reflect the change.
+
+# Xdebug/PECL Homebrew Fix
+- Always run fix-pecl-xdebug.sh as part of the standard macOS (ARM and x86) setup to ensure Xdebug can be installed reliably with Homebrew PHP and PECL. This resolves symlink and permission issues common to both architectures.
+
+# PR Review Automation
+- Every pull request must include a summary comment detailing documentation and technical changes. If automated, use a one-line command with escaped newlines for the GitHub CLI (gh pr comment) to ensure proper formatting. 

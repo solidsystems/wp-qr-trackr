@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-php:
+    name: PHP Lint & Standards
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: [8.1, 8.2, 8.3]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, intl, xdebug
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+      - name: PHP_CodeSniffer (WordPress)
+        run: |
+          composer global require "squizlabs/php_codesniffer=*"
+          phpcs --standard=WordPress --ignore=vendor .
+
+  lint-js:
+    name: JS Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install JS dependencies
+        run: yarn install
+      - name: Run ESLint
+        run: yarn lint
+
+  lint-css:
+    name: CSS Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install JS dependencies
+        run: yarn install
+      - name: Run Stylelint
+        run: yarn stylelint
+
+  test-phpunit:
+    name: PHPUnit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: [8.1, 8.2, 8.3]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, intl, xdebug
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+        continue-on-error: true
+
+  audit-deps:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Composer Audit
+        run: composer audit || true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install JS dependencies
+        run: yarn install
+      - name: Yarn Audit
+        run: yarn audit --groups dependencies --level moderate || true
+
+  build-docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker compose build 

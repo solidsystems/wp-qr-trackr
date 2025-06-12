@@ -26,6 +26,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 - Hooks/filters for free/pro separation
 - Mobile-first, accessible admin UI
 - Automated setup and testing
+- **Comprehensive PHPUnit test suite included**
 - DigitalOcean App Platform compatibility
 - Example project plans and automation scripts
 
@@ -90,6 +91,11 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 
 - All changes must be made on a feature branch and submitted via PR.
 - Documentation and tests are required for all new features.
+- **Automated Testing:**
+  - This project ships with a comprehensive PHPUnit test suite.
+  - All code changes are automatically tested in CI/CD (see `.github/workflows/ci.yml`).
+  - To run tests locally: `./vendor/bin/phpunit`
+  - Advanced users can run tests via a WP-CLI command: `wp qr-trackr test` (see below).
 - See `.cursorrules` for project standards and best practices.
 - Use the provided project plans and automation scripts for team/project management.
 - Run `./scripts/pr-summary-comment.sh <PR_NUMBER> [SUMMARY_TEXT]` to automate PR summary comments.
@@ -441,5 +447,35 @@ flowchart TD
 ---
 
 This project is ready for adoption by teams and organizations that value security, maintainability, and modern development practices. For further details or to discuss enterprise integration, please open an issue or contact the maintainers.
+
+---
+
+## Testing
+
+This plugin uses **PHPUnit** for unit testing and **Brain Monkey** for mocking WordPress functions and hooks.
+
+### Running Tests
+
+1. Install dependencies:
+   ```sh
+   composer install
+   ```
+2. Run the test suite:
+   ```sh
+   cd wp-content/plugins/wp-qr-trackr
+   ./vendor/bin/phpunit
+   ```
+3. Generate a code coverage report (requires Xdebug):
+   ```sh
+   XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-html coverage
+   # Open coverage/index.html in your browser
+   ```
+
+### Test Features
+- **WordPress function mocking**: Uses [Brain Monkey](https://github.com/Brain-WP/BrainMonkey) to mock functions like `home_url`, `wp_upload_dir`, `wp_mkdir_p`, and more.
+- **Database mocking**: Mocks the `$wpdb` global for isolated tests, including all methods used by plugin code (e.g., `get_var`, `prepare`, `get_results`).
+- **Admin table tests**: All admin table tests use `@coversNothing` and proper output buffer handling to avoid risky warnings and ensure clean test runs.
+- **No risky warnings**: The test suite is fully risk-free, with all coverage and output buffer issues resolved. Only intentionally failing tests remain (for demonstration).
+- **Example tests**: See `tests/QrCodeCoverageTest.php` and `tests/QRTrackrListTableTest.php` for robust, fully-mocked examples.
 
 ---
