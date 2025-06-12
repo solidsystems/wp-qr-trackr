@@ -33,7 +33,17 @@ function qr_trackr_get_or_create_tracking_link( $post_id ) {
     }
 }
 
-function qr_trackr_generate_qr_image( $url, $size = 300, $post_id = null ) {
+// Add a filter for available QR shapes
+function qr_trackr_get_available_shapes() {
+    $shapes = [
+        'standard' => __('Standard', 'qr-trackr'),
+        // Pro plugin can add more via filter
+    ];
+    return apply_filters('qr_trackr_qr_shapes', $shapes);
+}
+
+// Update QR code generation to accept a shape parameter
+function qr_trackr_generate_qr_image( $url, $size = 300, $post_id = null, $shape = 'standard' ) {
     if ( $post_id ) {
         $link = qr_trackr_get_or_create_tracking_link( $post_id );
         $home = home_url();
@@ -42,34 +52,57 @@ function qr_trackr_generate_qr_image( $url, $size = 300, $post_id = null ) {
         $url = esc_url_raw( $url );
     }
     $size = intval( $size );
-    // Generate a unique filename for the QR code
+    $shape = $shape ?: 'standard';
+    // Generate a unique filename for the QR code, including shape
     $upload_dir = wp_upload_dir();
     $qr_dir = trailingslashit( $upload_dir['basedir'] ) . 'qr-trackr/';
     if ( ! file_exists( $qr_dir ) ) {
         wp_mkdir_p( $qr_dir );
     }
-    $filename = 'qr_' . md5( $url . $size ) . '.png';
+    $filename = 'qr_' . md5( $url . $size . $shape ) . '.png';
     $filepath = $qr_dir . $filename;
     $fileurl = trailingslashit( $upload_dir['baseurl'] ) . 'qr-trackr/' . $filename;
     if ( ! file_exists( $filepath ) ) {
-        $qr = new QrCode(
-            data: $url,
-            encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::Low,
-            size: $size,
-            margin: 10,
-            roundBlockSizeMode: RoundBlockSizeMode::Margin,
-            foregroundColor: new Color(0, 0, 0),
-            backgroundColor: new Color(255, 255, 255)
-        );
-        $writer = new PngWriter();
-        $result = $writer->write($qr);
-        file_put_contents($filepath, $result->getString());
+        // Standard shape uses default QR code
+        if ($shape === 'standard') {
+            $qr = new QrCode(
+                data: $url,
+                encoding: new Encoding('UTF-8'),
+                errorCorrectionLevel: ErrorCorrectionLevel::Low,
+                size: $size,
+                margin: 10,
+                roundBlockSizeMode: RoundBlockSizeMode::Margin,
+                foregroundColor: new Color(0, 0, 0),
+                backgroundColor: new Color(255, 255, 255)
+            );
+            $writer = new PngWriter();
+            $result = $writer->write($qr);
+            file_put_contents($filepath, $result->getString());
+        } else {
+            // Allow custom shape generation via filter
+            $custom = apply_filters('qr_trackr_generate_custom_shape', null, $url, $size, $shape, $filepath);
+            if ($custom === null) {
+                // fallback to standard if not handled
+                $qr = new QrCode(
+                    data: $url,
+                    encoding: new Encoding('UTF-8'),
+                    errorCorrectionLevel: ErrorCorrectionLevel::Low,
+                    size: $size,
+                    margin: 10,
+                    roundBlockSizeMode: RoundBlockSizeMode::Margin,
+                    foregroundColor: new Color(0, 0, 0),
+                    backgroundColor: new Color(255, 255, 255)
+                );
+                $writer = new PngWriter();
+                $result = $writer->write($qr);
+                file_put_contents($filepath, $result->getString());
+            }
+        }
     }
     return $fileurl;
 }
 
-function qr_trackr_generate_qr_image_for_link( $link_id, $size = 300 ) {
+function qr_trackr_generate_qr_image_for_link( $link_id, $size = 300, $shape = 'standard' ) {
     global $wpdb;
     $links_table = $wpdb->prefix . 'qr_trackr_links';
     $link = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $links_table WHERE id = %d", $link_id ) );
@@ -77,28 +110,48 @@ function qr_trackr_generate_qr_image_for_link( $link_id, $size = 300 ) {
     $home = home_url();
     $url = trailingslashit( $home ) . 'qr-trackr/redirect/' . intval( $link->id );
     $size = intval( $size );
+    $shape = $shape ?: 'standard';
     $upload_dir = wp_upload_dir();
     $qr_dir = trailingslashit( $upload_dir['basedir'] ) . 'qr-trackr/';
     if ( ! file_exists( $qr_dir ) ) {
         wp_mkdir_p( $qr_dir );
     }
-    $filename = 'qr_' . md5( $url . $size ) . '.png';
+    $filename = 'qr_' . md5( $url . $size . $shape ) . '.png';
     $filepath = $qr_dir . $filename;
     $fileurl = trailingslashit( $upload_dir['baseurl'] ) . 'qr-trackr/' . $filename;
     if ( ! file_exists( $filepath ) ) {
-        $qr = new QrCode(
-            data: $url,
-            encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::Low,
-            size: $size,
-            margin: 10,
-            roundBlockSizeMode: RoundBlockSizeMode::Margin,
-            foregroundColor: new Color(0, 0, 0),
-            backgroundColor: new Color(255, 255, 255)
-        );
-        $writer = new PngWriter();
-        $result = $writer->write($qr);
-        file_put_contents($filepath, $result->getString());
+        if ($shape === 'standard') {
+            $qr = new QrCode(
+                data: $url,
+                encoding: new Encoding('UTF-8'),
+                errorCorrectionLevel: ErrorCorrectionLevel::Low,
+                size: $size,
+                margin: 10,
+                roundBlockSizeMode: RoundBlockSizeMode::Margin,
+                foregroundColor: new Color(0, 0, 0),
+                backgroundColor: new Color(255, 255, 255)
+            );
+            $writer = new PngWriter();
+            $result = $writer->write($qr);
+            file_put_contents($filepath, $result->getString());
+        } else {
+            $custom = apply_filters('qr_trackr_generate_custom_shape', null, $url, $size, $shape, $filepath);
+            if ($custom === null) {
+                $qr = new QrCode(
+                    data: $url,
+                    encoding: new Encoding('UTF-8'),
+                    errorCorrectionLevel: ErrorCorrectionLevel::Low,
+                    size: $size,
+                    margin: 10,
+                    roundBlockSizeMode: RoundBlockSizeMode::Margin,
+                    foregroundColor: new Color(0, 0, 0),
+                    backgroundColor: new Color(255, 255, 255)
+                );
+                $writer = new PngWriter();
+                $result = $writer->write($qr);
+                file_put_contents($filepath, $result->getString());
+            }
+        }
     }
     return $fileurl;
 }
