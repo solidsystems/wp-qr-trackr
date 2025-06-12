@@ -96,3 +96,47 @@ To stop the containers, press `Ctrl+C` in the terminal running Docker, or run:
 ```sh
 docker-compose down
 ```
+
+## QR Code Shapes (Extensible)
+
+QR Trackr now supports a `shape` parameter for QR code generation. By default, only the standard shape is available, but the Pro plugin (or other plugins) can register new shapes and custom QR code renderers.
+
+### Usage
+- The `qr_trackr_generate_qr_image` and `qr_trackr_generate_qr_image_for_link` functions accept a `$shape` parameter.
+- Use the `qr_trackr_get_available_shapes()` function to get all registered shapes.
+
+### Extending with Pro
+- Pro or other plugins can add new shapes via the `qr_trackr_qr_shapes` filter:
+
+```php
+add_filter('qr_trackr_qr_shapes', function($shapes) {
+    $shapes['animal_head'] = __('Animal Head', 'qr-trackr-pro');
+    return $shapes;
+});
+```
+
+- To generate custom QR code images for new shapes, use the `qr_trackr_generate_custom_shape` filter:
+
+```php
+add_filter('qr_trackr_generate_custom_shape', function($custom, $url, $size, $shape, $filepath) {
+    if ($shape === 'animal_head') {
+        // Generate and save custom QR code to $filepath
+        // ...
+        return true; // Indicate handled
+    }
+    return $custom;
+}, 10, 5);
+```
+
+- If the filter returns `null`, the core plugin will fall back to the standard QR code.
+
+---
+
+## Pro Version
+
+The Pro add-on can:
+- Register new shapes and custom QR code renderers.
+- Provide advanced QR code styles, overlays, and more.
+- Integrate with the shape system via the documented filters.
+
+See the Pro plugin documentation for more details.
