@@ -73,4 +73,13 @@ This file aggregates all TODO items and improvement suggestions from across the 
 
 ---
 
+## Documentation & Architecture
+
+- [ ] Expand `ARCHITECTURE.md` with:
+  - [ ] Sequence diagrams for key flows (QR generation, scan tracking, admin workflows)
+  - [ ] Deployment notes (supported environments, Docker, CI/CD, cloud platforms)
+  - [ ] Integration points (API/webhooks, analytics, email, CDN, external services)
+  - [ ] Security and scaling considerations
+- [ ] Keep architecture documentation up to date as features evolve
+
 _This file is an index. All TODOs remain in their original locations for context. Please reference this file for a unified view of outstanding work._ 
