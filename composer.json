@@ -9,5 +9,6 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
-    }
+    },
+    "phpcs": "vendor/bin/phpcs --standard=wp-content/plugins/wp-qr-trackr/phpcs.xml --report=full wp-content/plugins/wp-qr-trackr"
 }

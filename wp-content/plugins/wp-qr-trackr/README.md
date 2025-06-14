@@ -81,6 +81,15 @@ yarn lint
 - Updated workflow for TODO index to use CI_GITHUB_TOKEN for authenticated pushes, resolving push errors in CI.
 - All changes are documented in the README and tracking files, and the workflow is now robust, standards-compliant, and future-proof.
 
+## Best Way to Do Things Philosophy
+
+- **Always use local Composer dependencies for tools like PHPCS.**
+  - Add PHPCS as a dev dependency in the root composer.json.
+  - All contributors (Mac, Linux, CI) should run `composer install` and use `vendor/bin/phpcs`.
+  - Never require or rely on global PHPCS installs—this ensures version consistency and zero path issues.
+  - Add Composer scripts for common tasks (e.g., `composer phpcs`).
+  - This approach is portable, standards-compliant, and works everywhere.
+
 ---
 
 For support or feature requests, open an issue or PR. 
