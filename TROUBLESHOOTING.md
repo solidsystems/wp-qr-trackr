@@ -19,6 +19,38 @@ This guide covers common issues and solutions for the QR Trackr plugin and templ
 - Use `yarn setup:ci` to reinstall all dependencies and Husky hooks.
 - Ensure `.env` and `.env.example` are up to date and match your environment.
 
+## CI/CD & GitHub Actions Issues
+
+### PHP CodeSniffer Path Error: "No such file or directory"
+**Error:** GitHub Actions workflow fails with `/vendor/bin/phpcs: No such file or directory` when running from the plugin directory.
+
+**Cause:** The workflow changes to the plugin directory (`wp-content/plugins/wp-qr-trackr/`) but uses an incorrect relative path to access the `phpcs` binary in the repository root.
+
+**Solution:** Update the GitHub Actions workflow (`.github/workflows/ci.yml`) to use the correct relative path:
+- **Wrong:** `../../vendor/bin/phpcs` (only goes up 2 levels)
+- **Correct:** `../../../vendor/bin/phpcs` (goes up 3 levels: plugin → plugins → wp-content → root)
+
+**Directory Structure:**
+```
+root/
+├── vendor/bin/phpcs          # Root-level Composer dependencies
+└── wp-content/
+    └── plugins/
+        └── wp-qr-trackr/     # Plugin directory (3 levels deep from root)
+```
+
+**Fixed workflow step example:**
+```yaml
+- name: PHP_CodeSniffer (WordPress)
+  run: |
+    cd wp-content/plugins/wp-qr-trackr
+    ../../../vendor/bin/phpcs --standard=../../../.phpcs.xml --report=full --extensions=php .
+```
+
+**Note:** Also ensure you're using:
+- `--standard=../../../.phpcs.xml` (correct config file path with leading dot)
+- `--extensions=php` (to avoid memory issues with large JS files in node_modules)
+
 ## General Contribution Questions
 - All standards and automation are described in the main README. The CI/CD pipeline enforces best practices so you can focus on building features.
 - For anything not covered here, see `CONTRIBUTING.md` or open an issue.
