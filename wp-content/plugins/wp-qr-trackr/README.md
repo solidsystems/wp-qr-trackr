@@ -57,6 +57,16 @@ To add a new feature:
 - Custom QR code styles
 - REST API integration
 
+## Linting & Code Quality
+
+- ESLint is configured to ignore `vendor/`, `node_modules/`, and `coverage/` via a `.eslintignore` file in this directory.
+- The `lint` script in `package.json` explicitly uses this ignore file to ensure consistent results locally and in CI.
+- To run linting:
+
+```sh
+yarn lint
+```
+
 ---
 
 For support or feature requests, open an issue or PR. 
