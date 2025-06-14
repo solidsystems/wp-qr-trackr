@@ -19,10 +19,10 @@ define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 // date_default_timezone_set( 'UTC' ); // Removed per WordPress coding standards.
 
-// Include core files
+// Include core files.
 require_once QR_TRACKR_PLUGIN_DIR . 'qr-code.php';
 
-// Include the QR_Trackr_List_Table class
+// Include the QR_Trackr_List_Table class.
 require_once QR_TRACKR_PLUGIN_DIR . 'includes/class-qr-trackr-list-table.php';
 
 require_once QR_TRACKR_PLUGIN_DIR . 'includes/class-qr-trackr-cli-command.php';
@@ -130,7 +130,7 @@ function qr_trackr_admin_overview() {
 	echo '<div class="wrap"><h1>QR Trackr Overview</h1>';
 	// --- New QR code creation form. ---
 	if ( isset( $_POST['qr_trackr_admin_new_qr_nonce'], $_POST['qr_trackr_admin_new_post_id'] ) ) {
-		if ( wp_verify_nonce( $_POST['qr_trackr_admin_new_qr_nonce'], 'qr_trackr_admin_new_qr' ) ) {
+		if ( wp_verify_nonce( wp_unslash( $_POST['qr_trackr_admin_new_qr_nonce'] ), 'qr_trackr_admin_new_qr' ) ) {
 			$new_post_id = intval( $_POST['qr_trackr_admin_new_post_id'] );
 			if ( get_post( $new_post_id ) ) {
 				$link          = qr_trackr_get_or_create_tracking_link( $new_post_id );
@@ -163,8 +163,8 @@ function qr_trackr_admin_overview() {
 	);
 	$preselect_post_id = isset( $_GET['new_post_id'] ) ? intval( $_GET['new_post_id'] ) : 0;
 	foreach ( $posts as $post ) {
-		$selected = ( $preselect_post_id && $preselect_post_id == $post->ID ) ? ' selected' : '';
-		echo '<option value="' . intval( $post->ID ) . '"' . $selected . '>' . esc_html( $post->post_title ) . ' (' . esc_html( ucfirst( $post->post_type ) ) . ')</option>';
+		$selected = ( $preselect_post_id && $preselect_post_id === $post->ID ) ? ' selected' : '';
+		echo '<option value="' . intval( $post->ID ) . '"' . esc_attr( $selected ) . '>' . esc_html( $post->post_title ) . ' (' . esc_html( ucfirst( $post->post_type ) ) . ')</option>';
 	}
 	echo '</select> ';
 	echo '<button type="submit" class="button button-primary">Create QR Code</button>';
@@ -216,8 +216,8 @@ add_action(
 	'admin_enqueue_scripts',
 	function ( $hook ) {
 		if ( strpos( $hook, 'qr-trackr' ) !== false || $hook === 'post.php' || $hook === 'post-new.php' ) {
-			wp_enqueue_style( 'qr-trackr-admin', QR_TRACKR_PLUGIN_URL . 'assets/admin.css' );
-			wp_enqueue_script( 'qr-trackr-admin', QR_TRACKR_PLUGIN_URL . 'assets/admin.js', array( 'jquery' ), null, true );
+			wp_enqueue_style( 'qr-trackr-admin', QR_TRACKR_PLUGIN_URL . 'assets/admin.css', array(), QR_TRACKR_VERSION );
+			wp_enqueue_script( 'qr-trackr-admin', QR_TRACKR_PLUGIN_URL . 'assets/admin.js', array( 'jquery' ), QR_TRACKR_VERSION, true );
 			wp_localize_script( 'qr-trackr-admin', 'qrTrackrDebugMode', array( 'debug' => get_option( 'qr_trackr_debug_mode', '0' ) === '1' ? true : false ) );
 			// Inline script for expanding/collapsing update destination rows
 			add_action(
@@ -313,11 +313,11 @@ add_action( 'manage_pages_custom_column', 'qr_trackr_column_content', 10, 2 );
  * @param int    $post_id The post ID.
  */
 function qr_trackr_column_content( $column, $post_id ) {
-	if ( $column === 'qr_trackr_scans' ) {
+	if ( 'qr_trackr_scans' === $column ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'qr_trackr_scans';
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe.
-		$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE post_id = %d", $post_id ) );
+		// Table name constructed safely outside prepare().
+		$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM `{$table}` WHERE post_id = %d", $post_id ) );
 		echo intval( $count );
 	}
 }
