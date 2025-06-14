@@ -130,8 +130,9 @@ function qr_trackr_admin_overview() {
 	echo '<div class="wrap"><h1>QR Trackr Overview</h1>';
 	// --- New QR code creation form. ---
 	if ( isset( $_POST['qr_trackr_admin_new_qr_nonce'], $_POST['qr_trackr_admin_new_post_id'] ) ) {
-		if ( wp_verify_nonce( wp_unslash( $_POST['qr_trackr_admin_new_qr_nonce'] ), 'qr_trackr_admin_new_qr' ) ) {
-			$new_post_id = intval( $_POST['qr_trackr_admin_new_post_id'] );
+		$nonce = isset( $_POST['qr_trackr_admin_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_admin_new_qr_nonce'] ) ) : '';
+		$new_post_id = isset( $_POST['qr_trackr_admin_new_post_id'] ) ? intval( wp_unslash( $_POST['qr_trackr_admin_new_post_id'] ) ) : 0;
+		if ( wp_verify_nonce( $nonce, 'qr_trackr_admin_new_qr' ) ) {
 			if ( get_post( $new_post_id ) ) {
 				$link          = qr_trackr_get_or_create_tracking_link( $new_post_id );
 				$qr_url        = qr_trackr_generate_qr_image_for_link( $link->id );
@@ -436,7 +437,10 @@ add_action(
 	'save_post',
 	function ( $post_id ) {
 		if ( isset( $_POST['qr_trackr_dest_nonce'], $_POST['qr_trackr_dest_url'], $_POST['qr_trackr_link_id'] ) ) {
-			if ( ! wp_verify_nonce( $_POST['qr_trackr_dest_nonce'], 'qr_trackr_update_dest_' . $post_id ) ) {
+			$nonce = isset( $_POST['qr_trackr_dest_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_dest_nonce'] ) ) : '';
+			$link_id = isset( $_POST['qr_trackr_link_id'] ) ? intval( wp_unslash( $_POST['qr_trackr_link_id'] ) ) : 0;
+			$dest_url = isset( $_POST['qr_trackr_dest_url'] ) ? esc_url_raw( wp_unslash( $_POST['qr_trackr_dest_url'] ) ) : '';
+			if ( ! wp_verify_nonce( $nonce, 'qr_trackr_update_dest_' . $post_id ) ) {
 				return;
 			}
 			if ( ! current_user_can( 'edit_post', $post_id ) ) {
@@ -444,8 +448,6 @@ add_action(
 			}
 			global $wpdb;
 			$links_table = $wpdb->prefix . 'qr_trackr_links';
-			$link_id     = intval( $_POST['qr_trackr_link_id'] );
-			$dest_url    = esc_url_raw( $_POST['qr_trackr_dest_url'] );
 			$wpdb->update( $links_table, array( 'destination_url' => $dest_url ), array( 'id' => $link_id ) );
 		}
 	}
@@ -494,8 +496,8 @@ add_action(
 					array(
 						'post_id'    => intval( $link->post_id ),
 						'scan_time'  => current_time( 'mysql', 1 ),
-						'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ) : '',
-						'ip_address' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( $_SERVER['REMOTE_ADDR'] ) : '',
+						'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '',
+						'ip_address' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
 					)
 				);
 				// Redirect to destination URL.

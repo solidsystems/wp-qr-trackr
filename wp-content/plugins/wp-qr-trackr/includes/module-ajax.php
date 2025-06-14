@@ -32,7 +32,7 @@ add_action( 'wp_ajax_qr_trackr_get_stats', 'qr_trackr_ajax_get_stats' );
  */
 function qr_trackr_ajax_generate_qr() {
 	check_ajax_referer( 'qr_trackr_generate_qr_nonce', 'security' );
-	$post_id = isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0;
+	$post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
 	if ( 0 === $post_id || ! get_post( $post_id ) ) {
 		wp_send_json_error( array( 'message' => 'Invalid post ID.' ) );
 	}
@@ -54,8 +54,8 @@ add_action(
 	 * @return void
 	 */
 	function () {
-		$post_id = intval( $_POST['post_id'] ?? 0 );
-		$nonce   = $_POST['qr_trackr_new_qr_nonce'] ?? '';
+		$post_id = intval( wp_unslash( $_POST['post_id'] ?? 0 ) );
+		$nonce   = isset( $_POST['qr_trackr_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_new_qr_nonce'] ) ) : '';
 		qr_trackr_debug_log( 'AJAX: Create QR called', array( 'post_id' => $post_id ) );
 		// Verify nonce before processing.
 		if ( ! wp_verify_nonce( $nonce, 'qr_trackr_admin_new_qr' ) ) {

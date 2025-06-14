@@ -60,7 +60,7 @@ add_action(
 function qr_trackr_admin_overview() {
 	echo '<div class="wrap"><h1>QR Trackr Overview</h1>';
 	if ( isset( $_POST['qr_trackr_admin_new_qr_nonce'], $_POST['qr_trackr_admin_new_post_id'] ) ) {
-		$nonce       = isset( $_POST['qr_trackr_admin_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_admin_new_qr_nonce'] ) ) : '';
+		$nonce = isset( $_POST['qr_trackr_admin_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_admin_new_qr_nonce'] ) ) : '';
 		$new_post_id = isset( $_POST['qr_trackr_admin_new_post_id'] ) ? intval( wp_unslash( $_POST['qr_trackr_admin_new_post_id'] ) ) : 0;
 		if ( wp_verify_nonce( $nonce, 'qr_trackr_admin_new_qr' ) ) {
 			if ( get_post( $new_post_id ) ) {

@@ -104,34 +104,18 @@ add_action(
 	 */
 	function ( $post_id ) {
 		if ( isset( $_POST['qr_trackr_dest_nonce'], $_POST['qr_trackr_dest_url'], $_POST['qr_trackr_link_id'] ) ) {
-			qr_trackr_debug_log(
-				'save_post: Attempting destination URL update',
-				array(
-					'post_id' => $post_id,
-					'link_id' => $_POST['qr_trackr_link_id'],
-				)
-			);
-			$nonce    = isset( $_POST['qr_trackr_dest_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_dest_nonce'] ) ) : '';
-			$link_id  = isset( $_POST['qr_trackr_link_id'] ) ? intval( wp_unslash( $_POST['qr_trackr_link_id'] ) ) : 0;
+			$nonce = isset( $_POST['qr_trackr_dest_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_dest_nonce'] ) ) : '';
+			$link_id = isset( $_POST['qr_trackr_link_id'] ) ? intval( wp_unslash( $_POST['qr_trackr_link_id'] ) ) : 0;
 			$dest_url = isset( $_POST['qr_trackr_dest_url'] ) ? esc_url_raw( wp_unslash( $_POST['qr_trackr_dest_url'] ) ) : '';
 			if ( ! wp_verify_nonce( $nonce, 'qr_trackr_update_dest_' . $post_id ) ) {
-				qr_trackr_debug_log( 'save_post: Nonce verification failed', $nonce );
 				return;
 			}
 			if ( ! current_user_can( 'edit_post', $post_id ) ) {
-				qr_trackr_debug_log( 'save_post: Current user cannot edit post', $post_id );
 				return;
 			}
 			global $wpdb;
 			$links_table = $wpdb->prefix . 'qr_trackr_links';
 			$wpdb->update( $links_table, array( 'destination_url' => $dest_url ), array( 'id' => $link_id ) );
-			qr_trackr_debug_log(
-				'save_post: Destination URL updated',
-				array(
-					'link_id'  => $link_id,
-					'dest_url' => $dest_url,
-				)
-			);
 		}
 	}
 );
