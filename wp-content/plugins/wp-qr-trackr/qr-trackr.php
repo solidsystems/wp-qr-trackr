@@ -190,9 +190,9 @@ function qr_trackr_admin_individual() {
 	global $wpdb;
 	$scans_table = $wpdb->prefix . 'qr_trackr_scans';
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe.
-	$total_scans = $wpdb->get_var( "SELECT COUNT(*) FROM $scans_table" );
+	$total_scans = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %s', $scans_table ) );
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safe.
-	$most_popular      = $wpdb->get_row( "SELECT post_id, COUNT(*) as scan_count FROM $scans_table GROUP BY post_id ORDER BY scan_count DESC LIMIT 1" );
+	$most_popular      = $wpdb->get_row( $wpdb->prepare( 'SELECT post_id, COUNT(*) as scan_count FROM %s GROUP BY post_id ORDER BY scan_count DESC LIMIT 1', $scans_table ) );
 	$most_popular_post = $most_popular ? get_post( $most_popular->post_id ) : null;
 	echo '<div style="margin-bottom:2em; background:#fafafa; padding:1em; border:1px solid #eee; max-width:600px;">';
 	echo '<strong>Total QR Scans:</strong> ' . intval( $total_scans ) . '<br>';
@@ -600,7 +600,7 @@ add_action(
 	function () {
 		global $wpdb;
 		$links_table = $wpdb->prefix . 'qr_trackr_links';
-		$columns     = $wpdb->get_results( "SHOW COLUMNS FROM $links_table", ARRAY_A );
+		$columns     = $wpdb->get_results( $wpdb->prepare( 'SHOW COLUMNS FROM %s', $links_table ), ARRAY_A );
 		$expected    = array( 'id', 'post_id', 'destination_url', 'created_at', 'updated_at' );
 		$actual      = array_map(
 			function ( $col ) {
@@ -613,10 +613,10 @@ add_action(
 			error_log( '[QR Trackr MIGRATE] Missing columns in qr_trackr_links: ' . implode( ', ', $missing ) );
 			// Try to add missing columns
 			if ( in_array( 'created_at', $missing ) ) {
-				$wpdb->query( "ALTER TABLE $links_table ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP" );
+				$wpdb->query( $wpdb->prepare( 'ALTER TABLE %s ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP', $links_table ) );
 			}
 			if ( in_array( 'updated_at', $missing ) ) {
-				$wpdb->query( "ALTER TABLE $links_table ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" );
+				$wpdb->query( $wpdb->prepare( 'ALTER TABLE %s ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', $links_table ) );
 			}
 		} else {
 			error_log( '[QR Trackr MIGRATE] qr_trackr_links schema OK: ' . implode( ', ', $actual ) );

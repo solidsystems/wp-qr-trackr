@@ -178,6 +178,22 @@ During the project cleanup to enable strict pre-commit hooks and pass all CI/CD 
 
 ### 6. Docblocks and comments: All modules and the main plugin file now have complete docblocks and inline comments, in compliance with WordPress and project standards.
 
+### PHPCS Remediation & Final Compliance Pass (Current Stage)
+
+- **All major PHPCS categories (input sanitization, SQL placeholders, output escaping, Yoda conditions, nonce verification, docblocks) are complete for source files.**
+- **Test files are undergoing a final compliance pass:**
+  - Adding/fixing docblocks for classes, functions, and member variables
+  - Ensuring all Yoda conditions and strict comparisons
+  - Correcting inline comment punctuation
+  - Avoiding reserved keywords as parameter names
+  - Addressing file/class naming conventions
+- **Workflow:**
+  - Run `vendor/bin/phpcs --standard=.phpcs.xml --no-cache -v --report=full wp-content/plugins/wp-qr-trackr/tests` to see remaining issues
+  - Remediate each file in order of error count
+  - Commit, push, and update PR with a summary after each file is fixed
+  - Track progress in `CODEGEN-REMEDIATION-TRACKING.md`
+- **Goal:** Achieve zero PHPCS errors/warnings in all test and source files, ensuring a fully standards-compliant, maintainable codebase.
+
 ---
 
 ## Infrastructure & Plumbing
