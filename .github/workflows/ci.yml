@@ -21,7 +21,6 @@ jobs:
           extensions: mbstring, intl, xdebug
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress
-        working-directory: wp-content/plugins/wp-qr-trackr
       - name: PHP_CodeSniffer (WordPress)
         run: |
           composer global require "squizlabs/php_codesniffer=*"
@@ -78,7 +77,6 @@ jobs:
           extensions: mbstring, intl, xdebug
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress
-        working-directory: wp-content/plugins/wp-qr-trackr
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
       - name: Upload coverage to Codecov
@@ -92,9 +90,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
       - name: Composer Audit
         run: composer audit || true
-        working-directory: wp-content/plugins/wp-qr-trackr
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
