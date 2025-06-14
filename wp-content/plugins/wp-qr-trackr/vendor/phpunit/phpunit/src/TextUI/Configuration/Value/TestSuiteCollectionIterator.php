@@ -10,8 +10,6 @@
 namespace PHPUnit\TextUI\Configuration;
 
 use function count;
-use function iterator_count;
-use Countable;
 use Iterator;
 
 /**
@@ -19,39 +17,41 @@ use Iterator;
  *
  * @template-implements Iterator<int, TestSuite>
  */
-final class TestSuiteCollectionIterator implements Countable, Iterator {
+final class TestSuiteCollectionIterator implements Iterator
+{
+    /**
+     * @var list<TestSuite>
+     */
+    private readonly array $testSuites;
+    private int $position = 0;
 
-	/**
-	 * @psalm-var list<TestSuite>
-	 */
-	private readonly array $testSuites;
-	private int $position = 0;
+    public function __construct(TestSuiteCollection $testSuites)
+    {
+        $this->testSuites = $testSuites->asArray();
+    }
 
-	public function __construct( TestSuiteCollection $testSuites ) {
-		$this->testSuites = $testSuites->asArray();
-	}
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
 
-	public function count(): int {
-		return iterator_count( $this );
-	}
+    public function valid(): bool
+    {
+        return $this->position < count($this->testSuites);
+    }
 
-	public function rewind(): void {
-		$this->position = 0;
-	}
+    public function key(): int
+    {
+        return $this->position;
+    }
 
-	public function valid(): bool {
-		return $this->position < count( $this->testSuites );
-	}
+    public function current(): TestSuite
+    {
+        return $this->testSuites[$this->position];
+    }
 
-	public function key(): int {
-		return $this->position;
-	}
-
-	public function current(): TestSuite {
-		return $this->testSuites[ $this->position ];
-	}
-
-	public function next(): void {
-		++$this->position;
-	}
+    public function next(): void
+    {
+        $this->position++;
+    }
 }

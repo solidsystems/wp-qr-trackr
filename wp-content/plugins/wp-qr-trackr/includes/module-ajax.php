@@ -54,19 +54,24 @@ add_action(
 	 * @return void
 	 */
 	function () {
-		$post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
-		$nonce   = isset( $_POST['qr_trackr_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_new_qr_nonce'] ) ) : '';
+		$post_id = intval( $_POST['post_id'] ?? 0 );
+		$nonce   = $_POST['qr_trackr_new_qr_nonce'] ?? '';
+		qr_trackr_debug_log( 'AJAX: Create QR called', array( 'post_id' => $post_id ) );
+		// Verify nonce before processing.
 		if ( ! wp_verify_nonce( $nonce, 'qr_trackr_admin_new_qr' ) ) {
+			qr_trackr_debug_log( 'AJAX: Invalid nonce', $nonce );
 			wp_send_json_error( array( 'message' => 'Invalid nonce.' ) );
 			wp_die();
 		}
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			qr_trackr_debug_log( 'AJAX: Permission denied', $post_id );
 			wp_send_json_error( array( 'message' => 'You do not have permission to edit this post.' ) );
 		}
 		global $wpdb;
 		$links_table     = $wpdb->prefix . 'qr_trackr_links';
 		$destination_url = get_permalink( $post_id );
 		if ( ! $destination_url ) {
+			qr_trackr_debug_log( 'AJAX: Could not determine permalink', $post_id );
 			wp_send_json_error( array( 'message' => 'Could not determine permalink for this post.' ) );
 		}
 		$result = $wpdb->insert(
@@ -74,17 +79,25 @@ add_action(
 			array(
 				'post_id'         => $post_id,
 				'destination_url' => esc_url_raw( $destination_url ),
-			),
-			array( '%d', '%s' )
+			)
 		);
-		if ( false === $result ) {
+		if ( $result === false ) {
+			qr_trackr_debug_log( 'AJAX: Insert failed', $wpdb->last_error );
 			wp_send_json_error( array( 'message' => 'Insert failed: ' . $wpdb->last_error ) );
 		}
-		$link_id       = $wpdb->insert_id;
+		$link_id = $wpdb->insert_id;
+		// Generate QR code image and get URLs
 		$qr_url        = qr_trackr_generate_qr_image_for_link( $link_id );
 		$tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $link_id );
 		$html          = qr_trackr_render_qr_list_html( $post_id );
 		$qr_image_html = $qr_url ? '<div class="qr-trackr-ajax-qr"><img src="' . esc_url( $qr_url ) . '" class="qr-trackr-qr-image" alt="QR Code"><br><a href="' . esc_url( $qr_url ) . '" download class="button">Download QR Code</a><br><strong>Tracking Link:</strong> <a href="' . esc_url( $tracking_link ) . '" target="_blank">' . esc_html( $tracking_link ) . '</a></div>' : '';
+		qr_trackr_debug_log(
+			'AJAX: QR code created',
+			array(
+				'link_id' => $link_id,
+				'qr_url'  => $qr_url,
+			)
+		);
 		wp_send_json_success(
 			array(
 				'html'          => $html,

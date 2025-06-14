@@ -19,66 +19,82 @@ use PHPUnit\Metadata\MetadataCollection;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CachingParser implements Parser {
+final class CachingParser implements Parser
+{
+    private readonly Parser $reader;
 
-	private readonly Parser $reader;
-	private array $classCache          = array();
-	private array $methodCache         = array();
-	private array $classAndMethodCache = array();
+    /**
+     * @var array<class-string, MetadataCollection>
+     */
+    private array $classCache = [];
 
-	public function __construct( Parser $reader ) {
-		$this->reader = $reader;
-	}
+    /**
+     * @var array<non-empty-string, MetadataCollection>
+     */
+    private array $methodCache = [];
 
-	/**
-	 * @psalm-param class-string $className
-	 */
-	public function forClass( string $className ): MetadataCollection {
-		assert( class_exists( $className ) );
+    /**
+     * @var array<non-empty-string, MetadataCollection>
+     */
+    private array $classAndMethodCache = [];
 
-		if ( isset( $this->classCache[ $className ] ) ) {
-			return $this->classCache[ $className ];
-		}
+    public function __construct(Parser $reader)
+    {
+        $this->reader = $reader;
+    }
 
-		$this->classCache[ $className ] = $this->reader->forClass( $className );
+    /**
+     * @param class-string $className
+     */
+    public function forClass(string $className): MetadataCollection
+    {
+        assert(class_exists($className));
 
-		return $this->classCache[ $className ];
-	}
+        if (isset($this->classCache[$className])) {
+            return $this->classCache[$className];
+        }
 
-	/**
-	 * @psalm-param class-string $className
-	 * @psalm-param non-empty-string $methodName
-	 */
-	public function forMethod( string $className, string $methodName ): MetadataCollection {
-		assert( class_exists( $className ) );
-		assert( method_exists( $className, $methodName ) );
+        $this->classCache[$className] = $this->reader->forClass($className);
 
-		$key = $className . '::' . $methodName;
+        return $this->classCache[$className];
+    }
 
-		if ( isset( $this->methodCache[ $key ] ) ) {
-			return $this->methodCache[ $key ];
-		}
+    /**
+     * @param class-string     $className
+     * @param non-empty-string $methodName
+     */
+    public function forMethod(string $className, string $methodName): MetadataCollection
+    {
+        assert(class_exists($className));
+        assert(method_exists($className, $methodName));
 
-		$this->methodCache[ $key ] = $this->reader->forMethod( $className, $methodName );
+        $key = $className . '::' . $methodName;
 
-		return $this->methodCache[ $key ];
-	}
+        if (isset($this->methodCache[$key])) {
+            return $this->methodCache[$key];
+        }
 
-	/**
-	 * @psalm-param class-string $className
-	 * @psalm-param non-empty-string $methodName
-	 */
-	public function forClassAndMethod( string $className, string $methodName ): MetadataCollection {
-		$key = $className . '::' . $methodName;
+        $this->methodCache[$key] = $this->reader->forMethod($className, $methodName);
 
-		if ( isset( $this->classAndMethodCache[ $key ] ) ) {
-			return $this->classAndMethodCache[ $key ];
-		}
+        return $this->methodCache[$key];
+    }
 
-		$this->classAndMethodCache[ $key ] = $this->forClass( $className )->mergeWith(
-			$this->forMethod( $className, $methodName ),
-		);
+    /**
+     * @param class-string     $className
+     * @param non-empty-string $methodName
+     */
+    public function forClassAndMethod(string $className, string $methodName): MetadataCollection
+    {
+        $key = $className . '::' . $methodName;
 
-		return $this->classAndMethodCache[ $key ];
-	}
+        if (isset($this->classAndMethodCache[$key])) {
+            return $this->classAndMethodCache[$key];
+        }
+
+        $this->classAndMethodCache[$key] = $this->forClass($className)->mergeWith(
+            $this->forMethod($className, $methodName),
+        );
+
+        return $this->classAndMethodCache[$key];
+    }
 }

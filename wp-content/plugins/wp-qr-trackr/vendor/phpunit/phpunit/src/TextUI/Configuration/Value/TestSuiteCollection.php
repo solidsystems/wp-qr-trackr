@@ -16,44 +16,50 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  *
  * @template-implements IteratorAggregate<int, TestSuite>
  */
-final class TestSuiteCollection implements Countable, IteratorAggregate {
+final readonly class TestSuiteCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<TestSuite>
+     */
+    private array $testSuites;
 
-	/**
-	 * @psalm-var list<TestSuite>
-	 */
-	private readonly array $testSuites;
+    /**
+     * @param list<TestSuite> $testSuites
+     */
+    public static function fromArray(array $testSuites): self
+    {
+        return new self(...$testSuites);
+    }
 
-	/**
-	 * @psalm-param list<TestSuite> $testSuites
-	 */
-	public static function fromArray( array $testSuites ): self {
-		return new self( ...$testSuites );
-	}
+    private function __construct(TestSuite ...$testSuites)
+    {
+        $this->testSuites = $testSuites;
+    }
 
-	private function __construct( TestSuite ...$testSuites ) {
-		$this->testSuites = $testSuites;
-	}
+    /**
+     * @return list<TestSuite>
+     */
+    public function asArray(): array
+    {
+        return $this->testSuites;
+    }
 
-	/**
-	 * @psalm-return list<TestSuite>
-	 */
-	public function asArray(): array {
-		return $this->testSuites;
-	}
+    public function count(): int
+    {
+        return count($this->testSuites);
+    }
 
-	public function count(): int {
-		return count( $this->testSuites );
-	}
+    public function getIterator(): TestSuiteCollectionIterator
+    {
+        return new TestSuiteCollectionIterator($this);
+    }
 
-	public function getIterator(): TestSuiteCollectionIterator {
-		return new TestSuiteCollectionIterator( $this );
-	}
-
-	public function isEmpty(): bool {
-		return $this->count() === 0;
-	}
+    public function isEmpty(): bool
+    {
+        return $this->count() === 0;
+    }
 }

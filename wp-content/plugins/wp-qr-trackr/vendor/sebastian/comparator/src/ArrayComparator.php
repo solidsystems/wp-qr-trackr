@@ -23,102 +23,109 @@ use SebastianBergmann\Exporter\Exporter;
  * The order of the keys does not matter.
  * The types of key-value pairs do not matter.
  */
-class ArrayComparator extends Comparator {
+class ArrayComparator extends Comparator
+{
+    public function accepts(mixed $expected, mixed $actual): bool
+    {
+        return is_array($expected) && is_array($actual);
+    }
 
-	public function accepts( mixed $expected, mixed $actual ): bool {
-		return is_array( $expected ) && is_array( $actual );
-	}
+    /**
+     * @param array<mixed> $processed
+     *
+     * @throws ComparisonFailure
+     */
+    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = []): void
+    {
+        assert(is_array($expected));
+        assert(is_array($actual));
 
-	/**
-	 * @throws ComparisonFailure
-	 */
-	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = array() ): void {
-		assert( is_array( $expected ) );
-		assert( is_array( $actual ) );
+        if ($canonicalize) {
+            sort($expected);
+            sort($actual);
+        }
 
-		if ( $canonicalize ) {
-			sort( $expected );
-			sort( $actual );
-		}
+        $remaining        = $actual;
+        $actualAsString   = "Array (\n";
+        $expectedAsString = "Array (\n";
+        $equal            = true;
+        $exporter         = new Exporter;
 
-		$remaining        = $actual;
-		$actualAsString   = "Array (\n";
-		$expectedAsString = "Array (\n";
-		$equal            = true;
-		$exporter         = new Exporter();
+        foreach ($expected as $key => $value) {
+            unset($remaining[$key]);
 
-		foreach ( $expected as $key => $value ) {
-			unset( $remaining[ $key ] );
+            if (!array_key_exists($key, $actual)) {
+                $expectedAsString .= sprintf(
+                    "    %s => %s\n",
+                    $exporter->export($key),
+                    $exporter->shortenedExport($value),
+                );
 
-			if ( ! array_key_exists( $key, $actual ) ) {
-				$expectedAsString .= sprintf(
-					"    %s => %s\n",
-					$exporter->export( $key ),
-					$exporter->shortenedExport( $value ),
-				);
+                $equal = false;
 
-				$equal = false;
+                continue;
+            }
 
-				continue;
-			}
+            try {
+                $comparator = $this->factory()->getComparatorFor($value, $actual[$key]);
 
-			try {
-				$comparator = $this->factory()->getComparatorFor( $value, $actual[ $key ] );
-				$comparator->assertEquals( $value, $actual[ $key ], $delta, $canonicalize, $ignoreCase, $processed );
+                /** @phpstan-ignore arguments.count */
+                $comparator->assertEquals($value, $actual[$key], $delta, $canonicalize, $ignoreCase, $processed);
 
-				$expectedAsString .= sprintf(
-					"    %s => %s\n",
-					$exporter->export( $key ),
-					$exporter->shortenedExport( $value ),
-				);
+                $expectedAsString .= sprintf(
+                    "    %s => %s\n",
+                    $exporter->export($key),
+                    $exporter->shortenedExport($value),
+                );
 
-				$actualAsString .= sprintf(
-					"    %s => %s\n",
-					$exporter->export( $key ),
-					$exporter->shortenedExport( $actual[ $key ] ),
-				);
-			} catch ( ComparisonFailure $e ) {
-				$expectedAsString .= sprintf(
-					"    %s => %s\n",
-					$exporter->export( $key ),
-					$e->getExpectedAsString() ? $this->indent( $e->getExpectedAsString() ) : $exporter->shortenedExport( $e->getExpected() ),
-				);
+                $actualAsString .= sprintf(
+                    "    %s => %s\n",
+                    $exporter->export($key),
+                    $exporter->shortenedExport($actual[$key]),
+                );
+            } catch (ComparisonFailure $e) {
+                $expectedAsString .= sprintf(
+                    "    %s => %s\n",
+                    $exporter->export($key),
+                    $e->getExpectedAsString() ? $this->indent($e->getExpectedAsString()) : $exporter->shortenedExport($e->getExpected()),
+                );
 
-				$actualAsString .= sprintf(
-					"    %s => %s\n",
-					$exporter->export( $key ),
-					$e->getActualAsString() ? $this->indent( $e->getActualAsString() ) : $exporter->shortenedExport( $e->getActual() ),
-				);
+                $actualAsString .= sprintf(
+                    "    %s => %s\n",
+                    $exporter->export($key),
+                    $e->getActualAsString() ? $this->indent($e->getActualAsString()) : $exporter->shortenedExport($e->getActual()),
+                );
 
-				$equal = false;
-			}
-		}
+                $equal = false;
+            }
+        }
 
-		foreach ( $remaining as $key => $value ) {
-			$actualAsString .= sprintf(
-				"    %s => %s\n",
-				$exporter->export( $key ),
-				$exporter->shortenedExport( $value ),
-			);
+        foreach ($remaining as $key => $value) {
+            $actualAsString .= sprintf(
+                "    %s => %s\n",
+                $exporter->export($key),
+                $exporter->shortenedExport($value),
+            );
 
-			$equal = false;
-		}
+            $equal = false;
+        }
 
-		$expectedAsString .= ')';
-		$actualAsString   .= ')';
+        $expectedAsString .= ')';
+        $actualAsString .= ')';
 
-		if ( ! $equal ) {
-			throw new ComparisonFailure(
-				$expected,
-				$actual,
-				$expectedAsString,
-				$actualAsString,
-				'Failed asserting that two arrays are equal.',
-			);
-		}
-	}
+        if (!$equal) {
+            throw new ComparisonFailure(
+                $expected,
+                $actual,
+                $expectedAsString,
+                $actualAsString,
+                'Failed asserting that two arrays are equal.',
+            );
+        }
+    }
 
-	private function indent( string $lines ): string {
-		return trim( str_replace( "\n", "\n    ", $lines ) );
-	}
+    private function indent(string $lines): string
+    {
+        return trim(str_replace("\n", "\n    ", $lines));
+    }
 }

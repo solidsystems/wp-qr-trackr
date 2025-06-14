@@ -16,44 +16,50 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  *
  * @template-implements IteratorAggregate<int, File>
  */
-final class FileCollection implements Countable, IteratorAggregate {
+final readonly class FileCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<File>
+     */
+    private array $files;
 
-	/**
-	 * @psalm-var list<File>
-	 */
-	private readonly array $files;
+    /**
+     * @param list<File> $files
+     */
+    public static function fromArray(array $files): self
+    {
+        return new self(...$files);
+    }
 
-	/**
-	 * @psalm-param list<File> $files
-	 */
-	public static function fromArray( array $files ): self {
-		return new self( ...$files );
-	}
+    private function __construct(File ...$files)
+    {
+        $this->files = $files;
+    }
 
-	private function __construct( File ...$files ) {
-		$this->files = $files;
-	}
+    /**
+     * @return list<File>
+     */
+    public function asArray(): array
+    {
+        return $this->files;
+    }
 
-	/**
-	 * @psalm-return list<File>
-	 */
-	public function asArray(): array {
-		return $this->files;
-	}
+    public function count(): int
+    {
+        return count($this->files);
+    }
 
-	public function count(): int {
-		return count( $this->files );
-	}
+    public function notEmpty(): bool
+    {
+        return $this->files !== [];
+    }
 
-	public function notEmpty(): bool {
-		return ! empty( $this->files );
-	}
-
-	public function getIterator(): FileCollectionIterator {
-		return new FileCollectionIterator( $this );
-	}
+    public function getIterator(): FileCollectionIterator
+    {
+        return new FileCollectionIterator($this);
+    }
 }

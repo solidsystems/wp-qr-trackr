@@ -13,25 +13,28 @@ use const PHP_OS;
 use const PHP_OS_FAMILY;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class OperatingSystem {
+final readonly class OperatingSystem
+{
+    private string $operatingSystem;
+    private string $operatingSystemFamily;
 
-	private readonly string $operatingSystem;
-	private readonly string $operatingSystemFamily;
+    public function __construct()
+    {
+        $this->operatingSystem       = PHP_OS;
+        $this->operatingSystemFamily = PHP_OS_FAMILY;
+    }
 
-	public function __construct() {
-		$this->operatingSystem       = PHP_OS;
-		$this->operatingSystemFamily = PHP_OS_FAMILY;
-	}
+    public function operatingSystem(): string
+    {
+        return $this->operatingSystem;
+    }
 
-	public function operatingSystem(): string {
-		return $this->operatingSystem;
-	}
-
-	public function operatingSystemFamily(): string {
-		return $this->operatingSystemFamily;
-	}
+    public function operatingSystemFamily(): string
+    {
+        return $this->operatingSystemFamily;
+    }
 }

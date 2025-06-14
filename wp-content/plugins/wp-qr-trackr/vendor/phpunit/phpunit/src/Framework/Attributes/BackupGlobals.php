@@ -12,20 +12,22 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD )]
-final class BackupGlobals {
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+final readonly class BackupGlobals
+{
+    private bool $enabled;
 
-	private readonly bool $enabled;
+    public function __construct(bool $enabled)
+    {
+        $this->enabled = $enabled;
+    }
 
-	public function __construct( bool $enabled ) {
-		$this->enabled = $enabled;
-	}
-
-	public function enabled(): bool {
-		return $this->enabled;
-	}
+    public function enabled(): bool
+    {
+        return $this->enabled;
+    }
 }

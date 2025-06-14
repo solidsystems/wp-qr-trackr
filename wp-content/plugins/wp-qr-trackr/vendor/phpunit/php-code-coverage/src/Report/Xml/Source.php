@@ -17,23 +17,25 @@ use TheSeer\Tokenizer\XMLSerializer;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class Source {
+final readonly class Source
+{
+    private DOMElement $context;
 
-	private readonly DOMElement $context;
+    public function __construct(DOMElement $context)
+    {
+        $this->context = $context;
+    }
 
-	public function __construct( DOMElement $context ) {
-		$this->context = $context;
-	}
+    public function setSourceCode(string $source): void
+    {
+        $context = $this->context;
 
-	public function setSourceCode( string $source ): void {
-		$context = $this->context;
+        $tokens = (new Tokenizer)->parse($source);
+        $srcDom = (new XMLSerializer(new NamespaceUri($context->namespaceURI)))->toDom($tokens);
 
-		$tokens = ( new Tokenizer() )->parse( $source );
-		$srcDom = ( new XMLSerializer( new NamespaceUri( $context->namespaceURI ) ) )->toDom( $tokens );
-
-		$context->parentNode->replaceChild(
-			$context->ownerDocument->importNode( $srcDom->documentElement, true ),
-			$context,
-		);
-	}
+        $context->parentNode->replaceChild(
+            $context->ownerDocument->importNode($srcDom->documentElement, true),
+            $context,
+        );
+    }
 }

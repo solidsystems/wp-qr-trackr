@@ -10,18 +10,17 @@
 namespace SebastianBergmann\CodeCoverage\Test\TestStatus;
 
 /**
- * @psalm-immutable
+ * @immutable
  */
-final class Success extends Known {
+final class Success extends Known
+{
+    public function isSuccess(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true Success $this
-	 */
-	public function isSuccess(): bool {
-		return true;
-	}
-
-	public function asString(): string {
-		return 'success';
-	}
+    public function asString(): string
+    {
+        return 'success';
+    }
 }

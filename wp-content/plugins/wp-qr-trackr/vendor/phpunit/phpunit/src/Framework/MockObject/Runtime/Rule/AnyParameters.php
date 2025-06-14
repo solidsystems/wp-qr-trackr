@@ -16,11 +16,13 @@ use PHPUnit\Framework\MockObject\Invocation as BaseInvocation;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class AnyParameters implements ParametersRule {
+final class AnyParameters implements ParametersRule
+{
+    public function apply(BaseInvocation $invocation): void
+    {
+    }
 
-	public function apply( BaseInvocation $invocation ): void {
-	}
-
-	public function verify(): void {
-	}
+    public function verify(): void
+    {
+    }
 }

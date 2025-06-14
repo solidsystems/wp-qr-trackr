@@ -12,9 +12,12 @@ namespace PHPUnit\Event;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface Event {
+interface Event
+{
+    public function telemetryInfo(): Telemetry\Info;
 
-	public function telemetryInfo(): Telemetry\Info;
-
-	public function asString(): string;
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string;
 }

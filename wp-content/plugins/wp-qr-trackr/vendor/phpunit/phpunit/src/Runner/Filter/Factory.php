@@ -12,69 +12,93 @@ namespace PHPUnit\Runner\Filter;
 use function assert;
 use FilterIterator;
 use Iterator;
+use PHPUnit\Framework\Test;
 use PHPUnit\Framework\TestSuite;
-use ReflectionClass;
 
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Factory {
+final class Factory
+{
+    /**
+     * @var list<array{className: class-string<FilterIterator<int, Test, Iterator<int, Test>>>, argument: list<non-empty-string>|non-empty-string}>
+     */
+    private array $filters = [];
 
-	/**
-	 * @psalm-var array<int,array{0: ReflectionClass, 1: array|string}>
-	 */
-	private array $filters = array();
+    /**
+     * @param list<non-empty-string> $testIds
+     */
+    public function addTestIdFilter(array $testIds): void
+    {
+        $this->filters[] = [
+            'className' => TestIdFilterIterator::class,
+            'argument'  => $testIds,
+        ];
+    }
 
-	/**
-	 * @psalm-param list<non-empty-string> $testIds
-	 */
-	public function addTestIdFilter( array $testIds ): void {
-		$this->filters[] = array(
-			new ReflectionClass( TestIdFilterIterator::class ),
-			$testIds,
-		);
-	}
+    /**
+     * @param list<non-empty-string> $groups
+     */
+    public function addIncludeGroupFilter(array $groups): void
+    {
+        $this->filters[] = [
+            'className' => IncludeGroupFilterIterator::class,
+            'argument'  => $groups,
+        ];
+    }
 
-	/**
-	 * @psalm-param list<non-empty-string> $groups
-	 */
-	public function addExcludeGroupFilter( array $groups ): void {
-		$this->filters[] = array(
-			new ReflectionClass( ExcludeGroupFilterIterator::class ),
-			$groups,
-		);
-	}
+    /**
+     * @param list<non-empty-string> $groups
+     */
+    public function addExcludeGroupFilter(array $groups): void
+    {
+        $this->filters[] = [
+            'className' => ExcludeGroupFilterIterator::class,
+            'argument'  => $groups,
+        ];
+    }
 
-	/**
-	 * @psalm-param list<non-empty-string> $groups
-	 */
-	public function addIncludeGroupFilter( array $groups ): void {
-		$this->filters[] = array(
-			new ReflectionClass( IncludeGroupFilterIterator::class ),
-			$groups,
-		);
-	}
+    /**
+     * @param non-empty-string $name
+     */
+    public function addIncludeNameFilter(string $name): void
+    {
+        $this->filters[] = [
+            'className' => IncludeNameFilterIterator::class,
+            'argument'  => $name,
+        ];
+    }
 
-	/**
-	 * @psalm-param non-empty-string $name
-	 */
-	public function addNameFilter( string $name ): void {
-		$this->filters[] = array(
-			new ReflectionClass( NameFilterIterator::class ),
-			$name,
-		);
-	}
+    /**
+     * @param non-empty-string $name
+     */
+    public function addExcludeNameFilter(string $name): void
+    {
+        $this->filters[] = [
+            'className' => ExcludeNameFilterIterator::class,
+            'argument'  => $name,
+        ];
+    }
 
-	public function factory( Iterator $iterator, TestSuite $suite ): FilterIterator {
-		foreach ( $this->filters as $filter ) {
-			[$class, $arguments] = $filter;
-			$iterator            = $class->newInstance( $iterator, $arguments, $suite );
-		}
+    /**
+     * @param Iterator<int, Test> $iterator
+     *
+     * @return FilterIterator<int, Test, Iterator<int, Test>>
+     */
+    public function factory(Iterator $iterator, TestSuite $suite): FilterIterator
+    {
+        foreach ($this->filters as $filter) {
+            $iterator = new $filter['className'](
+                $iterator,
+                $filter['argument'],
+                $suite,
+            );
+        }
 
-		assert( $iterator instanceof FilterIterator );
+        assert($iterator instanceof FilterIterator);
 
-		return $iterator;
-	}
+        return $iterator;
+    }
 }

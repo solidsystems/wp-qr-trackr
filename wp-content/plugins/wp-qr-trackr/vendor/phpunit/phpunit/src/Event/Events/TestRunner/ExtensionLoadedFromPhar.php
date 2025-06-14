@@ -14,45 +14,80 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ExtensionLoadedFromPhar implements Event {
+final readonly class ExtensionLoadedFromPhar implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly string $filename;
-	private readonly string $name;
-	private readonly string $version;
+    /**
+     * @var non-empty-string
+     */
+    private string $filename;
 
-	public function __construct( Telemetry\Info $telemetryInfo, string $filename, string $name, string $version ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->filename      = $filename;
-		$this->name          = $name;
-		$this->version       = $version;
-	}
+    /**
+     * @var non-empty-string
+     */
+    private string $name;
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @var non-empty-string
+     */
+    private string $version;
 
-	public function filename(): string {
-		return $this->filename;
-	}
+    /**
+     * @param non-empty-string $filename
+     * @param non-empty-string $name
+     * @param non-empty-string $version
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, string $filename, string $name, string $version)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->filename      = $filename;
+        $this->name          = $name;
+        $this->version       = $version;
+    }
 
-	public function name(): string {
-		return $this->name;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function version(): string {
-		return $this->version;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function filename(): string
+    {
+        return $this->filename;
+    }
 
-	public function asString(): string {
-		return sprintf(
-			'Extension Loaded from PHAR (%s %s)',
-			$this->name,
-			$this->version,
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function name(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return non-empty-string
+     */
+    public function version(): string
+    {
+        return $this->version;
+    }
+
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Extension Loaded from PHAR (%s %s)',
+            $this->name,
+            $this->version,
+        );
+    }
 }

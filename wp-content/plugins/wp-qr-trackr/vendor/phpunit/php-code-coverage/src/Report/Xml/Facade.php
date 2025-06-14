@@ -28,264 +28,297 @@ use function substr;
 use DateTimeImmutable;
 use DOMDocument;
 use SebastianBergmann\CodeCoverage\CodeCoverage;
-use SebastianBergmann\CodeCoverage\Driver\PathExistsButIsNotDirectoryException;
-use SebastianBergmann\CodeCoverage\Driver\WriteOperationFailedException;
 use SebastianBergmann\CodeCoverage\Node\AbstractNode;
 use SebastianBergmann\CodeCoverage\Node\Directory as DirectoryNode;
+use SebastianBergmann\CodeCoverage\Node\File;
 use SebastianBergmann\CodeCoverage\Node\File as FileNode;
+use SebastianBergmann\CodeCoverage\PathExistsButIsNotDirectoryException;
 use SebastianBergmann\CodeCoverage\Util\Filesystem as DirectoryUtil;
 use SebastianBergmann\CodeCoverage\Version;
+use SebastianBergmann\CodeCoverage\WriteOperationFailedException;
 use SebastianBergmann\CodeCoverage\XmlException;
 use SebastianBergmann\Environment\Runtime;
 
-final class Facade {
+/**
+ * @phpstan-import-type ProcessedClassType from File
+ * @phpstan-import-type ProcessedTraitType from File
+ * @phpstan-import-type ProcessedFunctionType from File
+ * @phpstan-import-type TestType from CodeCoverage
+ */
+final class Facade
+{
+    private string $target;
+    private Project $project;
+    private readonly string $phpUnitVersion;
 
-	private string $target;
-	private Project $project;
-	private readonly string $phpUnitVersion;
+    public function __construct(string $version)
+    {
+        $this->phpUnitVersion = $version;
+    }
 
-	public function __construct( string $version ) {
-		$this->phpUnitVersion = $version;
-	}
+    /**
+     * @throws XmlException
+     */
+    public function process(CodeCoverage $coverage, string $target): void
+    {
+        if (substr($target, -1, 1) !== DIRECTORY_SEPARATOR) {
+            $target .= DIRECTORY_SEPARATOR;
+        }
 
-	/**
-	 * @throws XmlException
-	 */
-	public function process( CodeCoverage $coverage, string $target ): void {
-		if ( substr( $target, -1, 1 ) !== DIRECTORY_SEPARATOR ) {
-			$target .= DIRECTORY_SEPARATOR;
-		}
+        $this->target = $target;
+        $this->initTargetDirectory($target);
 
-		$this->target = $target;
-		$this->initTargetDirectory( $target );
+        $report = $coverage->getReport();
 
-		$report = $coverage->getReport();
+        $this->project = new Project(
+            $coverage->getReport()->name(),
+        );
 
-		$this->project = new Project(
-			$coverage->getReport()->name(),
-		);
+        $this->setBuildInformation();
+        $this->processTests($coverage->getTests());
+        $this->processDirectory($report, $this->project);
 
-		$this->setBuildInformation();
-		$this->processTests( $coverage->getTests() );
-		$this->processDirectory( $report, $this->project );
+        $this->saveDocument($this->project->asDom(), 'index');
+    }
 
-		$this->saveDocument( $this->project->asDom(), 'index' );
-	}
+    private function setBuildInformation(): void
+    {
+        $buildNode = $this->project->buildInformation();
+        $buildNode->setRuntimeInformation(new Runtime);
+        $buildNode->setBuildTime(new DateTimeImmutable);
+        $buildNode->setGeneratorVersions($this->phpUnitVersion, Version::id());
+    }
 
-	private function setBuildInformation(): void {
-		$buildNode = $this->project->buildInformation();
-		$buildNode->setRuntimeInformation( new Runtime() );
-		$buildNode->setBuildTime( new DateTimeImmutable() );
-		$buildNode->setGeneratorVersions( $this->phpUnitVersion, Version::id() );
-	}
+    /**
+     * @throws PathExistsButIsNotDirectoryException
+     * @throws WriteOperationFailedException
+     */
+    private function initTargetDirectory(string $directory): void
+    {
+        if (is_file($directory)) {
+            // @codeCoverageIgnoreStart
+            if (!is_dir($directory)) {
+                throw new PathExistsButIsNotDirectoryException($directory);
+            }
 
-	/**
-	 * @throws PathExistsButIsNotDirectoryException
-	 * @throws WriteOperationFailedException
-	 */
-	private function initTargetDirectory( string $directory ): void {
-		if ( is_file( $directory ) ) {
-			if ( ! is_dir( $directory ) ) {
-				throw new PathExistsButIsNotDirectoryException( $directory );
-			}
+            if (!is_writable($directory)) {
+                throw new WriteOperationFailedException($directory);
+            }
+            // @codeCoverageIgnoreEnd
+        }
 
-			if ( ! is_writable( $directory ) ) {
-				throw new WriteOperationFailedException( $directory );
-			}
-		}
+        DirectoryUtil::createDirectory($directory);
+    }
 
-		DirectoryUtil::createDirectory( $directory );
-	}
+    /**
+     * @throws XmlException
+     */
+    private function processDirectory(DirectoryNode $directory, Node $context): void
+    {
+        $directoryName = $directory->name();
 
-	/**
-	 * @throws XmlException
-	 */
-	private function processDirectory( DirectoryNode $directory, Node $context ): void {
-		$directoryName = $directory->name();
+        if ($this->project->projectSourceDirectory() === $directoryName) {
+            $directoryName = '/';
+        }
 
-		if ( $this->project->projectSourceDirectory() === $directoryName ) {
-			$directoryName = '/';
-		}
+        $directoryObject = $context->addDirectory($directoryName);
 
-		$directoryObject = $context->addDirectory( $directoryName );
+        $this->setTotals($directory, $directoryObject->totals());
 
-		$this->setTotals( $directory, $directoryObject->totals() );
+        foreach ($directory->directories() as $node) {
+            $this->processDirectory($node, $directoryObject);
+        }
 
-		foreach ( $directory->directories() as $node ) {
-			$this->processDirectory( $node, $directoryObject );
-		}
+        foreach ($directory->files() as $node) {
+            $this->processFile($node, $directoryObject);
+        }
+    }
 
-		foreach ( $directory->files() as $node ) {
-			$this->processFile( $node, $directoryObject );
-		}
-	}
+    /**
+     * @throws XmlException
+     */
+    private function processFile(FileNode $file, Directory $context): void
+    {
+        $fileObject = $context->addFile(
+            $file->name(),
+            $file->id() . '.xml',
+        );
 
-	/**
-	 * @throws XmlException
-	 */
-	private function processFile( FileNode $file, Directory $context ): void {
-		$fileObject = $context->addFile(
-			$file->name(),
-			$file->id() . '.xml',
-		);
+        $this->setTotals($file, $fileObject->totals());
 
-		$this->setTotals( $file, $fileObject->totals() );
+        $path = substr(
+            $file->pathAsString(),
+            strlen($this->project->projectSourceDirectory()),
+        );
 
-		$path = substr(
-			$file->pathAsString(),
-			strlen( $this->project->projectSourceDirectory() ),
-		);
+        $fileReport = new Report($path);
 
-		$fileReport = new Report( $path );
+        $this->setTotals($file, $fileReport->totals());
 
-		$this->setTotals( $file, $fileReport->totals() );
+        foreach ($file->classesAndTraits() as $unit) {
+            $this->processUnit($unit, $fileReport);
+        }
 
-		foreach ( $file->classesAndTraits() as $unit ) {
-			$this->processUnit( $unit, $fileReport );
-		}
+        foreach ($file->functions() as $function) {
+            $this->processFunction($function, $fileReport);
+        }
 
-		foreach ( $file->functions() as $function ) {
-			$this->processFunction( $function, $fileReport );
-		}
+        foreach ($file->lineCoverageData() as $line => $tests) {
+            if (!is_array($tests) || count($tests) === 0) {
+                continue;
+            }
 
-		foreach ( $file->lineCoverageData() as $line => $tests ) {
-			if ( ! is_array( $tests ) || count( $tests ) === 0 ) {
-				continue;
-			}
+            $coverage = $fileReport->lineCoverage((string) $line);
 
-			$coverage = $fileReport->lineCoverage( (string) $line );
+            foreach ($tests as $test) {
+                $coverage->addTest($test);
+            }
 
-			foreach ( $tests as $test ) {
-				$coverage->addTest( $test );
-			}
+            $coverage->finalize();
+        }
 
-			$coverage->finalize();
-		}
+        $fileReport->source()->setSourceCode(
+            file_get_contents($file->pathAsString()),
+        );
 
-		$fileReport->source()->setSourceCode(
-			file_get_contents( $file->pathAsString() ),
-		);
+        $this->saveDocument($fileReport->asDom(), $file->id());
+    }
 
-		$this->saveDocument( $fileReport->asDom(), $file->id() );
-	}
+    /**
+     * @param ProcessedClassType|ProcessedTraitType $unit
+     */
+    private function processUnit(array $unit, Report $report): void
+    {
+        if (isset($unit['className'])) {
+            $unitObject = $report->classObject($unit['className']);
+        } else {
+            $unitObject = $report->traitObject($unit['traitName']);
+        }
 
-	private function processUnit( array $unit, Report $report ): void {
-		if ( isset( $unit['className'] ) ) {
-			$unitObject = $report->classObject( $unit['className'] );
-		} else {
-			$unitObject = $report->traitObject( $unit['traitName'] );
-		}
+        $unitObject->setLines(
+            $unit['startLine'],
+            $unit['executableLines'],
+            $unit['executedLines'],
+        );
 
-		$unitObject->setLines(
-			$unit['startLine'],
-			$unit['executableLines'],
-			$unit['executedLines'],
-		);
+        $unitObject->setCrap((float) $unit['crap']);
+        $unitObject->setNamespace($unit['namespace']);
 
-		$unitObject->setCrap( (float) $unit['crap'] );
-		$unitObject->setNamespace( $unit['namespace'] );
+        foreach ($unit['methods'] as $method) {
+            $methodObject = $unitObject->addMethod($method['methodName']);
+            $methodObject->setSignature($method['signature']);
+            $methodObject->setLines((string) $method['startLine'], (string) $method['endLine']);
+            $methodObject->setCrap($method['crap']);
+            $methodObject->setTotals(
+                (string) $method['executableLines'],
+                (string) $method['executedLines'],
+                (string) $method['coverage'],
+            );
+        }
+    }
 
-		foreach ( $unit['methods'] as $method ) {
-			$methodObject = $unitObject->addMethod( $method['methodName'] );
-			$methodObject->setSignature( $method['signature'] );
-			$methodObject->setLines( (string) $method['startLine'], (string) $method['endLine'] );
-			$methodObject->setCrap( $method['crap'] );
-			$methodObject->setTotals(
-				(string) $method['executableLines'],
-				(string) $method['executedLines'],
-				(string) $method['coverage'],
-			);
-		}
-	}
+    /**
+     * @param ProcessedFunctionType $function
+     */
+    private function processFunction(array $function, Report $report): void
+    {
+        $functionObject = $report->functionObject($function['functionName']);
 
-	private function processFunction( array $function, Report $report ): void {
-		$functionObject = $report->functionObject( $function['functionName'] );
+        $functionObject->setSignature($function['signature']);
+        $functionObject->setLines((string) $function['startLine']);
+        $functionObject->setCrap($function['crap']);
+        $functionObject->setTotals((string) $function['executableLines'], (string) $function['executedLines'], (string) $function['coverage']);
+    }
 
-		$functionObject->setSignature( $function['signature'] );
-		$functionObject->setLines( (string) $function['startLine'] );
-		$functionObject->setCrap( $function['crap'] );
-		$functionObject->setTotals( (string) $function['executableLines'], (string) $function['executedLines'], (string) $function['coverage'] );
-	}
+    /**
+     * @param array<string, TestType> $tests
+     */
+    private function processTests(array $tests): void
+    {
+        $testsObject = $this->project->tests();
 
-	private function processTests( array $tests ): void {
-		$testsObject = $this->project->tests();
+        foreach ($tests as $test => $result) {
+            $testsObject->addTest($test, $result);
+        }
+    }
 
-		foreach ( $tests as $test => $result ) {
-			$testsObject->addTest( $test, $result );
-		}
-	}
+    private function setTotals(AbstractNode $node, Totals $totals): void
+    {
+        $loc = $node->linesOfCode();
 
-	private function setTotals( AbstractNode $node, Totals $totals ): void {
-		$loc = $node->linesOfCode();
+        $totals->setNumLines(
+            $loc->linesOfCode(),
+            $loc->commentLinesOfCode(),
+            $loc->nonCommentLinesOfCode(),
+            $node->numberOfExecutableLines(),
+            $node->numberOfExecutedLines(),
+        );
 
-		$totals->setNumLines(
-			$loc['linesOfCode'],
-			$loc['commentLinesOfCode'],
-			$loc['nonCommentLinesOfCode'],
-			$node->numberOfExecutableLines(),
-			$node->numberOfExecutedLines(),
-		);
+        $totals->setNumClasses(
+            $node->numberOfClasses(),
+            $node->numberOfTestedClasses(),
+        );
 
-		$totals->setNumClasses(
-			$node->numberOfClasses(),
-			$node->numberOfTestedClasses(),
-		);
+        $totals->setNumTraits(
+            $node->numberOfTraits(),
+            $node->numberOfTestedTraits(),
+        );
 
-		$totals->setNumTraits(
-			$node->numberOfTraits(),
-			$node->numberOfTestedTraits(),
-		);
+        $totals->setNumMethods(
+            $node->numberOfMethods(),
+            $node->numberOfTestedMethods(),
+        );
 
-		$totals->setNumMethods(
-			$node->numberOfMethods(),
-			$node->numberOfTestedMethods(),
-		);
+        $totals->setNumFunctions(
+            $node->numberOfFunctions(),
+            $node->numberOfTestedFunctions(),
+        );
+    }
 
-		$totals->setNumFunctions(
-			$node->numberOfFunctions(),
-			$node->numberOfTestedFunctions(),
-		);
-	}
+    private function targetDirectory(): string
+    {
+        return $this->target;
+    }
 
-	private function targetDirectory(): string {
-		return $this->target;
-	}
+    /**
+     * @throws XmlException
+     */
+    private function saveDocument(DOMDocument $document, string $name): void
+    {
+        $filename = sprintf('%s/%s.xml', $this->targetDirectory(), $name);
 
-	/**
-	 * @throws XmlException
-	 */
-	private function saveDocument( DOMDocument $document, string $name ): void {
-		$filename = sprintf( '%s/%s.xml', $this->targetDirectory(), $name );
+        $document->formatOutput       = true;
+        $document->preserveWhiteSpace = false;
+        $this->initTargetDirectory(dirname($filename));
 
-		$document->formatOutput       = true;
-		$document->preserveWhiteSpace = false;
-		$this->initTargetDirectory( dirname( $filename ) );
+        file_put_contents($filename, $this->documentAsString($document));
+    }
 
-		file_put_contents( $filename, $this->documentAsString( $document ) );
-	}
+    /**
+     * @throws XmlException
+     *
+     * @see https://bugs.php.net/bug.php?id=79191
+     */
+    private function documentAsString(DOMDocument $document): string
+    {
+        $xmlErrorHandling = libxml_use_internal_errors(true);
+        $xml              = $document->saveXML();
 
-	/**
-	 * @throws XmlException
-	 *
-	 * @see https://bugs.php.net/bug.php?id=79191
-	 */
-	private function documentAsString( DOMDocument $document ): string {
-		$xmlErrorHandling = libxml_use_internal_errors( true );
-		$xml              = $document->saveXML();
+        if ($xml === false) {
+            // @codeCoverageIgnoreStart
+            $message = 'Unable to generate the XML';
 
-		if ( $xml === false ) {
-			$message = 'Unable to generate the XML';
+            foreach (libxml_get_errors() as $error) {
+                $message .= PHP_EOL . $error->message;
+            }
 
-			foreach ( libxml_get_errors() as $error ) {
-				$message .= PHP_EOL . $error->message;
-			}
+            throw new XmlException($message);
+            // @codeCoverageIgnoreEnd
+        }
 
-			throw new XmlException( $message );
-		}
+        libxml_clear_errors();
+        libxml_use_internal_errors($xmlErrorHandling);
 
-		libxml_clear_errors();
-		libxml_use_internal_errors( $xmlErrorHandling );
-
-		return $xml;
-	}
+        return $xml;
+    }
 }

@@ -12,29 +12,31 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
-final class Ticket {
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
+final readonly class Ticket
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $text;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $text;
+    /**
+     * @param non-empty-string $text
+     */
+    public function __construct(string $text)
+    {
+        $this->text = $text;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $text
-	 */
-	public function __construct( string $text ) {
-		$this->text = $text;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function text(): string {
-		return $this->text;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function text(): string
+    {
+        return $this->text;
+    }
 }

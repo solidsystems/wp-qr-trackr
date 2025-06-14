@@ -12,6 +12,7 @@ namespace PHPUnit\Util;
 use const DIRECTORY_SEPARATOR;
 use const PHP_EOL;
 use function array_map;
+use function array_walk;
 use function count;
 use function explode;
 use function implode;
@@ -30,146 +31,155 @@ use function trim;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Color {
+final class Color
+{
+    /**
+     * @var non-empty-array<non-empty-string, non-empty-string>
+     */
+    private const array WHITESPACE_MAP = [
+        ' '  => '·',
+        "\t" => '⇥',
+    ];
 
-	/**
-	 * @psalm-var array<string,string>
-	 */
-	private const WHITESPACE_MAP = array(
-		' '  => '·',
-		"\t" => '⇥',
-	);
+    /**
+     * @var non-empty-array<non-empty-string, non-empty-string>
+     */
+    private const array WHITESPACE_EOL_MAP = [
+        ' '  => '·',
+        "\t" => '⇥',
+        "\n" => '↵',
+        "\r" => '⟵',
+    ];
 
-	/**
-	 * @psalm-var array<string,string>
-	 */
-	private const WHITESPACE_EOL_MAP = array(
-		' '  => '·',
-		"\t" => '⇥',
-		"\n" => '↵',
-		"\r" => '⟵',
-	);
+    /**
+     * @var non-empty-array<non-empty-string, non-empty-string>
+     */
+    private const array ANSI_CODES = [
+        'reset'      => '0',
+        'bold'       => '1',
+        'dim'        => '2',
+        'dim-reset'  => '22',
+        'underlined' => '4',
+        'fg-default' => '39',
+        'fg-black'   => '30',
+        'fg-red'     => '31',
+        'fg-green'   => '32',
+        'fg-yellow'  => '33',
+        'fg-blue'    => '34',
+        'fg-magenta' => '35',
+        'fg-cyan'    => '36',
+        'fg-white'   => '37',
+        'bg-default' => '49',
+        'bg-black'   => '40',
+        'bg-red'     => '41',
+        'bg-green'   => '42',
+        'bg-yellow'  => '43',
+        'bg-blue'    => '44',
+        'bg-magenta' => '45',
+        'bg-cyan'    => '46',
+        'bg-white'   => '47',
+    ];
 
-	/**
-	 * @psalm-var array<string,string>
-	 */
-	private static array $ansiCodes = array(
-		'reset'      => '0',
-		'bold'       => '1',
-		'dim'        => '2',
-		'dim-reset'  => '22',
-		'underlined' => '4',
-		'fg-default' => '39',
-		'fg-black'   => '30',
-		'fg-red'     => '31',
-		'fg-green'   => '32',
-		'fg-yellow'  => '33',
-		'fg-blue'    => '34',
-		'fg-magenta' => '35',
-		'fg-cyan'    => '36',
-		'fg-white'   => '37',
-		'bg-default' => '49',
-		'bg-black'   => '40',
-		'bg-red'     => '41',
-		'bg-green'   => '42',
-		'bg-yellow'  => '43',
-		'bg-blue'    => '44',
-		'bg-magenta' => '45',
-		'bg-cyan'    => '46',
-		'bg-white'   => '47',
-	);
+    public static function colorize(string $color, string $buffer): string
+    {
+        if (trim($buffer) === '') {
+            return $buffer;
+        }
 
-	public static function colorize( string $color, string $buffer ): string {
-		if ( trim( $buffer ) === '' ) {
-			return $buffer;
-		}
+        $codes  = array_map('\trim', explode(',', $color));
+        $styles = [];
 
-		$codes  = array_map( '\trim', explode( ',', $color ) );
-		$styles = array();
+        foreach ($codes as $code) {
+            if (isset(self::ANSI_CODES[$code])) {
+                $styles[] = self::ANSI_CODES[$code];
+            }
+        }
 
-		foreach ( $codes as $code ) {
-			if ( isset( self::$ansiCodes[ $code ] ) ) {
-				$styles[] = self::$ansiCodes[ $code ] ?? '';
-			}
-		}
+        if ($styles === []) {
+            return $buffer;
+        }
 
-		if ( empty( $styles ) ) {
-			return $buffer;
-		}
+        return self::optimizeColor(sprintf("\x1b[%sm", implode(';', $styles)) . $buffer . "\x1b[0m");
+    }
 
-		return self::optimizeColor( sprintf( "\x1b[%sm", implode( ';', $styles ) ) . $buffer . "\x1b[0m" );
-	}
+    public static function colorizeTextBox(string $color, string $buffer, ?int $columns = null): string
+    {
+        $lines       = preg_split('/\r\n|\r|\n/', $buffer);
+        $maxBoxWidth = max(array_map('\strlen', $lines));
 
-	public static function colorizeTextBox( string $color, string $buffer ): string {
-		$lines   = preg_split( '/\r\n|\r|\n/', $buffer );
-		$padding = max( array_map( '\strlen', $lines ) );
+        if ($columns !== null) {
+            $maxBoxWidth = min($maxBoxWidth, $columns);
+        }
 
-		$styledLines = array();
+        array_walk($lines, static function (string &$line) use ($color, $maxBoxWidth): void
+        {
+            $line = self::colorize($color, str_pad($line, $maxBoxWidth));
+        });
 
-		foreach ( $lines as $line ) {
-			$styledLines[] = self::colorize( $color, str_pad( $line, $padding ) );
-		}
+        return implode(PHP_EOL, $lines);
+    }
 
-		return implode( PHP_EOL, $styledLines );
-	}
+    public static function colorizePath(string $path, ?string $previousPath = null, bool $colorizeFilename = false): string
+    {
+        if ($previousPath === null) {
+            $previousPath = '';
+        }
 
-	public static function colorizePath( string $path, ?string $previousPath = null, bool $colorizeFilename = false ): string {
-		if ( $previousPath === null ) {
-			$previousPath = '';
-		}
+        $path         = explode(DIRECTORY_SEPARATOR, $path);
+        $previousPath = explode(DIRECTORY_SEPARATOR, $previousPath);
 
-		$path         = explode( DIRECTORY_SEPARATOR, $path );
-		$previousPath = explode( DIRECTORY_SEPARATOR, $previousPath );
+        for ($i = 0; $i < min(count($path), count($previousPath)); $i++) {
+            if ($path[$i] === $previousPath[$i]) {
+                $path[$i] = self::dim($path[$i]);
+            }
+        }
 
-		for ( $i = 0; $i < min( count( $path ), count( $previousPath ) ); $i++ ) {
-			if ( $path[ $i ] === $previousPath[ $i ] ) {
-				$path[ $i ] = self::dim( $path[ $i ] );
-			}
-		}
+        if ($colorizeFilename) {
+            $last        = count($path) - 1;
+            $path[$last] = preg_replace_callback(
+                '/([\-_.]+|phpt$)/',
+                static fn (array $matches) => self::dim($matches[0]),
+                $path[$last],
+            );
+        }
 
-		if ( $colorizeFilename ) {
-			$last          = count( $path ) - 1;
-			$path[ $last ] = preg_replace_callback(
-				'/([\-_.]+|phpt$)/',
-				static fn ( $matches ) => self::dim( $matches[0] ),
-				$path[ $last ],
-			);
-		}
+        return self::optimizeColor(implode(self::dim(DIRECTORY_SEPARATOR), $path));
+    }
 
-		return self::optimizeColor( implode( self::dim( DIRECTORY_SEPARATOR ), $path ) );
-	}
+    public static function dim(string $buffer): string
+    {
+        if (trim($buffer) === '') {
+            return $buffer;
+        }
 
-	public static function dim( string $buffer ): string {
-		if ( trim( $buffer ) === '' ) {
-			return $buffer;
-		}
+        return "\e[2m{$buffer}\e[22m";
+    }
 
-		return "\e[2m{$buffer}\e[22m";
-	}
+    public static function visualizeWhitespace(string $buffer, bool $visualizeEOL = false): string
+    {
+        $replaceMap = $visualizeEOL ? self::WHITESPACE_EOL_MAP : self::WHITESPACE_MAP;
 
-	public static function visualizeWhitespace( string $buffer, bool $visualizeEOL = false ): string {
-		$replaceMap = $visualizeEOL ? self::WHITESPACE_EOL_MAP : self::WHITESPACE_MAP;
+        return preg_replace_callback(
+            '/\s+/',
+            static fn (array $matches) => self::dim(strtr($matches[0], $replaceMap)),
+            $buffer,
+        );
+    }
 
-		return preg_replace_callback(
-			'/\s+/',
-			static fn ( $matches ) => self::dim( strtr( $matches[0], $replaceMap ) ),
-			$buffer,
-		);
-	}
-
-	private static function optimizeColor( string $buffer ): string {
-		return preg_replace(
-			array(
-				"/\e\\[22m\e\\[2m/",
-				"/\e\\[([^m]*)m\e\\[([1-9][0-9;]*)m/",
-				"/(\e\\[[^m]*m)+(\e\\[0m)/",
-			),
-			array(
-				'',
-				"\e[$1;$2m",
-				'$2',
-			),
-			$buffer,
-		);
-	}
+    private static function optimizeColor(string $buffer): string
+    {
+        return preg_replace(
+            [
+                "/\e\\[22m\e\\[2m/",
+                "/\e\\[([^m]*)m\e\\[([1-9][0-9;]*)m/",
+                "/(\e\\[[^m]*m)+(\e\\[0m)/",
+            ],
+            [
+                '',
+                "\e[$1;$2m",
+                '$2',
+            ],
+            $buffer,
+        );
+    }
 }

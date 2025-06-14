@@ -16,90 +16,69 @@ use Traversable;
 /**
  * @template-implements IteratorAggregate<int, Chunk>
  */
-final class Diff implements IteratorAggregate {
+final class Diff implements IteratorAggregate
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $from;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private string $from;
+    /**
+     * @var non-empty-string
+     */
+    private string $to;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private string $to;
+    /**
+     * @var list<Chunk>
+     */
+    private array $chunks;
 
-	/**
-	 * @psalm-var list<Chunk>
-	 */
-	private array $chunks;
+    /**
+     * @param non-empty-string $from
+     * @param non-empty-string $to
+     * @param list<Chunk>      $chunks
+     */
+    public function __construct(string $from, string $to, array $chunks = [])
+    {
+        $this->from   = $from;
+        $this->to     = $to;
+        $this->chunks = $chunks;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $from
-	 * @psalm-param non-empty-string $to
-	 * @psalm-param list<Chunk> $chunks
-	 */
-	public function __construct( string $from, string $to, array $chunks = array() ) {
-		$this->from   = $from;
-		$this->to     = $to;
-		$this->chunks = $chunks;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function from(): string
+    {
+        return $this->from;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function from(): string {
-		return $this->from;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function to(): string
+    {
+        return $this->to;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function to(): string {
-		return $this->to;
-	}
+    /**
+     * @return list<Chunk>
+     */
+    public function chunks(): array
+    {
+        return $this->chunks;
+    }
 
-	/**
-	 * @psalm-return list<Chunk>
-	 */
-	public function chunks(): array {
-		return $this->chunks;
-	}
+    /**
+     * @param list<Chunk> $chunks
+     */
+    public function setChunks(array $chunks): void
+    {
+        $this->chunks = $chunks;
+    }
 
-	/**
-	 * @psalm-param list<Chunk> $chunks
-	 */
-	public function setChunks( array $chunks ): void {
-		$this->chunks = $chunks;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 *
-	 * @deprecated
-	 */
-	public function getFrom(): string {
-		return $this->from;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 *
-	 * @deprecated
-	 */
-	public function getTo(): string {
-		return $this->to;
-	}
-
-	/**
-	 * @psalm-return list<Chunk>
-	 *
-	 * @deprecated
-	 */
-	public function getChunks(): array {
-		return $this->chunks;
-	}
-
-	public function getIterator(): Traversable {
-		return new ArrayIterator( $this->chunks );
-	}
+    public function getIterator(): Traversable
+    {
+        return new ArrayIterator($this->chunks);
+    }
 }

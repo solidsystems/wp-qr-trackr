@@ -16,23 +16,26 @@ use PHPUnit\TextUI\Configuration\File;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class Crap4j {
+final readonly class Crap4j
+{
+    private File $target;
+    private int $threshold;
 
-	private readonly File $target;
-	private readonly int $threshold;
+    public function __construct(File $target, int $threshold)
+    {
+        $this->target    = $target;
+        $this->threshold = $threshold;
+    }
 
-	public function __construct( File $target, int $threshold ) {
-		$this->target    = $target;
-		$this->threshold = $threshold;
-	}
+    public function target(): File
+    {
+        return $this->target;
+    }
 
-	public function target(): File {
-		return $this->target;
-	}
-
-	public function threshold(): int {
-		return $this->threshold;
-	}
+    public function threshold(): int
+    {
+        return $this->threshold;
+    }
 }

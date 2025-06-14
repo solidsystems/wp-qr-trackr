@@ -10,8 +10,19 @@
 if ( ! defined( 'QR_TRACKR_PLUGIN_DIR' ) ) {
 	define( 'QR_TRACKR_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
 }
-use PHPUnit\Framework\TestCase;
+if ( ! defined( 'QR_ECLEVEL_L' ) ) {
+	define( 'QR_ECLEVEL_L', 0 ); // 0 is the standard value for 'L' in phpqrcode
+}
+use Yoast\WPTestUtils\BrainMonkey\TestCase;
 use Brain\Monkey\Functions;
+
+if ( ! class_exists( 'QRcode' ) ) {
+	class QRcode {
+		public static function png() {
+			// Do nothing, just mock.
+		}
+	}
+}
 
 /**
  * Tests for plugin-level QR Trackr functions.
@@ -42,6 +53,16 @@ class PluginTest extends TestCase {
 			)
 		);
 		Functions\when( 'wp_mkdir_p' )->justReturn( true );
+		Functions\when( 'get_option' )->justReturn( '0' );
+		Functions\when( 'plugin_dir_path' )->justReturn( __DIR__ . '/../' );
+		Functions\when( 'class_exists' )->alias(
+			function ( $class ) {
+				if ( $class === 'QRcode' ) {
+					return true;
+				}
+				return \class_exists( $class, false );
+			}
+		);
 	}
 	/**
 	 * Tear down test environment.

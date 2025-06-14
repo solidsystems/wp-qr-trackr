@@ -10,41 +10,56 @@
 namespace PHPUnit\Framework;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class PhptAssertionFailedError extends AssertionFailedError {
+final class PhptAssertionFailedError extends AssertionFailedError
+{
+    private readonly string $syntheticFile;
+    private readonly int $syntheticLine;
 
-	private readonly string $syntheticFile;
-	private readonly int $syntheticLine;
-	private readonly array $syntheticTrace;
-	private readonly string $diff;
+    /**
+     * @var list<array{file: string, line: int, function: string, type: string}>
+     */
+    private readonly array $syntheticTrace;
+    private readonly string $diff;
 
-	public function __construct( string $message, int $code, string $file, int $line, array $trace, string $diff ) {
-		parent::__construct( $message, $code );
+    /**
+     * @param list<array{file: string, line: int, function: string, type: string}> $trace
+     */
+    public function __construct(string $message, int $code, string $file, int $line, array $trace, string $diff)
+    {
+        parent::__construct($message, $code);
 
-		$this->syntheticFile  = $file;
-		$this->syntheticLine  = $line;
-		$this->syntheticTrace = $trace;
-		$this->diff           = $diff;
-	}
+        $this->syntheticFile  = $file;
+        $this->syntheticLine  = $line;
+        $this->syntheticTrace = $trace;
+        $this->diff           = $diff;
+    }
 
-	public function syntheticFile(): string {
-		return $this->syntheticFile;
-	}
+    public function syntheticFile(): string
+    {
+        return $this->syntheticFile;
+    }
 
-	public function syntheticLine(): int {
-		return $this->syntheticLine;
-	}
+    public function syntheticLine(): int
+    {
+        return $this->syntheticLine;
+    }
 
-	public function syntheticTrace(): array {
-		return $this->syntheticTrace;
-	}
+    /**
+     * @return list<array{file: string, line: int, function: string, type: string}>
+     */
+    public function syntheticTrace(): array
+    {
+        return $this->syntheticTrace;
+    }
 
-	public function diff(): string {
-		return $this->diff;
-	}
+    public function diff(): string
+    {
+        return $this->diff;
+    }
 }

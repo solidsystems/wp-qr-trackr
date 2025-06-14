@@ -9,7 +9,6 @@
  */
 namespace PHPUnit\Framework\MockObject;
 
-use PHPUnit\Framework\MockObject\Builder\InvocationMocker as InvocationMockerBuilder;
 use PHPUnit\Framework\MockObject\Rule\InvocationOrder;
 
 /**
@@ -17,34 +16,32 @@ use PHPUnit\Framework\MockObject\Rule\InvocationOrder;
  *
  * @internal This trait is not covered by the backward compatibility promise for PHPUnit
  */
-trait MockObjectApi {
+trait MockObjectApi
+{
+    /** @noinspection MagicMethodsValidityInspection */
+    public function __phpunit_hasMatchers(): bool
+    {
+        return $this->__phpunit_getInvocationHandler()->hasMatchers();
+    }
 
-	private object $__phpunit_originalObject;
+    /** @noinspection MagicMethodsValidityInspection */
+    public function __phpunit_verify(bool $unsetInvocationMocker = true): void
+    {
+        $this->__phpunit_getInvocationHandler()->verify();
 
-	/** @noinspection MagicMethodsValidityInspection */
-	public function __phpunit_hasMatchers(): bool {
-		return $this->__phpunit_getInvocationHandler()->hasMatchers();
-	}
+        if ($unsetInvocationMocker) {
+            $this->__phpunit_unsetInvocationMocker();
+        }
+    }
 
-	/** @noinspection MagicMethodsValidityInspection */
-	public function __phpunit_setOriginalObject( object $originalObject ): void {
-		$this->__phpunit_originalObject = $originalObject;
-	}
+    abstract public function __phpunit_state(): TestDoubleState;
 
-	/** @noinspection MagicMethodsValidityInspection */
-	public function __phpunit_verify( bool $unsetInvocationMocker = true ): void {
-		$this->__phpunit_getInvocationHandler()->verify();
+    abstract public function __phpunit_getInvocationHandler(): InvocationHandler;
 
-		if ( $unsetInvocationMocker ) {
-			$this->__phpunit_unsetInvocationMocker();
-		}
-	}
+    abstract public function __phpunit_unsetInvocationMocker(): void;
 
-	abstract public function __phpunit_getInvocationHandler(): InvocationHandler;
-
-	abstract public function __phpunit_unsetInvocationMocker(): void;
-
-	public function expects( InvocationOrder $matcher ): InvocationMockerBuilder {
-		return $this->__phpunit_getInvocationHandler()->expects( $matcher );
-	}
+    public function expects(InvocationOrder $matcher): InvocationStubber
+    {
+        return $this->__phpunit_getInvocationHandler()->expects($matcher);
+    }
 }

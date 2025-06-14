@@ -1,10 +1,12 @@
 #!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
 # Fast pre-commit: only check staged files in the plugin directory
 
 # Staged PHP files
 STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACM | grep '\.php$' | grep 'wp-content/plugins/wp-qr-trackr' || true)
 if [ -n "$STAGED_PHP" ]; then
-  ./wp-content/plugins/wp-qr-trackr/vendor/bin/phpcs --standard=.phpcs.xml $STAGED_PHP
+  ./vendor/bin/phpcs --report=full $STAGED_PHP
 fi
 
 # Staged JS files (exclude config)

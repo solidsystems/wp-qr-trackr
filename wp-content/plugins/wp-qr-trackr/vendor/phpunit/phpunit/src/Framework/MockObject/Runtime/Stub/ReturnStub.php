@@ -16,15 +16,17 @@ use PHPUnit\Framework\MockObject\Invocation;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ReturnStub implements Stub {
+final readonly class ReturnStub implements Stub
+{
+    private mixed $value;
 
-	private readonly mixed $value;
+    public function __construct(mixed $value)
+    {
+        $this->value = $value;
+    }
 
-	public function __construct( mixed $value ) {
-		$this->value = $value;
-	}
-
-	public function invoke( Invocation $invocation ): mixed {
-		return $this->value;
-	}
+    public function invoke(Invocation $invocation): mixed
+    {
+        return $this->value;
+    }
 }

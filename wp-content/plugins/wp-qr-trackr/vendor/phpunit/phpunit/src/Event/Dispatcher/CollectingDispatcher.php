@@ -14,23 +14,26 @@ namespace PHPUnit\Event;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CollectingDispatcher implements Dispatcher {
+final class CollectingDispatcher implements Dispatcher
+{
+    private EventCollection $events;
 
-	private EventCollection $events;
+    public function __construct()
+    {
+        $this->events = new EventCollection;
+    }
 
-	public function __construct() {
-		$this->events = new EventCollection();
-	}
+    public function dispatch(Event $event): void
+    {
+        $this->events->add($event);
+    }
 
-	public function dispatch( Event $event ): void {
-		$this->events->add( $event );
-	}
+    public function flush(): EventCollection
+    {
+        $events = $this->events;
 
-	public function flush(): EventCollection {
-		$events = $this->events;
+        $this->events = new EventCollection;
 
-		$this->events = new EventCollection();
-
-		return $events;
-	}
+        return $events;
+    }
 }

@@ -16,40 +16,45 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  *
  * @template-implements IteratorAggregate<int, Constant>
  */
-final class ConstantCollection implements Countable, IteratorAggregate {
+final readonly class ConstantCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<Constant>
+     */
+    private array $constants;
 
-	/**
-	 * @psalm-var list<Constant>
-	 */
-	private readonly array $constants;
+    /**
+     * @param list<Constant> $constants
+     */
+    public static function fromArray(array $constants): self
+    {
+        return new self(...$constants);
+    }
 
-	/**
-	 * @psalm-param list<Constant> $constants
-	 */
-	public static function fromArray( array $constants ): self {
-		return new self( ...$constants );
-	}
+    private function __construct(Constant ...$constants)
+    {
+        $this->constants = $constants;
+    }
 
-	private function __construct( Constant ...$constants ) {
-		$this->constants = $constants;
-	}
+    /**
+     * @return list<Constant>
+     */
+    public function asArray(): array
+    {
+        return $this->constants;
+    }
 
-	/**
-	 * @psalm-return list<Constant>
-	 */
-	public function asArray(): array {
-		return $this->constants;
-	}
+    public function count(): int
+    {
+        return count($this->constants);
+    }
 
-	public function count(): int {
-		return count( $this->constants );
-	}
-
-	public function getIterator(): ConstantCollectionIterator {
-		return new ConstantCollectionIterator( $this );
-	}
+    public function getIterator(): ConstantCollectionIterator
+    {
+        return new ConstantCollectionIterator($this);
+    }
 }

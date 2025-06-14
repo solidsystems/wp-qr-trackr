@@ -16,62 +16,70 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PreConditionFinished implements Event {
+final readonly class PreConditionFinished implements Event
+{
+    private Telemetry\Info $telemetryInfo;
+    private Code\TestMethod $test;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    /**
+     * @var list<Code\ClassMethod>
+     */
+    private array $calledMethods;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $testClassName;
+    public function __construct(Telemetry\Info $telemetryInfo, Code\TestMethod $test, Code\ClassMethod ...$calledMethods)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->test          = $test;
+        $this->calledMethods = $calledMethods;
+    }
 
-	/**
-	 * @psalm-var list<Code\ClassMethod>
-	 */
-	private readonly array $calledMethods;
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	/**
-	 * @psalm-param class-string $testClassName
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod ...$calledMethods ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->testClassName = $testClassName;
-		$this->calledMethods = $calledMethods;
-	}
+    public function test(): Code\TestMethod
+    {
+        return $this->test;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @return class-string
+     *
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/6140
+     */
+    public function testClassName(): string
+    {
+        return $this->test->className();
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function testClassName(): string {
-		return $this->testClassName;
-	}
+    /**
+     * @return list<Code\ClassMethod>
+     */
+    public function calledMethods(): array
+    {
+        return $this->calledMethods;
+    }
 
-	/**
-	 * @psalm-return list<Code\ClassMethod>
-	 */
-	public function calledMethods(): array {
-		return $this->calledMethods;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        $buffer = 'Pre Condition Method Finished:';
 
-	public function asString(): string {
-		$buffer = 'Pre Condition Method Finished:';
+        foreach ($this->calledMethods as $calledMethod) {
+            $buffer .= sprintf(
+                PHP_EOL . '- %s::%s',
+                $calledMethod->className(),
+                $calledMethod->methodName(),
+            );
+        }
 
-		foreach ( $this->calledMethods as $calledMethod ) {
-			$buffer .= sprintf(
-				PHP_EOL . '- %s::%s',
-				$calledMethod->className(),
-				$calledMethod->methodName(),
-			);
-		}
-
-		return $buffer;
-	}
+        return $buffer;
+    }
 }

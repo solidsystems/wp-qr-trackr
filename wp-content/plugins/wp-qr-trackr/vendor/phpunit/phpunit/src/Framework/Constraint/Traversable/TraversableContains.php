@@ -16,36 +16,40 @@ use PHPUnit\Util\Exporter;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract class TraversableContains extends Constraint {
+abstract class TraversableContains extends Constraint
+{
+    private readonly mixed $value;
 
-	private readonly mixed $value;
+    public function __construct(mixed $value)
+    {
+        $this->value = $value;
+    }
 
-	public function __construct( mixed $value ) {
-		$this->value = $value;
-	}
+    /**
+     * Returns a string representation of the constraint.
+     */
+    public function toString(): string
+    {
+        return 'contains ' . Exporter::export($this->value);
+    }
 
-	/**
-	 * Returns a string representation of the constraint.
-	 */
-	public function toString( bool $exportObjects = false ): string {
-		return 'contains ' . Exporter::export( $this->value, $exportObjects );
-	}
+    /**
+     * Returns the description of the failure.
+     *
+     * The beginning of failure messages is "Failed asserting that" in most
+     * cases. This method should return the second part of that sentence.
+     */
+    protected function failureDescription(mixed $other): string
+    {
+        return sprintf(
+            '%s %s',
+            is_array($other) ? 'an array' : 'a traversable',
+            $this->toString(),
+        );
+    }
 
-	/**
-	 * Returns the description of the failure.
-	 *
-	 * The beginning of failure messages is "Failed asserting that" in most
-	 * cases. This method should return the second part of that sentence.
-	 */
-	protected function failureDescription( mixed $other ): string {
-		return sprintf(
-			'%s %s',
-			is_array( $other ) ? 'an array' : 'a traversable',
-			$this->toString( true ),
-		);
-	}
-
-	protected function value(): mixed {
-		return $this->value;
-	}
+    protected function value(): mixed
+    {
+        return $this->value;
+    }
 }

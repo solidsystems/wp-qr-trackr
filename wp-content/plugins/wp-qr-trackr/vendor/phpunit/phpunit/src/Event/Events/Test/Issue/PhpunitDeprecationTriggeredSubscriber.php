@@ -14,7 +14,7 @@ use PHPUnit\Event\Subscriber;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface PhpunitDeprecationTriggeredSubscriber extends Subscriber {
-
-	public function notify( PhpunitDeprecationTriggered $event ): void;
+interface PhpunitDeprecationTriggeredSubscriber extends Subscriber
+{
+    public function notify(PhpunitDeprecationTriggered $event): void;
 }

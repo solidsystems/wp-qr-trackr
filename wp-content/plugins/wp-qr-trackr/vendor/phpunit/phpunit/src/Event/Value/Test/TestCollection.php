@@ -16,40 +16,45 @@ use IteratorAggregate;
 /**
  * @template-implements IteratorAggregate<int, Test>
  *
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestCollection implements Countable, IteratorAggregate {
+final readonly class TestCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<Test>
+     */
+    private array $tests;
 
-	/**
-	 * @psalm-var list<Test>
-	 */
-	private readonly array $tests;
+    /**
+     * @param list<Test> $tests
+     */
+    public static function fromArray(array $tests): self
+    {
+        return new self(...$tests);
+    }
 
-	/**
-	 * @psalm-param list<Test> $tests
-	 */
-	public static function fromArray( array $tests ): self {
-		return new self( ...$tests );
-	}
+    private function __construct(Test ...$tests)
+    {
+        $this->tests = $tests;
+    }
 
-	private function __construct( Test ...$tests ) {
-		$this->tests = $tests;
-	}
+    /**
+     * @return list<Test>
+     */
+    public function asArray(): array
+    {
+        return $this->tests;
+    }
 
-	/**
-	 * @psalm-return list<Test>
-	 */
-	public function asArray(): array {
-		return $this->tests;
-	}
+    public function count(): int
+    {
+        return count($this->tests);
+    }
 
-	public function count(): int {
-		return count( $this->tests );
-	}
-
-	public function getIterator(): TestCollectionIterator {
-		return new TestCollectionIterator( $this );
-	}
+    public function getIterator(): TestCollectionIterator
+    {
+        return new TestCollectionIterator($this);
+    }
 }

@@ -9,30 +9,37 @@
  */
 namespace SebastianBergmann\Type;
 
-final class TrueType extends Type {
+/**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
+ */
+final class TrueType extends Type
+{
+    public function isAssignable(Type $other): bool
+    {
+        if ($other instanceof self) {
+            return true;
+        }
 
-	public function isAssignable( Type $other ): bool {
-		if ( $other instanceof self ) {
-			return true;
-		}
+        return $other instanceof SimpleType &&
+              $other->name() === 'bool' &&
+              $other->value() === true;
+    }
 
-		return $other instanceof SimpleType &&
-				$other->name() === 'bool' &&
-				$other->value() === true;
-	}
+    /**
+     * @return 'true'
+     */
+    public function name(): string
+    {
+        return 'true';
+    }
 
-	public function name(): string {
-		return 'true';
-	}
+    public function allowsNull(): bool
+    {
+        return false;
+    }
 
-	public function allowsNull(): bool {
-		return false;
-	}
-
-	/**
-	 * @psalm-assert-if-true TrueType $this
-	 */
-	public function isTrue(): bool {
-		return true;
-	}
+    public function isTrue(): bool
+    {
+        return true;
+    }
 }

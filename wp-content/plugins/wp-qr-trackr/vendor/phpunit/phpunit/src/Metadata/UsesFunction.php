@@ -10,45 +10,38 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class UsesFunction extends Metadata {
+final readonly class UsesFunction extends Metadata
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $functionName;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $functionName;
+    /**
+     * @param int<0, 1>        $level
+     * @param non-empty-string $functionName
+     */
+    public function __construct(int $level, string $functionName)
+    {
+        parent::__construct($level);
 
-	/**
-	 * @psalm-param 0|1 $level
-	 * @psalm-param non-empty-string $functionName
-	 */
-	public function __construct( int $level, string $functionName ) {
-		parent::__construct( $level );
+        $this->functionName = $functionName;
+    }
 
-		$this->functionName = $functionName;
-	}
+    public function isUsesFunction(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true UsesFunction $this
-	 */
-	public function isUsesFunction(): bool {
-		return true;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function functionName(): string {
-		return $this->functionName;
-	}
-
-	/**
-	 * @internal This method is not covered by the backward compatibility promise for PHPUnit
-	 */
-	public function asStringForCodeUnitMapper(): string {
-		return '::' . $this->functionName;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function functionName(): string
+    {
+        return $this->functionName;
+    }
 }

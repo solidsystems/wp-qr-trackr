@@ -21,63 +21,81 @@ use PHPUnit\TextUI\Configuration\FilterNotConfiguredException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestSuiteFilterProcessor {
+final readonly class TestSuiteFilterProcessor
+{
+    /**
+     * @throws Event\RuntimeException
+     * @throws FilterNotConfiguredException
+     */
+    public function process(Configuration $configuration, TestSuite $suite): void
+    {
+        $factory = new Factory;
 
-	/**
-	 * @throws Event\RuntimeException
-	 * @throws FilterNotConfiguredException
-	 */
-	public function process( Configuration $configuration, TestSuite $suite ): void {
-		$factory = new Factory();
+        if (!$configuration->hasFilter() &&
+            !$configuration->hasGroups() &&
+            !$configuration->hasExcludeGroups() &&
+            !$configuration->hasExcludeFilter() &&
+            !$configuration->hasTestsCovering() &&
+            !$configuration->hasTestsUsing() &&
+            !$configuration->hasTestsRequiringPhpExtension()) {
+            return;
+        }
 
-		if ( ! $configuration->hasFilter() &&
-			! $configuration->hasGroups() &&
-			! $configuration->hasExcludeGroups() &&
-			! $configuration->hasTestsCovering() &&
-			! $configuration->hasTestsUsing() ) {
-			return;
-		}
+        if ($configuration->hasExcludeGroups()) {
+            $factory->addExcludeGroupFilter(
+                $configuration->excludeGroups(),
+            );
+        }
 
-		if ( $configuration->hasExcludeGroups() ) {
-			$factory->addExcludeGroupFilter(
-				$configuration->excludeGroups(),
-			);
-		}
+        if ($configuration->hasGroups()) {
+            $factory->addIncludeGroupFilter(
+                $configuration->groups(),
+            );
+        }
 
-		if ( $configuration->hasGroups() ) {
-			$factory->addIncludeGroupFilter(
-				$configuration->groups(),
-			);
-		}
+        if ($configuration->hasTestsCovering()) {
+            $factory->addIncludeGroupFilter(
+                array_map(
+                    static fn (string $name): string => '__phpunit_covers_' . $name,
+                    $configuration->testsCovering(),
+                ),
+            );
+        }
 
-		if ( $configuration->hasTestsCovering() ) {
-			$factory->addIncludeGroupFilter(
-				array_map(
-					static fn ( string $name ): string => '__phpunit_covers_' . $name,
-					$configuration->testsCovering(),
-				),
-			);
-		}
+        if ($configuration->hasTestsUsing()) {
+            $factory->addIncludeGroupFilter(
+                array_map(
+                    static fn (string $name): string => '__phpunit_uses_' . $name,
+                    $configuration->testsUsing(),
+                ),
+            );
+        }
 
-		if ( $configuration->hasTestsUsing() ) {
-			$factory->addIncludeGroupFilter(
-				array_map(
-					static fn ( string $name ): string => '__phpunit_uses_' . $name,
-					$configuration->testsUsing(),
-				),
-			);
-		}
+        if ($configuration->hasTestsRequiringPhpExtension()) {
+            $factory->addIncludeGroupFilter(
+                array_map(
+                    static fn (string $name): string => '__phpunit_requires_php_extension' . $name,
+                    $configuration->testsRequiringPhpExtension(),
+                ),
+            );
+        }
 
-		if ( $configuration->hasFilter() ) {
-			$factory->addNameFilter(
-				$configuration->filter(),
-			);
-		}
+        if ($configuration->hasExcludeFilter()) {
+            $factory->addExcludeNameFilter(
+                $configuration->excludeFilter(),
+            );
+        }
 
-		$suite->injectFilter( $factory );
+        if ($configuration->hasFilter()) {
+            $factory->addIncludeNameFilter(
+                $configuration->filter(),
+            );
+        }
 
-		Event\Facade::emitter()->testSuiteFiltered(
-			Event\TestSuite\TestSuiteBuilder::from( $suite ),
-		);
-	}
+        $suite->injectFilter($factory);
+
+        Event\Facade::emitter()->testSuiteFiltered(
+            Event\TestSuite\TestSuiteBuilder::from($suite),
+        );
+    }
 }

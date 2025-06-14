@@ -10,52 +10,53 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class RequiresSetting extends Metadata {
+final readonly class RequiresSetting extends Metadata
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $setting;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $setting;
+    /**
+     * @var non-empty-string
+     */
+    private string $value;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $value;
+    /**
+     * @param int<0, 1>        $level
+     * @param non-empty-string $setting
+     * @param non-empty-string $value
+     */
+    protected function __construct(int $level, string $setting, string $value)
+    {
+        parent::__construct($level);
 
-	/**
-	 * @psalm-param 0|1 $level
-	 * @psalm-param non-empty-string $setting
-	 * @psalm-param non-empty-string $value
-	 */
-	protected function __construct( int $level, string $setting, string $value ) {
-		parent::__construct( $level );
+        $this->setting = $setting;
+        $this->value   = $value;
+    }
 
-		$this->setting = $setting;
-		$this->value   = $value;
-	}
+    public function isRequiresSetting(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true RequiresSetting $this
-	 */
-	public function isRequiresSetting(): bool {
-		return true;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function setting(): string
+    {
+        return $this->setting;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function setting(): string {
-		return $this->setting;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function value(): string {
-		return $this->value;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function value(): string
+    {
+        return $this->value;
+    }
 }

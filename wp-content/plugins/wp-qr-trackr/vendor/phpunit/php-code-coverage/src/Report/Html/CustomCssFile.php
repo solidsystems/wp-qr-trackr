@@ -13,34 +13,38 @@ use function is_file;
 use SebastianBergmann\CodeCoverage\InvalidArgumentException;
 
 /**
- * @psalm-immutable
+ * @immutable
  */
-final class CustomCssFile {
+final readonly class CustomCssFile
+{
+    private string $path;
 
-	private readonly string $path;
+    public static function default(): self
+    {
+        return new self(__DIR__ . '/Renderer/Template/css/custom.css');
+    }
 
-	public static function default(): self {
-		return new self( __DIR__ . '/Renderer/Template/css/custom.css' );
-	}
+    /**
+     * @throws InvalidArgumentException
+     */
+    public static function from(string $path): self
+    {
+        if (!is_file($path)) {
+            throw new InvalidArgumentException(
+                '$path does not exist',
+            );
+        }
 
-	/**
-	 * @throws InvalidArgumentException
-	 */
-	public static function from( string $path ): self {
-		if ( ! is_file( $path ) ) {
-			throw new InvalidArgumentException(
-				'$path does not exist',
-			);
-		}
+        return new self($path);
+    }
 
-		return new self( $path );
-	}
+    private function __construct(string $path)
+    {
+        $this->path = $path;
+    }
 
-	private function __construct( string $path ) {
-		$this->path = $path;
-	}
-
-	public function path(): string {
-		return $this->path;
-	}
+    public function path(): string
+    {
+        return $this->path;
+    }
 }

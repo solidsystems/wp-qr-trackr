@@ -10,18 +10,17 @@
 namespace SebastianBergmann\CodeCoverage\Test\TestSize;
 
 /**
- * @psalm-immutable
+ * @immutable
  */
-final class Unknown extends TestSize {
+final class Unknown extends TestSize
+{
+    public function isUnknown(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true Unknown $this
-	 */
-	public function isUnknown(): bool {
-		return true;
-	}
-
-	public function asString(): string {
-		return 'unknown';
-	}
+    public function asString(): string
+    {
+        return 'unknown';
+    }
 }

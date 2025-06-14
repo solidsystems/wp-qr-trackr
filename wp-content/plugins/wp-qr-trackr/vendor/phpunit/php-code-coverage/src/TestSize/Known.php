@@ -10,16 +10,14 @@
 namespace SebastianBergmann\CodeCoverage\Test\TestSize;
 
 /**
- * @psalm-immutable
+ * @immutable
  */
-abstract class Known extends TestSize {
+abstract class Known extends TestSize
+{
+    public function isKnown(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true Known $this
-	 */
-	public function isKnown(): bool {
-		return true;
-	}
-
-	abstract public function isGreaterThan( self $other ): bool;
+    abstract public function isGreaterThan(self $other): bool;
 }

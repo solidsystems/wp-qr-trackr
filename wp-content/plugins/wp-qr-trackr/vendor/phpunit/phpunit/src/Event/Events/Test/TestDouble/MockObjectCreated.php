@@ -14,42 +14,49 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class MockObjectCreated implements Event {
+final readonly class MockObjectCreated implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    /**
+     * @var class-string
+     */
+    private string $className;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $className;
+    /**
+     * @param class-string $className
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, string $className)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->className     = $className;
+    }
 
-	/**
-	 * @psalm-param class-string $className
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, string $className ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->className     = $className;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @return class-string
+     */
+    public function className(): string
+    {
+        return $this->className;
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function className(): string {
-		return $this->className;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'Mock Object Created (%s)',
-			$this->className,
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Mock Object Created (%s)',
+            $this->className,
+        );
+    }
 }

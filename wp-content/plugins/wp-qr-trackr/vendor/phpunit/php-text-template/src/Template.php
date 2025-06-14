@@ -14,90 +14,118 @@ use function array_merge;
 use function file_get_contents;
 use function file_put_contents;
 use function is_file;
+use function is_string;
 use function sprintf;
 use function str_replace;
 
-final class Template {
+final class Template
+{
+    /**
+     * @var non-empty-string
+     */
+    private readonly string $template;
 
-	private string $template = '';
-	private string $openDelimiter;
-	private string $closeDelimiter;
+    /**
+     * @var non-empty-string
+     */
+    private readonly string $openDelimiter;
 
-	/**
-	 * @psalm-var array<string,string>
-	 */
-	private array $values = array();
+    /**
+     * @var non-empty-string
+     */
+    private readonly string $closeDelimiter;
 
-	/**
-	 * @throws InvalidArgumentException
-	 */
-	public function __construct( string $file = '', string $openDelimiter = '{', string $closeDelimiter = '}' ) {
-		$this->setFile( $file );
+    /**
+     * @var array<string,string>
+     */
+    private array $values = [];
 
-		$this->openDelimiter  = $openDelimiter;
-		$this->closeDelimiter = $closeDelimiter;
-	}
+    /**
+     * @param non-empty-string $templateFile
+     * @param non-empty-string $openDelimiter
+     * @param non-empty-string $closeDelimiter
+     *
+     * @throws InvalidArgumentException
+     */
+    public function __construct(string $templateFile, string $openDelimiter = '{', string $closeDelimiter = '}')
+    {
+        $this->template       = $this->loadTemplateFile($templateFile);
+        $this->openDelimiter  = $openDelimiter;
+        $this->closeDelimiter = $closeDelimiter;
+    }
 
-	/**
-	 * @throws InvalidArgumentException
-	 */
-	public function setFile( string $file ): void {
-		if ( is_file( $file ) ) {
-			$this->template = file_get_contents( $file );
+    /**
+     * @param array<string,string> $values
+     */
+    public function setVar(array $values, bool $merge = true): void
+    {
+        if (!$merge || empty($this->values)) {
+            $this->values = $values;
 
-			return;
-		}
+            return;
+        }
 
-		$distFile = $file . '.dist';
+        $this->values = array_merge($this->values, $values);
+    }
 
-		if ( is_file( $distFile ) ) {
-			$this->template = file_get_contents( $distFile );
+    public function render(): string
+    {
+        $keys = [];
 
-			return;
-		}
+        foreach (array_keys($this->values) as $key) {
+            $keys[] = $this->openDelimiter . $key . $this->closeDelimiter;
+        }
 
-		throw new InvalidArgumentException(
-			sprintf(
-				'Failed to load template "%s"',
-				$file
-			)
-		);
-	}
+        return str_replace($keys, $this->values, $this->template);
+    }
 
-	/**
-	 * @psalm-param array<string,string> $values
-	 */
-	public function setVar( array $values, bool $merge = true ): void {
-		if ( ! $merge || empty( $this->values ) ) {
-			$this->values = $values;
+    /**
+     * @codeCoverageIgnore
+     */
+    public function renderTo(string $target): void
+    {
+        if (!@file_put_contents($target, $this->render())) {
+            throw new RuntimeException(
+                sprintf(
+                    'Writing rendered result to "%s" failed',
+                    $target,
+                ),
+            );
+        }
+    }
 
-			return;
-		}
+    /**
+     * @param non-empty-string $file
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return non-empty-string
+     */
+    private function loadTemplateFile(string $file): string
+    {
+        if (is_file($file)) {
+            $template = file_get_contents($file);
 
-		$this->values = array_merge( $this->values, $values );
-	}
+            if (is_string($template) && !empty($template)) {
+                return $template;
+            }
+        }
 
-	public function render(): string {
-		$keys = array();
+        $distFile = $file . '.dist';
 
-		foreach ( array_keys( $this->values ) as $key ) {
-			$keys[] = $this->openDelimiter . $key . $this->closeDelimiter;
-		}
+        if (is_file($distFile)) {
+            $template = file_get_contents($distFile);
 
-		return str_replace( $keys, $this->values, $this->template );
-	}
+            if (is_string($template) && !empty($template)) {
+                return $template;
+            }
+        }
 
-	/**
-	 * @codeCoverageIgnore
-	 */
-	public function renderTo( string $target ): void {
-		if ( ! @file_put_contents( $target, $this->render() ) ) {
-			throw new RuntimeException(
-				sprintf(
-					'Writing rendered result to "%s" failed',
-					$target
-				)
-			);
-		}
-	}
+        throw new InvalidArgumentException(
+            sprintf(
+                'Failed to load template "%s"',
+                $file,
+            ),
+        );
+    }
 }

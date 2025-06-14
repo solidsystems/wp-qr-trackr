@@ -15,38 +15,56 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Finished implements Event {
+final readonly class Finished implements Event
+{
+    private Telemetry\Info $telemetryInfo;
+    private Code\Test $test;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly Code\Test $test;
-	private readonly int $numberOfAssertionsPerformed;
+    /**
+     * @var non-negative-int
+     */
+    private int $numberOfAssertionsPerformed;
 
-	public function __construct( Telemetry\Info $telemetryInfo, Code\Test $test, int $numberOfAssertionsPerformed ) {
-		$this->telemetryInfo               = $telemetryInfo;
-		$this->test                        = $test;
-		$this->numberOfAssertionsPerformed = $numberOfAssertionsPerformed;
-	}
+    /**
+     * @param non-negative-int $numberOfAssertionsPerformed
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, Code\Test $test, int $numberOfAssertionsPerformed)
+    {
+        $this->telemetryInfo               = $telemetryInfo;
+        $this->test                        = $test;
+        $this->numberOfAssertionsPerformed = $numberOfAssertionsPerformed;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function test(): Code\Test {
-		return $this->test;
-	}
+    public function test(): Code\Test
+    {
+        return $this->test;
+    }
 
-	public function numberOfAssertionsPerformed(): int {
-		return $this->numberOfAssertionsPerformed;
-	}
+    /**
+     * @return non-negative-int
+     */
+    public function numberOfAssertionsPerformed(): int
+    {
+        return $this->numberOfAssertionsPerformed;
+    }
 
-	public function asString(): string {
-		return sprintf(
-			'Test Finished (%s)',
-			$this->test->id(),
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Test Finished (%s)',
+            $this->test->id(),
+        );
+    }
 }

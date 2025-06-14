@@ -16,15 +16,15 @@ use function str_replace;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Generator {
-
-	/**
-	 * @var string
-	 */
-	private const TEMPLATE = <<<'EOT'
+final readonly class Generator
+{
+    /**
+     * @var string
+     */
+    private const string TEMPLATE = <<<'EOT'
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/{phpunit_version}/phpunit.xsd"
+         xsi:noNamespaceSchemaLocation="{schema_location}"
          bootstrap="{bootstrap_script}"
          cacheDirectory="{cache_directory}"
          executionOrder="depends,defects"
@@ -41,7 +41,7 @@ final class Generator {
         </testsuite>
     </testsuites>
 
-    <source restrictDeprecations="true" restrictNotices="true" restrictWarnings="true">
+    <source ignoreIndirectDeprecations="true" restrictNotices="true" restrictWarnings="true">
         <include>
             <directory>{src_directory}</directory>
         </include>
@@ -50,23 +50,24 @@ final class Generator {
 
 EOT;
 
-	public function generateDefaultConfiguration( string $phpunitVersion, string $bootstrapScript, string $testsDirectory, string $srcDirectory, string $cacheDirectory ): string {
-		return str_replace(
-			array(
-				'{phpunit_version}',
-				'{bootstrap_script}',
-				'{tests_directory}',
-				'{src_directory}',
-				'{cache_directory}',
-			),
-			array(
-				$phpunitVersion,
-				$bootstrapScript,
-				$testsDirectory,
-				$srcDirectory,
-				$cacheDirectory,
-			),
-			self::TEMPLATE,
-		);
-	}
+    public function generateDefaultConfiguration(string $schemaLocation, string $bootstrapScript, string $testsDirectory, string $srcDirectory, string $cacheDirectory): string
+    {
+        return str_replace(
+            [
+                '{schema_location}',
+                '{bootstrap_script}',
+                '{tests_directory}',
+                '{src_directory}',
+                '{cache_directory}',
+            ],
+            [
+                $schemaLocation,
+                $bootstrapScript,
+                $testsDirectory,
+                $srcDirectory,
+                $cacheDirectory,
+            ],
+            self::TEMPLATE,
+        );
+    }
 }

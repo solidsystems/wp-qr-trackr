@@ -14,11 +14,16 @@ namespace PHPUnit\Framework\MockObject;
  *
  * @internal This trait is not covered by the backward compatibility promise for PHPUnit
  */
-trait ProxiedCloneMethod {
+trait ProxiedCloneMethod
+{
+    public function __clone(): void
+    {
+        $this->__phpunit_state = clone $this->__phpunit_state;
 
-	public function __clone(): void {
-		$this->__phpunit_invocationMocker = clone $this->__phpunit_getInvocationHandler();
+        $this->__phpunit_state()->cloneInvocationHandler();
 
-		parent::__clone();
-	}
+        parent::__clone();
+    }
+
+    abstract public function __phpunit_state(): TestDoubleState;
 }

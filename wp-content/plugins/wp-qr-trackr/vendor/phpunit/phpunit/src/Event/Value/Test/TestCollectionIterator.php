@@ -17,35 +17,41 @@ use Iterator;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestCollectionIterator implements Iterator {
+final class TestCollectionIterator implements Iterator
+{
+    /**
+     * @var list<Test>
+     */
+    private readonly array $tests;
+    private int $position = 0;
 
-	/**
-	 * @psalm-var list<Test>
-	 */
-	private readonly array $tests;
-	private int $position = 0;
+    public function __construct(TestCollection $tests)
+    {
+        $this->tests = $tests->asArray();
+    }
 
-	public function __construct( TestCollection $tests ) {
-		$this->tests = $tests->asArray();
-	}
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
 
-	public function rewind(): void {
-		$this->position = 0;
-	}
+    public function valid(): bool
+    {
+        return $this->position < count($this->tests);
+    }
 
-	public function valid(): bool {
-		return $this->position < count( $this->tests );
-	}
+    public function key(): int
+    {
+        return $this->position;
+    }
 
-	public function key(): int {
-		return $this->position;
-	}
+    public function current(): Test
+    {
+        return $this->tests[$this->position];
+    }
 
-	public function current(): Test {
-		return $this->tests[ $this->position ];
-	}
-
-	public function next(): void {
-		++$this->position;
-	}
+    public function next(): void
+    {
+        $this->position++;
+    }
 }

@@ -18,19 +18,20 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveTestSuiteLoaderAttributes implements Migration {
+final readonly class RemoveTestSuiteLoaderAttributes implements Migration
+{
+    public function migrate(DOMDocument $document): void
+    {
+        $root = $document->documentElement;
 
-	public function migrate( DOMDocument $document ): void {
-		$root = $document->documentElement;
+        assert($root instanceof DOMElement);
 
-		assert( $root instanceof DOMElement );
+        if ($root->hasAttribute('testSuiteLoaderClass')) {
+            $root->removeAttribute('testSuiteLoaderClass');
+        }
 
-		if ( $root->hasAttribute( 'testSuiteLoaderClass' ) ) {
-			$root->removeAttribute( 'testSuiteLoaderClass' );
-		}
-
-		if ( $root->hasAttribute( 'testSuiteLoaderFile' ) ) {
-			$root->removeAttribute( 'testSuiteLoaderFile' );
-		}
-	}
+        if ($root->hasAttribute('testSuiteLoaderFile')) {
+            $root->removeAttribute('testSuiteLoaderFile');
+        }
+    }
 }

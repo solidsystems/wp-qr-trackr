@@ -12,29 +12,31 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute( Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
-final class DependsUsingShallowClone {
+#[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
+final readonly class DependsUsingShallowClone
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $methodName;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $methodName;
+    /**
+     * @param non-empty-string $methodName
+     */
+    public function __construct(string $methodName)
+    {
+        $this->methodName = $methodName;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $methodName
-	 */
-	public function __construct( string $methodName ) {
-		$this->methodName = $methodName;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function methodName(): string {
-		return $this->methodName;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function methodName(): string
+    {
+        return $this->methodName;
+    }
 }

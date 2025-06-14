@@ -19,117 +19,123 @@ use PHPUnit\Framework\ExpectationFailedException;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class LogicalNot extends UnaryOperator {
+final class LogicalNot extends UnaryOperator
+{
+    public static function negate(string $string): string
+    {
+        $positives = [
+            'contains ',
+            'exists',
+            'has ',
+            'is ',
+            'are ',
+            'matches ',
+            'starts with ',
+            'ends with ',
+            'reference ',
+            'not not ',
+        ];
 
-	public static function negate( string $string ): string {
-		$positives = array(
-			'contains ',
-			'exists',
-			'has ',
-			'is ',
-			'are ',
-			'matches ',
-			'starts with ',
-			'ends with ',
-			'reference ',
-			'not not ',
-		);
+        $negatives = [
+            'does not contain ',
+            'does not exist',
+            'does not have ',
+            'is not ',
+            'are not ',
+            'does not match ',
+            'starts not with ',
+            'ends not with ',
+            'don\'t reference ',
+            'not ',
+        ];
 
-		$negatives = array(
-			'does not contain ',
-			'does not exist',
-			'does not have ',
-			'is not ',
-			'are not ',
-			'does not match ',
-			'starts not with ',
-			'ends not with ',
-			'don\'t reference ',
-			'not ',
-		);
+        preg_match('/(\'[\w\W]*\')([\w\W]*)("[\w\W]*")/i', $string, $matches);
 
-		preg_match( '/(\'[\w\W]*\')([\w\W]*)("[\w\W]*")/i', $string, $matches );
+        if (count($matches) === 0) {
+            preg_match('/(\'[\w\W]*\')([\w\W]*)(\'[\w\W]*\')/i', $string, $matches);
+        }
 
-		if ( count( $matches ) === 0 ) {
-			preg_match( '/(\'[\w\W]*\')([\w\W]*)(\'[\w\W]*\')/i', $string, $matches );
-		}
+        $positives = array_map(
+            static fn (string $s) => '/\\b' . preg_quote($s, '/') . '/',
+            $positives,
+        );
 
-		$positives = array_map(
-			static fn ( string $s ) => '/\\b' . preg_quote( $s, '/' ) . '/',
-			$positives,
-		);
+        if (count($matches) >= 3) {
+            $nonInput = $matches[2];
 
-		if ( count( $matches ) > 0 ) {
-			$nonInput = $matches[2];
+            $negatedString = preg_replace(
+                '/' . preg_quote($nonInput, '/') . '/',
+                preg_replace(
+                    $positives,
+                    $negatives,
+                    $nonInput,
+                ),
+                $string,
+            );
+        } else {
+            $negatedString = preg_replace(
+                $positives,
+                $negatives,
+                $string,
+            );
+        }
 
-			$negatedString = preg_replace(
-				'/' . preg_quote( $nonInput, '/' ) . '/',
-				preg_replace(
-					$positives,
-					$negatives,
-					$nonInput,
-				),
-				$string,
-			);
-		} else {
-			$negatedString = preg_replace(
-				$positives,
-				$negatives,
-				$string,
-			);
-		}
+        return $negatedString;
+    }
 
-		return $negatedString;
-	}
+    /**
+     * Returns the name of this operator.
+     */
+    public function operator(): string
+    {
+        return 'not';
+    }
 
-	/**
-	 * Returns the name of this operator.
-	 */
-	public function operator(): string {
-		return 'not';
-	}
+    /**
+     * Returns this operator's precedence.
+     *
+     * @see https://www.php.net/manual/en/language.operators.precedence.php
+     */
+    public function precedence(): int
+    {
+        return 5;
+    }
 
-	/**
-	 * Returns this operator's precedence.
-	 *
-	 * @see https://www.php.net/manual/en/language.operators.precedence.php
-	 */
-	public function precedence(): int {
-		return 5;
-	}
+    /**
+     * Evaluates the constraint for parameter $other. Returns true if the
+     * constraint is met, false otherwise.
+     *
+     * @throws ExpectationFailedException
+     */
+    protected function matches(mixed $other): bool
+    {
+        return !$this->constraint()->evaluate($other, '', true);
+    }
 
-	/**
-	 * Evaluates the constraint for parameter $other. Returns true if the
-	 * constraint is met, false otherwise.
-	 *
-	 * @throws ExpectationFailedException
-	 */
-	protected function matches( mixed $other ): bool {
-		return ! $this->constraint()->evaluate( $other, '', true );
-	}
+    /**
+     * Applies additional transformation to strings returned by toString() or
+     * failureDescription().
+     */
+    protected function transformString(string $string): string
+    {
+        return self::negate($string);
+    }
 
-	/**
-	 * Applies additional transformation to strings returned by toString() or
-	 * failureDescription().
-	 */
-	protected function transformString( string $string ): string {
-		return self::negate( $string );
-	}
+    /**
+     * Reduces the sub-expression starting at $this by skipping degenerate
+     * sub-expression and returns first descendant constraint that starts
+     * a non-reducible sub-expression.
+     *
+     * See Constraint::reduce() for more.
+     */
+    protected function reduce(): Constraint
+    {
+        $constraint = $this->constraint();
 
-	/**
-	 * Reduces the sub-expression starting at $this by skipping degenerate
-	 * sub-expression and returns first descendant constraint that starts
-	 * a non-reducible sub-expression.
-	 *
-	 * See Constraint::reduce() for more.
-	 */
-	protected function reduce(): Constraint {
-		$constraint = $this->constraint();
+        if ($constraint instanceof self) {
+            return $constraint->constraint()->reduce();
+        }
 
-		if ( $constraint instanceof self ) {
-			return $constraint->constraint()->reduce();
-		}
-
-		return parent::reduce();
-	}
+        return parent::reduce();
+    }
 }

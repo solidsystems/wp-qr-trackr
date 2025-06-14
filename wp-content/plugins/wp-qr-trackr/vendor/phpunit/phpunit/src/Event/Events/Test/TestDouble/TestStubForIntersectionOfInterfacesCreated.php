@@ -15,42 +15,49 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestStubForIntersectionOfInterfacesCreated implements Event {
+final readonly class TestStubForIntersectionOfInterfacesCreated implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    /**
+     * @var list<class-string>
+     */
+    private array $interfaces;
 
-	/**
-	 * @psalm-var list<class-string>
-	 */
-	private readonly array $interfaces;
+    /**
+     * @param list<class-string> $interfaces
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, array $interfaces)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->interfaces    = $interfaces;
+    }
 
-	/**
-	 * @psalm-param list<class-string> $interfaces
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, array $interfaces ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->interfaces    = $interfaces;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @return list<class-string>
+     */
+    public function interfaces(): array
+    {
+        return $this->interfaces;
+    }
 
-	/**
-	 * @return list<class-string>
-	 */
-	public function interfaces(): array {
-		return $this->interfaces;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'Test Stub Created (%s)',
-			implode( '&', $this->interfaces ),
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Test Stub Created (%s)',
+            implode('&', $this->interfaces),
+        );
+    }
 }

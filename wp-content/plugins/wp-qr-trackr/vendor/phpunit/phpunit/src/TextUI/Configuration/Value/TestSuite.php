@@ -12,44 +12,49 @@ namespace PHPUnit\TextUI\Configuration;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class TestSuite {
+final readonly class TestSuite
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $name;
+    private TestDirectoryCollection $directories;
+    private TestFileCollection $files;
+    private FileCollection $exclude;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $name;
-	private readonly TestDirectoryCollection $directories;
-	private readonly TestFileCollection $files;
-	private readonly FileCollection $exclude;
+    /**
+     * @param non-empty-string $name
+     */
+    public function __construct(string $name, TestDirectoryCollection $directories, TestFileCollection $files, FileCollection $exclude)
+    {
+        $this->name        = $name;
+        $this->directories = $directories;
+        $this->files       = $files;
+        $this->exclude     = $exclude;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $name
-	 */
-	public function __construct( string $name, TestDirectoryCollection $directories, TestFileCollection $files, FileCollection $exclude ) {
-		$this->name        = $name;
-		$this->directories = $directories;
-		$this->files       = $files;
-		$this->exclude     = $exclude;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function name(): string
+    {
+        return $this->name;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function name(): string {
-		return $this->name;
-	}
+    public function directories(): TestDirectoryCollection
+    {
+        return $this->directories;
+    }
 
-	public function directories(): TestDirectoryCollection {
-		return $this->directories;
-	}
+    public function files(): TestFileCollection
+    {
+        return $this->files;
+    }
 
-	public function files(): TestFileCollection {
-		return $this->files;
-	}
-
-	public function exclude(): FileCollection {
-		return $this->exclude;
-	}
+    public function exclude(): FileCollection
+    {
+        return $this->exclude;
+    }
 }

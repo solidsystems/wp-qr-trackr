@@ -112,6 +112,26 @@ yarn lint
 
 See the 'Best Way to Do Things Philosophy' section for more on why this approach is used.
 
+## Brain Monkey Compatibility & Alternatives
+
+- **Brain Monkey** is a popular library for mocking WordPress functions in unit tests.
+- As of June 2025, the latest release is v2.6.2 (Oct 2024). However, Brain Monkey is only officially compatible with PHPUnit up to 9.x. It is not compatible with PHPUnit 10+ or 12+.
+- If you encounter errors related to test suites or undefined PHPUnit methods, check your Brain Monkey version and its compatibility with your PHPUnit version.
+- **Alternatives:**
+  - [Yoast/wp-test-utils](https://github.com/Yoast/wp-test-utils): Provides a compatibility layer for PHPUnit 5.7–9.x and integrates with Brain Monkey, Mockery, and native PHPUnit mocks. It is the most robust option for modern WordPress plugin testing.
+  - [WP_Mock](https://github.com/10up/wp_mock): Another popular WordPress mocking library.
+  - **Native PHPUnit mocks**: For simple cases, use PHPUnit's built-in mocking.
+- If you need to support PHPUnit 10+ or 12+, consider migrating to Yoast/wp-test-utils or using native PHPUnit mocks.
+- If you re-enable Brain Monkey, ensure you are using a compatible PHPUnit version (9.x or below) or follow the Yoast/wp-test-utils migration guide.
+
+## Why We Use PHPUnit 9.x and Yoast/wp-test-utils (Not the Latest Version)
+
+- **Industry Standard:** The WordPress plugin ecosystem in 2025 overwhelmingly uses PHPUnit 9.x, as it is the most stable and compatible version for WordPress development and testing.
+- **Ecosystem Compatibility:** Most WordPress-specific testing utilities (including Brain Monkey and Yoast/wp-test-utils) are only compatible with PHPUnit 9.x and below. The WordPress Core test suite and most major plugins/themes are also on PHPUnit 9.x.
+- **Latest PHPUnit (10+/12+) Not Yet Supported:** As of June 2025, PHPUnit 10+ and 12+ introduce major breaking changes and are not yet supported by Brain Monkey or Yoast/wp-test-utils. The WordPress ecosystem is expected to migrate once these tools are updated.
+- **Best Practice:** Using Yoast/wp-test-utils with PHPUnit 9.x ensures maximum compatibility, robust mocking, and a future-proof path as the ecosystem evolves.
+- **If/when the ecosystem moves to PHPUnit 10+ or 12+,** this project will revisit and update its testing stack accordingly.
+
 ---
 
 For support or feature requests, open an issue or PR. 

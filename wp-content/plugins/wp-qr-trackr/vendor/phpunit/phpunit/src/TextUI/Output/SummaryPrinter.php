@@ -19,148 +19,142 @@ use PHPUnit\Util\Color;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class SummaryPrinter {
+final class SummaryPrinter
+{
+    private readonly Printer $printer;
+    private readonly bool $colors;
+    private bool $countPrinted = false;
 
-	private readonly Printer $printer;
-	private readonly bool $colors;
-	private bool $countPrinted = false;
+    public function __construct(Printer $printer, bool $colors)
+    {
+        $this->printer = $printer;
+        $this->colors  = $colors;
+    }
 
-	public function __construct( Printer $printer, bool $colors ) {
-		$this->printer = $printer;
-		$this->colors  = $colors;
-	}
+    public function print(TestResult $result): void
+    {
+        if ($result->numberOfTestsRun() === 0) {
+            $this->printWithColor(
+                'fg-black, bg-yellow',
+                'No tests executed!',
+            );
 
-	public function print( TestResult $result ): void {
-		if ( $result->numberOfTestsRun() === 0 ) {
-			$this->printWithColor(
-				'fg-black, bg-yellow',
-				'No tests executed!',
-			);
+            return;
+        }
 
-			return;
-		}
+        if ($result->wasSuccessfulIgnoringPhpunitWarnings() &&
+            !$result->hasIssues() &&
+            !$result->hasTestSuiteSkippedEvents() &&
+            !$result->hasTestSkippedEvents()) {
+            $this->printWithColor(
+                'fg-black, bg-green',
+                sprintf(
+                    'OK (%d test%s, %d assertion%s)',
+                    $result->numberOfTestsRun(),
+                    $result->numberOfTestsRun() === 1 ? '' : 's',
+                    $result->numberOfAssertions(),
+                    $result->numberOfAssertions() === 1 ? '' : 's',
+                ),
+            );
 
-		if ( $result->wasSuccessfulAndNoTestHasIssues() &&
-			! $result->hasTestSuiteSkippedEvents() &&
-			! $result->hasTestSkippedEvents() ) {
-			$this->printWithColor(
-				'fg-black, bg-green',
-				sprintf(
-					'OK (%d test%s, %d assertion%s)',
-					$result->numberOfTestsRun(),
-					$result->numberOfTestsRun() === 1 ? '' : 's',
-					$result->numberOfAssertions(),
-					$result->numberOfAssertions() === 1 ? '' : 's',
-				),
-			);
+            $this->printNumberOfIssuesIgnoredByBaseline($result);
 
-			$this->printNumberOfIssuesIgnoredByBaseline( $result );
+            return;
+        }
 
-			return;
-		}
+        $color = 'fg-black, bg-yellow';
 
-		$color = 'fg-black, bg-yellow';
+        if ($result->wasSuccessfulIgnoringPhpunitWarnings()) {
+            if ($result->hasIssues()) {
+                $this->printWithColor(
+                    $color,
+                    'OK, but there were issues!',
+                );
+            } else {
+                $this->printWithColor(
+                    $color,
+                    'OK, but some tests were skipped!',
+                );
+            }
+        } else {
+            if ($result->hasTestErroredEvents() || $result->hasTestTriggeredPhpunitErrorEvents()) {
+                $color = 'fg-white, bg-red';
 
-		if ( $result->wasSuccessful() ) {
-			if ( ! $result->hasTestsWithIssues() ) {
-				$this->printWithColor(
-					$color,
-					'OK, but some tests were skipped!',
-				);
-			} else {
-				$this->printWithColor(
-					$color,
-					'OK, but there were issues!',
-				);
-			}
-		} elseif ( $result->hasTestErroredEvents() || $result->hasTestTriggeredPhpunitErrorEvents() ) {
-				$color = 'fg-white, bg-red';
+                $this->printWithColor(
+                    $color,
+                    'ERRORS!',
+                );
+            } else {
+                $color = 'fg-white, bg-red';
 
-				$this->printWithColor(
-					$color,
-					'ERRORS!',
-				);
-		} elseif ( $result->hasTestFailedEvents() ) {
-			$color = 'fg-white, bg-red';
+                $this->printWithColor(
+                    $color,
+                    'FAILURES!',
+                );
+            }
+        }
 
-			$this->printWithColor(
-				$color,
-				'FAILURES!',
-			);
-		} elseif ( $result->hasWarnings() ) {
-			$this->printWithColor(
-				$color,
-				'WARNINGS!',
-			);
-		} elseif ( $result->hasDeprecations() ) {
-			$this->printWithColor(
-				$color,
-				'DEPRECATIONS!',
-			);
-		} elseif ( $result->hasNotices() ) {
-			$this->printWithColor(
-				$color,
-				'NOTICES!',
-			);
-		}
+        $this->printCountString($result->numberOfTestsRun(), 'Tests', $color, true);
+        $this->printCountString($result->numberOfAssertions(), 'Assertions', $color, true);
+        $this->printCountString($result->numberOfErrors(), 'Errors', $color);
+        $this->printCountString($result->numberOfTestFailedEvents(), 'Failures', $color);
+        $this->printCountString($result->numberOfWarnings(), 'Warnings', $color);
+        $this->printCountString($result->numberOfPhpOrUserDeprecations(), 'Deprecations', $color);
+        $this->printCountString($result->numberOfPhpunitDeprecations(), 'PHPUnit Deprecations', $color);
+        $this->printCountString($result->numberOfPhpunitNotices(), 'PHPUnit Notices', $color);
+        $this->printCountString($result->numberOfNotices(), 'Notices', $color);
+        $this->printCountString($result->numberOfTestSuiteSkippedEvents() + $result->numberOfTestSkippedEvents(), 'Skipped', $color);
+        $this->printCountString($result->numberOfTestMarkedIncompleteEvents(), 'Incomplete', $color);
+        $this->printCountString($result->numberOfTestsWithTestConsideredRiskyEvents(), 'Risky', $color);
+        $this->printWithColor($color, '.');
 
-		$this->printCountString( $result->numberOfTestsRun(), 'Tests', $color, true );
-		$this->printCountString( $result->numberOfAssertions(), 'Assertions', $color, true );
-		$this->printCountString( $result->numberOfErrors(), 'Errors', $color );
-		$this->printCountString( $result->numberOfTestFailedEvents(), 'Failures', $color );
-		$this->printCountString( $result->numberOfWarnings(), 'Warnings', $color );
-		$this->printCountString( $result->numberOfPhpOrUserDeprecations(), 'Deprecations', $color );
-		$this->printCountString( $result->numberOfPhpunitDeprecations(), 'PHPUnit Deprecations', $color );
-		$this->printCountString( $result->numberOfNotices(), 'Notices', $color );
-		$this->printCountString( $result->numberOfTestSuiteSkippedEvents() + $result->numberOfTestSkippedEvents(), 'Skipped', $color );
-		$this->printCountString( $result->numberOfTestMarkedIncompleteEvents(), 'Incomplete', $color );
-		$this->printCountString( $result->numberOfTestsWithTestConsideredRiskyEvents(), 'Risky', $color );
-		$this->printWithColor( $color, '.' );
+        $this->printNumberOfIssuesIgnoredByBaseline($result);
+    }
 
-		$this->printNumberOfIssuesIgnoredByBaseline( $result );
-	}
+    private function printCountString(int $count, string $name, string $color, bool $always = false): void
+    {
+        if ($always || $count > 0) {
+            $this->printWithColor(
+                $color,
+                sprintf(
+                    '%s%s: %d',
+                    $this->countPrinted ? ', ' : '',
+                    $name,
+                    $count,
+                ),
+                false,
+            );
 
-	private function printCountString( int $count, string $name, string $color, bool $always = false ): void {
-		if ( $always || $count > 0 ) {
-			$this->printWithColor(
-				$color,
-				sprintf(
-					'%s%s: %d',
-					$this->countPrinted ? ', ' : '',
-					$name,
-					$count,
-				),
-				false,
-			);
+            $this->countPrinted = true;
+        }
+    }
 
-			$this->countPrinted = true;
-		}
-	}
+    private function printWithColor(string $color, string $buffer, bool $lf = true): void
+    {
+        if ($this->colors) {
+            $buffer = Color::colorizeTextBox($color, $buffer);
+        }
 
-	private function printWithColor( string $color, string $buffer, bool $lf = true ): void {
-		if ( $this->colors ) {
-			$buffer = Color::colorizeTextBox( $color, $buffer );
-		}
+        $this->printer->print($buffer);
 
-		$this->printer->print( $buffer );
+        if ($lf) {
+            $this->printer->print(PHP_EOL);
+        }
+    }
 
-		if ( $lf ) {
-			$this->printer->print( PHP_EOL );
-		}
-	}
-
-	private function printNumberOfIssuesIgnoredByBaseline( TestResult $result ): void {
-		if ( $result->hasIssuesIgnoredByBaseline() ) {
-			$this->printer->print(
-				sprintf(
-					'%s%d issue%s %s ignored by baseline.%s',
-					PHP_EOL,
-					$result->numberOfIssuesIgnoredByBaseline(),
-					$result->numberOfIssuesIgnoredByBaseline() > 1 ? 's' : '',
-					$result->numberOfIssuesIgnoredByBaseline() > 1 ? 'were' : 'was',
-					PHP_EOL,
-				),
-			);
-		}
-	}
+    private function printNumberOfIssuesIgnoredByBaseline(TestResult $result): void
+    {
+        if ($result->hasIssuesIgnoredByBaseline()) {
+            $this->printer->print(
+                sprintf(
+                    '%s%d issue%s %s ignored by baseline.%s',
+                    PHP_EOL,
+                    $result->numberOfIssuesIgnoredByBaseline(),
+                    $result->numberOfIssuesIgnoredByBaseline() > 1 ? 's' : '',
+                    $result->numberOfIssuesIgnoredByBaseline() > 1 ? 'were' : 'was',
+                    PHP_EOL,
+                ),
+            );
+        }
+    }
 }

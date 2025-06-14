@@ -12,61 +12,68 @@ namespace PHPUnit\Event\TestSuite;
 use PHPUnit\Event\Code\TestCollection;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract class TestSuite {
+abstract readonly class TestSuite
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $name;
+    private int $count;
+    private TestCollection $tests;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $name;
-	private readonly int $count;
-	private readonly TestCollection $tests;
+    /**
+     * @param non-empty-string $name
+     */
+    public function __construct(string $name, int $size, TestCollection $tests)
+    {
+        $this->name  = $name;
+        $this->count = $size;
+        $this->tests = $tests;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $name
-	 */
-	public function __construct( string $name, int $size, TestCollection $tests ) {
-		$this->name  = $name;
-		$this->count = $size;
-		$this->tests = $tests;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function name(): string
+    {
+        return $this->name;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function name(): string {
-		return $this->name;
-	}
+    public function count(): int
+    {
+        return $this->count;
+    }
 
-	public function count(): int {
-		return $this->count;
-	}
+    public function tests(): TestCollection
+    {
+        return $this->tests;
+    }
 
-	public function tests(): TestCollection {
-		return $this->tests;
-	}
+    /**
+     * @phpstan-assert-if-true TestSuiteWithName $this
+     */
+    public function isWithName(): bool
+    {
+        return false;
+    }
 
-	/**
-	 * @psalm-assert-if-true TestSuiteWithName $this
-	 */
-	public function isWithName(): bool {
-		return false;
-	}
+    /**
+     * @phpstan-assert-if-true TestSuiteForTestClass $this
+     */
+    public function isForTestClass(): bool
+    {
+        return false;
+    }
 
-	/**
-	 * @psalm-assert-if-true TestSuiteForTestClass $this
-	 */
-	public function isForTestClass(): bool {
-		return false;
-	}
-
-	/**
-	 * @psalm-assert-if-true TestSuiteForTestMethodWithDataProvider $this
-	 */
-	public function isForTestMethodWithDataProvider(): bool {
-		return false;
-	}
+    /**
+     * @phpstan-assert-if-true TestSuiteForTestMethodWithDataProvider $this
+     */
+    public function isForTestMethodWithDataProvider(): bool
+    {
+        return false;
+    }
 }

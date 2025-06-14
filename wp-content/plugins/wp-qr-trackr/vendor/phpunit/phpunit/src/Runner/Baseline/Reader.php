@@ -27,75 +27,77 @@ use PHPUnit\Util\Xml\XmlException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Reader {
+final readonly class Reader
+{
+    /**
+     * @param non-empty-string $baselineFile
+     *
+     * @throws CannotLoadBaselineException
+     */
+    public function read(string $baselineFile): Baseline
+    {
+        if (!is_file($baselineFile)) {
+            throw new CannotLoadBaselineException(
+                sprintf(
+                    'Cannot read baseline %s, file does not exist',
+                    $baselineFile,
+                ),
+            );
+        }
 
-	/**
-	 * @psalm-param non-empty-string $baselineFile
-	 *
-	 * @throws CannotLoadBaselineException
-	 */
-	public function read( string $baselineFile ): Baseline {
-		if ( ! is_file( $baselineFile ) ) {
-			throw new CannotLoadBaselineException(
-				sprintf(
-					'Cannot read baseline %s, file does not exist',
-					$baselineFile,
-				),
-			);
-		}
+        try {
+            $document = (new XmlLoader)->loadFile($baselineFile);
+        } catch (XmlException $e) {
+            throw new CannotLoadBaselineException(
+                sprintf(
+                    'Cannot read baseline %s: %s',
+                    $baselineFile,
+                    trim($e->getMessage()),
+                ),
+            );
+        }
 
-		try {
-			$document = ( new XmlLoader() )->loadFile( $baselineFile );
-		} catch ( XmlException $e ) {
-			throw new CannotLoadBaselineException(
-				sprintf(
-					'Cannot read baseline: %s',
-					trim( $e->getMessage() ),
-				),
-			);
-		}
+        $version = (int) $document->documentElement->getAttribute('version');
 
-		$version = (int) $document->documentElement->getAttribute( 'version' );
+        if ($version !== Baseline::VERSION) {
+            throw new CannotLoadBaselineException(
+                sprintf(
+                    'Cannot read baseline %s, version %d is not supported',
+                    $baselineFile,
+                    $version,
+                ),
+            );
+        }
 
-		if ( $version !== Baseline::VERSION ) {
-			throw new CannotLoadBaselineException(
-				sprintf(
-					'Cannot read baseline %s, version %d is not supported',
-					$baselineFile,
-					$version,
-				),
-			);
-		}
+        $baseline          = new Baseline;
+        $baselineDirectory = dirname(realpath($baselineFile));
+        $xpath             = new DOMXPath($document);
 
-		$baseline          = new Baseline();
-		$baselineDirectory = dirname( realpath( $baselineFile ) );
-		$xpath             = new DOMXPath( $document );
+        foreach ($xpath->query('file') as $fileElement) {
+            assert($fileElement instanceof DOMElement);
 
-		foreach ( $xpath->query( 'file' ) as $fileElement ) {
-			assert( $fileElement instanceof DOMElement );
+            $file = $baselineDirectory . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $fileElement->getAttribute('path'));
 
-			$file = $baselineDirectory . DIRECTORY_SEPARATOR . str_replace( '/', DIRECTORY_SEPARATOR, $fileElement->getAttribute( 'path' ) );
+            foreach ($xpath->query('line', $fileElement) as $lineElement) {
+                assert($lineElement instanceof DOMElement);
 
-			foreach ( $xpath->query( 'line', $fileElement ) as $lineElement ) {
-				assert( $lineElement instanceof DOMElement );
+                $line = (int) $lineElement->getAttribute('number');
+                $hash = $lineElement->getAttribute('hash');
 
-				$line = (int) $lineElement->getAttribute( 'number' );
-				$hash = $lineElement->getAttribute( 'hash' );
+                foreach ($xpath->query('issue', $lineElement) as $issueElement) {
+                    assert($issueElement instanceof DOMElement);
 
-				foreach ( $xpath->query( 'issue', $lineElement ) as $issueElement ) {
-					assert( $issueElement instanceof DOMElement );
+                    $description = $issueElement->textContent;
 
-					$description = $issueElement->textContent;
+                    assert($line > 0);
+                    assert($hash !== '');
+                    assert($description !== '');
 
-					assert( $line > 0 );
-					assert( ! empty( $hash ) );
-					assert( ! empty( $description ) );
+                    $baseline->add(Issue::from($file, $line, $hash, $description));
+                }
+            }
+        }
 
-					$baseline->add( Issue::from( $file, $line, $hash, $description ) );
-				}
-			}
-		}
-
-		return $baseline;
-	}
+        return $baseline;
+    }
 }

@@ -14,53 +14,61 @@ use function class_exists;
 use function is_iterable;
 use ReflectionClass;
 
-final class IterableType extends Type {
+/**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
+ */
+final class IterableType extends Type
+{
+    private bool $allowsNull;
 
-	private bool $allowsNull;
+    public function __construct(bool $nullable)
+    {
+        $this->allowsNull = $nullable;
+    }
 
-	public function __construct( bool $nullable ) {
-		$this->allowsNull = $nullable;
-	}
+    /**
+     * @throws RuntimeException
+     */
+    public function isAssignable(Type $other): bool
+    {
+        if ($this->allowsNull && $other instanceof NullType) {
+            return true;
+        }
 
-	/**
-	 * @throws RuntimeException
-	 */
-	public function isAssignable( Type $other ): bool {
-		if ( $this->allowsNull && $other instanceof NullType ) {
-			return true;
-		}
+        if ($other instanceof self) {
+            return true;
+        }
 
-		if ( $other instanceof self ) {
-			return true;
-		}
+        if ($other instanceof SimpleType) {
+            return is_iterable($other->value());
+        }
 
-		if ( $other instanceof SimpleType ) {
-			return is_iterable( $other->value() );
-		}
+        if ($other instanceof ObjectType) {
+            $className = $other->className()->qualifiedName();
 
-		if ( $other instanceof ObjectType ) {
-			$className = $other->className()->qualifiedName();
+            assert(class_exists($className));
 
-			assert( class_exists( $className ) );
+            return (new ReflectionClass($className))->isIterable();
+        }
 
-			return ( new ReflectionClass( $className ) )->isIterable();
-		}
+        return false;
+    }
 
-		return false;
-	}
+    /**
+     * @return 'iterable'
+     */
+    public function name(): string
+    {
+        return 'iterable';
+    }
 
-	public function name(): string {
-		return 'iterable';
-	}
+    public function allowsNull(): bool
+    {
+        return $this->allowsNull;
+    }
 
-	public function allowsNull(): bool {
-		return $this->allowsNull;
-	}
-
-	/**
-	 * @psalm-assert-if-true IterableType $this
-	 */
-	public function isIterable(): bool {
-		return true;
-	}
+    public function isIterable(): bool
+    {
+        return true;
+    }
 }

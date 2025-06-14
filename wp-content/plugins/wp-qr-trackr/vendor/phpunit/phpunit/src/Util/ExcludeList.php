@@ -10,6 +10,7 @@
 namespace PHPUnit\Util;
 
 use const PHP_OS_FAMILY;
+use function assert;
 use function class_exists;
 use function defined;
 use function dirname;
@@ -26,8 +27,6 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use SebastianBergmann\CliParser\Parser as CliParser;
 use SebastianBergmann\CodeCoverage\CodeCoverage;
-use SebastianBergmann\CodeUnit\CodeUnit;
-use SebastianBergmann\CodeUnitReverseLookup\Wizard;
 use SebastianBergmann\Comparator\Comparator;
 use SebastianBergmann\Complexity\Calculator;
 use SebastianBergmann\Diff\Diff;
@@ -44,183 +43,190 @@ use SebastianBergmann\Template\Template;
 use SebastianBergmann\Timer\Timer;
 use SebastianBergmann\Type\TypeName;
 use SebastianBergmann\Version;
+use staabm\SideEffectsDetector\SideEffectsDetector;
 use TheSeer\Tokenizer\Tokenizer;
 
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ExcludeList {
+final class ExcludeList
+{
+    /**
+     * @var non-empty-array<class-string, positive-int>
+     */
+    private const array EXCLUDED_CLASS_NAMES = [
+        // composer
+        ClassLoader::class => 1,
 
-	/**
-	 * @psalm-var array<string,int>
-	 */
-	private const EXCLUDED_CLASS_NAMES = array(
-		// composer
-		ClassLoader::class        => 1,
+        // myclabs/deepcopy
+        DeepCopy::class => 1,
 
-		// myclabs/deepcopy
-		DeepCopy::class           => 1,
+        // nikic/php-parser
+        Parser::class => 1,
 
-		// nikic/php-parser
-		Parser::class             => 1,
+        // phar-io/manifest
+        Manifest::class => 1,
 
-		// phar-io/manifest
-		Manifest::class           => 1,
+        // phar-io/version
+        PharIoVersion::class => 1,
 
-		// phar-io/version
-		PharIoVersion::class      => 1,
+        // phpunit/phpunit
+        TestCase::class => 2,
 
-		// phpunit/phpunit
-		TestCase::class           => 2,
+        // phpunit/php-code-coverage
+        CodeCoverage::class => 1,
 
-		// phpunit/php-code-coverage
-		CodeCoverage::class       => 1,
+        // phpunit/php-file-iterator
+        FileIteratorFacade::class => 1,
 
-		// phpunit/php-file-iterator
-		FileIteratorFacade::class => 1,
+        // phpunit/php-invoker
+        Invoker::class => 1,
 
-		// phpunit/php-invoker
-		Invoker::class            => 1,
+        // phpunit/php-text-template
+        Template::class => 1,
 
-		// phpunit/php-text-template
-		Template::class           => 1,
+        // phpunit/php-timer
+        Timer::class => 1,
 
-		// phpunit/php-timer
-		Timer::class              => 1,
+        // sebastian/cli-parser
+        CliParser::class => 1,
 
-		// sebastian/cli-parser
-		CliParser::class          => 1,
+        // sebastian/comparator
+        Comparator::class => 1,
 
-		// sebastian/code-unit
-		CodeUnit::class           => 1,
+        // sebastian/complexity
+        Calculator::class => 1,
 
-		// sebastian/code-unit-reverse-lookup
-		Wizard::class             => 1,
+        // sebastian/diff
+        Diff::class => 1,
 
-		// sebastian/comparator
-		Comparator::class         => 1,
+        // sebastian/environment
+        Runtime::class => 1,
 
-		// sebastian/complexity
-		Calculator::class         => 1,
+        // sebastian/exporter
+        Exporter::class => 1,
 
-		// sebastian/diff
-		Diff::class               => 1,
+        // sebastian/global-state
+        Snapshot::class => 1,
 
-		// sebastian/environment
-		Runtime::class            => 1,
+        // sebastian/lines-of-code
+        Counter::class => 1,
 
-		// sebastian/exporter
-		Exporter::class           => 1,
+        // sebastian/object-enumerator
+        Enumerator::class => 1,
 
-		// sebastian/global-state
-		Snapshot::class           => 1,
+        // sebastian/object-reflector
+        ObjectReflector::class => 1,
 
-		// sebastian/lines-of-code
-		Counter::class            => 1,
+        // sebastian/recursion-context
+        Context::class => 1,
 
-		// sebastian/object-enumerator
-		Enumerator::class         => 1,
+        // sebastian/type
+        TypeName::class => 1,
 
-		// sebastian/object-reflector
-		ObjectReflector::class    => 1,
+        // sebastian/version
+        Version::class => 1,
 
-		// sebastian/recursion-context
-		Context::class            => 1,
+        // staabm/side-effects-detector
+        SideEffectsDetector::class => 1,
 
-		// sebastian/type
-		TypeName::class           => 1,
+        // theseer/tokenizer
+        Tokenizer::class => 1,
+    ];
 
-		// sebastian/version
-		Version::class            => 1,
+    /**
+     * @var list<string>
+     */
+    private static array $directories = [];
+    private static bool $initialized  = false;
+    private readonly bool $enabled;
 
-		// theseer/tokenizer
-		Tokenizer::class          => 1,
-	);
+    /**
+     * @param non-empty-string $directory
+     *
+     * @throws InvalidDirectoryException
+     */
+    public static function addDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            throw new InvalidDirectoryException($directory);
+        }
 
-	/**
-	 * @psalm-var list<string>
-	 */
-	private static array $directories = array();
-	private static bool $initialized  = false;
-	private readonly bool $enabled;
+        $directory = realpath($directory);
 
-	/**
-	 * @psalm-param non-empty-string $directory
-	 *
-	 * @throws InvalidDirectoryException
-	 */
-	public static function addDirectory( string $directory ): void {
-		if ( ! is_dir( $directory ) ) {
-			throw new InvalidDirectoryException( $directory );
-		}
+        assert($directory !== false);
 
-		self::$directories[] = realpath( $directory );
-	}
+        self::$directories[] = $directory;
+    }
 
-	public function __construct( ?bool $enabled = null ) {
-		if ( $enabled === null ) {
-			$enabled = ! defined( 'PHPUNIT_TESTSUITE' );
-		}
+    public function __construct(?bool $enabled = null)
+    {
+        if ($enabled === null) {
+            $enabled = !defined('PHPUNIT_TESTSUITE');
+        }
 
-		$this->enabled = $enabled;
-	}
+        $this->enabled = $enabled;
+    }
 
-	/**
-	 * @psalm-return list<string>
-	 */
-	public function getExcludedDirectories(): array {
-		self::initialize();
+    /**
+     * @return list<string>
+     */
+    public function getExcludedDirectories(): array
+    {
+        self::initialize();
 
-		return self::$directories;
-	}
+        return self::$directories;
+    }
 
-	public function isExcluded( string $file ): bool {
-		if ( ! $this->enabled ) {
-			return false;
-		}
+    public function isExcluded(string $file): bool
+    {
+        if (!$this->enabled) {
+            return false;
+        }
 
-		self::initialize();
+        self::initialize();
 
-		foreach ( self::$directories as $directory ) {
-			if ( str_starts_with( $file, $directory ) ) {
-				return true;
-			}
-		}
+        foreach (self::$directories as $directory) {
+            if (str_starts_with($file, $directory)) {
+                return true;
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	private static function initialize(): void {
-		if ( self::$initialized ) {
-			return;
-		}
+    private static function initialize(): void
+    {
+        if (self::$initialized) {
+            return;
+        }
 
-		foreach ( self::EXCLUDED_CLASS_NAMES as $className => $parent ) {
-			if ( ! class_exists( $className ) ) {
-				continue;
-			}
+        foreach (self::EXCLUDED_CLASS_NAMES as $className => $parent) {
+            if (!class_exists($className)) {
+                continue;
+            }
 
-			$directory = ( new ReflectionClass( $className ) )->getFileName();
+            $directory = (new ReflectionClass($className))->getFileName();
 
-			for ( $i = 0; $i < $parent; $i++ ) {
-				$directory = dirname( $directory );
-			}
+            for ($i = 0; $i < $parent; $i++) {
+                $directory = dirname($directory);
+            }
 
-			self::$directories[] = $directory;
-		}
+            self::$directories[] = $directory;
+        }
 
-		/**
-		 * Hide process isolation workaround on Windows:
-		 * tempnam() prefix is limited to first 3 characters.
-		 *
-		 * @see https://php.net/manual/en/function.tempnam.php
-		 */
-		if ( PHP_OS_FAMILY === 'Windows' ) {
-			// @codeCoverageIgnoreStart
-			self::$directories[] = sys_get_temp_dir() . '\\PHP';
-			// @codeCoverageIgnoreEnd
-		}
+        /**
+         * Hide process isolation workaround on Windows:
+         * tempnam() prefix is limited to first 3 characters.
+         *
+         * @see https://php.net/manual/en/function.tempnam.php
+         */
+        if (PHP_OS_FAMILY === 'Windows') {
+            // @codeCoverageIgnoreStart
+            self::$directories[] = sys_get_temp_dir() . '\\PHP';
+            // @codeCoverageIgnoreEnd
+        }
 
-		self::$initialized = true;
-	}
+        self::$initialized = true;
+    }
 }

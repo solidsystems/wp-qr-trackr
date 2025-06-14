@@ -17,9 +17,10 @@ use PHPUnit\Event\Test\PassedSubscriber;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestPassedSubscriber extends Subscriber implements PassedSubscriber {
-
-	public function notify( Passed $event ): void {
-		$this->collector()->testPassed( $event );
-	}
+final readonly class TestPassedSubscriber extends Subscriber implements PassedSubscriber
+{
+    public function notify(Passed $event): void
+    {
+        $this->collector()->testPassed($event);
+    }
 }

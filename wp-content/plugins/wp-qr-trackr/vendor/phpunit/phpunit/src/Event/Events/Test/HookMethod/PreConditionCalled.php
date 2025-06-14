@@ -15,49 +15,57 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PreConditionCalled implements Event {
+final readonly class PreConditionCalled implements Event
+{
+    private Telemetry\Info$telemetryInfo;
+    private Code\TestMethod $test;
+    private Code\ClassMethod $calledMethod;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    public function __construct(Telemetry\Info $telemetryInfo, Code\TestMethod $test, Code\ClassMethod $calledMethod)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->test          = $test;
+        $this->calledMethod  = $calledMethod;
+    }
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $testClassName;
-	private readonly Code\ClassMethod $calledMethod;
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	/**
-	 * @psalm-param class-string $testClassName
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod $calledMethod ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->testClassName = $testClassName;
-		$this->calledMethod  = $calledMethod;
-	}
+    public function test(): Code\TestMethod
+    {
+        return $this->test;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @return class-string
+     *
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/6140
+     */
+    public function testClassName(): string
+    {
+        return $this->test->className();
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function testClassName(): string {
-		return $this->testClassName;
-	}
+    public function calledMethod(): Code\ClassMethod
+    {
+        return $this->calledMethod;
+    }
 
-	public function calledMethod(): Code\ClassMethod {
-		return $this->calledMethod;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'Pre Condition Method Called (%s::%s)',
-			$this->calledMethod->className(),
-			$this->calledMethod->methodName(),
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Pre Condition Method Called (%s::%s)',
+            $this->calledMethod->className(),
+            $this->calledMethod->methodName(),
+        );
+    }
 }

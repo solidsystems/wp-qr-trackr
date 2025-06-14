@@ -12,23 +12,26 @@ namespace PHPUnit\TextUI\Configuration;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class Constant {
+final readonly class Constant
+{
+    private string $name;
+    private bool|string $value;
 
-	private readonly string $name;
-	private readonly bool|string $value;
+    public function __construct(string $name, bool|string $value)
+    {
+        $this->name  = $name;
+        $this->value = $value;
+    }
 
-	public function __construct( string $name, bool|string $value ) {
-		$this->name  = $name;
-		$this->value = $value;
-	}
+    public function name(): string
+    {
+        return $this->name;
+    }
 
-	public function name(): string {
-		return $this->name;
-	}
-
-	public function value(): bool|string {
-		return $this->value;
-	}
+    public function value(): bool|string
+    {
+        return $this->value;
+    }
 }

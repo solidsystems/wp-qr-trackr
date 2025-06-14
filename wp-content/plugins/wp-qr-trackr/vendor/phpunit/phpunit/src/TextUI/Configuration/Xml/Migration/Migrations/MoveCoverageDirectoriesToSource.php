@@ -19,45 +19,50 @@ use DOMXPath;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MoveCoverageDirectoriesToSource implements Migration {
+final readonly class MoveCoverageDirectoriesToSource implements Migration
+{
+    /**
+     * @throws MigrationException
+     */
+    public function migrate(DOMDocument $document): void
+    {
+        $source = $document->getElementsByTagName('source')->item(0);
 
-	/**
-	 * @throws MigrationException
-	 */
-	public function migrate( DOMDocument $document ): void {
-		$source = $document->getElementsByTagName( 'source' )->item( 0 );
+        if ($source !== null) {
+            return;
+        }
 
-		if ( $source !== null ) {
-			return;
-		}
+        $coverage = $document->getElementsByTagName('coverage')->item(0);
 
-		$coverage = $document->getElementsByTagName( 'coverage' )->item( 0 );
+        if ($coverage === null) {
+            return;
+        }
 
-		if ( $coverage === null ) {
-			return;
-		}
+        $root = $document->documentElement;
 
-		$root = $document->documentElement;
+        assert($root instanceof DOMElement);
 
-		assert( $root instanceof DOMElement );
+        $source = $document->createElement('source');
+        $root->appendChild($source);
 
-		$source = $document->createElement( 'source' );
-		$root->appendChild( $source );
+        $xpath = new DOMXPath($document);
 
-		$xpath = new DOMXPath( $document );
+        foreach (['include', 'exclude'] as $element) {
+            $nodes = $xpath->query('//coverage/' . $element);
 
-		foreach ( array( 'include', 'exclude' ) as $element ) {
-			foreach ( SnapshotNodeList::fromNodeList( $xpath->query( '//coverage/' . $element ) ) as $node ) {
-				$source->appendChild( $node );
-			}
-		}
+            assert($nodes !== false);
 
-		if ( $coverage->childElementCount !== 0 ) {
-			return;
-		}
+            foreach (SnapshotNodeList::fromNodeList($nodes) as $node) {
+                $source->appendChild($node);
+            }
+        }
 
-		assert( $coverage->parentNode !== null );
+        if ($coverage->childElementCount !== 0) {
+            return;
+        }
 
-		$coverage->parentNode->removeChild( $coverage );
-	}
+        assert($coverage->parentNode !== null);
+
+        $coverage->parentNode->removeChild($coverage);
+    }
 }

@@ -28,203 +28,220 @@ use function str_ends_with;
 use function substr;
 use SebastianBergmann\Diff\Output\DiffOutputBuilderInterface;
 
-final class Differ {
+final class Differ
+{
+    public const int OLD                     = 0;
+    public const int ADDED                   = 1;
+    public const int REMOVED                 = 2;
+    public const int DIFF_LINE_END_WARNING   = 3;
+    public const int NO_LINE_END_EOF_WARNING = 4;
+    private DiffOutputBuilderInterface $outputBuilder;
 
-	public const OLD                     = 0;
-	public const ADDED                   = 1;
-	public const REMOVED                 = 2;
-	public const DIFF_LINE_END_WARNING   = 3;
-	public const NO_LINE_END_EOF_WARNING = 4;
-	private DiffOutputBuilderInterface $outputBuilder;
+    public function __construct(DiffOutputBuilderInterface $outputBuilder)
+    {
+        $this->outputBuilder = $outputBuilder;
+    }
 
-	public function __construct( DiffOutputBuilderInterface $outputBuilder ) {
-		$this->outputBuilder = $outputBuilder;
-	}
+    /**
+     * @param list<string>|string $from
+     * @param list<string>|string $to
+     */
+    public function diff(array|string $from, array|string $to, ?LongestCommonSubsequenceCalculator $lcs = null): string
+    {
+        $diff = $this->diffToArray($from, $to, $lcs);
 
-	public function diff( array|string $from, array|string $to, ?LongestCommonSubsequenceCalculator $lcs = null ): string {
-		$diff = $this->diffToArray( $from, $to, $lcs );
+        return $this->outputBuilder->getDiff($diff);
+    }
 
-		return $this->outputBuilder->getDiff( $diff );
-	}
+    /**
+     * @param list<string>|string $from
+     * @param list<string>|string $to
+     */
+    public function diffToArray(array|string $from, array|string $to, ?LongestCommonSubsequenceCalculator $lcs = null): array
+    {
+        if (is_string($from)) {
+            $from = $this->splitStringByLines($from);
+        }
 
-	public function diffToArray( array|string $from, array|string $to, ?LongestCommonSubsequenceCalculator $lcs = null ): array {
-		if ( is_string( $from ) ) {
-			$from = $this->splitStringByLines( $from );
-		}
+        if (is_string($to)) {
+            $to = $this->splitStringByLines($to);
+        }
 
-		if ( is_string( $to ) ) {
-			$to = $this->splitStringByLines( $to );
-		}
+        [$from, $to, $start, $end] = self::getArrayDiffParted($from, $to);
 
-		[$from, $to, $start, $end] = self::getArrayDiffParted( $from, $to );
+        if ($lcs === null) {
+            $lcs = $this->selectLcsImplementation($from, $to);
+        }
 
-		if ( $lcs === null ) {
-			$lcs = $this->selectLcsImplementation( $from, $to );
-		}
+        $common = $lcs->calculate(array_values($from), array_values($to));
+        $diff   = [];
 
-		$common = $lcs->calculate( array_values( $from ), array_values( $to ) );
-		$diff   = array();
+        foreach ($start as $token) {
+            $diff[] = [$token, self::OLD];
+        }
 
-		foreach ( $start as $token ) {
-			$diff[] = array( $token, self::OLD );
-		}
+        reset($from);
+        reset($to);
 
-		reset( $from );
-		reset( $to );
+        foreach ($common as $token) {
+            while ((/* from-token */ reset($from)) !== $token) {
+                $diff[] = [array_shift($from), self::REMOVED];
+            }
 
-		foreach ( $common as $token ) {
-			while ( ( $fromToken = reset( $from ) ) !== $token ) {
-				$diff[] = array( array_shift( $from ), self::REMOVED );
-			}
+            while ((/* to-token */ reset($to)) !== $token) {
+                $diff[] = [array_shift($to), self::ADDED];
+            }
 
-			while ( ( $toToken = reset( $to ) ) !== $token ) {
-				$diff[] = array( array_shift( $to ), self::ADDED );
-			}
+            $diff[] = [$token, self::OLD];
 
-			$diff[] = array( $token, self::OLD );
+            array_shift($from);
+            array_shift($to);
+        }
 
-			array_shift( $from );
-			array_shift( $to );
-		}
+        while (($token = array_shift($from)) !== null) {
+            $diff[] = [$token, self::REMOVED];
+        }
 
-		while ( ( $token = array_shift( $from ) ) !== null ) {
-			$diff[] = array( $token, self::REMOVED );
-		}
+        while (($token = array_shift($to)) !== null) {
+            $diff[] = [$token, self::ADDED];
+        }
 
-		while ( ( $token = array_shift( $to ) ) !== null ) {
-			$diff[] = array( $token, self::ADDED );
-		}
+        foreach ($end as $token) {
+            $diff[] = [$token, self::OLD];
+        }
 
-		foreach ( $end as $token ) {
-			$diff[] = array( $token, self::OLD );
-		}
+        if ($this->detectUnmatchedLineEndings($diff)) {
+            array_unshift($diff, ["#Warning: Strings contain different line endings!\n", self::DIFF_LINE_END_WARNING]);
+        }
 
-		if ( $this->detectUnmatchedLineEndings( $diff ) ) {
-			array_unshift( $diff, array( "#Warning: Strings contain different line endings!\n", self::DIFF_LINE_END_WARNING ) );
-		}
+        return $diff;
+    }
 
-		return $diff;
-	}
+    private function splitStringByLines(string $input): array
+    {
+        return preg_split('/(.*\R)/', $input, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+    }
 
-	private function splitStringByLines( string $input ): array {
-		return preg_split( '/(.*\R)/', $input, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY );
-	}
+    private function selectLcsImplementation(array $from, array $to): LongestCommonSubsequenceCalculator
+    {
+        // We do not want to use the time-efficient implementation if its memory
+        // footprint will probably exceed this value. Note that the footprint
+        // calculation is only an estimation for the matrix and the LCS method
+        // will typically allocate a bit more memory than this.
+        $memoryLimit = 100 * 1024 * 1024;
 
-	private function selectLcsImplementation( array $from, array $to ): LongestCommonSubsequenceCalculator {
-		// We do not want to use the time-efficient implementation if its memory
-		// footprint will probably exceed this value. Note that the footprint
-		// calculation is only an estimation for the matrix and the LCS method
-		// will typically allocate a bit more memory than this.
-		$memoryLimit = 100 * 1024 * 1024;
+        if ($this->calculateEstimatedFootprint($from, $to) > $memoryLimit) {
+            return new MemoryEfficientLongestCommonSubsequenceCalculator;
+        }
 
-		if ( $this->calculateEstimatedFootprint( $from, $to ) > $memoryLimit ) {
-			return new MemoryEfficientLongestCommonSubsequenceCalculator();
-		}
+        return new TimeEfficientLongestCommonSubsequenceCalculator;
+    }
 
-		return new TimeEfficientLongestCommonSubsequenceCalculator();
-	}
+    private function calculateEstimatedFootprint(array $from, array $to): int
+    {
+        $itemSize = PHP_INT_SIZE === 4 ? 76 : 144;
 
-	private function calculateEstimatedFootprint( array $from, array $to ): float|int {
-		$itemSize = PHP_INT_SIZE === 4 ? 76 : 144;
+        return $itemSize * min(count($from), count($to)) ** 2;
+    }
 
-		return $itemSize * min( count( $from ), count( $to ) ) ** 2;
-	}
+    private function detectUnmatchedLineEndings(array $diff): bool
+    {
+        $newLineBreaks = ['' => true];
+        $oldLineBreaks = ['' => true];
 
-	private function detectUnmatchedLineEndings( array $diff ): bool {
-		$newLineBreaks = array( '' => true );
-		$oldLineBreaks = array( '' => true );
+        foreach ($diff as $entry) {
+            if (self::OLD === $entry[1]) {
+                $ln                 = $this->getLinebreak($entry[0]);
+                $oldLineBreaks[$ln] = true;
+                $newLineBreaks[$ln] = true;
+            } elseif (self::ADDED === $entry[1]) {
+                $newLineBreaks[$this->getLinebreak($entry[0])] = true;
+            } elseif (self::REMOVED === $entry[1]) {
+                $oldLineBreaks[$this->getLinebreak($entry[0])] = true;
+            }
+        }
 
-		foreach ( $diff as $entry ) {
-			if ( self::OLD === $entry[1] ) {
-				$ln                   = $this->getLinebreak( $entry[0] );
-				$oldLineBreaks[ $ln ] = true;
-				$newLineBreaks[ $ln ] = true;
-			} elseif ( self::ADDED === $entry[1] ) {
-				$newLineBreaks[ $this->getLinebreak( $entry[0] ) ] = true;
-			} elseif ( self::REMOVED === $entry[1] ) {
-				$oldLineBreaks[ $this->getLinebreak( $entry[0] ) ] = true;
-			}
-		}
+        // if either input or output is a single line without breaks than no warning should be raised
+        if (['' => true] === $newLineBreaks || ['' => true] === $oldLineBreaks) {
+            return false;
+        }
 
-		// if either input or output is a single line without breaks than no warning should be raised
-		if ( array( '' => true ) === $newLineBreaks || array( '' => true ) === $oldLineBreaks ) {
-			return false;
-		}
+        // two-way compare
+        foreach ($newLineBreaks as $break => $set) {
+            if (!isset($oldLineBreaks[$break])) {
+                return true;
+            }
+        }
 
-		// two-way compare
-		foreach ( $newLineBreaks as $break => $set ) {
-			if ( ! isset( $oldLineBreaks[ $break ] ) ) {
-				return true;
-			}
-		}
+        foreach ($oldLineBreaks as $break => $set) {
+            if (!isset($newLineBreaks[$break])) {
+                return true;
+            }
+        }
 
-		foreach ( $oldLineBreaks as $break => $set ) {
-			if ( ! isset( $newLineBreaks[ $break ] ) ) {
-				return true;
-			}
-		}
+        return false;
+    }
 
-		return false;
-	}
+    private function getLinebreak($line): string
+    {
+        if (!is_string($line)) {
+            return '';
+        }
 
-	private function getLinebreak( $line ): string {
-		if ( ! is_string( $line ) ) {
-			return '';
-		}
+        $lc = substr($line, -1);
 
-		$lc = substr( $line, -1 );
+        if ("\r" === $lc) {
+            return "\r";
+        }
 
-		if ( "\r" === $lc ) {
-			return "\r";
-		}
+        if ("\n" !== $lc) {
+            return '';
+        }
 
-		if ( "\n" !== $lc ) {
-			return '';
-		}
+        if (str_ends_with($line, "\r\n")) {
+            return "\r\n";
+        }
 
-		if ( str_ends_with( $line, "\r\n" ) ) {
-			return "\r\n";
-		}
+        return "\n";
+    }
 
-		return "\n";
-	}
+    private static function getArrayDiffParted(array &$from, array &$to): array
+    {
+        $start = [];
+        $end   = [];
 
-	private static function getArrayDiffParted( array &$from, array &$to ): array {
-		$start = array();
-		$end   = array();
+        reset($to);
 
-		reset( $to );
+        foreach ($from as $k => $v) {
+            $toK = key($to);
 
-		foreach ( $from as $k => $v ) {
-			$toK = key( $to );
+            if ($toK === $k && $v === $to[$k]) {
+                $start[$k] = $v;
 
-			if ( $toK === $k && $v === $to[ $k ] ) {
-				$start[ $k ] = $v;
+                unset($from[$k], $to[$k]);
+            } else {
+                break;
+            }
+        }
 
-				unset( $from[ $k ], $to[ $k ] );
-			} else {
-				break;
-			}
-		}
+        end($from);
+        end($to);
 
-		end( $from );
-		end( $to );
+        do {
+            $fromK = key($from);
+            $toK   = key($to);
 
-		do {
-			$fromK = key( $from );
-			$toK   = key( $to );
+            if (null === $fromK || null === $toK || current($from) !== current($to)) {
+                break;
+            }
 
-			if ( null === $fromK || null === $toK || current( $from ) !== current( $to ) ) {
-				break;
-			}
+            prev($from);
+            prev($to);
 
-			prev( $from );
-			prev( $to );
+            $end = [$fromK => $from[$fromK]] + $end;
+            unset($from[$fromK], $to[$toK]);
+        } while (true);
 
-			$end = array( $fromK => $from[ $fromK ] ) + $end;
-			unset( $from[ $fromK ], $to[ $toK ] );
-		} while ( true );
-
-		return array( $from, $to, $start, $end );
-	}
+        return [$from, $to, $start, $end];
+    }
 }

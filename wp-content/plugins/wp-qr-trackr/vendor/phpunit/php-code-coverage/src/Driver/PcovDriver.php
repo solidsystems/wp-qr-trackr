@@ -24,52 +24,62 @@ use SebastianBergmann\CodeCoverage\Filter;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class PcovDriver extends Driver {
+final class PcovDriver extends Driver
+{
+    private readonly Filter $filter;
 
-	private readonly Filter $filter;
+    /**
+     * @throws PcovNotAvailableException
+     */
+    public function __construct(Filter $filter)
+    {
+        $this->ensurePcovIsAvailable();
 
-	/**
-	 * @throws PcovNotAvailableException
-	 */
-	public function __construct( Filter $filter ) {
-		$this->ensurePcovIsAvailable();
+        $this->filter = $filter;
+    }
 
-		$this->filter = $filter;
-	}
+    /**
+     * @codeCoverageIgnore
+     */
+    public function start(): void
+    {
+        start();
+    }
 
-	public function start(): void {
-		start();
-	}
+    public function stop(): RawCodeCoverageData
+    {
+        stop();
 
-	public function stop(): RawCodeCoverageData {
-		stop();
+        // @codeCoverageIgnoreStart
+        $filesToCollectCoverageFor = waiting();
+        $collected                 = [];
 
-		$filesToCollectCoverageFor = waiting();
-		$collected                 = array();
+        if ($filesToCollectCoverageFor !== []) {
+            if (!$this->filter->isEmpty()) {
+                $filesToCollectCoverageFor = array_intersect($filesToCollectCoverageFor, $this->filter->files());
+            }
 
-		if ( $filesToCollectCoverageFor ) {
-			if ( ! $this->filter->isEmpty() ) {
-				$filesToCollectCoverageFor = array_intersect( $filesToCollectCoverageFor, $this->filter->files() );
-			}
+            $collected = collect(inclusive, $filesToCollectCoverageFor);
 
-			$collected = collect( inclusive, $filesToCollectCoverageFor );
+            clear();
+        }
 
-			clear();
-		}
+        return RawCodeCoverageData::fromXdebugWithoutPathCoverage($collected);
+        // @codeCoverageIgnoreEnd
+    }
 
-		return RawCodeCoverageData::fromXdebugWithoutPathCoverage( $collected );
-	}
+    public function nameAndVersion(): string
+    {
+        return 'PCOV ' . phpversion('pcov');
+    }
 
-	public function nameAndVersion(): string {
-		return 'PCOV ' . phpversion( 'pcov' );
-	}
-
-	/**
-	 * @throws PcovNotAvailableException
-	 */
-	private function ensurePcovIsAvailable(): void {
-		if ( ! extension_loaded( 'pcov' ) ) {
-			throw new PcovNotAvailableException();
-		}
-	}
+    /**
+     * @throws PcovNotAvailableException
+     */
+    private function ensurePcovIsAvailable(): void
+    {
+        if (!extension_loaded('pcov')) {
+            throw new PcovNotAvailableException;
+        }
+    }
 }

@@ -10,22 +10,22 @@
 namespace SebastianBergmann\CodeCoverage\Test\TestSize;
 
 /**
- * @psalm-immutable
+ * @immutable
  */
-final class Small extends Known {
+final class Small extends Known
+{
+    public function isSmall(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true Small $this
-	 */
-	public function isSmall(): bool {
-		return true;
-	}
+    public function isGreaterThan(TestSize $other): bool
+    {
+        return false;
+    }
 
-	public function isGreaterThan( TestSize $other ): bool {
-		return false;
-	}
-
-	public function asString(): string {
-		return 'small';
-	}
+    public function asString(): string
+    {
+        return 'small';
+    }
 }

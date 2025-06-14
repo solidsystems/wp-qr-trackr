@@ -10,52 +10,53 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ExcludeStaticPropertyFromBackup extends Metadata {
+final readonly class ExcludeStaticPropertyFromBackup extends Metadata
+{
+    /**
+     * @var class-string
+     */
+    private string $className;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $className;
+    /**
+     * @var non-empty-string
+     */
+    private string $propertyName;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $propertyName;
+    /**
+     * @param int<0, 1>        $level
+     * @param class-string     $className
+     * @param non-empty-string $propertyName
+     */
+    protected function __construct(int $level, string $className, string $propertyName)
+    {
+        parent::__construct($level);
 
-	/**
-	 * @psalm-param 0|1 $level
-	 * @psalm-param class-string $className
-	 * @psalm-param non-empty-string $propertyName
-	 */
-	protected function __construct( int $level, string $className, string $propertyName ) {
-		parent::__construct( $level );
+        $this->className    = $className;
+        $this->propertyName = $propertyName;
+    }
 
-		$this->className    = $className;
-		$this->propertyName = $propertyName;
-	}
+    public function isExcludeStaticPropertyFromBackup(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true ExcludeStaticPropertyFromBackup $this
-	 */
-	public function isExcludeStaticPropertyFromBackup(): bool {
-		return true;
-	}
+    /**
+     * @return class-string
+     */
+    public function className(): string
+    {
+        return $this->className;
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function className(): string {
-		return $this->className;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function propertyName(): string {
-		return $this->propertyName;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function propertyName(): string
+    {
+        return $this->propertyName;
+    }
 }

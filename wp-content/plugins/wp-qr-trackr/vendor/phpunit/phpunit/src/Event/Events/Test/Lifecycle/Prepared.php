@@ -15,32 +15,39 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Prepared implements Event {
+final readonly class Prepared implements Event
+{
+    private Telemetry\Info $telemetryInfo;
+    private Code\Test $test;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly Code\Test $test;
+    public function __construct(Telemetry\Info $telemetryInfo, Code\Test $test)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->test          = $test;
+    }
 
-	public function __construct( Telemetry\Info $telemetryInfo, Code\Test $test ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->test          = $test;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    public function test(): Code\Test
+    {
+        return $this->test;
+    }
 
-	public function test(): Code\Test {
-		return $this->test;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'Test Prepared (%s)',
-			$this->test->id(),
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Test Prepared (%s)',
+            $this->test->id(),
+        );
+    }
 }

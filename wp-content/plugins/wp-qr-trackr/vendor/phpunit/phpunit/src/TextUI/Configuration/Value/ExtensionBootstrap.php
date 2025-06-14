@@ -12,40 +12,43 @@ namespace PHPUnit\TextUI\Configuration;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class ExtensionBootstrap {
+final readonly class ExtensionBootstrap
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $className;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $className;
+    /**
+     * @var array<string,string>
+     */
+    private array $parameters;
 
-	/**
-	 * @psalm-var array<string,string>
-	 */
-	private readonly array $parameters;
+    /**
+     * @param non-empty-string     $className
+     * @param array<string,string> $parameters
+     */
+    public function __construct(string $className, array $parameters)
+    {
+        $this->className  = $className;
+        $this->parameters = $parameters;
+    }
 
-	/**
-	 * @psalm-param class-string $className
-	 * @psalm-param array<string,string> $parameters
-	 */
-	public function __construct( string $className, array $parameters ) {
-		$this->className  = $className;
-		$this->parameters = $parameters;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function className(): string
+    {
+        return $this->className;
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function className(): string {
-		return $this->className;
-	}
-
-	/**
-	 * @psalm-return array<string,string>
-	 */
-	public function parameters(): array {
-		return $this->parameters;
-	}
+    /**
+     * @return array<string,string>
+     */
+    public function parameters(): array
+    {
+        return $this->parameters;
+    }
 }

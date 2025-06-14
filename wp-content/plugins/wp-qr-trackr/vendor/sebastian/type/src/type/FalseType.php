@@ -9,30 +9,37 @@
  */
 namespace SebastianBergmann\Type;
 
-final class FalseType extends Type {
+/**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
+ */
+final class FalseType extends Type
+{
+    public function isAssignable(Type $other): bool
+    {
+        if ($other instanceof self) {
+            return true;
+        }
 
-	public function isAssignable( Type $other ): bool {
-		if ( $other instanceof self ) {
-			return true;
-		}
+        return $other instanceof SimpleType &&
+              $other->name() === 'bool' &&
+              $other->value() === false;
+    }
 
-		return $other instanceof SimpleType &&
-				$other->name() === 'bool' &&
-				$other->value() === false;
-	}
+    /**
+     * @return 'false'
+     */
+    public function name(): string
+    {
+        return 'false';
+    }
 
-	public function name(): string {
-		return 'false';
-	}
+    public function allowsNull(): bool
+    {
+        return false;
+    }
 
-	public function allowsNull(): bool {
-		return false;
-	}
-
-	/**
-	 * @psalm-assert-if-true FalseType $this
-	 */
-	public function isFalse(): bool {
-		return true;
-	}
+    public function isFalse(): bool
+    {
+        return true;
+    }
 }

@@ -19,45 +19,49 @@ use EmptyIterator;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsEmpty extends Constraint {
+final class IsEmpty extends Constraint
+{
+    /**
+     * Returns a string representation of the constraint.
+     */
+    public function toString(): string
+    {
+        return 'is empty';
+    }
 
-	/**
-	 * Returns a string representation of the constraint.
-	 */
-	public function toString(): string {
-		return 'is empty';
-	}
+    /**
+     * Evaluates the constraint for parameter $other. Returns true if the
+     * constraint is met, false otherwise.
+     */
+    protected function matches(mixed $other): bool
+    {
+        if ($other instanceof EmptyIterator) {
+            return true;
+        }
 
-	/**
-	 * Evaluates the constraint for parameter $other. Returns true if the
-	 * constraint is met, false otherwise.
-	 */
-	protected function matches( mixed $other ): bool {
-		if ( $other instanceof EmptyIterator ) {
-			return true;
-		}
+        if ($other instanceof Countable) {
+            return count($other) === 0;
+        }
 
-		if ( $other instanceof Countable ) {
-			return count( $other ) === 0;
-		}
+        /** @phpstan-ignore empty.notAllowed */
+        return empty($other);
+    }
 
-		return empty( $other );
-	}
+    /**
+     * Returns the description of the failure.
+     *
+     * The beginning of failure messages is "Failed asserting that" in most
+     * cases. This method should return the second part of that sentence.
+     */
+    protected function failureDescription(mixed $other): string
+    {
+        $type = gettype($other);
 
-	/**
-	 * Returns the description of the failure.
-	 *
-	 * The beginning of failure messages is "Failed asserting that" in most
-	 * cases. This method should return the second part of that sentence.
-	 */
-	protected function failureDescription( mixed $other ): string {
-		$type = gettype( $other );
-
-		return sprintf(
-			'%s %s %s',
-			str_starts_with( $type, 'a' ) || str_starts_with( $type, 'o' ) ? 'an' : 'a',
-			$type,
-			$this->toString( true ),
-		);
-	}
+        return sprintf(
+            '%s %s %s',
+            str_starts_with($type, 'a') || str_starts_with($type, 'o') ? 'an' : 'a',
+            $type,
+            $this->toString(),
+        );
+    }
 }

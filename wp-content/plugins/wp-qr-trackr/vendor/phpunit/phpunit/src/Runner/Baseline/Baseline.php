@@ -14,45 +14,48 @@ namespace PHPUnit\Runner\Baseline;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Baseline {
+final class Baseline
+{
+    public const int VERSION = 1;
 
-	public const VERSION = 1;
+    /**
+     * @var array<non-empty-string, array<positive-int, list<Issue>>>
+     */
+    private array $issues = [];
 
-	/**
-	 * @psalm-var array<non-empty-string, array<positive-int, list<Issue>>>
-	 */
-	private array $issues = array();
+    public function add(Issue $issue): void
+    {
+        if (!isset($this->issues[$issue->file()])) {
+            $this->issues[$issue->file()] = [];
+        }
 
-	public function add( Issue $issue ): void {
-		if ( ! isset( $this->issues[ $issue->file() ] ) ) {
-			$this->issues[ $issue->file() ] = array();
-		}
+        if (!isset($this->issues[$issue->file()][$issue->line()])) {
+            $this->issues[$issue->file()][$issue->line()] = [];
+        }
 
-		if ( ! isset( $this->issues[ $issue->file() ][ $issue->line() ] ) ) {
-			$this->issues[ $issue->file() ][ $issue->line() ] = array();
-		}
+        $this->issues[$issue->file()][$issue->line()][] = $issue;
+    }
 
-		$this->issues[ $issue->file() ][ $issue->line() ][] = $issue;
-	}
+    public function has(Issue $issue): bool
+    {
+        if (!isset($this->issues[$issue->file()][$issue->line()])) {
+            return false;
+        }
 
-	public function has( Issue $issue ): bool {
-		if ( ! isset( $this->issues[ $issue->file() ][ $issue->line() ] ) ) {
-			return false;
-		}
+        foreach ($this->issues[$issue->file()][$issue->line()] as $_issue) {
+            if ($_issue->equals($issue)) {
+                return true;
+            }
+        }
 
-		foreach ( $this->issues[ $issue->file() ][ $issue->line() ] as $_issue ) {
-			if ( $_issue->equals( $issue ) ) {
-				return true;
-			}
-		}
+        return false;
+    }
 
-		return false;
-	}
-
-	/**
-	 * @psalm-return array<string, array<positive-int, list<Issue>>>
-	 */
-	public function groupedByFileAndLine(): array {
-		return $this->issues;
-	}
+    /**
+     * @return array<non-empty-string, array<positive-int, list<Issue>>>
+     */
+    public function groupedByFileAndLine(): array
+    {
+        return $this->issues;
+    }
 }

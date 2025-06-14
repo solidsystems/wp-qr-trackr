@@ -16,34 +16,38 @@ use IteratorAggregate;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class ExtensionBootstrapCollection implements IteratorAggregate {
+final readonly class ExtensionBootstrapCollection implements IteratorAggregate
+{
+    /**
+     * @var list<ExtensionBootstrap>
+     */
+    private array $extensionBootstraps;
 
-	/**
-	 * @psalm-var list<ExtensionBootstrap>
-	 */
-	private readonly array $extensionBootstraps;
+    /**
+     * @param list<ExtensionBootstrap> $extensionBootstraps
+     */
+    public static function fromArray(array $extensionBootstraps): self
+    {
+        return new self(...$extensionBootstraps);
+    }
 
-	/**
-	 * @psalm-param list<ExtensionBootstrap> $extensionBootstraps
-	 */
-	public static function fromArray( array $extensionBootstraps ): self {
-		return new self( ...$extensionBootstraps );
-	}
+    private function __construct(ExtensionBootstrap ...$extensionBootstraps)
+    {
+        $this->extensionBootstraps = $extensionBootstraps;
+    }
 
-	private function __construct( ExtensionBootstrap ...$extensionBootstraps ) {
-		$this->extensionBootstraps = $extensionBootstraps;
-	}
+    /**
+     * @return list<ExtensionBootstrap>
+     */
+    public function asArray(): array
+    {
+        return $this->extensionBootstraps;
+    }
 
-	/**
-	 * @psalm-return list<ExtensionBootstrap>
-	 */
-	public function asArray(): array {
-		return $this->extensionBootstraps;
-	}
-
-	public function getIterator(): ExtensionBootstrapCollectionIterator {
-		return new ExtensionBootstrapCollectionIterator( $this );
-	}
+    public function getIterator(): ExtensionBootstrapCollectionIterator
+    {
+        return new ExtensionBootstrapCollectionIterator($this);
+    }
 }

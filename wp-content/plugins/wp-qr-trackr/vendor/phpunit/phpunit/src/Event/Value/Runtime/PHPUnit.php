@@ -12,25 +12,28 @@ namespace PHPUnit\Event\Runtime;
 use PHPUnit\Runner\Version;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PHPUnit {
+final readonly class PHPUnit
+{
+    private string $versionId;
+    private string $releaseSeries;
 
-	private readonly string $versionId;
-	private readonly string $releaseSeries;
+    public function __construct()
+    {
+        $this->versionId     = Version::id();
+        $this->releaseSeries = Version::series();
+    }
 
-	public function __construct() {
-		$this->versionId     = Version::id();
-		$this->releaseSeries = Version::series();
-	}
+    public function versionId(): string
+    {
+        return $this->versionId;
+    }
 
-	public function versionId(): string {
-		return $this->versionId;
-	}
-
-	public function releaseSeries(): string {
-		return $this->releaseSeries;
-	}
+    public function releaseSeries(): string
+    {
+        return $this->releaseSeries;
+    }
 }

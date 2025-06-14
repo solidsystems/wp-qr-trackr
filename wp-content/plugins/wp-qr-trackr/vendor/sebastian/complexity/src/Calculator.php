@@ -10,7 +10,10 @@
 namespace SebastianBergmann\Complexity;
 
 use function assert;
+use function file_exists;
 use function file_get_contents;
+use function is_readable;
+use function is_string;
 use PhpParser\Error;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
@@ -18,63 +21,74 @@ use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
 
-final class Calculator {
+final class Calculator
+{
+    /**
+     * @param non-empty-string $sourceFile
+     *
+     * @throws RuntimeException
+     */
+    public function calculateForSourceFile(string $sourceFile): ComplexityCollection
+    {
+        assert(file_exists($sourceFile));
+        assert(is_readable($sourceFile));
 
-	/**
-	 * @throws RuntimeException
-	 */
-	public function calculateForSourceFile( string $sourceFile ): ComplexityCollection {
-		return $this->calculateForSourceString( file_get_contents( $sourceFile ) );
-	}
+        $source = file_get_contents($sourceFile);
 
-	/**
-	 * @throws RuntimeException
-	 */
-	public function calculateForSourceString( string $source ): ComplexityCollection {
-		try {
-			$nodes = ( new ParserFactory() )->createForHostVersion()->parse( $source );
+        assert(is_string($source));
 
-			assert( $nodes !== null );
+        return $this->calculateForSourceString($source);
+    }
 
-			return $this->calculateForAbstractSyntaxTree( $nodes );
+    /**
+     * @throws RuntimeException
+     */
+    public function calculateForSourceString(string $source): ComplexityCollection
+    {
+        try {
+            $nodes = (new ParserFactory)->createForHostVersion()->parse($source);
 
-			// @codeCoverageIgnoreStart
-		} catch ( Error $error ) {
-			throw new RuntimeException(
-				$error->getMessage(),
-				$error->getCode(),
-				$error,
-			);
-		}
-		// @codeCoverageIgnoreEnd
-	}
+            assert($nodes !== null);
 
-	/**
-	 * @param Node[] $nodes
-	 *
-	 * @throws RuntimeException
-	 */
-	public function calculateForAbstractSyntaxTree( array $nodes ): ComplexityCollection {
-		$traverser                    = new NodeTraverser();
-		$complexityCalculatingVisitor = new ComplexityCalculatingVisitor( true );
+            return $this->calculateForAbstractSyntaxTree($nodes);
+            // @codeCoverageIgnoreStart
+        } catch (Error $error) {
+            throw new RuntimeException(
+                $error->getMessage(),
+                $error->getCode(),
+                $error,
+            );
+        }
+        // @codeCoverageIgnoreEnd
+    }
 
-		$traverser->addVisitor( new NameResolver() );
-		$traverser->addVisitor( new ParentConnectingVisitor() );
-		$traverser->addVisitor( $complexityCalculatingVisitor );
+    /**
+     * @param Node[] $nodes
+     *
+     * @throws RuntimeException
+     */
+    public function calculateForAbstractSyntaxTree(array $nodes): ComplexityCollection
+    {
+        $traverser                    = new NodeTraverser;
+        $complexityCalculatingVisitor = new ComplexityCalculatingVisitor(true);
 
-		try {
-			/* @noinspection UnusedFunctionResultInspection */
-			$traverser->traverse( $nodes );
-			// @codeCoverageIgnoreStart
-		} catch ( Error $error ) {
-			throw new RuntimeException(
-				$error->getMessage(),
-				$error->getCode(),
-				$error,
-			);
-		}
-		// @codeCoverageIgnoreEnd
+        $traverser->addVisitor(new NameResolver);
+        $traverser->addVisitor(new ParentConnectingVisitor);
+        $traverser->addVisitor($complexityCalculatingVisitor);
 
-		return $complexityCalculatingVisitor->result();
-	}
+        try {
+            /* @noinspection UnusedFunctionResultInspection */
+            $traverser->traverse($nodes);
+            // @codeCoverageIgnoreStart
+        } catch (Error $error) {
+            throw new RuntimeException(
+                $error->getMessage(),
+                $error->getCode(),
+                $error,
+            );
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $complexityCalculatingVisitor->result();
+    }
 }

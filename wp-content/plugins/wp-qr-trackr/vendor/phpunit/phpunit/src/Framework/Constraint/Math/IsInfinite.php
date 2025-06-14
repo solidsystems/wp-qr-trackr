@@ -14,20 +14,22 @@ use function is_infinite;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsInfinite extends Constraint {
+final class IsInfinite extends Constraint
+{
+    /**
+     * Returns a string representation of the constraint.
+     */
+    public function toString(): string
+    {
+        return 'is infinite';
+    }
 
-	/**
-	 * Returns a string representation of the constraint.
-	 */
-	public function toString(): string {
-		return 'is infinite';
-	}
-
-	/**
-	 * Evaluates the constraint for parameter $other. Returns true if the
-	 * constraint is met, false otherwise.
-	 */
-	protected function matches( mixed $other ): bool {
-		return is_infinite( $other );
-	}
+    /**
+     * Evaluates the constraint for parameter $other. Returns true if the
+     * constraint is met, false otherwise.
+     */
+    protected function matches(mixed $other): bool
+    {
+        return is_infinite($other);
+    }
 }

@@ -12,43 +12,46 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
-final class RequiresSetting {
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
+final readonly class RequiresSetting
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $setting;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $setting;
+    /**
+     * @var non-empty-string
+     */
+    private string $value;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $value;
+    /**
+     * @param non-empty-string $setting
+     * @param non-empty-string $value
+     */
+    public function __construct(string $setting, string $value)
+    {
+        $this->setting = $setting;
+        $this->value   = $value;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $setting
-	 * @psalm-param non-empty-string $value
-	 */
-	public function __construct( string $setting, string $value ) {
-		$this->setting = $setting;
-		$this->value   = $value;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function setting(): string
+    {
+        return $this->setting;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function setting(): string {
-		return $this->setting;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function value(): string {
-		return $this->value;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function value(): string
+    {
+        return $this->value;
+    }
 }

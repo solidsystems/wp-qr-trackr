@@ -14,38 +14,42 @@ use IteratorAggregate;
 /**
  * @template-implements IteratorAggregate<int, TestResult>
  *
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestResultCollection implements IteratorAggregate {
+final readonly class TestResultCollection implements IteratorAggregate
+{
+    /**
+     * @var list<TestResult>
+     */
+    private array $testResults;
 
-	/**
-	 * @psalm-var list<TestResult>
-	 */
-	private readonly array $testResults;
+    /**
+     * @param list<TestResult> $testResults
+     */
+    public static function fromArray(array $testResults): self
+    {
+        return new self(...$testResults);
+    }
 
-	/**
-	 * @psalm-param list<TestResult> $testResults
-	 */
-	public static function fromArray( array $testResults ): self {
-		return new self( ...$testResults );
-	}
+    private function __construct(TestResult ...$testResults)
+    {
+        $this->testResults = $testResults;
+    }
 
-	private function __construct( TestResult ...$testResults ) {
-		$this->testResults = $testResults;
-	}
+    /**
+     * @return list<TestResult>
+     */
+    public function asArray(): array
+    {
+        return $this->testResults;
+    }
 
-	/**
-	 * @psalm-return list<TestResult>
-	 */
-	public function asArray(): array {
-		return $this->testResults;
-	}
-
-	public function getIterator(): TestResultCollectionIterator {
-		return new TestResultCollectionIterator( $this );
-	}
+    public function getIterator(): TestResultCollectionIterator
+    {
+        return new TestResultCollectionIterator($this);
+    }
 }

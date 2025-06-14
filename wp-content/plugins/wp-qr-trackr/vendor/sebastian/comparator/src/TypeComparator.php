@@ -13,29 +13,31 @@ use function gettype;
 use function sprintf;
 use SebastianBergmann\Exporter\Exporter;
 
-final class TypeComparator extends Comparator {
+final class TypeComparator extends Comparator
+{
+    public function accepts(mixed $expected, mixed $actual): bool
+    {
+        return true;
+    }
 
-	public function accepts( mixed $expected, mixed $actual ): bool {
-		return true;
-	}
-
-	/**
-	 * @throws ComparisonFailure
-	 */
-	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false ): void {
-		if ( gettype( $expected ) != gettype( $actual ) ) {
-			throw new ComparisonFailure(
-				$expected,
-				$actual,
-				// we don't need a diff
-				'',
-				'',
-				sprintf(
-					'%s does not match expected type "%s".',
-					( new Exporter() )->shortenedExport( $actual ),
-					gettype( $expected ),
-				),
-			);
-		}
-	}
+    /**
+     * @throws ComparisonFailure
+     */
+    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false): void
+    {
+        if (gettype($expected) != gettype($actual)) {
+            throw new ComparisonFailure(
+                $expected,
+                $actual,
+                // we don't need a diff
+                '',
+                '',
+                sprintf(
+                    '%s does not match expected type "%s".',
+                    (new Exporter)->shortenedExport($actual),
+                    gettype($expected),
+                ),
+            );
+        }
+    }
 }

@@ -9,38 +9,46 @@
  */
 namespace SebastianBergmann\Type;
 
-final class GenericObjectType extends Type {
+/**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
+ */
+final class GenericObjectType extends Type
+{
+    private bool $allowsNull;
 
-	private bool $allowsNull;
+    public function __construct(bool $nullable)
+    {
+        $this->allowsNull = $nullable;
+    }
 
-	public function __construct( bool $nullable ) {
-		$this->allowsNull = $nullable;
-	}
+    public function isAssignable(Type $other): bool
+    {
+        if ($this->allowsNull && $other instanceof NullType) {
+            return true;
+        }
 
-	public function isAssignable( Type $other ): bool {
-		if ( $this->allowsNull && $other instanceof NullType ) {
-			return true;
-		}
+        if (!$other instanceof ObjectType) {
+            return false;
+        }
 
-		if ( ! $other instanceof ObjectType ) {
-			return false;
-		}
+        return true;
+    }
 
-		return true;
-	}
+    /**
+     * @return 'object'
+     */
+    public function name(): string
+    {
+        return 'object';
+    }
 
-	public function name(): string {
-		return 'object';
-	}
+    public function allowsNull(): bool
+    {
+        return $this->allowsNull;
+    }
 
-	public function allowsNull(): bool {
-		return $this->allowsNull;
-	}
-
-	/**
-	 * @psalm-assert-if-true GenericObjectType $this
-	 */
-	public function isGenericObject(): bool {
-		return true;
-	}
+    public function isGenericObject(): bool
+    {
+        return true;
+    }
 }

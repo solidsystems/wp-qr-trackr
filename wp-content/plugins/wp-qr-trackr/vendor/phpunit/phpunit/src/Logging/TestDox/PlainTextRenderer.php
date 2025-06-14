@@ -16,62 +16,64 @@ use function sprintf;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class PlainTextRenderer {
+final readonly class PlainTextRenderer
+{
+    /**
+     * @param array<string, TestResultCollection> $tests
+     */
+    public function render(array $tests): string
+    {
+        $buffer = '';
 
-	/**
-	 * @psalm-param array<string, TestResultCollection> $tests
-	 */
-	public function render( array $tests ): string {
-		$buffer = '';
+        foreach ($tests as $prettifiedClassName => $_tests) {
+            $buffer .= $prettifiedClassName . "\n";
 
-		foreach ( $tests as $prettifiedClassName => $_tests ) {
-			$buffer .= $prettifiedClassName . "\n";
+            foreach ($this->reduce($_tests) as $prettifiedMethodName => $outcome) {
+                $buffer .= sprintf(
+                    ' [%s] %s' . "\n",
+                    $outcome,
+                    $prettifiedMethodName,
+                );
+            }
 
-			foreach ( $this->reduce( $_tests ) as $prettifiedMethodName => $outcome ) {
-				$buffer .= sprintf(
-					' [%s] %s' . "\n",
-					$outcome,
-					$prettifiedMethodName,
-				);
-			}
+            $buffer .= "\n";
+        }
 
-			$buffer .= "\n";
-		}
+        return $buffer;
+    }
 
-		return $buffer;
-	}
+    /**
+     * @return array<string, ' '|'x'>
+     */
+    private function reduce(TestResultCollection $tests): array
+    {
+        $result = [];
 
-	/**
-	 * @psalm-return array<string, 'x'|' '>
-	 */
-	private function reduce( TestResultCollection $tests ): array {
-		$result = array();
+        foreach ($tests as $test) {
+            $prettifiedMethodName = $test->test()->testDox()->prettifiedMethodName();
 
-		foreach ( $tests as $test ) {
-			$prettifiedMethodName = $test->test()->testDox()->prettifiedMethodName();
+            $success = true;
 
-			$success = true;
+            if ($test->status()->isError() ||
+                $test->status()->isFailure() ||
+                $test->status()->isIncomplete() ||
+                $test->status()->isSkipped()) {
+                $success = false;
+            }
 
-			if ( $test->status()->isError() ||
-				$test->status()->isFailure() ||
-				$test->status()->isIncomplete() ||
-				$test->status()->isSkipped() ) {
-				$success = false;
-			}
+            if (!isset($result[$prettifiedMethodName])) {
+                $result[$prettifiedMethodName] = $success ? 'x' : ' ';
 
-			if ( ! isset( $result[ $prettifiedMethodName ] ) ) {
-				$result[ $prettifiedMethodName ] = $success ? 'x' : ' ';
+                continue;
+            }
 
-				continue;
-			}
+            if ($success) {
+                continue;
+            }
 
-			if ( $success ) {
-				continue;
-			}
+            $result[$prettifiedMethodName] = ' ';
+        }
 
-			$result[ $prettifiedMethodName ] = ' ';
-		}
-
-		return $result;
-	}
+        return $result;
+    }
 }

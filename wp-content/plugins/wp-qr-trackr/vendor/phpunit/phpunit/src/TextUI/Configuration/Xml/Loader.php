@@ -27,6 +27,7 @@ use function trim;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use DOMNodeList;
 use DOMXPath;
 use PHPUnit\Runner\TestSuiteSorter;
 use PHPUnit\Runner\Version;
@@ -60,11 +61,13 @@ use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Clover;
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Cobertura;
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Crap4j;
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Html as CodeCoverageHtml;
+use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\OpenClover;
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php as CodeCoveragePhp;
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Text as CodeCoverageText;
 use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Xml as CodeCoverageXml;
 use PHPUnit\TextUI\XmlConfiguration\Logging\Junit;
 use PHPUnit\TextUI\XmlConfiguration\Logging\Logging;
+use PHPUnit\TextUI\XmlConfiguration\Logging\Otr;
 use PHPUnit\TextUI\XmlConfiguration\Logging\TeamCity;
 use PHPUnit\TextUI\XmlConfiguration\Logging\TestDox\Html as TestDoxHtml;
 use PHPUnit\TextUI\XmlConfiguration\Logging\TestDox\Text as TestDoxText;
@@ -79,951 +82,1099 @@ use SebastianBergmann\CodeCoverage\Report\Thresholds;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Loader {
-
-	/**
-	 * @throws Exception
-	 */
-	public function load( string $filename ): LoadedFromFileConfiguration {
-		try {
-			$document = ( new XmlLoader() )->loadFile( $filename );
-		} catch ( XmlException $e ) {
-			throw new Exception(
-				$e->getMessage(),
-				$e->getCode(),
-				$e,
-			);
-		}
-
-		$xpath = new DOMXPath( $document );
-
-		try {
-			$xsdFilename = ( new SchemaFinder() )->find( Version::series() );
-		} catch ( CannotFindSchemaException $e ) {
-			throw new Exception(
-				$e->getMessage(),
-				$e->getCode(),
-				$e,
-			);
-		}
-
-		$configurationFileRealpath = realpath( $filename );
-
-		return new LoadedFromFileConfiguration(
-			$configurationFileRealpath,
-			( new Validator() )->validate( $document, $xsdFilename ),
-			$this->extensions( $xpath ),
-			$this->source( $configurationFileRealpath, $xpath ),
-			$this->codeCoverage( $configurationFileRealpath, $xpath ),
-			$this->groups( $xpath ),
-			$this->logging( $configurationFileRealpath, $xpath ),
-			$this->php( $configurationFileRealpath, $xpath ),
-			$this->phpunit( $configurationFileRealpath, $document ),
-			$this->testSuite( $configurationFileRealpath, $xpath ),
-		);
-	}
-
-	private function logging( string $filename, DOMXPath $xpath ): Logging {
-		$junit   = null;
-		$element = $this->element( $xpath, 'logging/junit' );
-
-		if ( $element ) {
-			$junit = new Junit(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-			);
-		}
-
-		$teamCity = null;
-		$element  = $this->element( $xpath, 'logging/teamcity' );
-
-		if ( $element ) {
-			$teamCity = new TeamCity(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-			);
-		}
-
-		$testDoxHtml = null;
-		$element     = $this->element( $xpath, 'logging/testdoxHtml' );
-
-		if ( $element ) {
-			$testDoxHtml = new TestDoxHtml(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-			);
-		}
-
-		$testDoxText = null;
-		$element     = $this->element( $xpath, 'logging/testdoxText' );
-
-		if ( $element ) {
-			$testDoxText = new TestDoxText(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-			);
-		}
-
-		return new Logging(
-			$junit,
-			$teamCity,
-			$testDoxHtml,
-			$testDoxText,
-		);
-	}
-
-	private function extensions( DOMXPath $xpath ): ExtensionBootstrapCollection {
-		$extensionBootstrappers = array();
-
-		foreach ( $xpath->query( 'extensions/bootstrap' ) as $bootstrap ) {
-			assert( $bootstrap instanceof DOMElement );
-
-			$parameters = array();
-
-			foreach ( $xpath->query( 'parameter', $bootstrap ) as $parameter ) {
-				assert( $parameter instanceof DOMElement );
-
-				$parameters[ $parameter->getAttribute( 'name' ) ] = $parameter->getAttribute( 'value' );
-			}
-
-			$extensionBootstrappers[] = new ExtensionBootstrap(
-				$bootstrap->getAttribute( 'class' ),
-				$parameters,
-			);
-		}
-
-		return ExtensionBootstrapCollection::fromArray( $extensionBootstrappers );
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	private function toAbsolutePath( string $filename, string $path ): string {
-		$path = trim( $path );
-
-		if ( str_starts_with( $path, '/' ) ) {
-			return $path;
-		}
-
-		// Matches the following on Windows:
-		// - \\NetworkComputer\Path
-		// - \\.\D:
-		// - \\.\c:
-		// - C:\Windows
-		// - C:\windows
-		// - C:/windows
-		// - c:/windows
-		if ( defined( 'PHP_WINDOWS_VERSION_BUILD' ) &&
-			! empty( $path ) &&
-			( $path[0] === '\\' || ( strlen( $path ) >= 3 && preg_match( '#^[A-Z]:[/\\\]#i', substr( $path, 0, 3 ) ) ) ) ) {
-			return $path;
-		}
-
-		if ( str_contains( $path, '://' ) ) {
-			return $path;
-		}
-
-		return dirname( $filename ) . DIRECTORY_SEPARATOR . $path;
-	}
-
-	private function source( string $filename, DOMXPath $xpath ): Source {
-		$baseline                           = null;
-		$restrictDeprecations               = false;
-		$restrictNotices                    = false;
-		$restrictWarnings                   = false;
-		$ignoreSuppressionOfDeprecations    = false;
-		$ignoreSuppressionOfPhpDeprecations = false;
-		$ignoreSuppressionOfErrors          = false;
-		$ignoreSuppressionOfNotices         = false;
-		$ignoreSuppressionOfPhpNotices      = false;
-		$ignoreSuppressionOfWarnings        = false;
-		$ignoreSuppressionOfPhpWarnings     = false;
-
-		$element = $this->element( $xpath, 'source' );
-
-		if ( $element ) {
-			$baseline = $this->getStringAttribute( $element, 'baseline' );
-
-			if ( $baseline !== null ) {
-				$baseline = $this->toAbsolutePath( $filename, $baseline );
-			}
-
-			$restrictDeprecations               = $this->getBooleanAttribute( $element, 'restrictDeprecations', false );
-			$restrictNotices                    = $this->getBooleanAttribute( $element, 'restrictNotices', false );
-			$restrictWarnings                   = $this->getBooleanAttribute( $element, 'restrictWarnings', false );
-			$ignoreSuppressionOfDeprecations    = $this->getBooleanAttribute( $element, 'ignoreSuppressionOfDeprecations', false );
-			$ignoreSuppressionOfPhpDeprecations = $this->getBooleanAttribute( $element, 'ignoreSuppressionOfPhpDeprecations', false );
-			$ignoreSuppressionOfErrors          = $this->getBooleanAttribute( $element, 'ignoreSuppressionOfErrors', false );
-			$ignoreSuppressionOfNotices         = $this->getBooleanAttribute( $element, 'ignoreSuppressionOfNotices', false );
-			$ignoreSuppressionOfPhpNotices      = $this->getBooleanAttribute( $element, 'ignoreSuppressionOfPhpNotices', false );
-			$ignoreSuppressionOfWarnings        = $this->getBooleanAttribute( $element, 'ignoreSuppressionOfWarnings', false );
-			$ignoreSuppressionOfPhpWarnings     = $this->getBooleanAttribute( $element, 'ignoreSuppressionOfPhpWarnings', false );
-		}
-
-		return new Source(
-			$baseline,
-			false,
-			$this->readFilterDirectories( $filename, $xpath, 'source/include/directory' ),
-			$this->readFilterFiles( $filename, $xpath, 'source/include/file' ),
-			$this->readFilterDirectories( $filename, $xpath, 'source/exclude/directory' ),
-			$this->readFilterFiles( $filename, $xpath, 'source/exclude/file' ),
-			$restrictDeprecations,
-			$restrictNotices,
-			$restrictWarnings,
-			$ignoreSuppressionOfDeprecations,
-			$ignoreSuppressionOfPhpDeprecations,
-			$ignoreSuppressionOfErrors,
-			$ignoreSuppressionOfNotices,
-			$ignoreSuppressionOfPhpNotices,
-			$ignoreSuppressionOfWarnings,
-			$ignoreSuppressionOfPhpWarnings,
-		);
-	}
-
-	private function codeCoverage( string $filename, DOMXPath $xpath ): CodeCoverage {
-		$cacheDirectory            = null;
-		$pathCoverage              = false;
-		$includeUncoveredFiles     = true;
-		$ignoreDeprecatedCodeUnits = false;
-		$disableCodeCoverageIgnore = false;
-
-		$element = $this->element( $xpath, 'coverage' );
-
-		if ( $element ) {
-			$cacheDirectory = $this->getStringAttribute( $element, 'cacheDirectory' );
-
-			if ( $cacheDirectory !== null ) {
-				$cacheDirectory = new Directory(
-					$this->toAbsolutePath( $filename, $cacheDirectory ),
-				);
-			}
-
-			$pathCoverage = $this->getBooleanAttribute(
-				$element,
-				'pathCoverage',
-				false,
-			);
-
-			$includeUncoveredFiles = $this->getBooleanAttribute(
-				$element,
-				'includeUncoveredFiles',
-				true,
-			);
-
-			$ignoreDeprecatedCodeUnits = $this->getBooleanAttribute(
-				$element,
-				'ignoreDeprecatedCodeUnits',
-				false,
-			);
-
-			$disableCodeCoverageIgnore = $this->getBooleanAttribute(
-				$element,
-				'disableCodeCoverageIgnore',
-				false,
-			);
-		}
-
-		$clover  = null;
-		$element = $this->element( $xpath, 'coverage/report/clover' );
-
-		if ( $element ) {
-			$clover = new Clover(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-			);
-		}
-
-		$cobertura = null;
-		$element   = $this->element( $xpath, 'coverage/report/cobertura' );
-
-		if ( $element ) {
-			$cobertura = new Cobertura(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-			);
-		}
-
-		$crap4j  = null;
-		$element = $this->element( $xpath, 'coverage/report/crap4j' );
-
-		if ( $element ) {
-			$crap4j = new Crap4j(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-				$this->getIntegerAttribute( $element, 'threshold', 30 ),
-			);
-		}
-
-		$html    = null;
-		$element = $this->element( $xpath, 'coverage/report/html' );
-
-		if ( $element ) {
-			$defaultColors     = Colors::default();
-			$defaultThresholds = Thresholds::default();
-
-			$html = new CodeCoverageHtml(
-				new Directory(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputDirectory' ),
-					),
-				),
-				$this->getIntegerAttribute( $element, 'lowUpperBound', $defaultThresholds->lowUpperBound() ),
-				$this->getIntegerAttribute( $element, 'highLowerBound', $defaultThresholds->highLowerBound() ),
-				$this->getStringAttributeWithDefault( $element, 'colorSuccessLow', $defaultColors->successLow() ),
-				$this->getStringAttributeWithDefault( $element, 'colorSuccessMedium', $defaultColors->successMedium() ),
-				$this->getStringAttributeWithDefault( $element, 'colorSuccessHigh', $defaultColors->successHigh() ),
-				$this->getStringAttributeWithDefault( $element, 'colorWarning', $defaultColors->warning() ),
-				$this->getStringAttributeWithDefault( $element, 'colorDanger', $defaultColors->danger() ),
-				$this->getStringAttribute( $element, 'customCssFile' ),
-			);
-		}
-
-		$php     = null;
-		$element = $this->element( $xpath, 'coverage/report/php' );
-
-		if ( $element ) {
-			$php = new CodeCoveragePhp(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-			);
-		}
-
-		$text    = null;
-		$element = $this->element( $xpath, 'coverage/report/text' );
-
-		if ( $element ) {
-			$text = new CodeCoverageText(
-				new File(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputFile' ),
-					),
-				),
-				$this->getBooleanAttribute( $element, 'showUncoveredFiles', false ),
-				$this->getBooleanAttribute( $element, 'showOnlySummary', false ),
-			);
-		}
-
-		$xml     = null;
-		$element = $this->element( $xpath, 'coverage/report/xml' );
-
-		if ( $element ) {
-			$xml = new CodeCoverageXml(
-				new Directory(
-					$this->toAbsolutePath(
-						$filename,
-						(string) $this->getStringAttribute( $element, 'outputDirectory' ),
-					),
-				),
-			);
-		}
-
-		return new CodeCoverage(
-			$cacheDirectory,
-			$this->readFilterDirectories( $filename, $xpath, 'coverage/include/directory' ),
-			$this->readFilterFiles( $filename, $xpath, 'coverage/include/file' ),
-			$this->readFilterDirectories( $filename, $xpath, 'coverage/exclude/directory' ),
-			$this->readFilterFiles( $filename, $xpath, 'coverage/exclude/file' ),
-			$pathCoverage,
-			$includeUncoveredFiles,
-			$ignoreDeprecatedCodeUnits,
-			$disableCodeCoverageIgnore,
-			$clover,
-			$cobertura,
-			$crap4j,
-			$html,
-			$php,
-			$text,
-			$xml,
-		);
-	}
-
-	private function getBoolean( string $value, bool $default ): bool {
-		if ( strtolower( $value ) === 'false' ) {
-			return false;
-		}
-
-		if ( strtolower( $value ) === 'true' ) {
-			return true;
-		}
-
-		return $default;
-	}
-
-	private function getValue( string $value ): bool|string {
-		if ( strtolower( $value ) === 'false' ) {
-			return false;
-		}
-
-		if ( strtolower( $value ) === 'true' ) {
-			return true;
-		}
-
-		return $value;
-	}
-
-	private function readFilterDirectories( string $filename, DOMXPath $xpath, string $query ): FilterDirectoryCollection {
-		$directories = array();
-
-		foreach ( $xpath->query( $query ) as $directoryNode ) {
-			assert( $directoryNode instanceof DOMElement );
-
-			$directoryPath = $directoryNode->textContent;
-
-			if ( ! $directoryPath ) {
-				continue;
-			}
-
-			$directories[] = new FilterDirectory(
-				$this->toAbsolutePath( $filename, $directoryPath ),
-				$directoryNode->hasAttribute( 'prefix' ) ? $directoryNode->getAttribute( 'prefix' ) : '',
-				$directoryNode->hasAttribute( 'suffix' ) ? $directoryNode->getAttribute( 'suffix' ) : '.php',
-			);
-		}
-
-		return FilterDirectoryCollection::fromArray( $directories );
-	}
-
-	private function readFilterFiles( string $filename, DOMXPath $xpath, string $query ): FileCollection {
-		$files = array();
-
-		foreach ( $xpath->query( $query ) as $file ) {
-			assert( $file instanceof DOMNode );
-
-			$filePath = $file->textContent;
-
-			if ( $filePath ) {
-				$files[] = new File( $this->toAbsolutePath( $filename, $filePath ) );
-			}
-		}
-
-		return FileCollection::fromArray( $files );
-	}
-
-	private function groups( DOMXPath $xpath ): Groups {
-		$include = array();
-		$exclude = array();
-
-		foreach ( $xpath->query( 'groups/include/group' ) as $group ) {
-			assert( $group instanceof DOMNode );
-
-			$include[] = new Group( $group->textContent );
-		}
-
-		foreach ( $xpath->query( 'groups/exclude/group' ) as $group ) {
-			assert( $group instanceof DOMNode );
-
-			$exclude[] = new Group( $group->textContent );
-		}
-
-		return new Groups(
-			GroupCollection::fromArray( $include ),
-			GroupCollection::fromArray( $exclude ),
-		);
-	}
-
-	private function getBooleanAttribute( DOMElement $element, string $attribute, bool $default ): bool {
-		if ( ! $element->hasAttribute( $attribute ) ) {
-			return $default;
-		}
-
-		return $this->getBoolean(
-			$element->getAttribute( $attribute ),
-			false,
-		);
-	}
-
-	private function getIntegerAttribute( DOMElement $element, string $attribute, int $default ): int {
-		if ( ! $element->hasAttribute( $attribute ) ) {
-			return $default;
-		}
-
-		return $this->getInteger(
-			$element->getAttribute( $attribute ),
-			$default,
-		);
-	}
-
-	private function getStringAttribute( DOMElement $element, string $attribute ): ?string {
-		if ( ! $element->hasAttribute( $attribute ) ) {
-			return null;
-		}
-
-		return $element->getAttribute( $attribute );
-	}
-
-	private function getStringAttributeWithDefault( DOMElement $element, string $attribute, string $default ): string {
-		if ( ! $element->hasAttribute( $attribute ) ) {
-			return $default;
-		}
-
-		return $element->getAttribute( $attribute );
-	}
-
-	private function getInteger( string $value, int $default ): int {
-		if ( is_numeric( $value ) ) {
-			return (int) $value;
-		}
-
-		return $default;
-	}
-
-	private function php( string $filename, DOMXPath $xpath ): Php {
-		$includePaths = array();
-
-		foreach ( $xpath->query( 'php/includePath' ) as $includePath ) {
-			assert( $includePath instanceof DOMNode );
-
-			$path = $includePath->textContent;
-
-			if ( $path ) {
-				$includePaths[] = new Directory( $this->toAbsolutePath( $filename, $path ) );
-			}
-		}
-
-		$iniSettings = array();
-
-		foreach ( $xpath->query( 'php/ini' ) as $ini ) {
-			assert( $ini instanceof DOMElement );
-
-			$iniSettings[] = new IniSetting(
-				$ini->getAttribute( 'name' ),
-				$ini->getAttribute( 'value' ),
-			);
-		}
-
-		$constants = array();
-
-		foreach ( $xpath->query( 'php/const' ) as $const ) {
-			assert( $const instanceof DOMElement );
-
-			$value = $const->getAttribute( 'value' );
-
-			$constants[] = new Constant(
-				$const->getAttribute( 'name' ),
-				$this->getValue( $value ),
-			);
-		}
-
-		$variables = array(
-			'var'     => array(),
-			'env'     => array(),
-			'post'    => array(),
-			'get'     => array(),
-			'cookie'  => array(),
-			'server'  => array(),
-			'files'   => array(),
-			'request' => array(),
-		);
-
-		foreach ( array( 'var', 'env', 'post', 'get', 'cookie', 'server', 'files', 'request' ) as $array ) {
-			foreach ( $xpath->query( 'php/' . $array ) as $var ) {
-				assert( $var instanceof DOMElement );
-
-				$name     = $var->getAttribute( 'name' );
-				$value    = $var->getAttribute( 'value' );
-				$force    = false;
-				$verbatim = false;
-
-				if ( $var->hasAttribute( 'force' ) ) {
-					$force = $this->getBoolean( $var->getAttribute( 'force' ), false );
-				}
-
-				if ( $var->hasAttribute( 'verbatim' ) ) {
-					$verbatim = $this->getBoolean( $var->getAttribute( 'verbatim' ), false );
-				}
-
-				if ( ! $verbatim ) {
-					$value = $this->getValue( $value );
-				}
-
-				$variables[ $array ][] = new Variable( $name, $value, $force );
-			}
-		}
-
-		return new Php(
-			DirectoryCollection::fromArray( $includePaths ),
-			IniSettingCollection::fromArray( $iniSettings ),
-			ConstantCollection::fromArray( $constants ),
-			VariableCollection::fromArray( $variables['var'] ),
-			VariableCollection::fromArray( $variables['env'] ),
-			VariableCollection::fromArray( $variables['post'] ),
-			VariableCollection::fromArray( $variables['get'] ),
-			VariableCollection::fromArray( $variables['cookie'] ),
-			VariableCollection::fromArray( $variables['server'] ),
-			VariableCollection::fromArray( $variables['files'] ),
-			VariableCollection::fromArray( $variables['request'] ),
-		);
-	}
-
-	private function phpunit( string $filename, DOMDocument $document ): PHPUnit {
-		$executionOrder      = TestSuiteSorter::ORDER_DEFAULT;
-		$defectsFirst        = false;
-		$resolveDependencies = $this->getBooleanAttribute( $document->documentElement, 'resolveDependencies', true );
-
-		if ( $document->documentElement->hasAttribute( 'executionOrder' ) ) {
-			foreach ( explode( ',', $document->documentElement->getAttribute( 'executionOrder' ) ) as $order ) {
-				switch ( $order ) {
-					case 'default':
-						$executionOrder      = TestSuiteSorter::ORDER_DEFAULT;
-						$defectsFirst        = false;
-						$resolveDependencies = true;
-
-						break;
-
-					case 'depends':
-						$resolveDependencies = true;
-
-						break;
-
-					case 'no-depends':
-						$resolveDependencies = false;
-
-						break;
-
-					case 'defects':
-						$defectsFirst = true;
-
-						break;
-
-					case 'duration':
-						$executionOrder = TestSuiteSorter::ORDER_DURATION;
-
-						break;
-
-					case 'random':
-						$executionOrder = TestSuiteSorter::ORDER_RANDOMIZED;
-
-						break;
-
-					case 'reverse':
-						$executionOrder = TestSuiteSorter::ORDER_REVERSED;
-
-						break;
-
-					case 'size':
-						$executionOrder = TestSuiteSorter::ORDER_SIZE;
-
-						break;
-				}
-			}
-		}
-
-		$cacheDirectory = $this->getStringAttribute( $document->documentElement, 'cacheDirectory' );
-
-		if ( $cacheDirectory !== null ) {
-			$cacheDirectory = $this->toAbsolutePath( $filename, $cacheDirectory );
-		}
-
-		$cacheResultFile = $this->getStringAttribute( $document->documentElement, 'cacheResultFile' );
-
-		if ( $cacheResultFile !== null ) {
-			$cacheResultFile = $this->toAbsolutePath( $filename, $cacheResultFile );
-		}
-
-		$bootstrap = $this->getStringAttribute( $document->documentElement, 'bootstrap' );
-
-		if ( $bootstrap !== null ) {
-			$bootstrap = $this->toAbsolutePath( $filename, $bootstrap );
-		}
-
-		$extensionsDirectory = $this->getStringAttribute( $document->documentElement, 'extensionsDirectory' );
-
-		if ( $extensionsDirectory !== null ) {
-			$extensionsDirectory = $this->toAbsolutePath( $filename, $extensionsDirectory );
-		}
-
-		$backupStaticProperties = false;
-
-		if ( $document->documentElement->hasAttribute( 'backupStaticProperties' ) ) {
-			$backupStaticProperties = $this->getBooleanAttribute( $document->documentElement, 'backupStaticProperties', false );
-		} elseif ( $document->documentElement->hasAttribute( 'backupStaticAttributes' ) ) {
-			$backupStaticProperties = $this->getBooleanAttribute( $document->documentElement, 'backupStaticAttributes', false );
-		}
-
-		$requireCoverageMetadata = false;
-
-		if ( $document->documentElement->hasAttribute( 'requireCoverageMetadata' ) ) {
-			$requireCoverageMetadata = $this->getBooleanAttribute( $document->documentElement, 'requireCoverageMetadata', false );
-		} elseif ( $document->documentElement->hasAttribute( 'forceCoversAnnotation' ) ) {
-			$requireCoverageMetadata = $this->getBooleanAttribute( $document->documentElement, 'forceCoversAnnotation', false );
-		}
-
-		$beStrictAboutCoverageMetadata = false;
-
-		if ( $document->documentElement->hasAttribute( 'beStrictAboutCoverageMetadata' ) ) {
-			$beStrictAboutCoverageMetadata = $this->getBooleanAttribute( $document->documentElement, 'beStrictAboutCoverageMetadata', false );
-		} elseif ( $document->documentElement->hasAttribute( 'forceCoversAnnotation' ) ) {
-			$beStrictAboutCoverageMetadata = $this->getBooleanAttribute( $document->documentElement, 'beStrictAboutCoversAnnotation', false );
-		}
-
-		return new PHPUnit(
-			$cacheDirectory,
-			$this->getBooleanAttribute( $document->documentElement, 'cacheResult', true ),
-			$cacheResultFile,
-			$this->getColumns( $document ),
-			$this->getColors( $document ),
-			$this->getBooleanAttribute( $document->documentElement, 'stderr', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'displayDetailsOnAllIssues', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'displayDetailsOnIncompleteTests', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'displayDetailsOnSkippedTests', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'displayDetailsOnTestsThatTriggerDeprecations', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'displayDetailsOnPhpunitDeprecations', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'displayDetailsOnTestsThatTriggerErrors', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'displayDetailsOnTestsThatTriggerNotices', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'displayDetailsOnTestsThatTriggerWarnings', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'reverseDefectList', false ),
-			$requireCoverageMetadata,
-			$bootstrap,
-			$this->getBooleanAttribute( $document->documentElement, 'processIsolation', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnAllIssues', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnDeprecation', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnPhpunitDeprecation', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnEmptyTestSuite', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnIncomplete', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnNotice', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnRisky', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnSkipped', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'failOnWarning', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnDefect', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnDeprecation', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnError', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnFailure', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnIncomplete', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnNotice', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnRisky', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnSkipped', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'stopOnWarning', false ),
-			$extensionsDirectory,
-			$this->getBooleanAttribute( $document->documentElement, 'beStrictAboutChangesToGlobalState', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'beStrictAboutOutputDuringTests', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'beStrictAboutTestsThatDoNotTestAnything', true ),
-			$beStrictAboutCoverageMetadata,
-			$this->getBooleanAttribute( $document->documentElement, 'enforceTimeLimit', false ),
-			$this->getIntegerAttribute( $document->documentElement, 'defaultTimeLimit', 1 ),
-			$this->getIntegerAttribute( $document->documentElement, 'timeoutForSmallTests', 1 ),
-			$this->getIntegerAttribute( $document->documentElement, 'timeoutForMediumTests', 10 ),
-			$this->getIntegerAttribute( $document->documentElement, 'timeoutForLargeTests', 60 ),
-			$this->getStringAttribute( $document->documentElement, 'defaultTestSuite' ),
-			$executionOrder,
-			$resolveDependencies,
-			$defectsFirst,
-			$this->getBooleanAttribute( $document->documentElement, 'backupGlobals', false ),
-			$backupStaticProperties,
-			$this->getBooleanAttribute( $document->documentElement, 'registerMockObjectsFromTestArgumentsRecursively', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'testdox', false ),
-			$this->getBooleanAttribute( $document->documentElement, 'controlGarbageCollector', false ),
-			$this->getIntegerAttribute( $document->documentElement, 'numberOfTestsBeforeGarbageCollection', 100 ),
-		);
-	}
-
-	private function getColors( DOMDocument $document ): string {
-		$colors = Configuration::COLOR_DEFAULT;
-
-		if ( $document->documentElement->hasAttribute( 'colors' ) ) {
-			/*
-			only allow boolean for compatibility with previous versions
-				'always' only allowed from command line */
-			if ( $this->getBoolean( $document->documentElement->getAttribute( 'colors' ), false ) ) {
-				$colors = Configuration::COLOR_AUTO;
-			} else {
-				$colors = Configuration::COLOR_NEVER;
-			}
-		}
-
-		return $colors;
-	}
-
-	private function getColumns( DOMDocument $document ): int|string {
-		$columns = 80;
-
-		if ( $document->documentElement->hasAttribute( 'columns' ) ) {
-			$columns = $document->documentElement->getAttribute( 'columns' );
-
-			if ( $columns !== 'max' ) {
-				$columns = $this->getInteger( $columns, 80 );
-			}
-		}
-
-		return $columns;
-	}
-
-	private function testSuite( string $filename, DOMXPath $xpath ): TestSuiteCollection {
-		$testSuites = array();
-
-		foreach ( $this->getTestSuiteElements( $xpath ) as $element ) {
-			$exclude = array();
-
-			foreach ( $element->getElementsByTagName( 'exclude' ) as $excludeNode ) {
-				$excludeFile = $excludeNode->textContent;
-
-				if ( $excludeFile ) {
-					$exclude[] = new File( $this->toAbsolutePath( $filename, $excludeFile ) );
-				}
-			}
-
-			$directories = array();
-
-			foreach ( $element->getElementsByTagName( 'directory' ) as $directoryNode ) {
-				assert( $directoryNode instanceof DOMElement );
-
-				$directory = $directoryNode->textContent;
-
-				if ( empty( $directory ) ) {
-					continue;
-				}
-
-				$prefix = '';
-
-				if ( $directoryNode->hasAttribute( 'prefix' ) ) {
-					$prefix = $directoryNode->getAttribute( 'prefix' );
-				}
-
-				$suffix = 'Test.php';
-
-				if ( $directoryNode->hasAttribute( 'suffix' ) ) {
-					$suffix = $directoryNode->getAttribute( 'suffix' );
-				}
-
-				$phpVersion = PHP_VERSION;
-
-				if ( $directoryNode->hasAttribute( 'phpVersion' ) ) {
-					$phpVersion = $directoryNode->getAttribute( 'phpVersion' );
-				}
-
-				$phpVersionOperator = new VersionComparisonOperator( '>=' );
-
-				if ( $directoryNode->hasAttribute( 'phpVersionOperator' ) ) {
-					$phpVersionOperator = new VersionComparisonOperator( $directoryNode->getAttribute( 'phpVersionOperator' ) );
-				}
-
-				$directories[] = new TestDirectory(
-					$this->toAbsolutePath( $filename, $directory ),
-					$prefix,
-					$suffix,
-					$phpVersion,
-					$phpVersionOperator,
-				);
-			}
-
-			$files = array();
-
-			foreach ( $element->getElementsByTagName( 'file' ) as $fileNode ) {
-				assert( $fileNode instanceof DOMElement );
-
-				$file = $fileNode->textContent;
-
-				if ( empty( $file ) ) {
-					continue;
-				}
-
-				$phpVersion = PHP_VERSION;
-
-				if ( $fileNode->hasAttribute( 'phpVersion' ) ) {
-					$phpVersion = $fileNode->getAttribute( 'phpVersion' );
-				}
-
-				$phpVersionOperator = new VersionComparisonOperator( '>=' );
-
-				if ( $fileNode->hasAttribute( 'phpVersionOperator' ) ) {
-					$phpVersionOperator = new VersionComparisonOperator( $fileNode->getAttribute( 'phpVersionOperator' ) );
-				}
-
-				$files[] = new TestFile(
-					$this->toAbsolutePath( $filename, $file ),
-					$phpVersion,
-					$phpVersionOperator,
-				);
-			}
-
-			$name = $element->getAttribute( 'name' );
-
-			assert( ! empty( $name ) );
-
-			$testSuites[] = new TestSuiteConfiguration(
-				$name,
-				TestDirectoryCollection::fromArray( $directories ),
-				TestFileCollection::fromArray( $files ),
-				FileCollection::fromArray( $exclude ),
-			);
-		}
-
-		return TestSuiteCollection::fromArray( $testSuites );
-	}
-
-	/**
-	 * @psalm-return list<DOMElement>
-	 */
-	private function getTestSuiteElements( DOMXPath $xpath ): array {
-		$elements = array();
-
-		$testSuiteNodes = $xpath->query( 'testsuites/testsuite' );
-
-		if ( $testSuiteNodes->length === 0 ) {
-			$testSuiteNodes = $xpath->query( 'testsuite' );
-		}
-
-		if ( $testSuiteNodes->length === 1 ) {
-			$element = $testSuiteNodes->item( 0 );
-
-			assert( $element instanceof DOMElement );
-
-			$elements[] = $element;
-		} else {
-			foreach ( $testSuiteNodes as $testSuiteNode ) {
-				assert( $testSuiteNode instanceof DOMElement );
-
-				$elements[] = $testSuiteNode;
-			}
-		}
-
-		return $elements;
-	}
-
-	private function element( DOMXPath $xpath, string $element ): ?DOMElement {
-		$nodes = $xpath->query( $element );
-
-		if ( $nodes->length === 1 ) {
-			$node = $nodes->item( 0 );
-
-			assert( $node instanceof DOMElement );
-
-			return $node;
-		}
-
-		return null;
-	}
+final readonly class Loader
+{
+    /**
+     * @throws Exception
+     */
+    public function load(string $filename): LoadedFromFileConfiguration
+    {
+        try {
+            $document = (new XmlLoader)->loadFile($filename);
+        } catch (XmlException $e) {
+            throw new Exception(
+                $e->getMessage(),
+                $e->getCode(),
+                $e,
+            );
+        }
+
+        $xpath = new DOMXPath($document);
+
+        try {
+            $xsdFilename = (new SchemaFinder)->find(Version::series());
+        } catch (CannotFindSchemaException $e) {
+            throw new Exception(
+                $e->getMessage(),
+                $e->getCode(),
+                $e,
+            );
+        }
+
+        $configurationFileRealpath = realpath($filename);
+
+        assert($configurationFileRealpath !== false && $configurationFileRealpath !== '');
+
+        return new LoadedFromFileConfiguration(
+            $configurationFileRealpath,
+            (new Validator)->validate($document, $xsdFilename),
+            $this->extensions($xpath),
+            $this->source($configurationFileRealpath, $xpath),
+            $this->codeCoverage($configurationFileRealpath, $xpath),
+            $this->groups($xpath),
+            $this->logging($configurationFileRealpath, $xpath),
+            $this->php($configurationFileRealpath, $xpath),
+            $this->phpunit($configurationFileRealpath, $document),
+            $this->testSuite($configurationFileRealpath, $xpath),
+        );
+    }
+
+    private function logging(string $filename, DOMXPath $xpath): Logging
+    {
+        $junit   = null;
+        $element = $this->element($xpath, 'logging/junit');
+
+        if ($element !== null) {
+            $junit = new Junit(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        $otr     = null;
+        $element = $this->element($xpath, 'logging/otr');
+
+        if ($element !== null) {
+            $otr = new Otr(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        $teamCity = null;
+        $element  = $this->element($xpath, 'logging/teamcity');
+
+        if ($element !== null) {
+            $teamCity = new TeamCity(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        $testDoxHtml = null;
+        $element     = $this->element($xpath, 'logging/testdoxHtml');
+
+        if ($element !== null) {
+            $testDoxHtml = new TestDoxHtml(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        $testDoxText = null;
+        $element     = $this->element($xpath, 'logging/testdoxText');
+
+        if ($element !== null) {
+            $testDoxText = new TestDoxText(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        return new Logging(
+            $junit,
+            $otr,
+            $teamCity,
+            $testDoxHtml,
+            $testDoxText,
+        );
+    }
+
+    private function extensions(DOMXPath $xpath): ExtensionBootstrapCollection
+    {
+        $extensionBootstrappers = [];
+
+        $bootstrapNodes = $xpath->query('extensions/bootstrap');
+
+        assert($bootstrapNodes instanceof DOMNodeList);
+
+        foreach ($bootstrapNodes as $bootstrap) {
+            assert($bootstrap instanceof DOMElement);
+
+            $parameters = [];
+
+            $parameterNodes = $xpath->query('parameter', $bootstrap);
+
+            assert($parameterNodes instanceof DOMNodeList);
+
+            foreach ($parameterNodes as $parameter) {
+                assert($parameter instanceof DOMElement);
+
+                $parameters[$parameter->getAttribute('name')] = $parameter->getAttribute('value');
+            }
+
+            $className = $bootstrap->getAttribute('class');
+
+            assert($className !== '');
+
+            $extensionBootstrappers[] = new ExtensionBootstrap(
+                $className,
+                $parameters,
+            );
+        }
+
+        return ExtensionBootstrapCollection::fromArray($extensionBootstrappers);
+    }
+
+    /**
+     * @return non-empty-string
+     */
+    private function toAbsolutePath(string $filename, string $path): string
+    {
+        $path = trim($path);
+
+        if (str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        // Matches the following on Windows:
+        //  - \\NetworkComputer\Path
+        //  - \\.\D:
+        //  - \\.\c:
+        //  - C:\Windows
+        //  - C:\windows
+        //  - C:/windows
+        //  - c:/windows
+        if (defined('PHP_WINDOWS_VERSION_BUILD') &&
+            $path !== '' &&
+            ($path[0] === '\\' || (strlen($path) >= 3 && preg_match('#^[A-Z]:[/\\\]#i', substr($path, 0, 3))))) {
+            return $path;
+        }
+
+        if (str_contains($path, '://')) {
+            return $path;
+        }
+
+        return dirname($filename) . DIRECTORY_SEPARATOR . $path;
+    }
+
+    private function source(string $filename, DOMXPath $xpath): Source
+    {
+        $baseline                           = null;
+        $restrictNotices                    = false;
+        $restrictWarnings                   = false;
+        $ignoreSuppressionOfDeprecations    = false;
+        $ignoreSuppressionOfPhpDeprecations = false;
+        $ignoreSuppressionOfErrors          = false;
+        $ignoreSuppressionOfNotices         = false;
+        $ignoreSuppressionOfPhpNotices      = false;
+        $ignoreSuppressionOfWarnings        = false;
+        $ignoreSuppressionOfPhpWarnings     = false;
+        $ignoreSelfDeprecations             = false;
+        $ignoreDirectDeprecations           = false;
+        $ignoreIndirectDeprecations         = false;
+
+        $element = $this->element($xpath, 'source');
+
+        if ($element !== null) {
+            $baseline = $this->parseStringAttribute($element, 'baseline');
+
+            if ($baseline !== null) {
+                $baseline = $this->toAbsolutePath($filename, $baseline);
+            }
+
+            $restrictNotices                    = $this->parseBooleanAttribute($element, 'restrictNotices', false);
+            $restrictWarnings                   = $this->parseBooleanAttribute($element, 'restrictWarnings', false);
+            $ignoreSuppressionOfDeprecations    = $this->parseBooleanAttribute($element, 'ignoreSuppressionOfDeprecations', false);
+            $ignoreSuppressionOfPhpDeprecations = $this->parseBooleanAttribute($element, 'ignoreSuppressionOfPhpDeprecations', false);
+            $ignoreSuppressionOfErrors          = $this->parseBooleanAttribute($element, 'ignoreSuppressionOfErrors', false);
+            $ignoreSuppressionOfNotices         = $this->parseBooleanAttribute($element, 'ignoreSuppressionOfNotices', false);
+            $ignoreSuppressionOfPhpNotices      = $this->parseBooleanAttribute($element, 'ignoreSuppressionOfPhpNotices', false);
+            $ignoreSuppressionOfWarnings        = $this->parseBooleanAttribute($element, 'ignoreSuppressionOfWarnings', false);
+            $ignoreSuppressionOfPhpWarnings     = $this->parseBooleanAttribute($element, 'ignoreSuppressionOfPhpWarnings', false);
+            $ignoreSelfDeprecations             = $this->parseBooleanAttribute($element, 'ignoreSelfDeprecations', false);
+            $ignoreDirectDeprecations           = $this->parseBooleanAttribute($element, 'ignoreDirectDeprecations', false);
+            $ignoreIndirectDeprecations         = $this->parseBooleanAttribute($element, 'ignoreIndirectDeprecations', false);
+        }
+
+        $deprecationTriggers = [
+            'functions' => [],
+            'methods'   => [],
+        ];
+
+        $functionNodes = $xpath->query('source/deprecationTrigger/function');
+
+        assert($functionNodes instanceof DOMNodeList);
+
+        foreach ($functionNodes as $functionNode) {
+            assert($functionNode instanceof DOMElement);
+
+            $deprecationTriggers['functions'][] = $functionNode->textContent;
+        }
+
+        $methodNodes = $xpath->query('source/deprecationTrigger/method');
+
+        assert($methodNodes instanceof DOMNodeList);
+
+        foreach ($methodNodes as $methodNode) {
+            assert($methodNode instanceof DOMElement);
+
+            $deprecationTriggers['methods'][] = $methodNode->textContent;
+        }
+
+        return new Source(
+            $baseline,
+            false,
+            $this->readFilterDirectories($filename, $xpath, 'source/include/directory'),
+            $this->readFilterFiles($filename, $xpath, 'source/include/file'),
+            $this->readFilterDirectories($filename, $xpath, 'source/exclude/directory'),
+            $this->readFilterFiles($filename, $xpath, 'source/exclude/file'),
+            $restrictNotices,
+            $restrictWarnings,
+            $ignoreSuppressionOfDeprecations,
+            $ignoreSuppressionOfPhpDeprecations,
+            $ignoreSuppressionOfErrors,
+            $ignoreSuppressionOfNotices,
+            $ignoreSuppressionOfPhpNotices,
+            $ignoreSuppressionOfWarnings,
+            $ignoreSuppressionOfPhpWarnings,
+            $deprecationTriggers,
+            $ignoreSelfDeprecations,
+            $ignoreDirectDeprecations,
+            $ignoreIndirectDeprecations,
+        );
+    }
+
+    private function codeCoverage(string $filename, DOMXPath $xpath): CodeCoverage
+    {
+        $pathCoverage              = false;
+        $includeUncoveredFiles     = true;
+        $ignoreDeprecatedCodeUnits = false;
+        $disableCodeCoverageIgnore = false;
+
+        $element = $this->element($xpath, 'coverage');
+
+        if ($element !== null) {
+            $pathCoverage = $this->parseBooleanAttribute(
+                $element,
+                'pathCoverage',
+                false,
+            );
+
+            $includeUncoveredFiles = $this->parseBooleanAttribute(
+                $element,
+                'includeUncoveredFiles',
+                true,
+            );
+
+            $ignoreDeprecatedCodeUnits = $this->parseBooleanAttribute(
+                $element,
+                'ignoreDeprecatedCodeUnits',
+                false,
+            );
+
+            $disableCodeCoverageIgnore = $this->parseBooleanAttribute(
+                $element,
+                'disableCodeCoverageIgnore',
+                false,
+            );
+        }
+
+        $clover  = null;
+        $element = $this->element($xpath, 'coverage/report/clover');
+
+        if ($element !== null) {
+            $clover = new Clover(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        $cobertura = null;
+        $element   = $this->element($xpath, 'coverage/report/cobertura');
+
+        if ($element !== null) {
+            $cobertura = new Cobertura(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        $crap4j  = null;
+        $element = $this->element($xpath, 'coverage/report/crap4j');
+
+        if ($element !== null) {
+            $crap4j = new Crap4j(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+                $this->parseIntegerAttribute($element, 'threshold', 30),
+            );
+        }
+
+        $html    = null;
+        $element = $this->element($xpath, 'coverage/report/html');
+
+        if ($element !== null) {
+            $defaultColors     = Colors::default();
+            $defaultThresholds = Thresholds::default();
+
+            $html = new CodeCoverageHtml(
+                new Directory(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputDirectory'),
+                    ),
+                ),
+                $this->parseIntegerAttribute($element, 'lowUpperBound', $defaultThresholds->lowUpperBound()),
+                $this->parseIntegerAttribute($element, 'highLowerBound', $defaultThresholds->highLowerBound()),
+                $this->parseStringAttributeWithDefault($element, 'colorSuccessLow', $defaultColors->successLow()),
+                $this->parseStringAttributeWithDefault($element, 'colorSuccessMedium', $defaultColors->successMedium()),
+                $this->parseStringAttributeWithDefault($element, 'colorSuccessHigh', $defaultColors->successHigh()),
+                $this->parseStringAttributeWithDefault($element, 'colorWarning', $defaultColors->warning()),
+                $this->parseStringAttributeWithDefault($element, 'colorDanger', $defaultColors->danger()),
+                $this->parseStringAttribute($element, 'customCssFile'),
+            );
+        }
+
+        $openClover = null;
+        $element    = $this->element($xpath, 'coverage/report/openclover');
+
+        if ($element !== null) {
+            $openClover = new OpenClover(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        $php     = null;
+        $element = $this->element($xpath, 'coverage/report/php');
+
+        if ($element !== null) {
+            $php = new CodeCoveragePhp(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+            );
+        }
+
+        $text    = null;
+        $element = $this->element($xpath, 'coverage/report/text');
+
+        if ($element !== null) {
+            $text = new CodeCoverageText(
+                new File(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputFile'),
+                    ),
+                ),
+                $this->parseBooleanAttribute($element, 'showUncoveredFiles', false),
+                $this->parseBooleanAttribute($element, 'showOnlySummary', false),
+            );
+        }
+
+        $xml     = null;
+        $element = $this->element($xpath, 'coverage/report/xml');
+
+        if ($element !== null) {
+            $xml = new CodeCoverageXml(
+                new Directory(
+                    $this->toAbsolutePath(
+                        $filename,
+                        (string) $this->parseStringAttribute($element, 'outputDirectory'),
+                    ),
+                ),
+            );
+        }
+
+        return new CodeCoverage(
+            $pathCoverage,
+            $includeUncoveredFiles,
+            $ignoreDeprecatedCodeUnits,
+            $disableCodeCoverageIgnore,
+            $clover,
+            $cobertura,
+            $crap4j,
+            $html,
+            $openClover,
+            $php,
+            $text,
+            $xml,
+        );
+    }
+
+    private function booleanFromString(string $value, bool $default): bool
+    {
+        if (strtolower($value) === 'false') {
+            return false;
+        }
+
+        if (strtolower($value) === 'true') {
+            return true;
+        }
+
+        return $default;
+    }
+
+    private function valueFromString(string $value): bool|string
+    {
+        if (strtolower($value) === 'false') {
+            return false;
+        }
+
+        if (strtolower($value) === 'true') {
+            return true;
+        }
+
+        return $value;
+    }
+
+    private function readFilterDirectories(string $filename, DOMXPath $xpath, string $query): FilterDirectoryCollection
+    {
+        $directories = [];
+
+        $directoryNodes = $xpath->query($query);
+
+        assert($directoryNodes instanceof DOMNodeList);
+
+        foreach ($directoryNodes as $directoryNode) {
+            assert($directoryNode instanceof DOMElement);
+
+            $directoryPath = $directoryNode->textContent;
+
+            if ($directoryPath === '') {
+                continue;
+            }
+
+            $directories[] = new FilterDirectory(
+                $this->toAbsolutePath($filename, $directoryPath),
+                $directoryNode->hasAttribute('prefix') ? $directoryNode->getAttribute('prefix') : '',
+                $directoryNode->hasAttribute('suffix') ? $directoryNode->getAttribute('suffix') : '.php',
+            );
+        }
+
+        return FilterDirectoryCollection::fromArray($directories);
+    }
+
+    private function readFilterFiles(string $filename, DOMXPath $xpath, string $query): FileCollection
+    {
+        $files = [];
+
+        $fileNodes = $xpath->query($query);
+
+        assert($fileNodes instanceof DOMNodeList);
+
+        foreach ($fileNodes as $fileNode) {
+            assert($fileNode instanceof DOMNode);
+
+            $filePath = $fileNode->textContent;
+
+            if ($filePath !== '') {
+                $files[] = new File($this->toAbsolutePath($filename, $filePath));
+            }
+        }
+
+        return FileCollection::fromArray($files);
+    }
+
+    private function groups(DOMXPath $xpath): Groups
+    {
+        $include = [];
+        $exclude = [];
+
+        $groupNodes = $xpath->query('groups/include/group');
+
+        assert($groupNodes instanceof DOMNodeList);
+
+        foreach ($groupNodes as $groupNode) {
+            assert($groupNode instanceof DOMNode);
+
+            $include[] = new Group($groupNode->textContent);
+        }
+
+        $groupNodes = $xpath->query('groups/exclude/group');
+
+        assert($groupNodes instanceof DOMNodeList);
+
+        foreach ($groupNodes as $groupNode) {
+            assert($groupNode instanceof DOMNode);
+
+            $exclude[] = new Group($groupNode->textContent);
+        }
+
+        return new Groups(
+            GroupCollection::fromArray($include),
+            GroupCollection::fromArray($exclude),
+        );
+    }
+
+    private function parseBooleanAttribute(DOMElement $element, string $attribute, bool $default): bool
+    {
+        if (!$element->hasAttribute($attribute)) {
+            return $default;
+        }
+
+        return $this->booleanFromString(
+            $element->getAttribute($attribute),
+            false,
+        );
+    }
+
+    private function parseIntegerAttribute(DOMElement $element, string $attribute, int $default): int
+    {
+        if (!$element->hasAttribute($attribute)) {
+            return $default;
+        }
+
+        return $this->parseInteger(
+            $element->getAttribute($attribute),
+            $default,
+        );
+    }
+
+    private function parseStringAttribute(DOMElement $element, string $attribute): ?string
+    {
+        if (!$element->hasAttribute($attribute)) {
+            return null;
+        }
+
+        return $element->getAttribute($attribute);
+    }
+
+    private function parseStringAttributeWithDefault(DOMElement $element, string $attribute, string $default): string
+    {
+        if (!$element->hasAttribute($attribute)) {
+            return $default;
+        }
+
+        return $element->getAttribute($attribute);
+    }
+
+    private function parseInteger(string $value, int $default): int
+    {
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return $default;
+    }
+
+    private function php(string $filename, DOMXPath $xpath): Php
+    {
+        $includePaths = [];
+
+        $includePathNodes = $xpath->query('php/includePath');
+
+        assert($includePathNodes instanceof DOMNodeList);
+
+        foreach ($includePathNodes as $includePath) {
+            assert($includePath instanceof DOMNode);
+
+            $path = $includePath->textContent;
+
+            if ($path !== '') {
+                $includePaths[] = new Directory($this->toAbsolutePath($filename, $path));
+            }
+        }
+
+        $iniSettings = [];
+
+        $iniNodes = $xpath->query('php/ini');
+
+        assert($iniNodes instanceof DOMNodeList);
+
+        foreach ($iniNodes as $ini) {
+            assert($ini instanceof DOMElement);
+
+            $iniSettings[] = new IniSetting(
+                $ini->getAttribute('name'),
+                $ini->getAttribute('value'),
+            );
+        }
+
+        $constants = [];
+
+        $constNodes = $xpath->query('php/const');
+
+        assert($constNodes instanceof DOMNodeList);
+
+        foreach ($constNodes as $constNode) {
+            assert($constNode instanceof DOMElement);
+
+            $value = $constNode->getAttribute('value');
+
+            $constants[] = new Constant(
+                $constNode->getAttribute('name'),
+                $this->valueFromString($value),
+            );
+        }
+
+        $variables = [
+            'var'     => [],
+            'env'     => [],
+            'post'    => [],
+            'get'     => [],
+            'cookie'  => [],
+            'server'  => [],
+            'files'   => [],
+            'request' => [],
+        ];
+
+        foreach (['var', 'env', 'post', 'get', 'cookie', 'server', 'files', 'request'] as $array) {
+            $varNodes = $xpath->query('php/' . $array);
+
+            assert($varNodes instanceof DOMNodeList);
+
+            foreach ($varNodes as $var) {
+                assert($var instanceof DOMElement);
+
+                $name     = $var->getAttribute('name');
+                $value    = $var->getAttribute('value');
+                $force    = false;
+                $verbatim = false;
+
+                if ($var->hasAttribute('force')) {
+                    $force = $this->booleanFromString($var->getAttribute('force'), false);
+                }
+
+                if ($var->hasAttribute('verbatim')) {
+                    $verbatim = $this->booleanFromString($var->getAttribute('verbatim'), false);
+                }
+
+                if (!$verbatim) {
+                    $value = $this->valueFromString($value);
+                }
+
+                $variables[$array][] = new Variable($name, $value, $force);
+            }
+        }
+
+        return new Php(
+            DirectoryCollection::fromArray($includePaths),
+            IniSettingCollection::fromArray($iniSettings),
+            ConstantCollection::fromArray($constants),
+            VariableCollection::fromArray($variables['var']),
+            VariableCollection::fromArray($variables['env']),
+            VariableCollection::fromArray($variables['post']),
+            VariableCollection::fromArray($variables['get']),
+            VariableCollection::fromArray($variables['cookie']),
+            VariableCollection::fromArray($variables['server']),
+            VariableCollection::fromArray($variables['files']),
+            VariableCollection::fromArray($variables['request']),
+        );
+    }
+
+    private function phpunit(string $filename, DOMDocument $document): PHPUnit
+    {
+        $executionOrder      = TestSuiteSorter::ORDER_DEFAULT;
+        $defectsFirst        = false;
+        $resolveDependencies = $this->parseBooleanAttribute($document->documentElement, 'resolveDependencies', true);
+
+        if ($document->documentElement->hasAttribute('executionOrder')) {
+            foreach (explode(',', $document->documentElement->getAttribute('executionOrder')) as $order) {
+                switch ($order) {
+                    case 'default':
+                        $executionOrder      = TestSuiteSorter::ORDER_DEFAULT;
+                        $defectsFirst        = false;
+                        $resolveDependencies = true;
+
+                        break;
+
+                    case 'depends':
+                        $resolveDependencies = true;
+
+                        break;
+
+                    case 'no-depends':
+                        $resolveDependencies = false;
+
+                        break;
+
+                    case 'defects':
+                        $defectsFirst = true;
+
+                        break;
+
+                    case 'duration':
+                        $executionOrder = TestSuiteSorter::ORDER_DURATION;
+
+                        break;
+
+                    case 'random':
+                        $executionOrder = TestSuiteSorter::ORDER_RANDOMIZED;
+
+                        break;
+
+                    case 'reverse':
+                        $executionOrder = TestSuiteSorter::ORDER_REVERSED;
+
+                        break;
+
+                    case 'size':
+                        $executionOrder = TestSuiteSorter::ORDER_SIZE;
+
+                        break;
+                }
+            }
+        }
+
+        $cacheDirectory = $this->parseStringAttribute($document->documentElement, 'cacheDirectory');
+
+        if ($cacheDirectory !== null) {
+            $cacheDirectory = $this->toAbsolutePath($filename, $cacheDirectory);
+        }
+
+        $bootstrap = $this->parseStringAttribute($document->documentElement, 'bootstrap');
+
+        if ($bootstrap !== null) {
+            $bootstrap = $this->toAbsolutePath($filename, $bootstrap);
+        }
+
+        $extensionsDirectory = $this->parseStringAttribute($document->documentElement, 'extensionsDirectory');
+
+        if ($extensionsDirectory !== null) {
+            $extensionsDirectory = $this->toAbsolutePath($filename, $extensionsDirectory);
+        }
+
+        $backupStaticProperties = false;
+
+        if ($document->documentElement->hasAttribute('backupStaticProperties')) {
+            $backupStaticProperties = $this->parseBooleanAttribute($document->documentElement, 'backupStaticProperties', false);
+        }
+
+        $requireCoverageMetadata = false;
+
+        if ($document->documentElement->hasAttribute('requireCoverageMetadata')) {
+            $requireCoverageMetadata = $this->parseBooleanAttribute($document->documentElement, 'requireCoverageMetadata', false);
+        }
+
+        $beStrictAboutCoverageMetadata = false;
+
+        if ($document->documentElement->hasAttribute('beStrictAboutCoverageMetadata')) {
+            $beStrictAboutCoverageMetadata = $this->parseBooleanAttribute($document->documentElement, 'beStrictAboutCoverageMetadata', false);
+        }
+
+        $shortenArraysForExportThreshold = $this->parseIntegerAttribute($document->documentElement, 'shortenArraysForExportThreshold', 10);
+
+        if ($shortenArraysForExportThreshold < 0) {
+            $shortenArraysForExportThreshold = 0;
+        }
+
+        return new PHPUnit(
+            $cacheDirectory,
+            $this->parseBooleanAttribute($document->documentElement, 'cacheResult', true),
+            $this->parseColumns($document),
+            $this->parseColors($document),
+            $this->parseBooleanAttribute($document->documentElement, 'stderr', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnAllIssues', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnIncompleteTests', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnSkippedTests', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnTestsThatTriggerDeprecations', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnPhpunitDeprecations', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnPhpunitNotices', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnTestsThatTriggerErrors', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnTestsThatTriggerNotices', false),
+            $this->parseBooleanAttribute($document->documentElement, 'displayDetailsOnTestsThatTriggerWarnings', false),
+            $this->parseBooleanAttribute($document->documentElement, 'reverseDefectList', false),
+            $requireCoverageMetadata,
+            $bootstrap,
+            $this->parseBooleanAttribute($document->documentElement, 'processIsolation', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnAllIssues', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnDeprecation', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnPhpunitDeprecation', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnPhpunitNotice', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnEmptyTestSuite', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnIncomplete', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnNotice', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnRisky', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnSkipped', false),
+            $this->parseBooleanAttribute($document->documentElement, 'failOnWarning', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnDefect', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnDeprecation', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnError', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnFailure', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnIncomplete', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnNotice', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnRisky', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnSkipped', false),
+            $this->parseBooleanAttribute($document->documentElement, 'stopOnWarning', false),
+            $extensionsDirectory,
+            $this->parseBooleanAttribute($document->documentElement, 'beStrictAboutChangesToGlobalState', false),
+            $this->parseBooleanAttribute($document->documentElement, 'beStrictAboutOutputDuringTests', false),
+            $this->parseBooleanAttribute($document->documentElement, 'beStrictAboutTestsThatDoNotTestAnything', true),
+            $beStrictAboutCoverageMetadata,
+            $this->parseBooleanAttribute($document->documentElement, 'enforceTimeLimit', false),
+            $this->parseIntegerAttribute($document->documentElement, 'defaultTimeLimit', 1),
+            $this->parseIntegerAttribute($document->documentElement, 'timeoutForSmallTests', 1),
+            $this->parseIntegerAttribute($document->documentElement, 'timeoutForMediumTests', 10),
+            $this->parseIntegerAttribute($document->documentElement, 'timeoutForLargeTests', 60),
+            $this->parseStringAttribute($document->documentElement, 'defaultTestSuite'),
+            $executionOrder,
+            $resolveDependencies,
+            $defectsFirst,
+            $this->parseBooleanAttribute($document->documentElement, 'backupGlobals', false),
+            $backupStaticProperties,
+            $this->parseBooleanAttribute($document->documentElement, 'testdox', false),
+            $this->parseBooleanAttribute($document->documentElement, 'testdoxSummary', false),
+            $this->parseBooleanAttribute($document->documentElement, 'controlGarbageCollector', false),
+            $this->parseIntegerAttribute($document->documentElement, 'numberOfTestsBeforeGarbageCollection', 100),
+            $shortenArraysForExportThreshold,
+        );
+    }
+
+    private function parseColors(DOMDocument $document): string
+    {
+        $colors = Configuration::COLOR_DEFAULT;
+
+        if ($document->documentElement->hasAttribute('colors')) {
+            /* only allow boolean for compatibility with previous versions
+              'always' only allowed from command line */
+            if ($this->booleanFromString($document->documentElement->getAttribute('colors'), false)) {
+                $colors = Configuration::COLOR_AUTO;
+            } else {
+                $colors = Configuration::COLOR_NEVER;
+            }
+        }
+
+        return $colors;
+    }
+
+    private function parseColumns(DOMDocument $document): int|string
+    {
+        $columns = 80;
+
+        if ($document->documentElement->hasAttribute('columns')) {
+            $columns = $document->documentElement->getAttribute('columns');
+
+            if ($columns !== 'max') {
+                $columns = $this->parseInteger($columns, 80);
+            }
+        }
+
+        return $columns;
+    }
+
+    private function testSuite(string $filename, DOMXPath $xpath): TestSuiteCollection
+    {
+        $testSuites = [];
+
+        foreach ($this->parseTestSuiteElements($xpath) as $element) {
+            $exclude = [];
+
+            foreach ($element->getElementsByTagName('exclude') as $excludeNode) {
+                $excludeFile = $excludeNode->textContent;
+
+                if ($excludeFile !== '') {
+                    $exclude[] = new File($this->toAbsolutePath($filename, $excludeFile));
+                }
+            }
+
+            $directories = [];
+
+            foreach ($element->getElementsByTagName('directory') as $directoryNode) {
+                assert($directoryNode instanceof DOMElement);
+
+                $directory = $directoryNode->textContent;
+
+                if ($directory === '') {
+                    continue;
+                }
+
+                $prefix = '';
+
+                if ($directoryNode->hasAttribute('prefix')) {
+                    $prefix = $directoryNode->getAttribute('prefix');
+                }
+
+                $suffix = 'Test.php';
+
+                if ($directoryNode->hasAttribute('suffix')) {
+                    $suffix = $directoryNode->getAttribute('suffix');
+                }
+
+                $phpVersion = PHP_VERSION;
+
+                if ($directoryNode->hasAttribute('phpVersion')) {
+                    $phpVersion = $directoryNode->getAttribute('phpVersion');
+                }
+
+                $phpVersionOperator = new VersionComparisonOperator('>=');
+
+                if ($directoryNode->hasAttribute('phpVersionOperator')) {
+                    $phpVersionOperator = new VersionComparisonOperator($directoryNode->getAttribute('phpVersionOperator'));
+                }
+
+                $groups = [];
+
+                if ($directoryNode->hasAttribute('groups')) {
+                    foreach (explode(',', $directoryNode->getAttribute('groups')) as $group) {
+                        $group = trim($group);
+
+                        if ($group === '') {
+                            continue;
+                        }
+
+                        $groups[] = $group;
+                    }
+                }
+
+                $directories[] = new TestDirectory(
+                    $this->toAbsolutePath($filename, $directory),
+                    $prefix,
+                    $suffix,
+                    $phpVersion,
+                    $phpVersionOperator,
+                    $groups,
+                );
+            }
+
+            $files = [];
+
+            foreach ($element->getElementsByTagName('file') as $fileNode) {
+                assert($fileNode instanceof DOMElement);
+
+                $file = $fileNode->textContent;
+
+                if ($file === '') {
+                    continue;
+                }
+
+                $phpVersion = PHP_VERSION;
+
+                if ($fileNode->hasAttribute('phpVersion')) {
+                    $phpVersion = $fileNode->getAttribute('phpVersion');
+                }
+
+                $phpVersionOperator = new VersionComparisonOperator('>=');
+
+                if ($fileNode->hasAttribute('phpVersionOperator')) {
+                    $phpVersionOperator = new VersionComparisonOperator($fileNode->getAttribute('phpVersionOperator'));
+                }
+
+                $groups = [];
+
+                if ($fileNode->hasAttribute('groups')) {
+                    foreach (explode(',', $fileNode->getAttribute('groups')) as $group) {
+                        $group = trim($group);
+
+                        if ($group === '') {
+                            continue;
+                        }
+
+                        $groups[] = $group;
+                    }
+                }
+
+                $files[] = new TestFile(
+                    $this->toAbsolutePath($filename, $file),
+                    $phpVersion,
+                    $phpVersionOperator,
+                    $groups,
+                );
+            }
+
+            $name = $element->getAttribute('name');
+
+            assert($name !== '');
+
+            $testSuites[] = new TestSuiteConfiguration(
+                $name,
+                TestDirectoryCollection::fromArray($directories),
+                TestFileCollection::fromArray($files),
+                FileCollection::fromArray($exclude),
+            );
+        }
+
+        return TestSuiteCollection::fromArray($testSuites);
+    }
+
+    /**
+     * @return list<DOMElement>
+     */
+    private function parseTestSuiteElements(DOMXPath $xpath): array
+    {
+        $elements = [];
+
+        $testSuiteNodes = $xpath->query('testsuites/testsuite');
+
+        assert($testSuiteNodes instanceof DOMNodeList);
+
+        if ($testSuiteNodes->length === 0) {
+            $testSuiteNodes = $xpath->query('testsuite');
+
+            assert($testSuiteNodes instanceof DOMNodeList);
+        }
+
+        if ($testSuiteNodes->length === 1) {
+            $element = $testSuiteNodes->item(0);
+
+            assert($element instanceof DOMElement);
+
+            $elements[] = $element;
+        } else {
+            foreach ($testSuiteNodes as $testSuiteNode) {
+                assert($testSuiteNode instanceof DOMElement);
+
+                $elements[] = $testSuiteNode;
+            }
+        }
+
+        return $elements;
+    }
+
+    private function element(DOMXPath $xpath, string $element): ?DOMElement
+    {
+        $nodes = $xpath->query($element);
+
+        assert($nodes instanceof DOMNodeList);
+
+        if ($nodes->length === 1) {
+            $node = $nodes->item(0);
+
+            assert($node instanceof DOMElement);
+
+            return $node;
+        }
+
+        return null;
+    }
 }

@@ -14,50 +14,71 @@ use PHPUnit\Util\VersionComparisonOperator;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class TestDirectory {
+final readonly class TestDirectory
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $path;
+    private string $prefix;
+    private string $suffix;
+    private string $phpVersion;
+    private VersionComparisonOperator $phpVersionOperator;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $path;
-	private readonly string $prefix;
-	private readonly string $suffix;
-	private readonly string $phpVersion;
-	private readonly VersionComparisonOperator $phpVersionOperator;
+    /**
+     * @var list<non-empty-string>
+     */
+    private array $groups;
 
-	/**
-	 * @psalm-param non-empty-string $path
-	 */
-	public function __construct( string $path, string $prefix, string $suffix, string $phpVersion, VersionComparisonOperator $phpVersionOperator ) {
-		$this->path               = $path;
-		$this->prefix             = $prefix;
-		$this->suffix             = $suffix;
-		$this->phpVersion         = $phpVersion;
-		$this->phpVersionOperator = $phpVersionOperator;
-	}
+    /**
+     * @param non-empty-string       $path
+     * @param list<non-empty-string> $groups
+     */
+    public function __construct(string $path, string $prefix, string $suffix, string $phpVersion, VersionComparisonOperator $phpVersionOperator, array $groups)
+    {
+        $this->path               = $path;
+        $this->prefix             = $prefix;
+        $this->suffix             = $suffix;
+        $this->phpVersion         = $phpVersion;
+        $this->phpVersionOperator = $phpVersionOperator;
+        $this->groups             = $groups;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function path(): string {
-		return $this->path;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function path(): string
+    {
+        return $this->path;
+    }
 
-	public function prefix(): string {
-		return $this->prefix;
-	}
+    public function prefix(): string
+    {
+        return $this->prefix;
+    }
 
-	public function suffix(): string {
-		return $this->suffix;
-	}
+    public function suffix(): string
+    {
+        return $this->suffix;
+    }
 
-	public function phpVersion(): string {
-		return $this->phpVersion;
-	}
+    public function phpVersion(): string
+    {
+        return $this->phpVersion;
+    }
 
-	public function phpVersionOperator(): VersionComparisonOperator {
-		return $this->phpVersionOperator;
-	}
+    public function phpVersionOperator(): VersionComparisonOperator
+    {
+        return $this->phpVersionOperator;
+    }
+
+    /**
+     * @return list<non-empty-string>
+     */
+    public function groups(): array
+    {
+        return $this->groups;
+    }
 }

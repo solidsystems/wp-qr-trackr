@@ -10,16 +10,13 @@
 namespace PHPUnit\Runner\Filter;
 
 use function end;
-use function implode;
 use function preg_match;
 use function sprintf;
 use function str_replace;
 use function substr;
-use Exception;
-use PHPUnit\Framework\SelfDescribing;
 use PHPUnit\Framework\Test;
-use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\TestSuite;
+use PHPUnit\Runner\Phpt\TestCase as PhptTestCase;
 use RecursiveFilterIterator;
 use RecursiveIterator;
 
@@ -28,111 +25,113 @@ use RecursiveIterator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class NameFilterIterator extends RecursiveFilterIterator {
+abstract class NameFilterIterator extends RecursiveFilterIterator
+{
+    /**
+     * @var non-empty-string
+     */
+    private readonly string $regularExpression;
+    private readonly ?int $dataSetMinimum;
+    private readonly ?int $dataSetMaximum;
 
-	private ?string $filter = null;
-	private ?int $filterMin = null;
-	private ?int $filterMax = null;
+    /**
+     * @param RecursiveIterator<int, Test> $iterator
+     * @param non-empty-string             $filter
+     */
+    public function __construct(RecursiveIterator $iterator, string $filter)
+    {
+        parent::__construct($iterator);
 
-	/**
-	 * @psalm-param RecursiveIterator<int, Test> $iterator
-	 * @psalm-param non-empty-string $filter
-	 *
-	 * @throws Exception
-	 */
-	public function __construct( RecursiveIterator $iterator, string $filter ) {
-		parent::__construct( $iterator );
+        $preparedFilter = $this->prepareFilter($filter);
 
-		$this->setFilter( $filter );
-	}
+        $this->regularExpression = $preparedFilter['regularExpression'];
+        $this->dataSetMinimum    = $preparedFilter['dataSetMinimum'];
+        $this->dataSetMaximum    = $preparedFilter['dataSetMaximum'];
+    }
 
-	public function accept(): bool {
-		$test = $this->getInnerIterator()->current();
+    public function accept(): bool
+    {
+        $test = $this->getInnerIterator()->current();
 
-		if ( $test instanceof TestSuite ) {
-			return true;
-		}
+        if ($test instanceof TestSuite) {
+            return true;
+        }
 
-		$tmp = $this->describe( $test );
+        if ($test instanceof PhptTestCase) {
+            return false;
+        }
 
-		if ( $tmp[0] !== '' ) {
-			$name = implode( '::', $tmp );
-		} else {
-			$name = $tmp[1];
-		}
+        $name = $test::class . '::' . $test->nameWithDataSet();
 
-		$accepted = @preg_match( $this->filter, $name, $matches );
+        $accepted = @preg_match($this->regularExpression, $name, $matches) === 1;
 
-		if ( $accepted && isset( $this->filterMax ) ) {
-			$set      = end( $matches );
-			$accepted = $set >= $this->filterMin && $set <= $this->filterMax;
-		}
+        if ($accepted && isset($this->dataSetMaximum)) {
+            $set      = end($matches);
+            $accepted = $set >= $this->dataSetMinimum && $set <= $this->dataSetMaximum;
+        }
 
-		return (bool) $accepted;
-	}
+        return $this->doAccept($accepted);
+    }
 
-	/**
-	 * @throws Exception
-	 */
-	private function setFilter( string $filter ): void {
-		if ( preg_match( '/[a-zA-Z0-9]/', substr( $filter, 0, 1 ) ) === 1 || @preg_match( $filter, '' ) === false ) {
-			// Handles:
-			// * testAssertEqualsSucceeds#4
-			// * testAssertEqualsSucceeds#4-8
-			if ( preg_match( '/^(.*?)#(\d+)(?:-(\d+))?$/', $filter, $matches ) ) {
-				if ( isset( $matches[3] ) && $matches[2] < $matches[3] ) {
-					$filter = sprintf(
-						'%s.*with data set #(\d+)$',
-						$matches[1],
-					);
+    abstract protected function doAccept(bool $result): bool;
 
-					$this->filterMin = (int) $matches[2];
-					$this->filterMax = (int) $matches[3];
-				} else {
-					$filter = sprintf(
-						'%s.*with data set #%s$',
-						$matches[1],
-						$matches[2],
-					);
-				}
-			} // Handles:
-			// * testDetermineJsonError@JSON_ERROR_NONE
-			// * testDetermineJsonError@JSON.*
-			elseif ( preg_match( '/^(.*?)@(.+)$/', $filter, $matches ) ) {
-				$filter = sprintf(
-					'%s.*with data set "%s"$',
-					$matches[1],
-					$matches[2],
-				);
-			}
+    /**
+     * @param non-empty-string $filter
+     *
+     * @return array{regularExpression: non-empty-string, dataSetMinimum: ?int, dataSetMaximum: ?int}
+     */
+    private function prepareFilter(string $filter): array
+    {
+        $dataSetMinimum = null;
+        $dataSetMaximum = null;
 
-			// Escape delimiters in regular expression. Do NOT use preg_quote,
-			// to keep magic characters.
-			$filter = sprintf(
-				'/%s/i',
-				str_replace(
-					'/',
-					'\\/',
-					$filter,
-				),
-			);
-		}
+        if (preg_match('/[a-zA-Z0-9]/', substr($filter, 0, 1)) === 1 || @preg_match($filter, '') === false) {
+            // Handles:
+            //  * testAssertEqualsSucceeds#4
+            //  * testAssertEqualsSucceeds#4-8
+            if (preg_match('/^(.*?)#(\d+)(?:-(\d+))?$/', $filter, $matches)) {
+                if (isset($matches[3]) && $matches[2] < $matches[3]) {
+                    $filter = sprintf(
+                        '%s.*with data set #(\d+)$',
+                        $matches[1],
+                    );
 
-		$this->filter = $filter;
-	}
+                    $dataSetMinimum = (int) $matches[2];
+                    $dataSetMaximum = (int) $matches[3];
+                } else {
+                    $filter = sprintf(
+                        '%s.*with data set #%s$',
+                        $matches[1],
+                        $matches[2],
+                    );
+                }
+            } // Handles:
+            //  * testDetermineJsonError@JSON_ERROR_NONE
+            //  * testDetermineJsonError@JSON.*
+            elseif (preg_match('/^(.*?)@(.+)$/', $filter, $matches)) {
+                $filter = sprintf(
+                    '%s.*with data set "%s"$',
+                    $matches[1],
+                    $matches[2],
+                );
+            }
 
-	/**
-	 * @psalm-return array{0: string, 1: string}
-	 */
-	private function describe( Test $test ): array {
-		if ( $test instanceof TestCase ) {
-			return array( $test::class, $test->nameWithDataSet() );
-		}
+            // Escape delimiters in regular expression. Do NOT use preg_quote,
+            // to keep magic characters.
+            $filter = sprintf(
+                '/%s/i',
+                str_replace(
+                    '/',
+                    '\\/',
+                    $filter,
+                ),
+            );
+        }
 
-		if ( $test instanceof SelfDescribing ) {
-			return array( '', $test->toString() );
-		}
-
-		return array( '', $test::class );
-	}
+        return [
+            'regularExpression' => $filter,
+            'dataSetMinimum'    => $dataSetMinimum,
+            'dataSetMaximum'    => $dataSetMaximum,
+        ];
+    }
 }

@@ -14,7 +14,7 @@ use Countable;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface Test extends Countable {
-
-	public function run(): void;
+interface Test extends Countable
+{
+    public function run(): void;
 }

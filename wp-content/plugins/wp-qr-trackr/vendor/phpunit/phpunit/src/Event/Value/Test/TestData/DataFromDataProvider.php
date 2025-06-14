@@ -10,41 +10,43 @@
 namespace PHPUnit\Event\TestData;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DataFromDataProvider extends TestData {
+final readonly class DataFromDataProvider extends TestData
+{
+    private int|string $dataSetName;
+    private string $dataAsStringForResultOutput;
 
-	private readonly int|string $dataSetName;
-	private readonly string $dataAsStringForResultOutput;
+    public static function from(int|string $dataSetName, string $data, string $dataAsStringForResultOutput): self
+    {
+        return new self($dataSetName, $data, $dataAsStringForResultOutput);
+    }
 
-	public static function from( int|string $dataSetName, string $data, string $dataAsStringForResultOutput ): self {
-		return new self( $dataSetName, $data, $dataAsStringForResultOutput );
-	}
+    protected function __construct(int|string $dataSetName, string $data, string $dataAsStringForResultOutput)
+    {
+        $this->dataSetName                 = $dataSetName;
+        $this->dataAsStringForResultOutput = $dataAsStringForResultOutput;
 
-	protected function __construct( int|string $dataSetName, string $data, string $dataAsStringForResultOutput ) {
-		$this->dataSetName                 = $dataSetName;
-		$this->dataAsStringForResultOutput = $dataAsStringForResultOutput;
+        parent::__construct($data);
+    }
 
-		parent::__construct( $data );
-	}
+    public function dataSetName(): int|string
+    {
+        return $this->dataSetName;
+    }
 
-	public function dataSetName(): int|string {
-		return $this->dataSetName;
-	}
+    /**
+     * @internal This method is not covered by the backward compatibility promise for PHPUnit
+     */
+    public function dataAsStringForResultOutput(): string
+    {
+        return $this->dataAsStringForResultOutput;
+    }
 
-	/**
-	 * @internal This method is not covered by the backward compatibility promise for PHPUnit
-	 */
-	public function dataAsStringForResultOutput(): string {
-		return $this->dataAsStringForResultOutput;
-	}
-
-	/**
-	 * @psalm-assert-if-true DataFromDataProvider $this
-	 */
-	public function isFromDataProvider(): bool {
-		return true;
-	}
+    public function isFromDataProvider(): true
+    {
+        return true;
+    }
 }

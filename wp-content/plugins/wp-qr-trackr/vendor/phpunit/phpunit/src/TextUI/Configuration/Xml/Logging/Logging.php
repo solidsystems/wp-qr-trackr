@@ -18,79 +18,107 @@ use PHPUnit\TextUI\XmlConfiguration\Logging\TestDox\Text as TestDoxText;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class Logging {
+final readonly class Logging
+{
+    private ?Junit $junit;
+    private ?Otr $otr;
+    private ?TeamCity $teamCity;
+    private ?TestDoxHtml $testDoxHtml;
+    private ?TestDoxText $testDoxText;
 
-	private readonly ?Junit $junit;
-	private readonly ?TeamCity $teamCity;
-	private readonly ?TestDoxHtml $testDoxHtml;
-	private readonly ?TestDoxText $testDoxText;
+    public function __construct(?Junit $junit, ?Otr $otr, ?TeamCity $teamCity, ?TestDoxHtml $testDoxHtml, ?TestDoxText $testDoxText)
+    {
+        $this->junit       = $junit;
+        $this->otr         = $otr;
+        $this->teamCity    = $teamCity;
+        $this->testDoxHtml = $testDoxHtml;
+        $this->testDoxText = $testDoxText;
+    }
 
-	public function __construct( ?Junit $junit, ?TeamCity $teamCity, ?TestDoxHtml $testDoxHtml, ?TestDoxText $testDoxText ) {
-		$this->junit       = $junit;
-		$this->teamCity    = $teamCity;
-		$this->testDoxHtml = $testDoxHtml;
-		$this->testDoxText = $testDoxText;
-	}
+    public function hasJunit(): bool
+    {
+        return $this->junit !== null;
+    }
 
-	public function hasJunit(): bool {
-		return $this->junit !== null;
-	}
+    /**
+     * @throws Exception
+     */
+    public function junit(): Junit
+    {
+        if ($this->junit === null) {
+            throw new Exception('Logger "JUnit XML" is not configured');
+        }
 
-	/**
-	 * @throws Exception
-	 */
-	public function junit(): Junit {
-		if ( $this->junit === null ) {
-			throw new Exception( 'Logger "JUnit XML" is not configured' );
-		}
+        return $this->junit;
+    }
 
-		return $this->junit;
-	}
+    public function hasOtr(): bool
+    {
+        return $this->otr !== null;
+    }
 
-	public function hasTeamCity(): bool {
-		return $this->teamCity !== null;
-	}
+    /**
+     * @throws Exception
+     */
+    public function otr(): Otr
+    {
+        if ($this->otr === null) {
+            throw new Exception('Logger "Open Test Reporting XML" is not configured');
+        }
 
-	/**
-	 * @throws Exception
-	 */
-	public function teamCity(): TeamCity {
-		if ( $this->teamCity === null ) {
-			throw new Exception( 'Logger "Team City" is not configured' );
-		}
+        return $this->otr;
+    }
 
-		return $this->teamCity;
-	}
+    public function hasTeamCity(): bool
+    {
+        return $this->teamCity !== null;
+    }
 
-	public function hasTestDoxHtml(): bool {
-		return $this->testDoxHtml !== null;
-	}
+    /**
+     * @throws Exception
+     */
+    public function teamCity(): TeamCity
+    {
+        if ($this->teamCity === null) {
+            throw new Exception('Logger "Team City" is not configured');
+        }
 
-	/**
-	 * @throws Exception
-	 */
-	public function testDoxHtml(): TestDoxHtml {
-		if ( $this->testDoxHtml === null ) {
-			throw new Exception( 'Logger "TestDox HTML" is not configured' );
-		}
+        return $this->teamCity;
+    }
 
-		return $this->testDoxHtml;
-	}
+    public function hasTestDoxHtml(): bool
+    {
+        return $this->testDoxHtml !== null;
+    }
 
-	public function hasTestDoxText(): bool {
-		return $this->testDoxText !== null;
-	}
+    /**
+     * @throws Exception
+     */
+    public function testDoxHtml(): TestDoxHtml
+    {
+        if ($this->testDoxHtml === null) {
+            throw new Exception('Logger "TestDox HTML" is not configured');
+        }
 
-	/**
-	 * @throws Exception
-	 */
-	public function testDoxText(): TestDoxText {
-		if ( $this->testDoxText === null ) {
-			throw new Exception( 'Logger "TestDox Text" is not configured' );
-		}
+        return $this->testDoxHtml;
+    }
 
-		return $this->testDoxText;
-	}
+    public function hasTestDoxText(): bool
+    {
+        return $this->testDoxText !== null;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testDoxText(): TestDoxText
+    {
+        if ($this->testDoxText === null) {
+            throw new Exception('Logger "TestDox Text" is not configured');
+        }
+
+        return $this->testDoxText;
+    }
 }

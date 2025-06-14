@@ -14,20 +14,22 @@ use function is_finite;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsFinite extends Constraint {
+final class IsFinite extends Constraint
+{
+    /**
+     * Returns a string representation of the constraint.
+     */
+    public function toString(): string
+    {
+        return 'is finite';
+    }
 
-	/**
-	 * Returns a string representation of the constraint.
-	 */
-	public function toString(): string {
-		return 'is finite';
-	}
-
-	/**
-	 * Evaluates the constraint for parameter $other. Returns true if the
-	 * constraint is met, false otherwise.
-	 */
-	protected function matches( mixed $other ): bool {
-		return is_finite( $other );
-	}
+    /**
+     * Evaluates the constraint for parameter $other. Returns true if the
+     * constraint is met, false otherwise.
+     */
+    protected function matches(mixed $other): bool
+    {
+        return is_finite($other);
+    }
 }

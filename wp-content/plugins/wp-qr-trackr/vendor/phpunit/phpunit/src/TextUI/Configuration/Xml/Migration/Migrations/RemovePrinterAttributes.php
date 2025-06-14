@@ -18,19 +18,20 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemovePrinterAttributes implements Migration {
+final readonly class RemovePrinterAttributes implements Migration
+{
+    public function migrate(DOMDocument $document): void
+    {
+        $root = $document->documentElement;
 
-	public function migrate( DOMDocument $document ): void {
-		$root = $document->documentElement;
+        assert($root instanceof DOMElement);
 
-		assert( $root instanceof DOMElement );
+        if ($root->hasAttribute('printerClass')) {
+            $root->removeAttribute('printerClass');
+        }
 
-		if ( $root->hasAttribute( 'printerClass' ) ) {
-			$root->removeAttribute( 'printerClass' );
-		}
-
-		if ( $root->hasAttribute( 'printerFile' ) ) {
-			$root->removeAttribute( 'printerFile' );
-		}
-	}
+        if ($root->hasAttribute('printerFile')) {
+            $root->removeAttribute('printerFile');
+        }
+    }
 }

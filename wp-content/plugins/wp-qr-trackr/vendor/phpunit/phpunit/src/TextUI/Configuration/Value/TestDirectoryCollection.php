@@ -16,44 +16,50 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  *
  * @template-implements IteratorAggregate<int, TestDirectory>
  */
-final class TestDirectoryCollection implements Countable, IteratorAggregate {
+final readonly class TestDirectoryCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<TestDirectory>
+     */
+    private array $directories;
 
-	/**
-	 * @psalm-var list<TestDirectory>
-	 */
-	private readonly array $directories;
+    /**
+     * @param list<TestDirectory> $directories
+     */
+    public static function fromArray(array $directories): self
+    {
+        return new self(...$directories);
+    }
 
-	/**
-	 * @psalm-param list<TestDirectory> $directories
-	 */
-	public static function fromArray( array $directories ): self {
-		return new self( ...$directories );
-	}
+    private function __construct(TestDirectory ...$directories)
+    {
+        $this->directories = $directories;
+    }
 
-	private function __construct( TestDirectory ...$directories ) {
-		$this->directories = $directories;
-	}
+    /**
+     * @return list<TestDirectory>
+     */
+    public function asArray(): array
+    {
+        return $this->directories;
+    }
 
-	/**
-	 * @psalm-return list<TestDirectory>
-	 */
-	public function asArray(): array {
-		return $this->directories;
-	}
+    public function count(): int
+    {
+        return count($this->directories);
+    }
 
-	public function count(): int {
-		return count( $this->directories );
-	}
+    public function getIterator(): TestDirectoryCollectionIterator
+    {
+        return new TestDirectoryCollectionIterator($this);
+    }
 
-	public function getIterator(): TestDirectoryCollectionIterator {
-		return new TestDirectoryCollectionIterator( $this );
-	}
-
-	public function isEmpty(): bool {
-		return $this->count() === 0;
-	}
+    public function isEmpty(): bool
+    {
+        return $this->count() === 0;
+    }
 }

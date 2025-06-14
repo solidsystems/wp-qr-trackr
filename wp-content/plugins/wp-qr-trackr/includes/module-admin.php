@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action(
 	'admin_menu',
 	function () {
+		qr_trackr_debug_log( 'Registering admin menu and submenus.' );
 		add_menu_page(
 			__( 'QR Trackr Stats', 'qr-trackr' ),
 			'QR Trackr Stats',
@@ -147,6 +148,7 @@ function qr_trackr_debug_settings_page() {
 		$nonce = sanitize_text_field( wp_unslash( $_POST['qr_trackr_debug_nonce'] ) );
 		if ( wp_verify_nonce( $nonce, 'qr_trackr_debug_save' ) ) {
 			update_option( 'qr_trackr_debug_mode', isset( $_POST['qr_trackr_debug_mode'] ) ? '1' : '0' );
+			qr_trackr_debug_log( 'Debug settings updated via admin UI.', array( 'debug_mode' => isset( $_POST['qr_trackr_debug_mode'] ) ? '1' : '0' ) );
 			echo '<div class="notice notice-success is-dismissible"><p>Debug mode updated.</p></div>';
 		}
 	}

@@ -18,15 +18,16 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveCacheResultFileAttribute implements Migration {
+final readonly class RemoveCacheResultFileAttribute implements Migration
+{
+    public function migrate(DOMDocument $document): void
+    {
+        $root = $document->documentElement;
 
-	public function migrate( DOMDocument $document ): void {
-		$root = $document->documentElement;
+        assert($root instanceof DOMElement);
 
-		assert( $root instanceof DOMElement );
-
-		if ( $root->hasAttribute( 'cacheResultFile' ) ) {
-			$root->removeAttribute( 'cacheResultFile' );
-		}
-	}
+        if ($root->hasAttribute('cacheResultFile')) {
+            $root->removeAttribute('cacheResultFile');
+        }
+    }
 }

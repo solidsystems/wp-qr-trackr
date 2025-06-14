@@ -22,58 +22,61 @@ use PHPUnit\Runner\Version;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class SchemaFinder {
+final readonly class SchemaFinder
+{
+    /**
+     * @return non-empty-list<non-empty-string>
+     */
+    public function available(): array
+    {
+        $result = [Version::series()];
 
-	/**
-	 * @psalm-return non-empty-list<non-empty-string>
-	 */
-	public function available(): array {
-		$result = array( Version::series() );
+        foreach ((new DirectoryIterator($this->path() . 'schema')) as $file) {
+            if ($file->isDot()) {
+                continue;
+            }
 
-		foreach ( ( new DirectoryIterator( $this->path() . 'schema' ) ) as $file ) {
-			if ( $file->isDot() ) {
-				continue;
-			}
+            $version = $file->getBasename('.xsd');
 
-			$version = $file->getBasename( '.xsd' );
+            assert($version !== '');
 
-			assert( ! empty( $version ) );
+            $result[] = $version;
+        }
 
-			$result[] = $version;
-		}
+        rsort($result);
 
-		rsort( $result );
+        return $result;
+    }
 
-		return $result;
-	}
+    /**
+     * @throws CannotFindSchemaException
+     */
+    public function find(string $version): string
+    {
+        if ($version === Version::series()) {
+            $filename = $this->path() . 'phpunit.xsd';
+        } else {
+            $filename = $this->path() . 'schema/' . $version . '.xsd';
+        }
 
-	/**
-	 * @throws CannotFindSchemaException
-	 */
-	public function find( string $version ): string {
-		if ( $version === Version::series() ) {
-			$filename = $this->path() . 'phpunit.xsd';
-		} else {
-			$filename = $this->path() . 'schema/' . $version . '.xsd';
-		}
+        if (!is_file($filename)) {
+            throw new CannotFindSchemaException(
+                sprintf(
+                    'Schema for PHPUnit %s is not available',
+                    $version,
+                ),
+            );
+        }
 
-		if ( ! is_file( $filename ) ) {
-			throw new CannotFindSchemaException(
-				sprintf(
-					'Schema for PHPUnit %s is not available',
-					$version,
-				),
-			);
-		}
+        return $filename;
+    }
 
-		return $filename;
-	}
+    private function path(): string
+    {
+        if (defined('__PHPUNIT_PHAR_ROOT__')) {
+            return __PHPUNIT_PHAR_ROOT__ . '/';
+        }
 
-	private function path(): string {
-		if ( defined( '__PHPUNIT_PHAR_ROOT__' ) ) {
-			return __PHPUNIT_PHAR_ROOT__ . '/';
-		}
-
-		return __DIR__ . '/../../../../';
-	}
+        return __DIR__ . '/../../../../';
+    }
 }

@@ -14,12 +14,13 @@ namespace PHPUnit\Framework;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-class AssertionFailedError extends Exception implements SelfDescribing {
-
-	/**
-	 * Wrapper for getMessage() which is declared as final.
-	 */
-	public function toString(): string {
-		return $this->getMessage();
-	}
+class AssertionFailedError extends Exception implements SelfDescribing
+{
+    /**
+     * Wrapper for getMessage() which is declared as final.
+     */
+    public function toString(): string
+    {
+        return $this->getMessage();
+    }
 }

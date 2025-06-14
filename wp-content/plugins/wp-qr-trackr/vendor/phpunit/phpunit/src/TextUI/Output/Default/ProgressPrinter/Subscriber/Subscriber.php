@@ -14,15 +14,17 @@ namespace PHPUnit\TextUI\Output\Default\ProgressPrinter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract class Subscriber {
+abstract readonly class Subscriber
+{
+    private ProgressPrinter $printer;
 
-	private readonly ProgressPrinter $printer;
+    public function __construct(ProgressPrinter $printer)
+    {
+        $this->printer = $printer;
+    }
 
-	public function __construct( ProgressPrinter $printer ) {
-		$this->printer = $printer;
-	}
-
-	protected function printer(): ProgressPrinter {
-		return $this->printer;
-	}
+    protected function printer(): ProgressPrinter
+    {
+        return $this->printer;
+    }
 }

@@ -15,49 +15,57 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class AfterLastTestMethodCalled implements Event {
+final readonly class AfterLastTestMethodCalled implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    /**
+     * @var class-string
+     */
+    private string $testClassName;
+    private Code\ClassMethod $calledMethod;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $testClassName;
-	private readonly Code\ClassMethod $calledMethod;
+    /**
+     * @param class-string $testClassName
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod $calledMethod)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->testClassName = $testClassName;
+        $this->calledMethod  = $calledMethod;
+    }
 
-	/**
-	 * @psalm-param class-string $testClassName
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod $calledMethod ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->testClassName = $testClassName;
-		$this->calledMethod  = $calledMethod;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @return class-string
+     */
+    public function testClassName(): string
+    {
+        return $this->testClassName;
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function testClassName(): string {
-		return $this->testClassName;
-	}
+    public function calledMethod(): Code\ClassMethod
+    {
+        return $this->calledMethod;
+    }
 
-	public function calledMethod(): Code\ClassMethod {
-		return $this->calledMethod;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'After Last Test Method Called (%s::%s)',
-			$this->calledMethod->className(),
-			$this->calledMethod->methodName(),
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'After Last Test Method Called (%s::%s)',
+            $this->calledMethod->className(),
+            $this->calledMethod->methodName(),
+        );
+    }
 }

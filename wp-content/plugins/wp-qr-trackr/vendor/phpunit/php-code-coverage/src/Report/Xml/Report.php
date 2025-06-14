@@ -9,83 +9,99 @@
  */
 namespace SebastianBergmann\CodeCoverage\Report\Xml;
 
+use function assert;
 use function basename;
 use function dirname;
 use DOMDocument;
+use DOMElement;
 
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class Report extends File {
+final class Report extends File
+{
+    public function __construct(string $name)
+    {
+        $dom = new DOMDocument;
+        $dom->loadXML('<?xml version="1.0" ?><phpunit xmlns="https://schema.phpunit.de/coverage/1.0"><file /></phpunit>');
 
-	public function __construct( string $name ) {
-		$dom = new DOMDocument();
-		$dom->loadXML( '<?xml version="1.0" ?><phpunit xmlns="https://schema.phpunit.de/coverage/1.0"><file /></phpunit>' );
+        $contextNode = $dom->getElementsByTagNameNS(
+            'https://schema.phpunit.de/coverage/1.0',
+            'file',
+        )->item(0);
 
-		$contextNode = $dom->getElementsByTagNameNS(
-			'https://schema.phpunit.de/coverage/1.0',
-			'file',
-		)->item( 0 );
+        parent::__construct($contextNode);
 
-		parent::__construct( $contextNode );
+        $this->setName($name);
+    }
 
-		$this->setName( $name );
-	}
+    public function asDom(): DOMDocument
+    {
+        return $this->dom();
+    }
 
-	public function asDom(): DOMDocument {
-		return $this->dom();
-	}
+    public function functionObject(string $name): Method
+    {
+        $node = $this->contextNode()->appendChild(
+            $this->dom()->createElementNS(
+                'https://schema.phpunit.de/coverage/1.0',
+                'function',
+            ),
+        );
 
-	public function functionObject( $name ): Method {
-		$node = $this->contextNode()->appendChild(
-			$this->dom()->createElementNS(
-				'https://schema.phpunit.de/coverage/1.0',
-				'function',
-			),
-		);
+        assert($node instanceof DOMElement);
 
-		return new Method( $node, $name );
-	}
+        return new Method($node, $name);
+    }
 
-	public function classObject( $name ): Unit {
-		return $this->unitObject( 'class', $name );
-	}
+    public function classObject(string $name): Unit
+    {
+        return $this->unitObject('class', $name);
+    }
 
-	public function traitObject( $name ): Unit {
-		return $this->unitObject( 'trait', $name );
-	}
+    public function traitObject(string $name): Unit
+    {
+        return $this->unitObject('trait', $name);
+    }
 
-	public function source(): Source {
-		$source = $this->contextNode()->getElementsByTagNameNS(
-			'https://schema.phpunit.de/coverage/1.0',
-			'source',
-		)->item( 0 );
+    public function source(): Source
+    {
+        $source = $this->contextNode()->getElementsByTagNameNS(
+            'https://schema.phpunit.de/coverage/1.0',
+            'source',
+        )->item(0);
 
-		if ( ! $source ) {
-			$source = $this->contextNode()->appendChild(
-				$this->dom()->createElementNS(
-					'https://schema.phpunit.de/coverage/1.0',
-					'source',
-				),
-			);
-		}
+        if ($source === null) {
+            $source = $this->contextNode()->appendChild(
+                $this->dom()->createElementNS(
+                    'https://schema.phpunit.de/coverage/1.0',
+                    'source',
+                ),
+            );
+        }
 
-		return new Source( $source );
-	}
+        assert($source instanceof DOMElement);
 
-	private function setName( string $name ): void {
-		$this->contextNode()->setAttribute( 'name', basename( $name ) );
-		$this->contextNode()->setAttribute( 'path', dirname( $name ) );
-	}
+        return new Source($source);
+    }
 
-	private function unitObject( string $tagName, $name ): Unit {
-		$node = $this->contextNode()->appendChild(
-			$this->dom()->createElementNS(
-				'https://schema.phpunit.de/coverage/1.0',
-				$tagName,
-			),
-		);
+    private function setName(string $name): void
+    {
+        $this->contextNode()->setAttribute('name', basename($name));
+        $this->contextNode()->setAttribute('path', dirname($name));
+    }
 
-		return new Unit( $node, $name );
-	}
+    private function unitObject(string $tagName, string $name): Unit
+    {
+        $node = $this->contextNode()->appendChild(
+            $this->dom()->createElementNS(
+                'https://schema.phpunit.de/coverage/1.0',
+                $tagName,
+            ),
+        );
+
+        assert($node instanceof DOMElement);
+
+        return new Unit($node, $name);
+    }
 }

@@ -104,18 +104,34 @@ add_action(
 	 */
 	function ( $post_id ) {
 		if ( isset( $_POST['qr_trackr_dest_nonce'], $_POST['qr_trackr_dest_url'], $_POST['qr_trackr_link_id'] ) ) {
+			qr_trackr_debug_log(
+				'save_post: Attempting destination URL update',
+				array(
+					'post_id' => $post_id,
+					'link_id' => $_POST['qr_trackr_link_id'],
+				)
+			);
 			$nonce    = isset( $_POST['qr_trackr_dest_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_dest_nonce'] ) ) : '';
 			$link_id  = isset( $_POST['qr_trackr_link_id'] ) ? intval( wp_unslash( $_POST['qr_trackr_link_id'] ) ) : 0;
 			$dest_url = isset( $_POST['qr_trackr_dest_url'] ) ? esc_url_raw( wp_unslash( $_POST['qr_trackr_dest_url'] ) ) : '';
 			if ( ! wp_verify_nonce( $nonce, 'qr_trackr_update_dest_' . $post_id ) ) {
+				qr_trackr_debug_log( 'save_post: Nonce verification failed', $nonce );
 				return;
 			}
 			if ( ! current_user_can( 'edit_post', $post_id ) ) {
+				qr_trackr_debug_log( 'save_post: Current user cannot edit post', $post_id );
 				return;
 			}
 			global $wpdb;
 			$links_table = $wpdb->prefix . 'qr_trackr_links';
 			$wpdb->update( $links_table, array( 'destination_url' => $dest_url ), array( 'id' => $link_id ) );
+			qr_trackr_debug_log(
+				'save_post: Destination URL updated',
+				array(
+					'link_id'  => $link_id,
+					'dest_url' => $dest_url,
+				)
+			);
 		}
 	}
 );
@@ -141,17 +157,17 @@ add_action(
 		);
 		$missing     = array_diff( $expected, $actual );
 		if ( $missing ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( '[QR Trackr MIGRATE] Missing columns in qr_trackr_links: ' . implode( ', ', $missing ) );
+			qr_trackr_debug_log( 'Migration: Missing columns in qr_trackr_links', $missing );
 			if ( in_array( 'created_at', $missing, true ) ) {
 				$wpdb->query( $wpdb->prepare( 'ALTER TABLE %s ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP', $links_table ) );
+				qr_trackr_debug_log( 'Migration: Added created_at column.' );
 			}
 			if ( in_array( 'updated_at', $missing, true ) ) {
 				$wpdb->query( $wpdb->prepare( 'ALTER TABLE %s ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', $links_table ) );
+				qr_trackr_debug_log( 'Migration: Added updated_at column.' );
 			}
 		} else {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( '[QR Trackr MIGRATE] qr_trackr_links schema OK: ' . implode( ', ', $actual ) );
+			qr_trackr_debug_log( 'Migration: qr_trackr_links schema OK', $actual );
 		}
 	}
 );

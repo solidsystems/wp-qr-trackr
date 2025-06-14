@@ -19,65 +19,75 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Failed implements Event {
+final readonly class Failed implements Event
+{
+    private Telemetry\Info $telemetryInfo;
+    private Code\Test $test;
+    private Throwable $throwable;
+    private ?ComparisonFailure $comparisonFailure;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly Code\Test $test;
-	private readonly Throwable $throwable;
-	private readonly ?ComparisonFailure $comparisonFailure;
+    public function __construct(Telemetry\Info $telemetryInfo, Code\Test $test, Throwable $throwable, ?ComparisonFailure $comparisonFailure)
+    {
+        $this->telemetryInfo     = $telemetryInfo;
+        $this->test              = $test;
+        $this->throwable         = $throwable;
+        $this->comparisonFailure = $comparisonFailure;
+    }
 
-	public function __construct( Telemetry\Info $telemetryInfo, Code\Test $test, Throwable $throwable, ?ComparisonFailure $comparisonFailure ) {
-		$this->telemetryInfo     = $telemetryInfo;
-		$this->test              = $test;
-		$this->throwable         = $throwable;
-		$this->comparisonFailure = $comparisonFailure;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    public function test(): Code\Test
+    {
+        return $this->test;
+    }
 
-	public function test(): Code\Test {
-		return $this->test;
-	}
+    public function throwable(): Throwable
+    {
+        return $this->throwable;
+    }
 
-	public function throwable(): Throwable {
-		return $this->throwable;
-	}
+    /**
+     * @phpstan-assert-if-true !null $this->comparisonFailure
+     */
+    public function hasComparisonFailure(): bool
+    {
+        return $this->comparisonFailure !== null;
+    }
 
-	/**
-	 * @psalm-assert-if-true !null $this->comparisonFailure
-	 */
-	public function hasComparisonFailure(): bool {
-		return $this->comparisonFailure !== null;
-	}
+    /**
+     * @throws NoComparisonFailureException
+     */
+    public function comparisonFailure(): ComparisonFailure
+    {
+        if ($this->comparisonFailure === null) {
+            throw new NoComparisonFailureException;
+        }
 
-	/**
-	 * @throws NoComparisonFailureException
-	 */
-	public function comparisonFailure(): ComparisonFailure {
-		if ( $this->comparisonFailure === null ) {
-			throw new NoComparisonFailureException();
-		}
+        return $this->comparisonFailure;
+    }
 
-		return $this->comparisonFailure;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        $message = trim($this->throwable->message());
 
-	public function asString(): string {
-		$message = trim( $this->throwable->message() );
+        if ($message !== '') {
+            $message = PHP_EOL . $message;
+        }
 
-		if ( ! empty( $message ) ) {
-			$message = PHP_EOL . $message;
-		}
-
-		return sprintf(
-			'Test Failed (%s)%s',
-			$this->test->id(),
-			$message,
-		);
-	}
+        return sprintf(
+            'Test Failed (%s)%s',
+            $this->test->id(),
+            $message,
+        );
+    }
 }

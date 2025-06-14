@@ -17,35 +17,36 @@ use SplFileInfo;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Facade {
+final class Facade
+{
+    /**
+     * @param list<non-empty-string>|non-empty-string $paths
+     * @param list<non-empty-string>|string           $suffixes
+     * @param list<non-empty-string>|string           $prefixes
+     * @param list<non-empty-string>                  $exclude
+     *
+     * @return list<non-empty-string>
+     */
+    public function getFilesAsArray(array|string $paths, array|string $suffixes = '', array|string $prefixes = '', array $exclude = []): array
+    {
+        $iterator = (new Factory)->getFileIterator($paths, $suffixes, $prefixes, $exclude);
 
-	/**
-	 * @psalm-param list<non-empty-string>|non-empty-string $paths
-	 * @psalm-param list<non-empty-string>|string $suffixes
-	 * @psalm-param list<non-empty-string>|string $prefixes
-	 * @psalm-param list<non-empty-string> $exclude
-	 *
-	 * @psalm-return list<non-empty-string>
-	 */
-	public function getFilesAsArray( array|string $paths, array|string $suffixes = '', array|string $prefixes = '', array $exclude = array() ): array {
-		$iterator = ( new Factory() )->getFileIterator( $paths, $suffixes, $prefixes, $exclude );
+        $files = [];
 
-		$files = array();
+        foreach ($iterator as $file) {
+            assert($file instanceof SplFileInfo);
 
-		foreach ( $iterator as $file ) {
-			assert( $file instanceof SplFileInfo );
+            $file = $file->getRealPath();
 
-			$file = $file->getRealPath();
+            if ($file) {
+                $files[] = $file;
+            }
+        }
 
-			if ( $file ) {
-				$files[] = $file;
-			}
-		}
+        $files = array_unique($files);
 
-		$files = array_unique( $files );
+        sort($files);
 
-		sort( $files );
-
-		return $files;
-	}
+        return $files;
+    }
 }

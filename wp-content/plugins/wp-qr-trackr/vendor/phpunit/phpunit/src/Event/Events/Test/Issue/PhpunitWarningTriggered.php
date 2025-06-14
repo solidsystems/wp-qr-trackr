@@ -16,55 +16,63 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PhpunitWarningTriggered implements Event {
+final readonly class PhpunitWarningTriggered implements Event
+{
+    private Telemetry\Info $telemetryInfo;
+    private Test $test;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly Test $test;
+    /**
+     * @var non-empty-string
+     */
+    private string $message;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $message;
+    /**
+     * @param non-empty-string $message
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, Test $test, string $message)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->test          = $test;
+        $this->message       = $message;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $message
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, Test $test, string $message ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->test          = $test;
-		$this->message       = $message;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    public function test(): Test
+    {
+        return $this->test;
+    }
 
-	public function test(): Test {
-		return $this->test;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function message(): string
+    {
+        return $this->message;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function message(): string {
-		return $this->message;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        $message = $this->message;
 
-	public function asString(): string {
-		$message = $this->message;
+        if ($message !== '') {
+            $message = PHP_EOL . $message;
+        }
 
-		if ( ! empty( $message ) ) {
-			$message = PHP_EOL . $message;
-		}
-
-		return sprintf(
-			'Test Triggered PHPUnit Warning (%s)%s',
-			$this->test->id(),
-			$message,
-		);
-	}
+        return sprintf(
+            'Test Triggered PHPUnit Warning (%s)%s',
+            $this->test->id(),
+            $message,
+        );
+    }
 }

@@ -17,14 +17,15 @@ use RuntimeException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestDirectoryNotFoundException extends RuntimeException implements Exception {
-
-	public function __construct( string $path ) {
-		parent::__construct(
-			sprintf(
-				'Test directory "%s" not found',
-				$path,
-			),
-		);
-	}
+final class TestDirectoryNotFoundException extends RuntimeException implements Exception
+{
+    public function __construct(string $path)
+    {
+        parent::__construct(
+            sprintf(
+                'Test directory "%s" not found',
+                $path,
+            ),
+        );
+    }
 }

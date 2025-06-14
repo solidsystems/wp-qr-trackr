@@ -10,8 +10,6 @@
 namespace PHPUnit\TextUI\Configuration;
 
 use function count;
-use function iterator_count;
-use Countable;
 use Iterator;
 
 /**
@@ -19,39 +17,41 @@ use Iterator;
  *
  * @template-implements Iterator<int, Variable>
  */
-final class VariableCollectionIterator implements Countable, Iterator {
+final class VariableCollectionIterator implements Iterator
+{
+    /**
+     * @var list<Variable>
+     */
+    private readonly array $variables;
+    private int $position = 0;
 
-	/**
-	 * @psalm-var list<Variable>
-	 */
-	private readonly array $variables;
-	private int $position = 0;
+    public function __construct(VariableCollection $variables)
+    {
+        $this->variables = $variables->asArray();
+    }
 
-	public function __construct( VariableCollection $variables ) {
-		$this->variables = $variables->asArray();
-	}
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
 
-	public function count(): int {
-		return iterator_count( $this );
-	}
+    public function valid(): bool
+    {
+        return $this->position < count($this->variables);
+    }
 
-	public function rewind(): void {
-		$this->position = 0;
-	}
+    public function key(): int
+    {
+        return $this->position;
+    }
 
-	public function valid(): bool {
-		return $this->position < count( $this->variables );
-	}
+    public function current(): Variable
+    {
+        return $this->variables[$this->position];
+    }
 
-	public function key(): int {
-		return $this->position;
-	}
-
-	public function current(): Variable {
-		return $this->variables[ $this->position ];
-	}
-
-	public function next(): void {
-		++$this->position;
-	}
+    public function next(): void
+    {
+        $this->position++;
+    }
 }

@@ -16,17 +16,19 @@ use PHPUnit\TextUI\Configuration\File;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class Php {
+final readonly class Php
+{
+    private File $target;
 
-	private readonly File $target;
+    public function __construct(File $target)
+    {
+        $this->target = $target;
+    }
 
-	public function __construct( File $target ) {
-		$this->target = $target;
-	}
-
-	public function target(): File {
-		return $this->target;
-	}
+    public function target(): File
+    {
+        return $this->target;
+    }
 }

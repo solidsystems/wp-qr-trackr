@@ -10,8 +10,6 @@
 namespace PHPUnit\TextUI\Configuration;
 
 use function count;
-use function iterator_count;
-use Countable;
 use Iterator;
 
 /**
@@ -19,39 +17,41 @@ use Iterator;
  *
  * @template-implements Iterator<int, Group>
  */
-final class GroupCollectionIterator implements Countable, Iterator {
+final class GroupCollectionIterator implements Iterator
+{
+    /**
+     * @var list<Group>
+     */
+    private readonly array $groups;
+    private int $position = 0;
 
-	/**
-	 * @psalm-var list<Group>
-	 */
-	private readonly array $groups;
-	private int $position = 0;
+    public function __construct(GroupCollection $groups)
+    {
+        $this->groups = $groups->asArray();
+    }
 
-	public function __construct( GroupCollection $groups ) {
-		$this->groups = $groups->asArray();
-	}
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
 
-	public function count(): int {
-		return iterator_count( $this );
-	}
+    public function valid(): bool
+    {
+        return $this->position < count($this->groups);
+    }
 
-	public function rewind(): void {
-		$this->position = 0;
-	}
+    public function key(): int
+    {
+        return $this->position;
+    }
 
-	public function valid(): bool {
-		return $this->position < count( $this->groups );
-	}
+    public function current(): Group
+    {
+        return $this->groups[$this->position];
+    }
 
-	public function key(): int {
-		return $this->position;
-	}
-
-	public function current(): Group {
-		return $this->groups[ $this->position ];
-	}
-
-	public function next(): void {
-		++$this->position;
-	}
+    public function next(): void
+    {
+        $this->position++;
+    }
 }

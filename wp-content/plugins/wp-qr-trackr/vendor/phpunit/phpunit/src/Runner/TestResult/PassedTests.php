@@ -22,95 +22,103 @@ use PHPUnit\Metadata\Api\Groups;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class PassedTests {
+final class PassedTests
+{
+    private static ?self $instance = null;
 
-	private static ?self $instance = null;
+    /**
+     * @var list<class-string>
+     */
+    private array $passedTestClasses = [];
 
-	/**
-	 * @psalm-var list<class-string>
-	 */
-	private array $passedTestClasses = array();
+    /**
+     * @var array<string,array{returnValue: mixed, size: TestSize}>
+     */
+    private array $passedTestMethods = [];
 
-	/**
-	 * @psalm-var array<string,array{returnValue: mixed, size: TestSize}>
-	 */
-	private array $passedTestMethods = array();
+    public static function instance(): self
+    {
+        if (self::$instance !== null) {
+            return self::$instance;
+        }
 
-	public static function instance(): self {
-		if ( self::$instance !== null ) {
-			return self::$instance;
-		}
+        self::$instance = new self;
 
-		self::$instance = new self();
+        return self::$instance;
+    }
 
-		return self::$instance;
-	}
+    /**
+     * @param class-string $className
+     */
+    public function testClassPassed(string $className): void
+    {
+        $this->passedTestClasses[] = $className;
+    }
 
-	/**
-	 * @psalm-param class-string $className
-	 */
-	public function testClassPassed( string $className ): void {
-		$this->passedTestClasses[] = $className;
-	}
+    public function testMethodPassed(TestMethod $test, mixed $returnValue): void
+    {
+        $size = (new Groups)->size(
+            $test->className(),
+            $test->methodName(),
+        );
 
-	public function testMethodPassed( TestMethod $test, mixed $returnValue ): void {
-		$size = ( new Groups() )->size(
-			$test->className(),
-			$test->methodName(),
-		);
+        $this->passedTestMethods[$test->className() . '::' . $test->methodName()] = [
+            'returnValue' => $returnValue,
+            'size'        => $size,
+        ];
+    }
 
-		$this->passedTestMethods[ $test->className() . '::' . $test->methodName() ] = array(
-			'returnValue' => $returnValue,
-			'size'        => $size,
-		);
-	}
+    public function import(self $other): void
+    {
+        $this->passedTestClasses = array_merge(
+            $this->passedTestClasses,
+            $other->passedTestClasses,
+        );
 
-	public function import( self $other ): void {
-		$this->passedTestClasses = array_merge(
-			$this->passedTestClasses,
-			$other->passedTestClasses,
-		);
+        $this->passedTestMethods = array_merge(
+            $this->passedTestMethods,
+            $other->passedTestMethods,
+        );
+    }
 
-		$this->passedTestMethods = array_merge(
-			$this->passedTestMethods,
-			$other->passedTestMethods,
-		);
-	}
+    /**
+     * @param class-string $className
+     */
+    public function hasTestClassPassed(string $className): bool
+    {
+        return in_array($className, $this->passedTestClasses, true);
+    }
 
-	/**
-	 * @psalm-param class-string $className
-	 */
-	public function hasTestClassPassed( string $className ): bool {
-		return in_array( $className, $this->passedTestClasses, true );
-	}
+    public function hasTestMethodPassed(string $method): bool
+    {
+        return isset($this->passedTestMethods[$method]);
+    }
 
-	public function hasTestMethodPassed( string $method ): bool {
-		return isset( $this->passedTestMethods[ $method ] );
-	}
+    public function isGreaterThan(string $method, TestSize $other): bool
+    {
+        if ($other->isUnknown()) {
+            return false;
+        }
 
-	public function isGreaterThan( string $method, TestSize $other ): bool {
-		if ( $other->isUnknown() ) {
-			return false;
-		}
+        assert($other instanceof Known);
 
-		assert( $other instanceof Known );
+        $size = $this->passedTestMethods[$method]['size'];
 
-		$size = $this->passedTestMethods[ $method ]['size'];
+        if ($size->isUnknown()) {
+            return false;
+        }
 
-		if ( $size->isUnknown() ) {
-			return false;
-		}
+        assert($size instanceof Known);
 
-		assert( $size instanceof Known );
+        return $size->isGreaterThan($other);
+    }
 
-		return $size->isGreaterThan( $other );
-	}
+    public function returnValue(string $method): mixed
+    {
+        if (isset($this->passedTestMethods[$method])) {
+            return $this->passedTestMethods[$method]['returnValue'];
+        }
 
-	public function returnValue( string $method ): mixed {
-		if ( isset( $this->passedTestMethods[ $method ] ) ) {
-			return $this->passedTestMethods[ $method ]['returnValue'];
-		}
-
-		return null;
-	}
+        return null;
+    }
 }

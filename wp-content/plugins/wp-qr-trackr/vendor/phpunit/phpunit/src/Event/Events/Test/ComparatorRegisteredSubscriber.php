@@ -14,7 +14,7 @@ use PHPUnit\Event\Subscriber;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface ComparatorRegisteredSubscriber extends Subscriber {
-
-	public function notify( ComparatorRegistered $event ): void;
+interface ComparatorRegisteredSubscriber extends Subscriber
+{
+    public function notify(ComparatorRegistered $event): void;
 }

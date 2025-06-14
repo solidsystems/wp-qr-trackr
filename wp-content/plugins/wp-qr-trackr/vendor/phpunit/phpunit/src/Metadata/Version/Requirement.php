@@ -17,40 +17,41 @@ use PHPUnit\Util\InvalidVersionOperatorException;
 use PHPUnit\Util\VersionComparisonOperator;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract class Requirement {
+abstract readonly class Requirement
+{
+    private const string VERSION_COMPARISON = "/(?P<operator>!=|<|<=|<>|=|==|>|>=)?\s*(?P<version>[\d\.-]+(dev|(RC|alpha|beta)[\d\.])?)[ \t]*\r?$/m";
 
-	private const VERSION_COMPARISON = '/(?P<operator>[<>=!]{0,2})\s*(?P<version>[\d\.-]+(dev|(RC|alpha|beta)[\d\.])?)[ \t]*\r?$/m';
+    /**
+     * @throws InvalidVersionOperatorException
+     * @throws InvalidVersionRequirementException
+     */
+    public static function from(string $versionRequirement): self
+    {
+        try {
+            return new ConstraintRequirement(
+                (new VersionConstraintParser)->parse(
+                    $versionRequirement,
+                ),
+            );
+        } catch (UnsupportedVersionConstraintException) {
+            if (preg_match(self::VERSION_COMPARISON, $versionRequirement, $matches) > 0) {
+                return new ComparisonRequirement(
+                    $matches['version'],
+                    new VersionComparisonOperator(
+                        $matches['operator'] !== '' ? $matches['operator'] : '>=',
+                    ),
+                );
+            }
+        }
 
-	/**
-	 * @throws InvalidVersionOperatorException
-	 * @throws InvalidVersionRequirementException
-	 */
-	public static function from( string $versionRequirement ): self {
-		try {
-			return new ConstraintRequirement(
-				( new VersionConstraintParser() )->parse(
-					$versionRequirement,
-				),
-			);
-		} catch ( UnsupportedVersionConstraintException ) {
-			if ( preg_match( self::VERSION_COMPARISON, $versionRequirement, $matches ) ) {
-				return new ComparisonRequirement(
-					$matches['version'],
-					new VersionComparisonOperator(
-						! empty( $matches['operator'] ) ? $matches['operator'] : '>=',
-					),
-				);
-			}
-		}
+        throw new InvalidVersionRequirementException;
+    }
 
-		throw new InvalidVersionRequirementException();
-	}
+    abstract public function isSatisfiedBy(string $version): bool;
 
-	abstract public function isSatisfiedBy( string $version ): bool;
-
-	abstract public function asString(): string;
+    abstract public function asString(): string;
 }

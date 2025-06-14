@@ -16,56 +16,64 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DataProviderMethodFinished implements Event {
+final readonly class DataProviderMethodFinished implements Event
+{
+    private Telemetry\Info $telemetryInfo;
+    private ClassMethod $testMethod;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly ClassMethod $testMethod;
+    /**
+     * @var list<ClassMethod>
+     */
+    private array $calledMethods;
 
-	/**
-	 * @psalm-var list<ClassMethod>
-	 */
-	private readonly array $calledMethods;
+    public function __construct(Telemetry\Info $telemetryInfo, ClassMethod $testMethod, ClassMethod ...$calledMethods)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->testMethod    = $testMethod;
+        $this->calledMethods = $calledMethods;
+    }
 
-	public function __construct( Telemetry\Info $telemetryInfo, ClassMethod $testMethod, ClassMethod ...$calledMethods ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->testMethod    = $testMethod;
-		$this->calledMethods = $calledMethods;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    public function testMethod(): ClassMethod
+    {
+        return $this->testMethod;
+    }
 
-	public function testMethod(): ClassMethod {
-		return $this->testMethod;
-	}
+    /**
+     * @return list<ClassMethod>
+     */
+    public function calledMethods(): array
+    {
+        return $this->calledMethods;
+    }
 
-	/**
-	 * @psalm-return list<ClassMethod>
-	 */
-	public function calledMethods(): array {
-		return $this->calledMethods;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        $buffer = sprintf(
+            'Data Provider Method Finished for %s::%s:',
+            $this->testMethod->className(),
+            $this->testMethod->methodName(),
+        );
 
-	public function asString(): string {
-		$buffer = sprintf(
-			'Data Provider Method Finished for %s::%s:',
-			$this->testMethod->className(),
-			$this->testMethod->methodName(),
-		);
+        foreach ($this->calledMethods as $calledMethod) {
+            $buffer .= sprintf(
+                PHP_EOL . '- %s::%s',
+                $calledMethod->className(),
+                $calledMethod->methodName(),
+            );
+        }
 
-		foreach ( $this->calledMethods as $calledMethod ) {
-			$buffer .= sprintf(
-				PHP_EOL . '- %s::%s',
-				$calledMethod->className(),
-				$calledMethod->methodName(),
-			);
-		}
-
-		return $buffer;
-	}
+        return $buffer;
+    }
 }

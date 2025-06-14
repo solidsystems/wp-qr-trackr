@@ -10,33 +10,37 @@
 namespace PHPUnit\Event\TestData;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract class TestData {
+abstract readonly class TestData
+{
+    private string $data;
 
-	private readonly string $data;
+    protected function __construct(string $data)
+    {
+        $this->data = $data;
+    }
 
-	protected function __construct( string $data ) {
-		$this->data = $data;
-	}
+    public function data(): string
+    {
+        return $this->data;
+    }
 
-	public function data(): string {
-		return $this->data;
-	}
+    /**
+     * @phpstan-assert-if-true DataFromDataProvider $this
+     */
+    public function isFromDataProvider(): bool
+    {
+        return false;
+    }
 
-	/**
-	 * @psalm-assert-if-true DataFromDataProvider $this
-	 */
-	public function isFromDataProvider(): bool {
-		return false;
-	}
-
-	/**
-	 * @psalm-assert-if-true DataFromTestDependency $this
-	 */
-	public function isFromTestDependency(): bool {
-		return false;
-	}
+    /**
+     * @phpstan-assert-if-true DataFromTestDependency $this
+     */
+    public function isFromTestDependency(): bool
+    {
+        return false;
+    }
 }

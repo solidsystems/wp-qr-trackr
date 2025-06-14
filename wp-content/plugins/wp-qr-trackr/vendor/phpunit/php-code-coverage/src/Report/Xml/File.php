@@ -9,67 +9,77 @@
  */
 namespace SebastianBergmann\CodeCoverage\Report\Xml;
 
+use function assert;
 use DOMDocument;
 use DOMElement;
 
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-class File {
+class File
+{
+    private readonly DOMDocument $dom;
+    private readonly DOMElement $contextNode;
 
-	private readonly DOMDocument $dom;
-	private readonly DOMElement $contextNode;
+    public function __construct(DOMElement $context)
+    {
+        $this->dom         = $context->ownerDocument;
+        $this->contextNode = $context;
+    }
 
-	public function __construct( DOMElement $context ) {
-		$this->dom         = $context->ownerDocument;
-		$this->contextNode = $context;
-	}
+    public function totals(): Totals
+    {
+        $totalsContainer = $this->contextNode->firstChild;
 
-	public function totals(): Totals {
-		$totalsContainer = $this->contextNode->firstChild;
+        if ($totalsContainer === null) {
+            $totalsContainer = $this->contextNode->appendChild(
+                $this->dom->createElementNS(
+                    'https://schema.phpunit.de/coverage/1.0',
+                    'totals',
+                ),
+            );
+        }
 
-		if ( ! $totalsContainer ) {
-			$totalsContainer = $this->contextNode->appendChild(
-				$this->dom->createElementNS(
-					'https://schema.phpunit.de/coverage/1.0',
-					'totals',
-				),
-			);
-		}
+        assert($totalsContainer instanceof DOMElement);
 
-		return new Totals( $totalsContainer );
-	}
+        return new Totals($totalsContainer);
+    }
 
-	public function lineCoverage( string $line ): Coverage {
-		$coverage = $this->contextNode->getElementsByTagNameNS(
-			'https://schema.phpunit.de/coverage/1.0',
-			'coverage',
-		)->item( 0 );
+    public function lineCoverage(string $line): Coverage
+    {
+        $coverage = $this->contextNode->getElementsByTagNameNS(
+            'https://schema.phpunit.de/coverage/1.0',
+            'coverage',
+        )->item(0);
 
-		if ( ! $coverage ) {
-			$coverage = $this->contextNode->appendChild(
-				$this->dom->createElementNS(
-					'https://schema.phpunit.de/coverage/1.0',
-					'coverage',
-				),
-			);
-		}
+        if ($coverage === null) {
+            $coverage = $this->contextNode->appendChild(
+                $this->dom->createElementNS(
+                    'https://schema.phpunit.de/coverage/1.0',
+                    'coverage',
+                ),
+            );
+        }
 
-		$lineNode = $coverage->appendChild(
-			$this->dom->createElementNS(
-				'https://schema.phpunit.de/coverage/1.0',
-				'line',
-			),
-		);
+        $lineNode = $coverage->appendChild(
+            $this->dom->createElementNS(
+                'https://schema.phpunit.de/coverage/1.0',
+                'line',
+            ),
+        );
 
-		return new Coverage( $lineNode, $line );
-	}
+        assert($lineNode instanceof DOMElement);
 
-	protected function contextNode(): DOMElement {
-		return $this->contextNode;
-	}
+        return new Coverage($lineNode, $line);
+    }
 
-	protected function dom(): DOMDocument {
-		return $this->dom;
-	}
+    protected function contextNode(): DOMElement
+    {
+        return $this->contextNode;
+    }
+
+    protected function dom(): DOMDocument
+    {
+        return $this->dom;
+    }
 }

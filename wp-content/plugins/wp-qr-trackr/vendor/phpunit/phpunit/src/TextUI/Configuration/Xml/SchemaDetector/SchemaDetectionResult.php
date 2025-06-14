@@ -16,21 +16,23 @@ use PHPUnit\Util\Xml\XmlException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-abstract class SchemaDetectionResult {
+abstract readonly class SchemaDetectionResult
+{
+    /**
+     * @phpstan-assert-if-true SuccessfulSchemaDetectionResult $this
+     */
+    public function detected(): bool
+    {
+        return false;
+    }
 
-	/**
-	 * @psalm-assert-if-true SuccessfulSchemaDetectionResult $this
-	 */
-	public function detected(): bool {
-		return false;
-	}
-
-	/**
-	 * @throws XmlException
-	 */
-	public function version(): string {
-		throw new XmlException( 'No supported schema was detected' );
-	}
+    /**
+     * @throws XmlException
+     */
+    public function version(): string
+    {
+        throw new XmlException('No supported schema was detected');
+    }
 }

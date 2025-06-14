@@ -20,57 +20,65 @@ use RecursiveIterator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestSuiteIterator implements RecursiveIterator {
+final class TestSuiteIterator implements RecursiveIterator
+{
+    private int $position = 0;
 
-	private int $position = 0;
+    /**
+     * @var list<Test>
+     */
+    private readonly array $tests;
 
-	/**
-	 * @psalm-var list<Test>
-	 */
-	private readonly array $tests;
+    public function __construct(TestSuite $testSuite)
+    {
+        $this->tests = $testSuite->tests();
+    }
 
-	public function __construct( TestSuite $testSuite ) {
-		$this->tests = $testSuite->tests();
-	}
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
 
-	public function rewind(): void {
-		$this->position = 0;
-	}
+    public function valid(): bool
+    {
+        return $this->position < count($this->tests);
+    }
 
-	public function valid(): bool {
-		return $this->position < count( $this->tests );
-	}
+    public function key(): int
+    {
+        return $this->position;
+    }
 
-	public function key(): int {
-		return $this->position;
-	}
+    public function current(): Test
+    {
+        return $this->tests[$this->position];
+    }
 
-	public function current(): Test {
-		return $this->tests[ $this->position ];
-	}
+    public function next(): void
+    {
+        $this->position++;
+    }
 
-	public function next(): void {
-		++$this->position;
-	}
+    /**
+     * @throws NoChildTestSuiteException
+     */
+    public function getChildren(): self
+    {
+        if (!$this->hasChildren()) {
+            throw new NoChildTestSuiteException(
+                'The current item is not a TestSuite instance and therefore does not have any children.',
+            );
+        }
 
-	/**
-	 * @throws NoChildTestSuiteException
-	 */
-	public function getChildren(): self {
-		if ( ! $this->hasChildren() ) {
-			throw new NoChildTestSuiteException(
-				'The current item is not a TestSuite instance and therefore does not have any children.',
-			);
-		}
+        $current = $this->current();
 
-		$current = $this->current();
+        assert($current instanceof TestSuite);
 
-		assert( $current instanceof TestSuite );
+        return new self($current);
+    }
 
-		return new self( $current );
-	}
-
-	public function hasChildren(): bool {
-		return $this->valid() && $this->current() instanceof TestSuite;
-	}
+    public function hasChildren(): bool
+    {
+        return $this->valid() && $this->current() instanceof TestSuite;
+    }
 }

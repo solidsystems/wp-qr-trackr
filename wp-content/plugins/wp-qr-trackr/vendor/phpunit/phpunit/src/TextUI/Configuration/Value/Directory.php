@@ -12,17 +12,19 @@ namespace PHPUnit\TextUI\Configuration;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class Directory {
+final readonly class Directory
+{
+    private string $path;
 
-	private readonly string $path;
+    public function __construct(string $path)
+    {
+        $this->path = $path;
+    }
 
-	public function __construct( string $path ) {
-		$this->path = $path;
-	}
-
-	public function path(): string {
-		return $this->path;
-	}
+    public function path(): string
+    {
+        return $this->path;
+    }
 }

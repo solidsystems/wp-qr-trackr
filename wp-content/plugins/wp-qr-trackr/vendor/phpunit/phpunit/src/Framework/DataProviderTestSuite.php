@@ -9,6 +9,9 @@
  */
 namespace PHPUnit\Framework;
 
+use function assert;
+use function class_exists;
+use function count;
 use function explode;
 use PHPUnit\Framework\TestSize\TestSize;
 use PHPUnit\Metadata\Api\Groups;
@@ -18,55 +21,67 @@ use PHPUnit\Metadata\Api\Groups;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class DataProviderTestSuite extends TestSuite {
+final class DataProviderTestSuite extends TestSuite
+{
+    /**
+     * @var list<ExecutionOrderDependency>
+     */
+    private array $dependencies = [];
 
-	/**
-	 * @psalm-var list<ExecutionOrderDependency>
-	 */
-	private array $dependencies   = array();
-	private ?array $providedTests = null;
+    /**
+     * @var ?non-empty-list<ExecutionOrderDependency>
+     */
+    private ?array $providedTests = null;
 
-	/**
-	 * @psalm-param list<ExecutionOrderDependency> $dependencies
-	 */
-	public function setDependencies( array $dependencies ): void {
-		$this->dependencies = $dependencies;
+    /**
+     * @param list<ExecutionOrderDependency> $dependencies
+     */
+    public function setDependencies(array $dependencies): void
+    {
+        $this->dependencies = $dependencies;
 
-		foreach ( $this->tests() as $test ) {
-			if ( ! $test instanceof TestCase ) {
-				continue;
-			}
+        foreach ($this->tests() as $test) {
+            if (!$test instanceof TestCase) {
+                continue;
+            }
 
-			$test->setDependencies( $dependencies );
-		}
-	}
+            $test->setDependencies($dependencies);
+        }
+    }
 
-	/**
-	 * @psalm-return list<ExecutionOrderDependency>
-	 */
-	public function provides(): array {
-		if ( $this->providedTests === null ) {
-			$this->providedTests = array( new ExecutionOrderDependency( $this->name() ) );
-		}
+    /**
+     * @return non-empty-list<ExecutionOrderDependency>
+     */
+    public function provides(): array
+    {
+        if ($this->providedTests === null) {
+            $this->providedTests = [new ExecutionOrderDependency($this->name())];
+        }
 
-		return $this->providedTests;
-	}
+        return $this->providedTests;
+    }
 
-	/**
-	 * @psalm-return list<ExecutionOrderDependency>
-	 */
-	public function requires(): array {
-		// A DataProviderTestSuite does not have to traverse its child tests
-		// as these are inherited and cannot reference dataProvider rows directly
-		return $this->dependencies;
-	}
+    /**
+     * @return list<ExecutionOrderDependency>
+     */
+    public function requires(): array
+    {
+        // A DataProviderTestSuite does not have to traverse its child tests
+        // as these are inherited and cannot reference dataProvider rows directly
+        return $this->dependencies;
+    }
 
-	/**
-	 * Returns the size of each test created using the data provider(s).
-	 */
-	public function size(): TestSize {
-		[$className, $methodName] = explode( '::', $this->name() );
+    /**
+     * Returns the size of each test created using the data provider(s).
+     */
+    public function size(): TestSize
+    {
+        assert(count(explode('::', $this->name())) === 2);
+        [$className, $methodName] = explode('::', $this->name());
 
-		return ( new Groups() )->size( $className, $methodName );
-	}
+        assert(class_exists($className));
+        assert($methodName !== '');
+
+        return (new Groups)->size($className, $methodName);
+    }
 }

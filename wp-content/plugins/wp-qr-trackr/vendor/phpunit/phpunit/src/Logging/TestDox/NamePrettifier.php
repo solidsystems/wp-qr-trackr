@@ -42,258 +42,267 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit\Metadata\Parser\Registry as MetadataRegistry;
 use PHPUnit\Metadata\TestDox;
 use PHPUnit\Util\Color;
+use PHPUnit\Util\Exporter;
 use ReflectionEnum;
 use ReflectionMethod;
 use ReflectionObject;
-use SebastianBergmann\Exporter\Exporter;
 
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class NamePrettifier {
+final class NamePrettifier
+{
+    /**
+     * @var array<string, int>
+     */
+    private static array $strings = [];
 
-	/**
-	 * @psalm-var array<string, int>
-	 */
-	private static array $strings = array();
+    /**
+     * @param class-string $className
+     */
+    public function prettifyTestClassName(string $className): string
+    {
+        if (class_exists($className)) {
+            $classLevelTestDox = MetadataRegistry::parser()->forClass($className)->isTestDox();
 
-	/**
-	 * @psalm-param class-string $className
-	 */
-	public function prettifyTestClassName( string $className ): string {
-		if ( class_exists( $className ) ) {
-			$classLevelTestDox = MetadataRegistry::parser()->forClass( $className )->isTestDox();
+            if ($classLevelTestDox->isNotEmpty()) {
+                $classLevelTestDox = $classLevelTestDox->asArray()[0];
 
-			if ( $classLevelTestDox->isNotEmpty() ) {
-				$classLevelTestDox = $classLevelTestDox->asArray()[0];
+                assert($classLevelTestDox instanceof TestDox);
 
-				assert( $classLevelTestDox instanceof TestDox );
+                return $classLevelTestDox->text();
+            }
+        }
 
-				return $classLevelTestDox->text();
-			}
-		}
+        $parts     = explode('\\', $className);
+        $className = array_pop($parts);
 
-		$parts     = explode( '\\', $className );
-		$className = array_pop( $parts );
+        if (str_ends_with($className, 'Test')) {
+            $className = substr($className, 0, strlen($className) - strlen('Test'));
+        }
 
-		if ( str_ends_with( $className, 'Test' ) ) {
-			$className = substr( $className, 0, strlen( $className ) - strlen( 'Test' ) );
-		}
+        if (str_starts_with($className, 'Tests')) {
+            $className = substr($className, strlen('Tests'));
+        } elseif (str_starts_with($className, 'Test')) {
+            $className = substr($className, strlen('Test'));
+        }
 
-		if ( str_starts_with( $className, 'Tests' ) ) {
-			$className = substr( $className, strlen( 'Tests' ) );
-		} elseif ( str_starts_with( $className, 'Test' ) ) {
-			$className = substr( $className, strlen( 'Test' ) );
-		}
+        if ($className === '') {
+            $className = 'UnnamedTests';
+        }
 
-		if ( empty( $className ) ) {
-			$className = 'UnnamedTests';
-		}
+        if ($parts !== []) {
+            $parts[]            = $className;
+            $fullyQualifiedName = implode('\\', $parts);
+        } else {
+            $fullyQualifiedName = $className;
+        }
 
-		if ( ! empty( $parts ) ) {
-			$parts[]            = $className;
-			$fullyQualifiedName = implode( '\\', $parts );
-		} else {
-			$fullyQualifiedName = $className;
-		}
+        $result = preg_replace('/(?<=[[:lower:]])(?=[[:upper:]])/u', ' ', $className);
 
-		$result = preg_replace( '/(?<=[[:lower:]])(?=[[:upper:]])/u', ' ', $className );
+        if ($fullyQualifiedName !== $className) {
+            return $result . ' (' . $fullyQualifiedName . ')';
+        }
 
-		if ( $fullyQualifiedName !== $className ) {
-			return $result . ' (' . $fullyQualifiedName . ')';
-		}
+        return $result;
+    }
 
-		return $result;
-	}
+    // NOTE: this method is on a hot path and very performance sensitive. change with care.
+    public function prettifyTestMethodName(string $name): string
+    {
+        if ($name === '') {
+            return '';
+        }
 
-	// NOTE: this method is on a hot path and very performance sensitive. change with care.
-	public function prettifyTestMethodName( string $name ): string {
-		if ( $name === '' ) {
-			return '';
-		}
+        $string = rtrim($name, '0123456789');
 
-		$string = rtrim( $name, '0123456789' );
+        if (array_key_exists($string, self::$strings)) {
+            $name = $string;
+        } elseif ($string === $name) {
+            self::$strings[$string] = 1;
+        }
 
-		if ( array_key_exists( $string, self::$strings ) ) {
-			$name = $string;
-		} elseif ( $string === $name ) {
-			self::$strings[ $string ] = 1;
-		}
+        if (str_starts_with($name, 'test_')) {
+            $name = substr($name, 5);
+        } elseif (str_starts_with($name, 'test')) {
+            $name = substr($name, 4);
+        }
 
-		if ( str_starts_with( $name, 'test_' ) ) {
-			$name = substr( $name, 5 );
-		} elseif ( str_starts_with( $name, 'test' ) ) {
-			$name = substr( $name, 4 );
-		}
+        if ($name === '') {
+            return '';
+        }
 
-		if ( $name === '' ) {
-			return '';
-		}
+        $name[0] = strtoupper($name[0]);
 
-		$name[0] = strtoupper( $name[0] );
+        $noUnderscore = str_replace('_', ' ', $name);
 
-		$noUnderscore = str_replace( '_', ' ', $name );
+        if ($noUnderscore !== $name) {
+            return trim($noUnderscore);
+        }
 
-		if ( $noUnderscore !== $name ) {
-			return trim( $noUnderscore );
-		}
+        $wasNumeric = false;
 
-		$wasNumeric = false;
+        $buffer = '';
 
-		$buffer = '';
+        $len = strlen($name);
 
-		$len = strlen( $name );
+        for ($i = 0; $i < $len; $i++) {
+            if ($i > 0 && $name[$i] >= 'A' && $name[$i] <= 'Z') {
+                $buffer .= ' ' . strtolower($name[$i]);
+            } else {
+                $isNumeric = $name[$i] >= '0' && $name[$i] <= '9';
 
-		for ( $i = 0; $i < $len; $i++ ) {
-			if ( $i > 0 && $name[ $i ] >= 'A' && $name[ $i ] <= 'Z' ) {
-				$buffer .= ' ' . strtolower( $name[ $i ] );
-			} else {
-				$isNumeric = $name[ $i ] >= '0' && $name[ $i ] <= '9';
+                if (!$wasNumeric && $isNumeric) {
+                    $buffer .= ' ';
+                    $wasNumeric = true;
+                }
 
-				if ( ! $wasNumeric && $isNumeric ) {
-					$buffer    .= ' ';
-					$wasNumeric = true;
-				}
+                if ($wasNumeric && !$isNumeric) {
+                    $wasNumeric = false;
+                }
 
-				if ( $wasNumeric && ! $isNumeric ) {
-					$wasNumeric = false;
-				}
+                $buffer .= $name[$i];
+            }
+        }
 
-				$buffer .= $name[ $i ];
-			}
-		}
+        return $buffer;
+    }
 
-		return $buffer;
-	}
+    public function prettifyTestCase(TestCase $test, bool $colorize): string
+    {
+        $annotationWithPlaceholders = false;
+        $methodLevelTestDox         = MetadataRegistry::parser()->forMethod($test::class, $test->name())->isTestDox()->isMethodLevel();
 
-	public function prettifyTestCase( TestCase $test, bool $colorize ): string {
-		$annotationWithPlaceholders = false;
-		$methodLevelTestDox         = MetadataRegistry::parser()->forMethod( $test::class, $test->name() )->isTestDox()->isMethodLevel();
+        if ($methodLevelTestDox->isNotEmpty()) {
+            $methodLevelTestDox = $methodLevelTestDox->asArray()[0];
 
-		if ( $methodLevelTestDox->isNotEmpty() ) {
-			$methodLevelTestDox = $methodLevelTestDox->asArray()[0];
+            assert($methodLevelTestDox instanceof TestDox);
 
-			assert( $methodLevelTestDox instanceof TestDox );
+            $result = $methodLevelTestDox->text();
 
-			$result = $methodLevelTestDox->text();
+            if (str_contains($result, '$')) {
+                $annotation   = $result;
+                $providedData = $this->mapTestMethodParameterNamesToProvidedDataValues($test, $colorize);
 
-			if ( str_contains( $result, '$' ) ) {
-				$annotation   = $result;
-				$providedData = $this->mapTestMethodParameterNamesToProvidedDataValues( $test, $colorize );
+                $variables = array_map(
+                    static fn (string $variable): string => sprintf(
+                        '/%s(?=\b)/',
+                        preg_quote($variable, '/'),
+                    ),
+                    array_keys($providedData),
+                );
 
-				$variables = array_map(
-					static fn ( string $variable ): string => sprintf(
-						'/%s(?=\b)/',
-						preg_quote( $variable, '/' ),
-					),
-					array_keys( $providedData ),
-				);
+                $result = preg_replace($variables, $providedData, $annotation);
 
-				$result = preg_replace( $variables, $providedData, $annotation );
+                $annotationWithPlaceholders = true;
+            }
+        } else {
+            $result = $this->prettifyTestMethodName($test->name());
+        }
 
-				$annotationWithPlaceholders = true;
-			}
-		} else {
-			$result = $this->prettifyTestMethodName( $test->name() );
-		}
+        if (!$annotationWithPlaceholders && $test->usesDataProvider()) {
+            $result .= $this->prettifyDataSet($test, $colorize);
+        }
 
-		if ( ! $annotationWithPlaceholders && $test->usesDataProvider() ) {
-			$result .= $this->prettifyDataSet( $test, $colorize );
-		}
+        return $result;
+    }
 
-		return $result;
-	}
+    public function prettifyDataSet(TestCase $test, bool $colorize): string
+    {
+        if (!$colorize) {
+            return $test->dataSetAsString();
+        }
 
-	public function prettifyDataSet( TestCase $test, bool $colorize ): string {
-		if ( ! $colorize ) {
-			return $test->dataSetAsString();
-		}
+        if (is_int($test->dataName())) {
+            return Color::dim(' with data set ') . Color::colorize('fg-cyan', (string) $test->dataName());
+        }
 
-		if ( is_int( $test->dataName() ) ) {
-			return Color::dim( ' with data set ' ) . Color::colorize( 'fg-cyan', (string) $test->dataName() );
-		}
+        return Color::dim(' with ') . Color::colorize('fg-cyan', Color::visualizeWhitespace($test->dataName()));
+    }
 
-		return Color::dim( ' with ' ) . Color::colorize( 'fg-cyan', Color::visualizeWhitespace( $test->dataName() ) );
-	}
+    /**
+     * @return array<non-empty-string, non-empty-string>
+     */
+    private function mapTestMethodParameterNamesToProvidedDataValues(TestCase $test, bool $colorize): array
+    {
+        assert(method_exists($test, $test->name()));
 
-	private function mapTestMethodParameterNamesToProvidedDataValues( TestCase $test, bool $colorize ): array {
-		assert( method_exists( $test, $test->name() ) );
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $reflector = new ReflectionMethod($test::class, $test->name());
 
-		/** @noinspection PhpUnhandledExceptionInspection */
-		$reflector = new ReflectionMethod( $test::class, $test->name() );
+        $providedData       = [];
+        $providedDataValues = array_values($test->providedData());
+        $i                  = 0;
 
-		$providedData       = array();
-		$providedDataValues = array_values( $test->providedData() );
-		$i                  = 0;
+        $providedData['$_dataName'] = $test->dataName();
 
-		$providedData['$_dataName'] = $test->dataName();
+        foreach ($reflector->getParameters() as $parameter) {
+            if (!array_key_exists($i, $providedDataValues) && $parameter->isDefaultValueAvailable()) {
+                $providedDataValues[$i] = $parameter->getDefaultValue();
+            }
 
-		foreach ( $reflector->getParameters() as $parameter ) {
-			if ( ! array_key_exists( $i, $providedDataValues ) && $parameter->isDefaultValueAvailable() ) {
-				$providedDataValues[ $i ] = $parameter->getDefaultValue();
-			}
+            $value = $providedDataValues[$i++] ?? null;
 
-			$value = $providedDataValues[ $i++ ] ?? null;
+            if (is_object($value)) {
+                $value = $this->objectToString($value);
+            }
 
-			if ( is_object( $value ) ) {
-				$value = $this->objectToString( $value );
-			}
+            if (!is_scalar($value)) {
+                $value = gettype($value);
 
-			if ( ! is_scalar( $value ) ) {
-				$value = gettype( $value );
+                if ($value === 'NULL') {
+                    $value = 'null';
+                }
+            }
 
-				if ( $value === 'NULL' ) {
-					$value = 'null';
-				}
-			}
+            if (is_bool($value) || is_int($value) || is_float($value)) {
+                $value = Exporter::export($value);
+            }
 
-			if ( is_bool( $value ) || is_int( $value ) || is_float( $value ) ) {
-				$value = ( new Exporter() )->export( $value );
-			}
+            if ($value === '') {
+                if ($colorize) {
+                    $value = Color::colorize('dim,underlined', 'empty');
+                } else {
+                    $value = "''";
+                }
+            }
 
-			if ( $value === '' ) {
-				if ( $colorize ) {
-					$value = Color::colorize( 'dim,underlined', 'empty' );
-				} else {
-					$value = "''";
-				}
-			}
+            $providedData['$' . $parameter->getName()] = str_replace('$', '\\$', $value);
+        }
 
-			$providedData[ '$' . $parameter->getName() ] = str_replace( '$', '\\$', $value );
-		}
+        if ($colorize) {
+            $providedData = array_map(
+                static fn (mixed $value) => Color::colorize('fg-cyan', Color::visualizeWhitespace((string) $value, true)),
+                $providedData,
+            );
+        }
 
-		if ( $colorize ) {
-			$providedData = array_map(
-				static fn ( $value ) => Color::colorize( 'fg-cyan', Color::visualizeWhitespace( (string) $value, true ) ),
-				$providedData,
-			);
-		}
+        return $providedData;
+    }
 
-		return $providedData;
-	}
+    /**
+     * @return non-empty-string
+     */
+    private function objectToString(object $value): string
+    {
+        $reflector = new ReflectionObject($value);
 
-	/**
-	 * @return non-empty-string
-	 */
-	private function objectToString( object $value ): string {
-		$reflector = new ReflectionObject( $value );
+        if ($reflector->isEnum()) {
+            $enumReflector = new ReflectionEnum($value);
 
-		if ( $reflector->isEnum() ) {
-			$enumReflector = new ReflectionEnum( $value );
+            if ($enumReflector->isBacked()) {
+                return (string) $value->value;
+            }
 
-			if ( $enumReflector->isBacked() ) {
-				return (string) $value->value;
-			}
+            return $value->name;
+        }
 
-			return $value->name;
-		}
+        if ($reflector->hasMethod('__toString')) {
+            return $value->__toString();
+        }
 
-		if ( $reflector->hasMethod( '__toString' ) ) {
-			return $value->__toString();
-		}
-
-		return $value::class;
-	}
+        return $value::class;
+    }
 }

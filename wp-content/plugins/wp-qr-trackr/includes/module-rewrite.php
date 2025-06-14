@@ -17,6 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function qr_trackr_add_rewrite_rules() {
+	qr_trackr_debug_log( 'Registering rewrite rules.' );
 	add_rewrite_rule( '^qr-trackr/scan/([0-9]+)/?$', 'index.php?qr_trackr_scan=$matches[1]', 'top' );
 	add_rewrite_rule( '^qr-trackr/redirect/([0-9]+)/?$', 'index.php?qr_trackr_redirect_id=$matches[1]', 'top' );
 }
@@ -44,15 +45,24 @@ function qr_trackr_template_redirect() {
 	$redirect_id = get_query_var( 'qr_trackr_redirect_id' );
 	if ( '' !== $redirect_id && $redirect_id ) {
 		$redirect_id = intval( wp_unslash( $redirect_id ) );
+		qr_trackr_debug_log( 'Handling QR Trackr redirect', $redirect_id );
 		global $wpdb;
 		$table = $wpdb->prefix . 'qr_trackr_links';
 		$link  = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE id = %d', $table, $redirect_id ) );
 		if ( false !== $link && $link ) {
+			qr_trackr_debug_log(
+				'Found link for redirect',
+				array(
+					'redirect_id' => $redirect_id,
+					'post_id'     => $link->post_id,
+				)
+			);
 			qr_trackr_record_scan( $link->id );
 			$post_url = get_permalink( $link->post_id );
 			wp_safe_redirect( $post_url );
 			exit;
 		}
+		qr_trackr_debug_log( 'No link found for redirect', $redirect_id );
 		wp_safe_redirect( home_url() );
 		exit;
 	}
@@ -67,15 +77,27 @@ add_action( 'template_redirect', 'qr_trackr_template_redirect' );
  */
 function qr_trackr_record_scan( $link_id ) {
 	global $wpdb;
-	$table = $wpdb->prefix . 'qr_trackr_scans';
+	$table      = $wpdb->prefix . 'qr_trackr_scans';
+	$ua         = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+	$ip         = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+	$scanned_at = current_time( 'mysql' );
 	$wpdb->insert(
 		$table,
 		array(
 			'link_id'    => $link_id,
-			'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '',
-			'ip_address' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
-			'scanned_at' => current_time( 'mysql' ),
+			'user_agent' => $ua,
+			'ip_address' => $ip,
+			'scanned_at' => $scanned_at,
 		),
 		array( '%d', '%s', '%s', '%s' )
+	);
+	qr_trackr_debug_log(
+		'Recorded scan',
+		array(
+			'link_id'    => $link_id,
+			'ip'         => $ip,
+			'ua'         => $ua,
+			'scanned_at' => $scanned_at,
+		)
 	);
 }

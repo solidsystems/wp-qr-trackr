@@ -9,38 +9,61 @@
  */
 namespace PHPUnit\Event\Test;
 
+use const PHP_EOL;
 use function sprintf;
 use PHPUnit\Event\Code;
+use PHPUnit\Event\Code\Throwable;
 use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PreparationFailed implements Event {
+final readonly class PreparationFailed implements Event
+{
+    private Telemetry\Info $telemetryInfo;
+    private Code\Test $test;
+    private Throwable $throwable;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly Code\Test $test;
+    public function __construct(Telemetry\Info $telemetryInfo, Code\Test $test, Throwable $throwable)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->test          = $test;
+        $this->throwable     = $throwable;
+    }
 
-	public function __construct( Telemetry\Info $telemetryInfo, Code\Test $test ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->test          = $test;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    public function test(): Code\Test
+    {
+        return $this->test;
+    }
 
-	public function test(): Code\Test {
-		return $this->test;
-	}
+    public function throwable(): Throwable
+    {
+        return $this->throwable;
+    }
 
-	public function asString(): string {
-		return sprintf(
-			'Test Preparation Failed (%s)',
-			$this->test->id(),
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        $message = $this->throwable->message();
+
+        if ($message !== '') {
+            $message = PHP_EOL . $message;
+        }
+
+        return sprintf(
+            'Test Preparation Failed (%s)%s',
+            $this->test->id(),
+            $message,
+        );
+    }
 }

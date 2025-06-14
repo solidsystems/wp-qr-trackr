@@ -15,32 +15,39 @@ use PHPUnit\Event\Runtime\Runtime;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Started implements Event {
+final readonly class Started implements Event
+{
+    private Telemetry\Info $telemetryInfo;
+    private Runtime $runtime;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly Runtime $runtime;
+    public function __construct(Telemetry\Info $telemetryInfo, Runtime $runtime)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->runtime       = $runtime;
+    }
 
-	public function __construct( Telemetry\Info $telemetryInfo, Runtime $runtime ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->runtime       = $runtime;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    public function runtime(): Runtime
+    {
+        return $this->runtime;
+    }
 
-	public function runtime(): Runtime {
-		return $this->runtime;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'PHPUnit Started (%s)',
-			$this->runtime->asString(),
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'PHPUnit Started (%s)',
+            $this->runtime->asString(),
+        );
+    }
 }

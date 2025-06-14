@@ -12,48 +12,53 @@ namespace SebastianBergmann\Complexity;
 use function str_contains;
 
 /**
- * @psalm-immutable
+ * @immutable
  */
-final class Complexity {
+final readonly class Complexity
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $name;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $name;
+    /**
+     * @var positive-int
+     */
+    private int $cyclomaticComplexity;
 
-	/**
-	 * @psalm-var positive-int
-	 */
-	private int $cyclomaticComplexity;
+    /**
+     * @param non-empty-string $name
+     * @param positive-int     $cyclomaticComplexity
+     */
+    public function __construct(string $name, int $cyclomaticComplexity)
+    {
+        $this->name                 = $name;
+        $this->cyclomaticComplexity = $cyclomaticComplexity;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $name
-	 * @psalm-param positive-int $cyclomaticComplexity
-	 */
-	public function __construct( string $name, int $cyclomaticComplexity ) {
-		$this->name                 = $name;
-		$this->cyclomaticComplexity = $cyclomaticComplexity;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function name(): string
+    {
+        return $this->name;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function name(): string {
-		return $this->name;
-	}
+    /**
+     * @return positive-int
+     */
+    public function cyclomaticComplexity(): int
+    {
+        return $this->cyclomaticComplexity;
+    }
 
-	/**
-	 * @psalm-return positive-int
-	 */
-	public function cyclomaticComplexity(): int {
-		return $this->cyclomaticComplexity;
-	}
+    public function isFunction(): bool
+    {
+        return !$this->isMethod();
+    }
 
-	public function isFunction(): bool {
-		return ! $this->isMethod();
-	}
-
-	public function isMethod(): bool {
-		return str_contains( $this->name, '::' );
-	}
+    public function isMethod(): bool
+    {
+        return str_contains($this->name, '::');
+    }
 }

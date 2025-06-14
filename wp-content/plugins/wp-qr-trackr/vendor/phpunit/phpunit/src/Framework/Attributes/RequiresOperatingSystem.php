@@ -12,29 +12,31 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD )]
-final class RequiresOperatingSystem {
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+final readonly class RequiresOperatingSystem
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $regularExpression;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $regularExpression;
+    /**
+     * @param non-empty-string $regularExpression
+     */
+    public function __construct(string $regularExpression)
+    {
+        $this->regularExpression = $regularExpression;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $regularExpression
-	 */
-	public function __construct( string $regularExpression ) {
-		$this->regularExpression = $regularExpression;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function regularExpression(): string {
-		return $this->regularExpression;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function regularExpression(): string
+    {
+        return $this->regularExpression;
+    }
 }

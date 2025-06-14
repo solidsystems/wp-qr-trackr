@@ -14,39 +14,37 @@ use PharIo\Version\Version;
 use PharIo\Version\VersionConstraint;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ConstraintRequirement extends Requirement {
+final readonly class ConstraintRequirement extends Requirement
+{
+    private VersionConstraint $constraint;
 
-	private readonly VersionConstraint $constraint;
+    public function __construct(VersionConstraint $constraint)
+    {
+        $this->constraint = $constraint;
+    }
 
-	public function __construct( VersionConstraint $constraint ) {
-		$this->constraint = $constraint;
-	}
+    public function isSatisfiedBy(string $version): bool
+    {
+        return $this->constraint->complies(
+            new Version($this->sanitize($version)),
+        );
+    }
 
-	/**
-	 * @psalm-suppress ImpureMethodCall
-	 */
-	public function isSatisfiedBy( string $version ): bool {
-		return $this->constraint->complies(
-			new Version( $this->sanitize( $version ) ),
-		);
-	}
+    public function asString(): string
+    {
+        return $this->constraint->asString();
+    }
 
-	/**
-	 * @psalm-suppress ImpureMethodCall
-	 */
-	public function asString(): string {
-		return $this->constraint->asString();
-	}
-
-	private function sanitize( string $version ): string {
-		return preg_replace(
-			'/^(\d+\.\d+(?:.\d+)?).*$/',
-			'$1',
-			$version,
-		);
-	}
+    private function sanitize(string $version): string
+    {
+        return preg_replace(
+            '/^(\d+\.\d+(?:.\d+)?).*$/',
+            '$1',
+            $version,
+        );
+    }
 }

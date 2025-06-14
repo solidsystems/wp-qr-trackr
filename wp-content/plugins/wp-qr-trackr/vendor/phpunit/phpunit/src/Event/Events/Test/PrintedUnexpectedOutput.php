@@ -15,43 +15,50 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PrintedUnexpectedOutput implements Event {
+final readonly class PrintedUnexpectedOutput implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    /**
+     * @var non-empty-string
+     */
+    private string $output;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $output;
+    /**
+     * @param non-empty-string $output
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, string $output)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->output        = $output;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $output
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, string $output ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->output        = $output;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function output(): string
+    {
+        return $this->output;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function output(): string {
-		return $this->output;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'Test Printed Unexpected Output%s%s',
-			PHP_EOL,
-			$this->output,
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Test Printed Unexpected Output%s%s',
+            PHP_EOL,
+            $this->output,
+        );
+    }
 }

@@ -16,40 +16,45 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  *
  * @template-implements IteratorAggregate<int, Variable>
  */
-final class VariableCollection implements Countable, IteratorAggregate {
+final readonly class VariableCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<Variable>
+     */
+    private array $variables;
 
-	/**
-	 * @psalm-var list<Variable>
-	 */
-	private readonly array $variables;
+    /**
+     * @param list<Variable> $variables
+     */
+    public static function fromArray(array $variables): self
+    {
+        return new self(...$variables);
+    }
 
-	/**
-	 * @psalm-param list<Variable> $variables
-	 */
-	public static function fromArray( array $variables ): self {
-		return new self( ...$variables );
-	}
+    private function __construct(Variable ...$variables)
+    {
+        $this->variables = $variables;
+    }
 
-	private function __construct( Variable ...$variables ) {
-		$this->variables = $variables;
-	}
+    /**
+     * @return list<Variable>
+     */
+    public function asArray(): array
+    {
+        return $this->variables;
+    }
 
-	/**
-	 * @psalm-return list<Variable>
-	 */
-	public function asArray(): array {
-		return $this->variables;
-	}
+    public function count(): int
+    {
+        return count($this->variables);
+    }
 
-	public function count(): int {
-		return count( $this->variables );
-	}
-
-	public function getIterator(): VariableCollectionIterator {
-		return new VariableCollectionIterator( $this );
-	}
+    public function getIterator(): VariableCollectionIterator
+    {
+        return new VariableCollectionIterator($this);
+    }
 }

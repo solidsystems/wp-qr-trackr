@@ -15,33 +15,36 @@ use PHPUnit\Framework\EmptyStringException;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class StringEndsWith extends Constraint {
+final class StringEndsWith extends Constraint
+{
+    private readonly string $suffix;
 
-	private readonly string $suffix;
+    /**
+     * @throws EmptyStringException
+     */
+    public function __construct(string $suffix)
+    {
+        if ($suffix === '') {
+            throw new EmptyStringException;
+        }
 
-	/**
-	 * @throws EmptyStringException
-	 */
-	public function __construct( string $suffix ) {
-		if ( $suffix === '' ) {
-			throw new EmptyStringException();
-		}
+        $this->suffix = $suffix;
+    }
 
-		$this->suffix = $suffix;
-	}
+    /**
+     * Returns a string representation of the constraint.
+     */
+    public function toString(): string
+    {
+        return 'ends with "' . $this->suffix . '"';
+    }
 
-	/**
-	 * Returns a string representation of the constraint.
-	 */
-	public function toString(): string {
-		return 'ends with "' . $this->suffix . '"';
-	}
-
-	/**
-	 * Evaluates the constraint for parameter $other. Returns true if the
-	 * constraint is met, false otherwise.
-	 */
-	protected function matches( mixed $other ): bool {
-		return str_ends_with( (string) $other, $this->suffix );
-	}
+    /**
+     * Evaluates the constraint for parameter $other. Returns true if the
+     * constraint is met, false otherwise.
+     */
+    protected function matches(mixed $other): bool
+    {
+        return str_ends_with((string) $other, $this->suffix);
+    }
 }

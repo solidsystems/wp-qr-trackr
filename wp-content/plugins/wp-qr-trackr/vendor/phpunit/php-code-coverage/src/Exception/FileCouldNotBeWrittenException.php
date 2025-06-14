@@ -11,6 +11,6 @@ namespace SebastianBergmann\CodeCoverage;
 
 use RuntimeException;
 
-final class FileCouldNotBeWrittenException extends RuntimeException implements Exception {
-
+final class FileCouldNotBeWrittenException extends RuntimeException implements Exception
+{
 }

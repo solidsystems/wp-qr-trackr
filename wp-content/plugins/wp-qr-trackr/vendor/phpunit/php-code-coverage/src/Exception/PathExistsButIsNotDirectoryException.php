@@ -7,15 +7,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace SebastianBergmann\CodeCoverage\Driver;
+namespace SebastianBergmann\CodeCoverage;
 
 use function sprintf;
 use RuntimeException;
-use SebastianBergmann\CodeCoverage\Exception;
 
-final class PathExistsButIsNotDirectoryException extends RuntimeException implements Exception {
-
-	public function __construct( string $path ) {
-		parent::__construct( sprintf( '"%s" exists but is not a directory', $path ) );
-	}
+final class PathExistsButIsNotDirectoryException extends RuntimeException implements Exception
+{
+    public function __construct(string $path)
+    {
+        parent::__construct(sprintf('"%s" exists but is not a directory', $path));
+    }
 }

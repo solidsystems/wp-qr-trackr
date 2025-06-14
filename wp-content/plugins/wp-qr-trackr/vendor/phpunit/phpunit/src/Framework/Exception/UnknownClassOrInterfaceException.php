@@ -16,14 +16,15 @@ use function sprintf;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class UnknownClassOrInterfaceException extends InvalidArgumentException {
-
-	public function __construct( string $name ) {
-		parent::__construct(
-			sprintf(
-				'Class or interface "%s" does not exist',
-				$name,
-			),
-		);
-	}
+final class UnknownClassOrInterfaceException extends InvalidArgumentException
+{
+    public function __construct(string $name)
+    {
+        parent::__construct(
+            sprintf(
+                'Class or interface "%s" does not exist',
+                $name,
+            ),
+        );
+    }
 }

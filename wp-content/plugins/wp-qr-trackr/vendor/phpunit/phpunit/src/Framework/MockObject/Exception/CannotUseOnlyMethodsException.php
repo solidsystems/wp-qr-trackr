@@ -16,15 +16,16 @@ use function sprintf;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CannotUseOnlyMethodsException extends \PHPUnit\Framework\Exception implements Exception {
-
-	public function __construct( string $type, string $methodName ) {
-		parent::__construct(
-			sprintf(
-				'Trying to configure method "%s" with onlyMethods(), but it does not exist in class "%s"',
-				$methodName,
-				$type,
-			),
-		);
-	}
+final class CannotUseOnlyMethodsException extends \PHPUnit\Framework\Exception implements Exception
+{
+    public function __construct(string $type, string $methodName)
+    {
+        parent::__construct(
+            sprintf(
+                'Trying to configure method "%s" with onlyMethods(), but it does not exist in class "%s"',
+                $methodName,
+                $type,
+            ),
+        );
+    }
 }

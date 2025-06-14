@@ -14,7 +14,7 @@ use PHPUnit\Event\Subscriber;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface ExecutionStartedSubscriber extends Subscriber {
-
-	public function notify( ExecutionStarted $event ): void;
+interface ExecutionStartedSubscriber extends Subscriber
+{
+    public function notify(ExecutionStarted $event): void;
 }

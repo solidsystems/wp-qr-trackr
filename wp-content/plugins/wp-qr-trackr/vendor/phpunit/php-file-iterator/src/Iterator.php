@@ -9,100 +9,102 @@
  */
 namespace SebastianBergmann\FileIterator;
 
-use function assert;
 use function preg_match;
 use function realpath;
 use function str_ends_with;
 use function str_replace;
 use function str_starts_with;
-use AppendIterator;
 use FilterIterator;
 use SplFileInfo;
 
 /**
- * @template-extends FilterIterator<int, string, AppendIterator>
+ * @template-extends FilterIterator<int, SplFileInfo, \Iterator>
  *
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-file-iterator
  */
-final class Iterator extends FilterIterator {
+final class Iterator extends FilterIterator
+{
+    public const int PREFIX = 0;
+    public const int SUFFIX = 1;
+    private false|string $basePath;
 
-	public const PREFIX = 0;
-	public const SUFFIX = 1;
-	private string|false $basePath;
+    /**
+     * @var list<string>
+     */
+    private array $suffixes;
 
-	/**
-	 * @psalm-var list<string>
-	 */
-	private array $suffixes;
+    /**
+     * @var list<string>
+     */
+    private array $prefixes;
 
-	/**
-	 * @psalm-var list<string>
-	 */
-	private array $prefixes;
+    /**
+     * @param list<string> $suffixes
+     * @param list<string> $prefixes
+     */
+    public function __construct(string $basePath, \Iterator $iterator, array $suffixes = [], array $prefixes = [])
+    {
+        $this->basePath = realpath($basePath);
+        $this->prefixes = $prefixes;
+        $this->suffixes = $suffixes;
 
-	/**
-	 * @psalm-param list<string> $suffixes
-	 * @psalm-param list<string> $prefixes
-	 */
-	public function __construct( string $basePath, \Iterator $iterator, array $suffixes = array(), array $prefixes = array() ) {
-		$this->basePath = realpath( $basePath );
-		$this->prefixes = $prefixes;
-		$this->suffixes = $suffixes;
+        parent::__construct($iterator);
+    }
 
-		parent::__construct( $iterator );
-	}
+    public function accept(): bool
+    {
+        $current = $this->getInnerIterator()->current();
 
-	public function accept(): bool {
-		$current = $this->getInnerIterator()->current();
+        $filename = $current->getFilename();
+        $realPath = $current->getRealPath();
 
-		assert( $current instanceof SplFileInfo );
+        if ($realPath === false) {
+            // @codeCoverageIgnoreStart
+            return false;
+            // @codeCoverageIgnoreEnd
+        }
 
-		$filename = $current->getFilename();
-		$realPath = $current->getRealPath();
+        return $this->acceptPath($realPath) &&
+               $this->acceptPrefix($filename) &&
+               $this->acceptSuffix($filename);
+    }
 
-		if ( $realPath === false ) {
-			// @codeCoverageIgnoreStart
-			return false;
-			// @codeCoverageIgnoreEnd
-		}
+    private function acceptPath(string $path): bool
+    {
+        // Filter files in hidden directories by checking path that is relative to the base path.
+        if (preg_match('=/\.[^/]*/=', str_replace((string) $this->basePath, '', $path))) {
+            return false;
+        }
 
-		return $this->acceptPath( $realPath ) &&
-				$this->acceptPrefix( $filename ) &&
-				$this->acceptSuffix( $filename );
-	}
+        return true;
+    }
 
-	private function acceptPath( string $path ): bool {
-		// Filter files in hidden directories by checking path that is relative to the base path.
-		if ( preg_match( '=/\.[^/]*/=', str_replace( (string) $this->basePath, '', $path ) ) ) {
-			return false;
-		}
+    private function acceptPrefix(string $filename): bool
+    {
+        return $this->acceptSubString($filename, $this->prefixes, self::PREFIX);
+    }
 
-		return true;
-	}
+    private function acceptSuffix(string $filename): bool
+    {
+        return $this->acceptSubString($filename, $this->suffixes, self::SUFFIX);
+    }
 
-	private function acceptPrefix( string $filename ): bool {
-		return $this->acceptSubString( $filename, $this->prefixes, self::PREFIX );
-	}
+    /**
+     * @param list<string> $subStrings
+     */
+    private function acceptSubString(string $filename, array $subStrings, int $type): bool
+    {
+        if (empty($subStrings)) {
+            return true;
+        }
 
-	private function acceptSuffix( string $filename ): bool {
-		return $this->acceptSubString( $filename, $this->suffixes, self::SUFFIX );
-	}
+        foreach ($subStrings as $string) {
+            if (($type === self::PREFIX && str_starts_with($filename, $string)) ||
+                ($type === self::SUFFIX && str_ends_with($filename, $string))) {
+                return true;
+            }
+        }
 
-	/**
-	 * @psalm-param list<string> $subStrings
-	 */
-	private function acceptSubString( string $filename, array $subStrings, int $type ): bool {
-		if ( empty( $subStrings ) ) {
-			return true;
-		}
-
-		foreach ( $subStrings as $string ) {
-			if ( ( $type === self::PREFIX && str_starts_with( $filename, $string ) ) ||
-				( $type === self::SUFFIX && str_ends_with( $filename, $string ) ) ) {
-				return true;
-			}
-		}
-
-		return false;
-	}
+        return false;
+    }
 }

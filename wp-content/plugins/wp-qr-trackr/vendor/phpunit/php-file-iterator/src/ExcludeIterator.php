@@ -18,58 +18,63 @@ use SplFileInfo;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-file-iterator
  */
-final class ExcludeIterator extends RecursiveFilterIterator {
+final class ExcludeIterator extends RecursiveFilterIterator
+{
+    /**
+     * @var list<string>
+     */
+    private array $exclude;
 
-	/**
-	 * @psalm-var list<string>
-	 */
-	private array $exclude;
+    /**
+     * @param list<string> $exclude
+     */
+    public function __construct(RecursiveDirectoryIterator $iterator, array $exclude)
+    {
+        parent::__construct($iterator);
 
-	/**
-	 * @psalm-param list<string> $exclude
-	 */
-	public function __construct( RecursiveDirectoryIterator $iterator, array $exclude ) {
-		parent::__construct( $iterator );
+        $this->exclude = $exclude;
+    }
 
-		$this->exclude = $exclude;
-	}
+    public function accept(): bool
+    {
+        $current = $this->current();
 
-	public function accept(): bool {
-		$current = $this->current();
+        assert($current instanceof SplFileInfo);
 
-		assert( $current instanceof SplFileInfo );
+        $path = $current->getRealPath();
 
-		$path = $current->getRealPath();
+        if ($path === false) {
+            return false;
+        }
 
-		if ( $path === false ) {
-			return false;
-		}
+        foreach ($this->exclude as $exclude) {
+            if (str_starts_with($path, $exclude)) {
+                return false;
+            }
+        }
 
-		foreach ( $this->exclude as $exclude ) {
-			if ( str_starts_with( $path, $exclude ) ) {
-				return false;
-			}
-		}
+        return true;
+    }
 
-		return true;
-	}
+    public function hasChildren(): bool
+    {
+        return $this->getInnerIterator()->hasChildren();
+    }
 
-	public function hasChildren(): bool {
-		return $this->getInnerIterator()->hasChildren();
-	}
+    public function getChildren(): self
+    {
+        return new self(
+            $this->getInnerIterator()->getChildren(),
+            $this->exclude,
+        );
+    }
 
-	public function getChildren(): self {
-		return new self(
-			$this->getInnerIterator()->getChildren(),
-			$this->exclude
-		);
-	}
+    public function getInnerIterator(): RecursiveDirectoryIterator
+    {
+        $innerIterator = parent::getInnerIterator();
 
-	public function getInnerIterator(): RecursiveDirectoryIterator {
-		$innerIterator = parent::getInnerIterator();
+        assert($innerIterator instanceof RecursiveDirectoryIterator);
 
-		assert( $innerIterator instanceof RecursiveDirectoryIterator );
-
-		return $innerIterator;
-	}
+        return $innerIterator;
+    }
 }

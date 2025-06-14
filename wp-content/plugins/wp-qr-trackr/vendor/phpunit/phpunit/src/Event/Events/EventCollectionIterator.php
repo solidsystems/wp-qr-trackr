@@ -17,35 +17,41 @@ use Iterator;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class EventCollectionIterator implements Iterator {
+final class EventCollectionIterator implements Iterator
+{
+    /**
+     * @var list<Event>
+     */
+    private readonly array $events;
+    private int $position = 0;
 
-	/**
-	 * @psalm-var list<Event>
-	 */
-	private readonly array $events;
-	private int $position = 0;
+    public function __construct(EventCollection $events)
+    {
+        $this->events = $events->asArray();
+    }
 
-	public function __construct( EventCollection $events ) {
-		$this->events = $events->asArray();
-	}
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
 
-	public function rewind(): void {
-		$this->position = 0;
-	}
+    public function valid(): bool
+    {
+        return $this->position < count($this->events);
+    }
 
-	public function valid(): bool {
-		return $this->position < count( $this->events );
-	}
+    public function key(): int
+    {
+        return $this->position;
+    }
 
-	public function key(): int {
-		return $this->position;
-	}
+    public function current(): Event
+    {
+        return $this->events[$this->position];
+    }
 
-	public function current(): Event {
-		return $this->events[ $this->position ];
-	}
-
-	public function next(): void {
-		++$this->position;
-	}
+    public function next(): void
+    {
+        $this->position++;
+    }
 }

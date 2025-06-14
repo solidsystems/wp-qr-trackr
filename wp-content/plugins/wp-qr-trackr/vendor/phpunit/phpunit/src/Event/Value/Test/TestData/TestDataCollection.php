@@ -18,79 +18,71 @@ use IteratorAggregate;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestDataCollection implements Countable, IteratorAggregate {
+final readonly class TestDataCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<TestData>
+     */
+    private array $data;
+    private ?DataFromDataProvider $fromDataProvider;
 
-	/**
-	 * @psalm-var list<TestData>
-	 */
-	private readonly array $data;
-	private ?DataFromDataProvider $fromDataProvider = null;
+    /**
+     * @param list<TestData> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(...$data);
+    }
 
-	/**
-	 * @psalm-param list<TestData> $data
-	 *
-	 * @throws MoreThanOneDataSetFromDataProviderException
-	 */
-	public static function fromArray( array $data ): self {
-		return new self( ...$data );
-	}
+    private function __construct(TestData ...$data)
+    {
+        $fromDataProvider = null;
 
-	/**
-	 * @throws MoreThanOneDataSetFromDataProviderException
-	 */
-	private function __construct( TestData ...$data ) {
-		$this->ensureNoMoreThanOneDataFromDataProvider( $data );
+        foreach ($data as $_data) {
+            if ($_data->isFromDataProvider()) {
+                $fromDataProvider = $_data;
+            }
+        }
 
-		$this->data = $data;
-	}
+        $this->data             = $data;
+        $this->fromDataProvider = $fromDataProvider;
+    }
 
-	/**
-	 * @psalm-return list<TestData>
-	 */
-	public function asArray(): array {
-		return $this->data;
-	}
+    /**
+     * @return list<TestData>
+     */
+    public function asArray(): array
+    {
+        return $this->data;
+    }
 
-	public function count(): int {
-		return count( $this->data );
-	}
+    public function count(): int
+    {
+        return count($this->data);
+    }
 
-	/**
-	 * @psalm-assert-if-true !null $this->fromDataProvider
-	 */
-	public function hasDataFromDataProvider(): bool {
-		return $this->fromDataProvider !== null;
-	}
+    /**
+     * @phpstan-assert-if-true !null $this->fromDataProvider
+     */
+    public function hasDataFromDataProvider(): bool
+    {
+        return $this->fromDataProvider !== null;
+    }
 
-	/**
-	 * @throws NoDataSetFromDataProviderException
-	 */
-	public function dataFromDataProvider(): DataFromDataProvider {
-		if ( ! $this->hasDataFromDataProvider() ) {
-			throw new NoDataSetFromDataProviderException();
-		}
+    /**
+     * @throws NoDataSetFromDataProviderException
+     */
+    public function dataFromDataProvider(): DataFromDataProvider
+    {
+        if (!$this->hasDataFromDataProvider()) {
+            throw new NoDataSetFromDataProviderException;
+        }
 
-		return $this->fromDataProvider;
-	}
+        return $this->fromDataProvider;
+    }
 
-	public function getIterator(): TestDataCollectionIterator {
-		return new TestDataCollectionIterator( $this );
-	}
-
-	/**
-	 * @psalm-param list<TestData> $data
-	 *
-	 * @throws MoreThanOneDataSetFromDataProviderException
-	 */
-	private function ensureNoMoreThanOneDataFromDataProvider( array $data ): void {
-		foreach ( $data as $_data ) {
-			if ( $_data->isFromDataProvider() ) {
-				if ( $this->fromDataProvider !== null ) {
-					throw new MoreThanOneDataSetFromDataProviderException();
-				}
-
-				$this->fromDataProvider = $_data;
-			}
-		}
-	}
+    public function getIterator(): TestDataCollectionIterator
+    {
+        return new TestDataCollectionIterator($this);
+    }
 }

@@ -14,53 +14,59 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  *
  * @template-implements IteratorAggregate<int, Group>
  */
-final class GroupCollection implements IteratorAggregate {
+final readonly class GroupCollection implements IteratorAggregate
+{
+    /**
+     * @var list<Group>
+     */
+    private array $groups;
 
-	/**
-	 * @psalm-var list<Group>
-	 */
-	private readonly array $groups;
+    /**
+     * @param list<Group> $groups
+     */
+    public static function fromArray(array $groups): self
+    {
+        return new self(...$groups);
+    }
 
-	/**
-	 * @psalm-param list<Group> $groups
-	 */
-	public static function fromArray( array $groups ): self {
-		return new self( ...$groups );
-	}
+    private function __construct(Group ...$groups)
+    {
+        $this->groups = $groups;
+    }
 
-	private function __construct( Group ...$groups ) {
-		$this->groups = $groups;
-	}
+    /**
+     * @return list<Group>
+     */
+    public function asArray(): array
+    {
+        return $this->groups;
+    }
 
-	/**
-	 * @psalm-return list<Group>
-	 */
-	public function asArray(): array {
-		return $this->groups;
-	}
+    /**
+     * @return list<string>
+     */
+    public function asArrayOfStrings(): array
+    {
+        $result = [];
 
-	/**
-	 * @psalm-return list<string>
-	 */
-	public function asArrayOfStrings(): array {
-		$result = array();
+        foreach ($this->groups as $group) {
+            $result[] = $group->name();
+        }
 
-		foreach ( $this->groups as $group ) {
-			$result[] = $group->name();
-		}
+        return $result;
+    }
 
-		return $result;
-	}
+    public function isEmpty(): bool
+    {
+        return $this->groups === [];
+    }
 
-	public function isEmpty(): bool {
-		return empty( $this->groups );
-	}
-
-	public function getIterator(): GroupCollectionIterator {
-		return new GroupCollectionIterator( $this );
-	}
+    public function getIterator(): GroupCollectionIterator
+    {
+        return new GroupCollectionIterator($this);
+    }
 }

@@ -10,37 +10,42 @@
 namespace PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Snapshot {
+final readonly class Snapshot
+{
+    private HRTime $time;
+    private MemoryUsage $memoryUsage;
+    private MemoryUsage $peakMemoryUsage;
+    private GarbageCollectorStatus $garbageCollectorStatus;
 
-	private readonly HRTime $time;
-	private readonly MemoryUsage $memoryUsage;
-	private readonly MemoryUsage $peakMemoryUsage;
-	private readonly GarbageCollectorStatus $garbageCollectorStatus;
+    public function __construct(HRTime $time, MemoryUsage $memoryUsage, MemoryUsage $peakMemoryUsage, GarbageCollectorStatus $garbageCollectorStatus)
+    {
+        $this->time                   = $time;
+        $this->memoryUsage            = $memoryUsage;
+        $this->peakMemoryUsage        = $peakMemoryUsage;
+        $this->garbageCollectorStatus = $garbageCollectorStatus;
+    }
 
-	public function __construct( HRTime $time, MemoryUsage $memoryUsage, MemoryUsage $peakMemoryUsage, GarbageCollectorStatus $garbageCollectorStatus ) {
-		$this->time                   = $time;
-		$this->memoryUsage            = $memoryUsage;
-		$this->peakMemoryUsage        = $peakMemoryUsage;
-		$this->garbageCollectorStatus = $garbageCollectorStatus;
-	}
+    public function time(): HRTime
+    {
+        return $this->time;
+    }
 
-	public function time(): HRTime {
-		return $this->time;
-	}
+    public function memoryUsage(): MemoryUsage
+    {
+        return $this->memoryUsage;
+    }
 
-	public function memoryUsage(): MemoryUsage {
-		return $this->memoryUsage;
-	}
+    public function peakMemoryUsage(): MemoryUsage
+    {
+        return $this->peakMemoryUsage;
+    }
 
-	public function peakMemoryUsage(): MemoryUsage {
-		return $this->peakMemoryUsage;
-	}
-
-	public function garbageCollectorStatus(): GarbageCollectorStatus {
-		return $this->garbageCollectorStatus;
-	}
+    public function garbageCollectorStatus(): GarbageCollectorStatus
+    {
+        return $this->garbageCollectorStatus;
+    }
 }

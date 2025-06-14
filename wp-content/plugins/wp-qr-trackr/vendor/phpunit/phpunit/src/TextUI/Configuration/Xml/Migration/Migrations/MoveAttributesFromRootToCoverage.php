@@ -18,34 +18,35 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MoveAttributesFromRootToCoverage implements Migration {
+final readonly class MoveAttributesFromRootToCoverage implements Migration
+{
+    /**
+     * @throws MigrationException
+     */
+    public function migrate(DOMDocument $document): void
+    {
+        $map = [
+            'disableCodeCoverageIgnore'                 => 'disableCodeCoverageIgnore',
+            'ignoreDeprecatedCodeUnitsFromCodeCoverage' => 'ignoreDeprecatedCodeUnits',
+        ];
 
-	/**
-	 * @throws MigrationException
-	 */
-	public function migrate( DOMDocument $document ): void {
-		$map = array(
-			'disableCodeCoverageIgnore'                 => 'disableCodeCoverageIgnore',
-			'ignoreDeprecatedCodeUnitsFromCodeCoverage' => 'ignoreDeprecatedCodeUnits',
-		);
+        $root = $document->documentElement;
 
-		$root = $document->documentElement;
+        assert($root instanceof DOMElement);
 
-		assert( $root instanceof DOMElement );
+        $coverage = $document->getElementsByTagName('coverage')->item(0);
 
-		$coverage = $document->getElementsByTagName( 'coverage' )->item( 0 );
+        if (!$coverage instanceof DOMElement) {
+            throw new MigrationException('Unexpected state - No coverage element');
+        }
 
-		if ( ! $coverage instanceof DOMElement ) {
-			throw new MigrationException( 'Unexpected state - No coverage element' );
-		}
+        foreach ($map as $old => $new) {
+            if (!$root->hasAttribute($old)) {
+                continue;
+            }
 
-		foreach ( $map as $old => $new ) {
-			if ( ! $root->hasAttribute( $old ) ) {
-				continue;
-			}
-
-			$coverage->setAttribute( $new, $root->getAttribute( $old ) );
-			$root->removeAttribute( $old );
-		}
-	}
+            $coverage->setAttribute($new, $root->getAttribute($old));
+            $root->removeAttribute($old);
+        }
+    }
 }

@@ -10,8 +10,6 @@
 namespace PHPUnit\TextUI\Configuration;
 
 use function count;
-use function iterator_count;
-use Countable;
 use Iterator;
 
 /**
@@ -19,39 +17,41 @@ use Iterator;
  *
  * @template-implements Iterator<int, TestDirectory>
  */
-final class TestDirectoryCollectionIterator implements Countable, Iterator {
+final class TestDirectoryCollectionIterator implements Iterator
+{
+    /**
+     * @var list<TestDirectory>
+     */
+    private readonly array $directories;
+    private int $position = 0;
 
-	/**
-	 * @psalm-var list<TestDirectory>
-	 */
-	private readonly array $directories;
-	private int $position = 0;
+    public function __construct(TestDirectoryCollection $directories)
+    {
+        $this->directories = $directories->asArray();
+    }
 
-	public function __construct( TestDirectoryCollection $directories ) {
-		$this->directories = $directories->asArray();
-	}
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
 
-	public function count(): int {
-		return iterator_count( $this );
-	}
+    public function valid(): bool
+    {
+        return $this->position < count($this->directories);
+    }
 
-	public function rewind(): void {
-		$this->position = 0;
-	}
+    public function key(): int
+    {
+        return $this->position;
+    }
 
-	public function valid(): bool {
-		return $this->position < count( $this->directories );
-	}
+    public function current(): TestDirectory
+    {
+        return $this->directories[$this->position];
+    }
 
-	public function key(): int {
-		return $this->position;
-	}
-
-	public function current(): TestDirectory {
-		return $this->directories[ $this->position ];
-	}
-
-	public function next(): void {
-		++$this->position;
-	}
+    public function next(): void
+    {
+        $this->position++;
+    }
 }

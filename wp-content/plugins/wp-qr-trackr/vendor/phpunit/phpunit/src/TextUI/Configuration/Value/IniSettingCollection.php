@@ -16,40 +16,45 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  *
  * @template-implements IteratorAggregate<int, IniSetting>
  */
-final class IniSettingCollection implements Countable, IteratorAggregate {
+final readonly class IniSettingCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<IniSetting>
+     */
+    private array $iniSettings;
 
-	/**
-	 * @psalm-var list<IniSetting>
-	 */
-	private readonly array $iniSettings;
+    /**
+     * @param list<IniSetting> $iniSettings
+     */
+    public static function fromArray(array $iniSettings): self
+    {
+        return new self(...$iniSettings);
+    }
 
-	/**
-	 * @psalm-param list<IniSetting> $iniSettings
-	 */
-	public static function fromArray( array $iniSettings ): self {
-		return new self( ...$iniSettings );
-	}
+    private function __construct(IniSetting ...$iniSettings)
+    {
+        $this->iniSettings = $iniSettings;
+    }
 
-	private function __construct( IniSetting ...$iniSettings ) {
-		$this->iniSettings = $iniSettings;
-	}
+    /**
+     * @return list<IniSetting>
+     */
+    public function asArray(): array
+    {
+        return $this->iniSettings;
+    }
 
-	/**
-	 * @psalm-return list<IniSetting>
-	 */
-	public function asArray(): array {
-		return $this->iniSettings;
-	}
+    public function count(): int
+    {
+        return count($this->iniSettings);
+    }
 
-	public function count(): int {
-		return count( $this->iniSettings );
-	}
-
-	public function getIterator(): IniSettingCollectionIterator {
-		return new IniSettingCollectionIterator( $this );
-	}
+    public function getIterator(): IniSettingCollectionIterator
+    {
+        return new IniSettingCollectionIterator($this);
+    }
 }

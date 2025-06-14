@@ -9,6 +9,6 @@
  */
 namespace PHPUnit\Metadata;
 
-interface Exception extends \PHPUnit\Exception {
-
+interface Exception extends \PHPUnit\Exception
+{
 }

@@ -24,35 +24,40 @@ use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\While_;
 use PhpParser\NodeVisitorAbstract;
 
-final class CyclomaticComplexityCalculatingVisitor extends NodeVisitorAbstract {
+final class CyclomaticComplexityCalculatingVisitor extends NodeVisitorAbstract
+{
+    /**
+     * @var positive-int
+     */
+    private int $cyclomaticComplexity = 1;
 
-	/**
-	 * @psalm-var positive-int
-	 */
-	private int $cyclomaticComplexity = 1;
+    public function enterNode(Node $node): null
+    {
+        switch ($node::class) {
+            case BooleanAnd::class:
+            case BooleanOr::class:
+            case Case_::class:
+            case Catch_::class:
+            case ElseIf_::class:
+            case For_::class:
+            case Foreach_::class:
+            case If_::class:
+            case LogicalAnd::class:
+            case LogicalOr::class:
+            case Node\MatchArm::class:
+            case Ternary::class:
+            case While_::class:
+                $this->cyclomaticComplexity++;
+        }
 
-	public function enterNode( Node $node ): void {
-		switch ( $node::class ) {
-			case BooleanAnd::class:
-			case BooleanOr::class:
-			case Case_::class:
-			case Catch_::class:
-			case ElseIf_::class:
-			case For_::class:
-			case Foreach_::class:
-			case If_::class:
-			case LogicalAnd::class:
-			case LogicalOr::class:
-			case Ternary::class:
-			case While_::class:
-				++$this->cyclomaticComplexity;
-		}
-	}
+        return null;
+    }
 
-	/**
-	 * @psalm-return positive-int
-	 */
-	public function cyclomaticComplexity(): int {
-		return $this->cyclomaticComplexity;
-	}
+    /**
+     * @return positive-int
+     */
+    public function cyclomaticComplexity(): int
+    {
+        return $this->cyclomaticComplexity;
+    }
 }

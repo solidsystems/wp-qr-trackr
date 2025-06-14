@@ -14,32 +14,49 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DeprecationTriggered implements Event {
+final readonly class DeprecationTriggered implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
-	private readonly string $message;
+    /**
+     * @var non-empty-string
+     */
+    private string $message;
 
-	public function __construct( Telemetry\Info $telemetryInfo, string $message ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->message       = $message;
-	}
+    /**
+     * @param non-empty-string $message
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, string $message)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->message       = $message;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function message(): string {
-		return $this->message;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function message(): string
+    {
+        return $this->message;
+    }
 
-	public function asString(): string {
-		return sprintf(
-			'Test Runner Triggered Deprecation (%s)',
-			$this->message,
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Test Runner Triggered Deprecation (%s)',
+            $this->message,
+        );
+    }
 }

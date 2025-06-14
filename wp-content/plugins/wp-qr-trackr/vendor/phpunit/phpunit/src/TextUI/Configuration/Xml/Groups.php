@@ -16,31 +16,36 @@ use PHPUnit\TextUI\Configuration\GroupCollection;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class Groups {
+final readonly class Groups
+{
+    private GroupCollection $include;
+    private GroupCollection $exclude;
 
-	private readonly GroupCollection $include;
-	private readonly GroupCollection $exclude;
+    public function __construct(GroupCollection $include, GroupCollection $exclude)
+    {
+        $this->include = $include;
+        $this->exclude = $exclude;
+    }
 
-	public function __construct( GroupCollection $include, GroupCollection $exclude ) {
-		$this->include = $include;
-		$this->exclude = $exclude;
-	}
+    public function hasInclude(): bool
+    {
+        return !$this->include->isEmpty();
+    }
 
-	public function hasInclude(): bool {
-		return ! $this->include->isEmpty();
-	}
+    public function include(): GroupCollection
+    {
+        return $this->include;
+    }
 
-	public function include(): GroupCollection {
-		return $this->include;
-	}
+    public function hasExclude(): bool
+    {
+        return !$this->exclude->isEmpty();
+    }
 
-	public function hasExclude(): bool {
-		return ! $this->exclude->isEmpty();
-	}
-
-	public function exclude(): GroupCollection {
-		return $this->exclude;
-	}
+    public function exclude(): GroupCollection
+    {
+        return $this->exclude;
+    }
 }

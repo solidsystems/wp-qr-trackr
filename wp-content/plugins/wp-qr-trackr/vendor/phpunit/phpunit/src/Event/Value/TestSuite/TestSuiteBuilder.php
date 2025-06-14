@@ -9,16 +9,19 @@
  */
 namespace PHPUnit\Event\TestSuite;
 
+use function assert;
+use function class_exists;
+use function count;
 use function explode;
+use function method_exists;
 use PHPUnit\Event\Code\Test;
 use PHPUnit\Event\Code\TestCollection;
 use PHPUnit\Event\RuntimeException;
 use PHPUnit\Framework\DataProviderTestSuite;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\TestSuite as FrameworkTestSuite;
-use PHPUnit\Runner\PhptTestCase;
+use PHPUnit\Runner\Phpt\TestCase as PhptTestCase;
 use ReflectionClass;
-use ReflectionException;
 use ReflectionMethod;
 
 /**
@@ -26,85 +29,87 @@ use ReflectionMethod;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestSuiteBuilder {
+final readonly class TestSuiteBuilder
+{
+    /**
+     * @throws RuntimeException
+     */
+    public static function from(FrameworkTestSuite $testSuite): TestSuite
+    {
+        $tests = [];
 
-	/**
-	 * @throws RuntimeException
-	 */
-	public static function from( FrameworkTestSuite $testSuite ): TestSuite {
-		$tests = array();
+        self::process($testSuite, $tests);
 
-		self::process( $testSuite, $tests );
+        if ($testSuite instanceof DataProviderTestSuite) {
+            assert(count(explode('::', $testSuite->name())) === 2);
+            [$className, $methodName] = explode('::', $testSuite->name());
 
-		if ( $testSuite instanceof DataProviderTestSuite ) {
-			[$className, $methodName] = explode( '::', $testSuite->name() );
+            assert(class_exists($className));
+            assert($methodName !== '' && method_exists($className, $methodName));
 
-			try {
-				$reflector = new ReflectionMethod( $className, $methodName );
+            $reflector = new ReflectionMethod($className, $methodName);
 
-				return new TestSuiteForTestMethodWithDataProvider(
-					$testSuite->name(),
-					$testSuite->count(),
-					TestCollection::fromArray( $tests ),
-					$className,
-					$methodName,
-					$reflector->getFileName(),
-					$reflector->getStartLine(),
-				);
-				// @codeCoverageIgnoreStart
-			} catch ( ReflectionException $e ) {
-				throw new RuntimeException(
-					$e->getMessage(),
-					$e->getCode(),
-					$e,
-				);
-			}
-			// @codeCoverageIgnoreEnd
-		}
+            $file = $reflector->getFileName();
+            $line = $reflector->getStartLine();
 
-		if ( $testSuite->isForTestClass() ) {
-			try {
-				$reflector = new ReflectionClass( $testSuite->name() );
+            assert($file !== false);
+            assert($line !== false);
 
-				return new TestSuiteForTestClass(
-					$testSuite->name(),
-					$testSuite->count(),
-					TestCollection::fromArray( $tests ),
-					$reflector->getFileName(),
-					$reflector->getStartLine(),
-				);
-				// @codeCoverageIgnoreStart
-			} catch ( ReflectionException $e ) {
-				throw new RuntimeException(
-					$e->getMessage(),
-					$e->getCode(),
-					$e,
-				);
-			}
-			// @codeCoverageIgnoreEnd
-		}
+            return new TestSuiteForTestMethodWithDataProvider(
+                $testSuite->name(),
+                $testSuite->count(),
+                TestCollection::fromArray($tests),
+                $className,
+                $methodName,
+                $file,
+                $line,
+            );
+        }
 
-		return new TestSuiteWithName(
-			$testSuite->name(),
-			$testSuite->count(),
-			TestCollection::fromArray( $tests ),
-		);
-	}
+        if ($testSuite->isForTestClass()) {
+            $testClassName = $testSuite->name();
 
-	/**
-	 * @psalm-param list<Test> $tests
-	 */
-	private static function process( FrameworkTestSuite $testSuite, array &$tests ): void {
-		foreach ( $testSuite->getIterator() as $test ) {
-			if ( $test instanceof FrameworkTestSuite ) {
-				self::process( $test, $tests );
+            assert(class_exists($testClassName));
 
-				continue;
-			}
+            $reflector = new ReflectionClass($testClassName);
 
-			if ( $test instanceof TestCase || $test instanceof PhptTestCase ) {
-				$tests[] = $test->valueObjectForEvents();
-			}
-		}
-	}
+            $file = $reflector->getFileName();
+            $line = $reflector->getStartLine();
+
+            assert($file !== false);
+            assert($line !== false);
+
+            return new TestSuiteForTestClass(
+                $testClassName,
+                $testSuite->count(),
+                TestCollection::fromArray($tests),
+                $file,
+                $line,
+            );
+        }
+
+        return new TestSuiteWithName(
+            $testSuite->name(),
+            $testSuite->count(),
+            TestCollection::fromArray($tests),
+        );
+    }
+
+    /**
+     * @param list<Test> $tests
+     */
+    private static function process(FrameworkTestSuite $testSuite, array &$tests): void
+    {
+        foreach ($testSuite->getIterator() as $test) {
+            if ($test instanceof FrameworkTestSuite) {
+                self::process($test, $tests);
+
+                continue;
+            }
+
+            if ($test instanceof TestCase || $test instanceof PhptTestCase) {
+                $tests[] = $test->valueObjectForEvents();
+            }
+        }
+    }
 }

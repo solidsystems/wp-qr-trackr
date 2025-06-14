@@ -14,10 +14,10 @@ namespace PHPUnit\Util\Http;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-interface Downloader {
-
-	/**
-	 * @param non-empty-string $url
-	 */
-	public function download( string $url ): false|string;
+interface Downloader
+{
+    /**
+     * @param non-empty-string $url
+     */
+    public function download(string $url): false|string;
 }

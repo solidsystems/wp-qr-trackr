@@ -10,26 +10,26 @@
 namespace PHPUnit\Framework\TestStatus;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Skipped extends Known {
+final readonly class Skipped extends Known
+{
+    public function isSkipped(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true Skipped $this
-	 */
-	public function isSkipped(): bool {
-		return true;
-	}
+    public function asInt(): int
+    {
+        return 1;
+    }
 
-	public function asInt(): int {
-		return 1;
-	}
-
-	public function asString(): string {
-		return 'skipped';
-	}
+    public function asString(): string
+    {
+        return 'skipped';
+    }
 }

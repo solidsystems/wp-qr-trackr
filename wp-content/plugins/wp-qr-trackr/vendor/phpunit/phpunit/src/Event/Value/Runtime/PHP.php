@@ -21,76 +21,85 @@ use function get_loaded_extensions;
 use function sort;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PHP {
+final readonly class PHP
+{
+    private string $version;
+    private int $versionId;
+    private int $majorVersion;
+    private int $minorVersion;
+    private int $releaseVersion;
+    private string $extraVersion;
+    private string $sapi;
 
-	private readonly string $version;
-	private readonly int $versionId;
-	private readonly int $majorVersion;
-	private readonly int $minorVersion;
-	private readonly int $releaseVersion;
-	private readonly string $extraVersion;
-	private readonly string $sapi;
+    /**
+     * @var list<string>
+     */
+    private array $extensions;
 
-	/**
-	 * @psalm-var list<string>
-	 */
-	private readonly array $extensions;
+    public function __construct()
+    {
+        $this->version        = PHP_VERSION;
+        $this->versionId      = PHP_VERSION_ID;
+        $this->majorVersion   = PHP_MAJOR_VERSION;
+        $this->minorVersion   = PHP_MINOR_VERSION;
+        $this->releaseVersion = PHP_RELEASE_VERSION;
+        $this->extraVersion   = PHP_EXTRA_VERSION;
+        $this->sapi           = PHP_SAPI;
 
-	public function __construct() {
-		$this->version        = PHP_VERSION;
-		$this->versionId      = PHP_VERSION_ID;
-		$this->majorVersion   = PHP_MAJOR_VERSION;
-		$this->minorVersion   = PHP_MINOR_VERSION;
-		$this->releaseVersion = PHP_RELEASE_VERSION;
-		$this->extraVersion   = PHP_EXTRA_VERSION;
-		$this->sapi           = PHP_SAPI;
+        $extensions = array_merge(
+            get_loaded_extensions(true),
+            get_loaded_extensions(),
+        );
 
-		$extensions = array_merge(
-			get_loaded_extensions( true ),
-			get_loaded_extensions(),
-		);
+        sort($extensions);
 
-		sort( $extensions );
+        $this->extensions = $extensions;
+    }
 
-		$this->extensions = $extensions;
-	}
+    public function version(): string
+    {
+        return $this->version;
+    }
 
-	public function version(): string {
-		return $this->version;
-	}
+    public function sapi(): string
+    {
+        return $this->sapi;
+    }
 
-	public function sapi(): string {
-		return $this->sapi;
-	}
+    public function majorVersion(): int
+    {
+        return $this->majorVersion;
+    }
 
-	public function majorVersion(): int {
-		return $this->majorVersion;
-	}
+    public function minorVersion(): int
+    {
+        return $this->minorVersion;
+    }
 
-	public function minorVersion(): int {
-		return $this->minorVersion;
-	}
+    public function releaseVersion(): int
+    {
+        return $this->releaseVersion;
+    }
 
-	public function releaseVersion(): int {
-		return $this->releaseVersion;
-	}
+    public function extraVersion(): string
+    {
+        return $this->extraVersion;
+    }
 
-	public function extraVersion(): string {
-		return $this->extraVersion;
-	}
+    public function versionId(): int
+    {
+        return $this->versionId;
+    }
 
-	public function versionId(): int {
-		return $this->versionId;
-	}
-
-	/**
-	 * @psalm-return list<string>
-	 */
-	public function extensions(): array {
-		return $this->extensions;
-	}
+    /**
+     * @return list<string>
+     */
+    public function extensions(): array
+    {
+        return $this->extensions;
+    }
 }

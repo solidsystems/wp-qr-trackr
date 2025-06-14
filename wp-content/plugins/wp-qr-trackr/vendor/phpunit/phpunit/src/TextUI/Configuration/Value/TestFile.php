@@ -14,29 +14,57 @@ use PHPUnit\Util\VersionComparisonOperator;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class TestFile {
+final readonly class TestFile
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $path;
+    private string $phpVersion;
+    private VersionComparisonOperator $phpVersionOperator;
 
-	private readonly string $path;
-	private readonly string $phpVersion;
-	private readonly VersionComparisonOperator $phpVersionOperator;
+    /**
+     * @var list<non-empty-string>
+     */
+    private array $groups;
 
-	public function __construct( string $path, string $phpVersion, VersionComparisonOperator $phpVersionOperator ) {
-		$this->path               = $path;
-		$this->phpVersion         = $phpVersion;
-		$this->phpVersionOperator = $phpVersionOperator;
-	}
+    /**
+     * @param non-empty-string       $path
+     * @param list<non-empty-string> $groups
+     */
+    public function __construct(string $path, string $phpVersion, VersionComparisonOperator $phpVersionOperator, array $groups)
+    {
+        $this->path               = $path;
+        $this->phpVersion         = $phpVersion;
+        $this->phpVersionOperator = $phpVersionOperator;
+        $this->groups             = $groups;
+    }
 
-	public function path(): string {
-		return $this->path;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function path(): string
+    {
+        return $this->path;
+    }
 
-	public function phpVersion(): string {
-		return $this->phpVersion;
-	}
+    public function phpVersion(): string
+    {
+        return $this->phpVersion;
+    }
 
-	public function phpVersionOperator(): VersionComparisonOperator {
-		return $this->phpVersionOperator;
-	}
+    public function phpVersionOperator(): VersionComparisonOperator
+    {
+        return $this->phpVersionOperator;
+    }
+
+    /**
+     * @return list<non-empty-string>
+     */
+    public function groups(): array
+    {
+        return $this->groups;
+    }
 }

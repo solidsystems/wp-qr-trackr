@@ -16,23 +16,21 @@ use SebastianBergmann\Template\Template;
  *
  * @internal This trait is not covered by the backward compatibility promise for PHPUnit
  */
-trait TemplateLoader {
+trait TemplateLoader
+{
+    /**
+     * @var array<string,Template>
+     */
+    private static array $templates = [];
 
-	/**
-	 * @psalm-var array<string,Template>
-	 */
-	private static array $templates = array();
+    private function loadTemplate(string $template): Template
+    {
+        $filename = __DIR__ . '/templates/' . $template;
 
-	/**
-	 * @psalm-suppress MissingThrowsDocblock
-	 */
-	private function loadTemplate( string $template ): Template {
-		$filename = __DIR__ . '/templates/' . $template;
+        if (!isset(self::$templates[$filename])) {
+            self::$templates[$filename] = new Template($filename);
+        }
 
-		if ( ! isset( self::$templates[ $filename ] ) ) {
-			self::$templates[ $filename ] = new Template( $filename );
-		}
-
-		return self::$templates[ $filename ];
-	}
+        return self::$templates[$filename];
+    }
 }

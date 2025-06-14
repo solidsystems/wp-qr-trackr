@@ -28,237 +28,245 @@ use SebastianBergmann\CodeCoverage\StaticAnalysis\FileAnalyser;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  *
- * @psalm-import-type TestType from \SebastianBergmann\CodeCoverage\CodeCoverage
+ * @phpstan-import-type TestType from CodeCoverage
  */
-final class Builder {
+final readonly class Builder
+{
+    private FileAnalyser $analyser;
 
-	private readonly FileAnalyser $analyser;
+    public function __construct(FileAnalyser $analyser)
+    {
+        $this->analyser = $analyser;
+    }
 
-	public function __construct( FileAnalyser $analyser ) {
-		$this->analyser = $analyser;
-	}
+    public function build(CodeCoverage $coverage): Directory
+    {
+        $data       = clone $coverage->getData(); // clone because path munging is destructive to the original data
+        $commonPath = $this->reducePaths($data);
+        $root       = new Directory(
+            $commonPath,
+            null,
+        );
 
-	public function build( CodeCoverage $coverage ): Directory {
-		$data       = clone $coverage->getData(); // clone because path munging is destructive to the original data
-		$commonPath = $this->reducePaths( $data );
-		$root       = new Directory(
-			$commonPath,
-			null,
-		);
+        $this->addItems(
+            $root,
+            $this->buildDirectoryStructure($data),
+            $coverage->getTests(),
+        );
 
-		$this->addItems(
-			$root,
-			$this->buildDirectoryStructure( $data ),
-			$coverage->getTests(),
-		);
+        return $root;
+    }
 
-		return $root;
-	}
+    /**
+     * @param array<string, TestType> $tests
+     */
+    private function addItems(Directory $root, array $items, array $tests): void
+    {
+        foreach ($items as $key => $value) {
+            $key = (string) $key;
 
-	/**
-	 * @psalm-param array<string, TestType> $tests
-	 */
-	private function addItems( Directory $root, array $items, array $tests ): void {
-		foreach ( $items as $key => $value ) {
-			$key = (string) $key;
+            if (str_ends_with($key, '/f')) {
+                $key      = substr($key, 0, -2);
+                $filename = $root->pathAsString() . DIRECTORY_SEPARATOR . $key;
 
-			if ( str_ends_with( $key, '/f' ) ) {
-				$key      = substr( $key, 0, -2 );
-				$filename = $root->pathAsString() . DIRECTORY_SEPARATOR . $key;
+                if (is_file($filename)) {
+                    $analysisResult = $this->analyser->analyse($filename);
 
-				if ( is_file( $filename ) ) {
-					$root->addFile(
-						new File(
-							$key,
-							$root,
-							$value['lineCoverage'],
-							$value['functionCoverage'],
-							$tests,
-							$this->analyser->classesIn( $filename ),
-							$this->analyser->traitsIn( $filename ),
-							$this->analyser->functionsIn( $filename ),
-							$this->analyser->linesOfCodeFor( $filename ),
-						),
-					);
-				}
-			} else {
-				$child = $root->addDirectory( $key );
+                    $root->addFile(
+                        new File(
+                            $key,
+                            $root,
+                            $value['lineCoverage'],
+                            $value['functionCoverage'],
+                            $tests,
+                            $analysisResult->classes(),
+                            $analysisResult->traits(),
+                            $analysisResult->functions(),
+                            $analysisResult->linesOfCode(),
+                        ),
+                    );
+                }
+            } else {
+                $child = $root->addDirectory($key);
 
-				$this->addItems( $child, $value, $tests );
-			}
-		}
-	}
+                $this->addItems($child, $value, $tests);
+            }
+        }
+    }
 
-	/**
-	 * Builds an array representation of the directory structure.
-	 *
-	 * For instance,
-	 *
-	 * <code>
-	 * Array
-	 * (
-	 *     [Money.php] => Array
-	 *         (
-	 *             ...
-	 *         )
-	 *
-	 *     [MoneyBag.php] => Array
-	 *         (
-	 *             ...
-	 *         )
-	 * )
-	 * </code>
-	 *
-	 * is transformed into
-	 *
-	 * <code>
-	 * Array
-	 * (
-	 *     [.] => Array
-	 *         (
-	 *             [Money.php] => Array
-	 *                 (
-	 *                     ...
-	 *                 )
-	 *
-	 *             [MoneyBag.php] => Array
-	 *                 (
-	 *                     ...
-	 *                 )
-	 *         )
-	 * )
-	 * </code>
-	 *
-	 * @psalm-return array<string, array<string, array{lineCoverage: array<int, int>, functionCoverage: array<string, array<int, int>>}>>
-	 */
-	private function buildDirectoryStructure( ProcessedCodeCoverageData $data ): array {
-		$result = array();
+    /**
+     * Builds an array representation of the directory structure.
+     *
+     * For instance,
+     *
+     * <code>
+     * Array
+     * (
+     *     [Money.php] => Array
+     *         (
+     *             ...
+     *         )
+     *
+     *     [MoneyBag.php] => Array
+     *         (
+     *             ...
+     *         )
+     * )
+     * </code>
+     *
+     * is transformed into
+     *
+     * <code>
+     * Array
+     * (
+     *     [.] => Array
+     *         (
+     *             [Money.php] => Array
+     *                 (
+     *                     ...
+     *                 )
+     *
+     *             [MoneyBag.php] => Array
+     *                 (
+     *                     ...
+     *                 )
+     *         )
+     * )
+     * </code>
+     *
+     * @return array<string, array<string, array{lineCoverage: array<int, int>, functionCoverage: array<string, array<int, int>>}>>
+     */
+    private function buildDirectoryStructure(ProcessedCodeCoverageData $data): array
+    {
+        $result = [];
 
-		foreach ( $data->coveredFiles() as $originalPath ) {
-			$path    = explode( DIRECTORY_SEPARATOR, $originalPath );
-			$pointer = &$result;
-			$max     = count( $path );
+        foreach ($data->coveredFiles() as $originalPath) {
+            $path    = explode(DIRECTORY_SEPARATOR, $originalPath);
+            $pointer = &$result;
+            $max     = count($path);
 
-			for ( $i = 0; $i < $max; $i++ ) {
-				$type = '';
+            for ($i = 0; $i < $max; $i++) {
+                $type = '';
 
-				if ( $i === ( $max - 1 ) ) {
-					$type = '/f';
-				}
+                if ($i === ($max - 1)) {
+                    $type = '/f';
+                }
 
-				$pointer = &$pointer[ $path[ $i ] . $type ];
-			}
+                $pointer = &$pointer[$path[$i] . $type];
+            }
 
-			$pointer = array(
-				'lineCoverage'     => $data->lineCoverage()[ $originalPath ] ?? array(),
-				'functionCoverage' => $data->functionCoverage()[ $originalPath ] ?? array(),
-			);
-		}
+            $pointer = [
+                'lineCoverage'     => $data->lineCoverage()[$originalPath] ?? [],
+                'functionCoverage' => $data->functionCoverage()[$originalPath] ?? [],
+            ];
+        }
 
-		return $result;
-	}
+        return $result;
+    }
 
-	/**
-	 * Reduces the paths by cutting the longest common start path.
-	 *
-	 * For instance,
-	 *
-	 * <code>
-	 * Array
-	 * (
-	 *     [/home/sb/Money/Money.php] => Array
-	 *         (
-	 *             ...
-	 *         )
-	 *
-	 *     [/home/sb/Money/MoneyBag.php] => Array
-	 *         (
-	 *             ...
-	 *         )
-	 * )
-	 * </code>
-	 *
-	 * is reduced to
-	 *
-	 * <code>
-	 * Array
-	 * (
-	 *     [Money.php] => Array
-	 *         (
-	 *             ...
-	 *         )
-	 *
-	 *     [MoneyBag.php] => Array
-	 *         (
-	 *             ...
-	 *         )
-	 * )
-	 * </code>
-	 */
-	private function reducePaths( ProcessedCodeCoverageData $coverage ): string {
-		if ( empty( $coverage->coveredFiles() ) ) {
-			return '.';
-		}
+    /**
+     * Reduces the paths by cutting the longest common start path.
+     *
+     * For instance,
+     *
+     * <code>
+     * Array
+     * (
+     *     [/home/sb/Money/Money.php] => Array
+     *         (
+     *             ...
+     *         )
+     *
+     *     [/home/sb/Money/MoneyBag.php] => Array
+     *         (
+     *             ...
+     *         )
+     * )
+     * </code>
+     *
+     * is reduced to
+     *
+     * <code>
+     * Array
+     * (
+     *     [Money.php] => Array
+     *         (
+     *             ...
+     *         )
+     *
+     *     [MoneyBag.php] => Array
+     *         (
+     *             ...
+     *         )
+     * )
+     * </code>
+     */
+    private function reducePaths(ProcessedCodeCoverageData $coverage): string
+    {
+        if ($coverage->coveredFiles() === []) {
+            return '.';
+        }
 
-		$commonPath = '';
-		$paths      = $coverage->coveredFiles();
+        $commonPath = '';
+        $paths      = $coverage->coveredFiles();
 
-		if ( count( $paths ) === 1 ) {
-			$commonPath = dirname( $paths[0] ) . DIRECTORY_SEPARATOR;
-			$coverage->renameFile( $paths[0], basename( $paths[0] ) );
+        if (count($paths) === 1) {
+            $commonPath = dirname($paths[0]) . DIRECTORY_SEPARATOR;
+            $coverage->renameFile($paths[0], basename($paths[0]));
 
-			return $commonPath;
-		}
+            return $commonPath;
+        }
 
-		$max = count( $paths );
+        $max = count($paths);
 
-		for ( $i = 0; $i < $max; $i++ ) {
-			// strip phar:// prefixes
-			if ( str_starts_with( $paths[ $i ], 'phar://' ) ) {
-				$paths[ $i ] = substr( $paths[ $i ], 7 );
-				$paths[ $i ] = str_replace( '/', DIRECTORY_SEPARATOR, $paths[ $i ] );
-			}
-			$paths[ $i ] = explode( DIRECTORY_SEPARATOR, $paths[ $i ] );
+        for ($i = 0; $i < $max; $i++) {
+            // strip phar:// prefixes
+            if (str_starts_with($paths[$i], 'phar://')) {
+                $paths[$i] = substr($paths[$i], 7);
+                $paths[$i] = str_replace('/', DIRECTORY_SEPARATOR, $paths[$i]);
+            }
 
-			if ( empty( $paths[ $i ][0] ) ) {
-				$paths[ $i ][0] = DIRECTORY_SEPARATOR;
-			}
-		}
+            $paths[$i] = explode(DIRECTORY_SEPARATOR, $paths[$i]);
 
-		$done = false;
-		$max  = count( $paths );
+            if ($paths[$i][0] === '') {
+                $paths[$i][0] = DIRECTORY_SEPARATOR;
+            }
+        }
 
-		while ( ! $done ) {
-			for ( $i = 0; $i < $max - 1; $i++ ) {
-				if ( ! isset( $paths[ $i ][0] ) ||
-					! isset( $paths[ $i + 1 ][0] ) ||
-					$paths[ $i ][0] !== $paths[ $i + 1 ][0] ) {
-					$done = true;
+        $done = false;
+        $max  = count($paths);
 
-					break;
-				}
-			}
+        while (!$done) {
+            for ($i = 0; $i < $max - 1; $i++) {
+                if (!isset($paths[$i][0]) ||
+                    !isset($paths[$i + 1][0]) ||
+                    $paths[$i][0] !== $paths[$i + 1][0]) {
+                    $done = true;
 
-			if ( ! $done ) {
-				$commonPath .= $paths[0][0];
+                    break;
+                }
+            }
 
-				if ( $paths[0][0] !== DIRECTORY_SEPARATOR ) {
-					$commonPath .= DIRECTORY_SEPARATOR;
-				}
+            if (!$done) {
+                $commonPath .= $paths[0][0];
 
-				for ( $i = 0; $i < $max; $i++ ) {
-					array_shift( $paths[ $i ] );
-				}
-			}
-		}
+                if ($paths[0][0] !== DIRECTORY_SEPARATOR) {
+                    $commonPath .= DIRECTORY_SEPARATOR;
+                }
 
-		$original = $coverage->coveredFiles();
-		$max      = count( $original );
+                for ($i = 0; $i < $max; $i++) {
+                    array_shift($paths[$i]);
+                }
+            }
+        }
 
-		for ( $i = 0; $i < $max; $i++ ) {
-			$coverage->renameFile( $original[ $i ], implode( DIRECTORY_SEPARATOR, $paths[ $i ] ) );
-		}
+        $original = $coverage->coveredFiles();
+        $max      = count($original);
 
-		return substr( $commonPath, 0, -1 );
-	}
+        for ($i = 0; $i < $max; $i++) {
+            $coverage->renameFile($original[$i], implode(DIRECTORY_SEPARATOR, $paths[$i]));
+        }
+
+        return substr($commonPath, 0, -1);
+    }
 }

@@ -12,64 +12,67 @@ namespace PHPUnit\Event\TestSuite;
 use PHPUnit\Event\Code\TestCollection;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestSuiteForTestMethodWithDataProvider extends TestSuite {
+final readonly class TestSuiteForTestMethodWithDataProvider extends TestSuite
+{
+    /**
+     * @var class-string
+     */
+    private string $className;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $className;
+    /**
+     * @var non-empty-string
+     */
+    private string $methodName;
+    private string $file;
+    private int $line;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $methodName;
-	private readonly string $file;
-	private readonly int $line;
+    /**
+     * @param non-empty-string $name
+     * @param class-string     $className
+     * @param non-empty-string $methodName
+     */
+    public function __construct(string $name, int $size, TestCollection $tests, string $className, string $methodName, string $file, int $line)
+    {
+        parent::__construct($name, $size, $tests);
 
-	/**
-	 * @psalm-param non-empty-string $name
-	 * @psalm-param class-string $className
-	 * @psalm-param non-empty-string $methodName
-	 */
-	public function __construct( string $name, int $size, TestCollection $tests, string $className, string $methodName, string $file, int $line ) {
-		parent::__construct( $name, $size, $tests );
+        $this->className  = $className;
+        $this->methodName = $methodName;
+        $this->file       = $file;
+        $this->line       = $line;
+    }
 
-		$this->className  = $className;
-		$this->methodName = $methodName;
-		$this->file       = $file;
-		$this->line       = $line;
-	}
+    /**
+     * @return class-string
+     */
+    public function className(): string
+    {
+        return $this->className;
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function className(): string {
-		return $this->className;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function methodName(): string
+    {
+        return $this->methodName;
+    }
 
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function methodName(): string {
-		return $this->methodName;
-	}
+    public function file(): string
+    {
+        return $this->file;
+    }
 
-	public function file(): string {
-		return $this->file;
-	}
+    public function line(): int
+    {
+        return $this->line;
+    }
 
-	public function line(): int {
-		return $this->line;
-	}
-
-	/**
-	 * @psalm-assert-if-true TestSuiteForTestMethodWithDataProvider $this
-	 */
-	public function isForTestMethodWithDataProvider(): bool {
-		return true;
-	}
+    public function isForTestMethodWithDataProvider(): true
+    {
+        return true;
+    }
 }

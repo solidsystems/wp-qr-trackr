@@ -15,41 +15,49 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry\Info;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DataProviderMethodCalled implements Event {
+final readonly class DataProviderMethodCalled implements Event
+{
+    private Info $telemetryInfo;
+    private ClassMethod $testMethod;
+    private ClassMethod $dataProviderMethod;
 
-	private readonly Info $telemetryInfo;
-	private readonly ClassMethod $testMethod;
-	private readonly ClassMethod $dataProviderMethod;
+    public function __construct(Info $telemetryInfo, ClassMethod $testMethod, ClassMethod $dataProviderMethod)
+    {
+        $this->telemetryInfo      = $telemetryInfo;
+        $this->testMethod         = $testMethod;
+        $this->dataProviderMethod = $dataProviderMethod;
+    }
 
-	public function __construct( Info $telemetryInfo, ClassMethod $testMethod, ClassMethod $dataProviderMethod ) {
-		$this->telemetryInfo      = $telemetryInfo;
-		$this->testMethod         = $testMethod;
-		$this->dataProviderMethod = $dataProviderMethod;
-	}
+    public function telemetryInfo(): Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Info {
-		return $this->telemetryInfo;
-	}
+    public function testMethod(): ClassMethod
+    {
+        return $this->testMethod;
+    }
 
-	public function testMethod(): ClassMethod {
-		return $this->testMethod;
-	}
+    public function dataProviderMethod(): ClassMethod
+    {
+        return $this->dataProviderMethod;
+    }
 
-	public function dataProviderMethod(): ClassMethod {
-		return $this->dataProviderMethod;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'Data Provider Method Called (%s::%s for test method %s::%s)',
-			$this->dataProviderMethod->className(),
-			$this->dataProviderMethod->methodName(),
-			$this->testMethod->className(),
-			$this->testMethod->methodName(),
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Data Provider Method Called (%s::%s for test method %s::%s)',
+            $this->dataProviderMethod->className(),
+            $this->dataProviderMethod->methodName(),
+            $this->testMethod->className(),
+            $this->testMethod->methodName(),
+        );
+    }
 }

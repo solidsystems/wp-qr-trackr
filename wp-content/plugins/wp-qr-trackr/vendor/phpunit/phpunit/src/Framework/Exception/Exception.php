@@ -40,40 +40,48 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-class Exception extends RuntimeException implements \PHPUnit\Exception {
+class Exception extends RuntimeException implements \PHPUnit\Exception
+{
+    /**
+     * @var list<array{file: string, line: int, function: string}>
+     */
+    protected array $serializableTrace;
 
-	protected array $serializableTrace;
+    public function __construct(string $message = '', int|string $code = 0, ?Throwable $previous = null)
+    {
+        /**
+         * @see https://github.com/sebastianbergmann/phpunit/issues/5965
+         */
+        if (!is_int($code)) {
+            $message .= sprintf(
+                ' (exception code: %s)',
+                $code,
+            );
 
-	public function __construct( string $message = '', int|string $code = 0, ?Throwable $previous = null ) {
-		/**
-		 * @see https://github.com/sebastianbergmann/phpunit/issues/5965
-		 */
-		if ( ! is_int( $code ) ) {
-			$message .= sprintf(
-				' (exception code: %s)',
-				$code,
-			);
+            $code = 0;
+        }
 
-			$code = 0;
-		}
+        parent::__construct($message, $code, $previous);
 
-		parent::__construct( $message, $code, $previous );
+        $this->serializableTrace = $this->getTrace();
 
-		$this->serializableTrace = $this->getTrace();
+        foreach (array_keys($this->serializableTrace) as $key) {
+            unset($this->serializableTrace[$key]['args']);
+        }
+    }
 
-		foreach ( array_keys( $this->serializableTrace ) as $key ) {
-			unset( $this->serializableTrace[ $key ]['args'] );
-		}
-	}
+    public function __sleep(): array
+    {
+        return array_keys(get_object_vars($this));
+    }
 
-	public function __sleep(): array {
-		return array_keys( get_object_vars( $this ) );
-	}
-
-	/**
-	 * Returns the serializable trace (without 'args').
-	 */
-	public function getSerializableTrace(): array {
-		return $this->serializableTrace;
-	}
+    /**
+     * Returns the serializable trace (without 'args').
+     *
+     * @return list<array{file: string, line: int, function: string}>
+     */
+    public function getSerializableTrace(): array
+    {
+        return $this->serializableTrace;
+    }
 }

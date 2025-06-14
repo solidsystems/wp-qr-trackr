@@ -17,14 +17,15 @@ use RuntimeException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestFileNotFoundException extends RuntimeException implements Exception {
-
-	public function __construct( string $path ) {
-		parent::__construct(
-			sprintf(
-				'Test file "%s" not found',
-				$path,
-			),
-		);
-	}
+final class TestFileNotFoundException extends RuntimeException implements Exception
+{
+    public function __construct(string $path)
+    {
+        parent::__construct(
+            sprintf(
+                'Test file "%s" not found',
+                $path,
+            ),
+        );
+    }
 }

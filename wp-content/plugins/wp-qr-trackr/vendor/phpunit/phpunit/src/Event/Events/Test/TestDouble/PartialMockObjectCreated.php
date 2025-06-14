@@ -14,55 +14,63 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PartialMockObjectCreated implements Event {
+final readonly class PartialMockObjectCreated implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    /**
+     * @var class-string
+     */
+    private string $className;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $className;
+    /**
+     * @var list<string>
+     */
+    private array $methodNames;
 
-	/**
-	 * @psalm-var list<string>
-	 */
-	private readonly array $methodNames;
+    /**
+     * @param class-string $className
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, string $className, string ...$methodNames)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->className     = $className;
+        $this->methodNames   = $methodNames;
+    }
 
-	/**
-	 * @psalm-param class-string $className
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, string $className, string ...$methodNames ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->className     = $className;
-		$this->methodNames   = $methodNames;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @return class-string
+     */
+    public function className(): string
+    {
+        return $this->className;
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function className(): string {
-		return $this->className;
-	}
+    /**
+     * @return list<string>
+     */
+    public function methodNames(): array
+    {
+        return $this->methodNames;
+    }
 
-	/**
-	 * @psalm-return list<string>
-	 */
-	public function methodNames(): array {
-		return $this->methodNames;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'Partial Mock Object Created (%s)',
-			$this->className,
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Partial Mock Object Created (%s)',
+            $this->className,
+        );
+    }
 }

@@ -19,51 +19,58 @@ use LibXMLError;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  */
-final class ValidationResult {
+final readonly class ValidationResult
+{
+    /**
+     * @var array<int, list<string>>
+     */
+    private array $validationErrors;
 
-	/**
-	 * @psalm-var array<int,list<string>>
-	 */
-	private readonly array $validationErrors;
+    /**
+     * @param array<int, LibXMLError> $errors
+     */
+    public static function fromArray(array $errors): self
+    {
+        $validationErrors = [];
 
-	/**
-	 * @psalm-param array<int,LibXMLError> $errors
-	 */
-	public static function fromArray( array $errors ): self {
-		$validationErrors = array();
+        foreach ($errors as $error) {
+            if (!isset($validationErrors[$error->line])) {
+                $validationErrors[$error->line] = [];
+            }
 
-		foreach ( $errors as $error ) {
-			if ( ! isset( $validationErrors[ $error->line ] ) ) {
-				$validationErrors[ $error->line ] = array();
-			}
+            $validationErrors[$error->line][] = trim($error->message);
+        }
 
-			$validationErrors[ $error->line ][] = trim( $error->message );
-		}
+        return new self($validationErrors);
+    }
 
-		return new self( $validationErrors );
-	}
+    /**
+     * @param array<int, list<string>> $validationErrors
+     */
+    private function __construct(array $validationErrors)
+    {
+        $this->validationErrors = $validationErrors;
+    }
 
-	private function __construct( array $validationErrors ) {
-		$this->validationErrors = $validationErrors;
-	}
+    public function hasValidationErrors(): bool
+    {
+        return $this->validationErrors !== [];
+    }
 
-	public function hasValidationErrors(): bool {
-		return ! empty( $this->validationErrors );
-	}
+    public function asString(): string
+    {
+        $buffer = '';
 
-	public function asString(): string {
-		$buffer = '';
+        foreach ($this->validationErrors as $line => $validationErrorsOnLine) {
+            $buffer .= sprintf(PHP_EOL . '  Line %d:' . PHP_EOL, $line);
 
-		foreach ( $this->validationErrors as $line => $validationErrorsOnLine ) {
-			$buffer .= sprintf( PHP_EOL . '  Line %d:' . PHP_EOL, $line );
+            foreach ($validationErrorsOnLine as $validationError) {
+                $buffer .= sprintf('  - %s' . PHP_EOL, $validationError);
+            }
+        }
 
-			foreach ( $validationErrorsOnLine as $validationError ) {
-				$buffer .= sprintf( '  - %s' . PHP_EOL, $validationError );
-			}
-		}
-
-		return $buffer;
-	}
+        return $buffer;
+    }
 }

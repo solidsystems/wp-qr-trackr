@@ -14,17 +14,17 @@ namespace PHPUnit\Framework;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-interface Reorderable {
+interface Reorderable
+{
+    public function sortId(): string;
 
-	public function sortId(): string;
+    /**
+     * @return list<ExecutionOrderDependency>
+     */
+    public function provides(): array;
 
-	/**
-	 * @psalm-return list<ExecutionOrderDependency>
-	 */
-	public function provides(): array;
-
-	/**
-	 * @psalm-return list<ExecutionOrderDependency>
-	 */
-	public function requires(): array;
+    /**
+     * @return list<ExecutionOrderDependency>
+     */
+    public function requires(): array;
 }

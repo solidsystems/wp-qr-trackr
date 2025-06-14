@@ -18,13 +18,14 @@ use PHPUnit\Event\TestRunner\ExecutionStartedSubscriber as TestRunnerExecutionSt
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ExecutionStartedSubscriber extends Subscriber implements TestRunnerExecutionStartedSubscriber {
-
-	/**
-	 * @throws \PHPUnit\Framework\InvalidArgumentException
-	 * @throws InvalidArgumentException
-	 */
-	public function notify( ExecutionStarted $event ): void {
-		$this->handler()->executionStarted();
-	}
+final readonly class ExecutionStartedSubscriber extends Subscriber implements TestRunnerExecutionStartedSubscriber
+{
+    /**
+     * @throws \PHPUnit\Framework\InvalidArgumentException
+     * @throws InvalidArgumentException
+     */
+    public function notify(ExecutionStarted $event): void
+    {
+        $this->handler()->executionStarted();
+    }
 }

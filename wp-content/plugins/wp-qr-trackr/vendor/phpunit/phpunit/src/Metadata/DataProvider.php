@@ -10,52 +10,53 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DataProvider extends Metadata {
+final readonly class DataProvider extends Metadata
+{
+    /**
+     * @var class-string
+     */
+    private string $className;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $className;
+    /**
+     * @var non-empty-string
+     */
+    private string $methodName;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $methodName;
+    /**
+     * @param int<0, 1>        $level
+     * @param class-string     $className
+     * @param non-empty-string $methodName
+     */
+    protected function __construct(int $level, string $className, string $methodName)
+    {
+        parent::__construct($level);
 
-	/**
-	 * @psalm-param 0|1 $level
-	 * @psalm-param class-string $className
-	 * @psalm-param non-empty-string $methodName
-	 */
-	protected function __construct( int $level, string $className, string $methodName ) {
-		parent::__construct( $level );
+        $this->className  = $className;
+        $this->methodName = $methodName;
+    }
 
-		$this->className  = $className;
-		$this->methodName = $methodName;
-	}
+    public function isDataProvider(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true DataProvider $this
-	 */
-	public function isDataProvider(): bool {
-		return true;
-	}
+    /**
+     * @return class-string
+     */
+    public function className(): string
+    {
+        return $this->className;
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function className(): string {
-		return $this->className;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function methodName(): string {
-		return $this->methodName;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function methodName(): string
+    {
+        return $this->methodName;
+    }
 }

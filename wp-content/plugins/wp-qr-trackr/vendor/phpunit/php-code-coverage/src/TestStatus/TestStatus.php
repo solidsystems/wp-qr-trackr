@@ -10,49 +10,56 @@
 namespace SebastianBergmann\CodeCoverage\Test\TestStatus;
 
 /**
- * @psalm-immutable
+ * @immutable
  */
-abstract class TestStatus {
+abstract class TestStatus
+{
+    public static function unknown(): self
+    {
+        return new Unknown;
+    }
 
-	public static function unknown(): self {
-		return new Unknown();
-	}
+    public static function success(): self
+    {
+        return new Success;
+    }
 
-	public static function success(): self {
-		return new Success();
-	}
+    public static function failure(): self
+    {
+        return new Failure;
+    }
 
-	public static function failure(): self {
-		return new Failure();
-	}
+    /**
+     * @phpstan-assert-if-true Known $this
+     */
+    public function isKnown(): bool
+    {
+        return false;
+    }
 
-	/**
-	 * @psalm-assert-if-true Known $this
-	 */
-	public function isKnown(): bool {
-		return false;
-	}
+    /**
+     * @phpstan-assert-if-true Unknown $this
+     */
+    public function isUnknown(): bool
+    {
+        return false;
+    }
 
-	/**
-	 * @psalm-assert-if-true Unknown $this
-	 */
-	public function isUnknown(): bool {
-		return false;
-	}
+    /**
+     * @phpstan-assert-if-true Success $this
+     */
+    public function isSuccess(): bool
+    {
+        return false;
+    }
 
-	/**
-	 * @psalm-assert-if-true Success $this
-	 */
-	public function isSuccess(): bool {
-		return false;
-	}
+    /**
+     * @phpstan-assert-if-true Failure $this
+     */
+    public function isFailure(): bool
+    {
+        return false;
+    }
 
-	/**
-	 * @psalm-assert-if-true Failure $this
-	 */
-	public function isFailure(): bool {
-		return false;
-	}
-
-	abstract public function asString(): string;
+    abstract public function asString(): string;
 }

@@ -10,31 +10,31 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class BackupStaticProperties extends Metadata {
+final readonly class BackupStaticProperties extends Metadata
+{
+    private bool $enabled;
 
-	private readonly bool $enabled;
+    /**
+     * @param int<0, 1> $level
+     */
+    protected function __construct(int $level, bool $enabled)
+    {
+        parent::__construct($level);
 
-	/**
-	 * @psalm-param 0|1 $level
-	 */
-	protected function __construct( int $level, bool $enabled ) {
-		parent::__construct( $level );
+        $this->enabled = $enabled;
+    }
 
-		$this->enabled = $enabled;
-	}
+    public function isBackupStaticProperties(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true BackupStaticProperties $this
-	 */
-	public function isBackupStaticProperties(): bool {
-		return true;
-	}
-
-	public function enabled(): bool {
-		return $this->enabled;
-	}
+    public function enabled(): bool
+    {
+        return $this->enabled;
+    }
 }

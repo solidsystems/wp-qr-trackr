@@ -21,182 +21,81 @@ use function is_object;
 use function is_scalar;
 use function is_string;
 use function sprintf;
-use PHPUnit\Framework\UnknownTypeException;
+use PHPUnit\Framework\NativeType;
 
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsType extends Constraint {
+final class IsType extends Constraint
+{
+    private readonly NativeType $type;
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_ARRAY = 'array';
+    public function __construct(NativeType $type)
+    {
+        $this->type = $type;
+    }
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_BOOL = 'bool';
+    /**
+     * Returns a string representation of the constraint.
+     */
+    public function toString(): string
+    {
+        return sprintf(
+            'is of type %s',
+            $this->type->value,
+        );
+    }
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_FLOAT = 'float';
+    /**
+     * Evaluates the constraint for parameter $other. Returns true if the
+     * constraint is met, false otherwise.
+     */
+    protected function matches(mixed $other): bool
+    {
+        switch ($this->type) {
+            case NativeType::Numeric:
+                return is_numeric($other);
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_INT = 'int';
+            case NativeType::Int:
+                return is_int($other);
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_NULL = 'null';
+            case NativeType::Float:
+                return is_float($other);
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_NUMERIC = 'numeric';
+            case NativeType::String:
+                return is_string($other);
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_OBJECT = 'object';
+            case NativeType::Bool:
+                return is_bool($other);
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_RESOURCE = 'resource';
+            case NativeType::Null:
+                return null === $other;
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_CLOSED_RESOURCE = 'resource (closed)';
+            case NativeType::Array:
+                return is_array($other);
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_STRING = 'string';
+            case NativeType::Object:
+                return is_object($other);
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_SCALAR = 'scalar';
+            case NativeType::Resource:
+                $type = gettype($other);
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_CALLABLE = 'callable';
+                return $type === 'resource' || $type === 'resource (closed)';
 
-	/**
-	 * @var string
-	 */
-	public const TYPE_ITERABLE = 'iterable';
+            case NativeType::ClosedResource:
+                return gettype($other) === 'resource (closed)';
 
-	/**
-	 * @psalm-var array<string,bool>
-	 */
-	private const KNOWN_TYPES = array(
-		'array'             => true,
-		'boolean'           => true,
-		'bool'              => true,
-		'double'            => true,
-		'float'             => true,
-		'integer'           => true,
-		'int'               => true,
-		'null'              => true,
-		'numeric'           => true,
-		'object'            => true,
-		'real'              => true,
-		'resource'          => true,
-		'resource (closed)' => true,
-		'string'            => true,
-		'scalar'            => true,
-		'callable'          => true,
-		'iterable'          => true,
-	);
+            case NativeType::Scalar:
+                return is_scalar($other);
 
-	/**
-	 * @psalm-var 'array'|'boolean'|'bool'|'double'|'float'|'integer'|'int'|'null'|'numeric'|'object'|'real'|'resource'|'resource (closed)'|'string'|'scalar'|'callable'|'iterable'
-	 */
-	private readonly string $type;
+            case NativeType::Callable:
+                return is_callable($other);
 
-	/**
-	 * @psalm-param 'array'|'boolean'|'bool'|'double'|'float'|'integer'|'int'|'null'|'numeric'|'object'|'real'|'resource'|'resource (closed)'|'string'|'scalar'|'callable'|'iterable' $type
-	 *
-	 * @throws UnknownTypeException
-	 */
-	public function __construct( string $type ) {
-		if ( ! isset( self::KNOWN_TYPES[ $type ] ) ) {
-			throw new UnknownTypeException( $type );
-		}
+            case NativeType::Iterable:
+                return is_iterable($other);
 
-		$this->type = $type;
-	}
-
-	/**
-	 * Returns a string representation of the constraint.
-	 */
-	public function toString(): string {
-		return sprintf(
-			'is of type %s',
-			$this->type,
-		);
-	}
-
-	/**
-	 * Evaluates the constraint for parameter $other. Returns true if the
-	 * constraint is met, false otherwise.
-	 */
-	protected function matches( mixed $other ): bool {
-		switch ( $this->type ) {
-			case 'numeric':
-				return is_numeric( $other );
-
-			case 'integer':
-			case 'int':
-				return is_int( $other );
-
-			case 'double':
-			case 'float':
-			case 'real':
-				return is_float( $other );
-
-			case 'string':
-				return is_string( $other );
-
-			case 'boolean':
-			case 'bool':
-				return is_bool( $other );
-
-			case 'null':
-				return null === $other;
-
-			case 'array':
-				return is_array( $other );
-
-			case 'object':
-				return is_object( $other );
-
-			case 'resource':
-				$type = gettype( $other );
-
-				return $type === 'resource' || $type === 'resource (closed)';
-
-			case 'resource (closed)':
-				return gettype( $other ) === 'resource (closed)';
-
-			case 'scalar':
-				return is_scalar( $other );
-
-			case 'callable':
-				return is_callable( $other );
-
-			case 'iterable':
-				return is_iterable( $other );
-
-			default:
-				return false;
-		}
-	}
+            default:
+                return false;
+        }
+    }
 }

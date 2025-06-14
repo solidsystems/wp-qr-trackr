@@ -12,29 +12,31 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD )]
-final class RequiresOperatingSystemFamily {
+#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+final readonly class RequiresOperatingSystemFamily
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $operatingSystemFamily;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $operatingSystemFamily;
+    /**
+     * @param non-empty-string $operatingSystemFamily
+     */
+    public function __construct(string $operatingSystemFamily)
+    {
+        $this->operatingSystemFamily = $operatingSystemFamily;
+    }
 
-	/**
-	 * @psalm-param non-empty-string $operatingSystemFamily
-	 */
-	public function __construct( string $operatingSystemFamily ) {
-		$this->operatingSystemFamily = $operatingSystemFamily;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function operatingSystemFamily(): string {
-		return $this->operatingSystemFamily;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function operatingSystemFamily(): string
+    {
+        return $this->operatingSystemFamily;
+    }
 }

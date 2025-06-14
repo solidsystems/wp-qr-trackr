@@ -10,38 +10,38 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestDox extends Metadata {
+final readonly class TestDox extends Metadata
+{
+    /**
+     * @var non-empty-string
+     */
+    private string $text;
 
-	/**
-	 * @psalm-var non-empty-string
-	 */
-	private readonly string $text;
+    /**
+     * @param int<0, 1>        $level
+     * @param non-empty-string $text
+     */
+    protected function __construct(int $level, string $text)
+    {
+        parent::__construct($level);
 
-	/**
-	 * @psalm-param 0|1 $level
-	 * @psalm-param non-empty-string $text
-	 */
-	protected function __construct( int $level, string $text ) {
-		parent::__construct( $level );
+        $this->text = $text;
+    }
 
-		$this->text = $text;
-	}
+    public function isTestDox(): true
+    {
+        return true;
+    }
 
-	/**
-	 * @psalm-assert-if-true TestDox $this
-	 */
-	public function isTestDox(): bool {
-		return true;
-	}
-
-	/**
-	 * @psalm-return non-empty-string
-	 */
-	public function text(): string {
-		return $this->text;
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function text(): string
+    {
+        return $this->text;
+    }
 }

@@ -14,56 +14,64 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ExtensionBootstrapped implements Event {
+final readonly class ExtensionBootstrapped implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    /**
+     * @var class-string
+     */
+    private string $className;
 
-	/**
-	 * @psalm-var class-string
-	 */
-	private readonly string $className;
+    /**
+     * @var array<string, string>
+     */
+    private array $parameters;
 
-	/**
-	 * @psalm-var array<string, string>
-	 */
-	private readonly array $parameters;
+    /**
+     * @param class-string          $className
+     * @param array<string, string> $parameters
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, string $className, array $parameters)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+        $this->className     = $className;
+        $this->parameters    = $parameters;
+    }
 
-	/**
-	 * @psalm-param class-string $className
-	 * @psalm-param array<string, string> $parameters
-	 */
-	public function __construct( Telemetry\Info $telemetryInfo, string $className, array $parameters ) {
-		$this->telemetryInfo = $telemetryInfo;
-		$this->className     = $className;
-		$this->parameters    = $parameters;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
+    /**
+     * @return class-string
+     */
+    public function className(): string
+    {
+        return $this->className;
+    }
 
-	/**
-	 * @psalm-return class-string
-	 */
-	public function className(): string {
-		return $this->className;
-	}
+    /**
+     * @return array<string, string>
+     */
+    public function parameters(): array
+    {
+        return $this->parameters;
+    }
 
-	/**
-	 * @psalm-return array<string, string>
-	 */
-	public function parameters(): array {
-		return $this->parameters;
-	}
-
-	public function asString(): string {
-		return sprintf(
-			'Extension Bootstrapped (%s)',
-			$this->className,
-		);
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return sprintf(
+            'Extension Bootstrapped (%s)',
+            $this->className,
+        );
+    }
 }

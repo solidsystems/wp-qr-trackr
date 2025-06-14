@@ -17,17 +17,18 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveCoverageElementCacheDirectoryAttribute implements Migration {
+final readonly class RemoveCoverageElementCacheDirectoryAttribute implements Migration
+{
+    public function migrate(DOMDocument $document): void
+    {
+        $node = $document->getElementsByTagName('coverage')->item(0);
 
-	public function migrate( DOMDocument $document ): void {
-		$node = $document->getElementsByTagName( 'coverage' )->item( 0 );
+        if (!$node instanceof DOMElement || $node->parentNode === null) {
+            return;
+        }
 
-		if ( ! $node instanceof DOMElement || $node->parentNode === null ) {
-			return;
-		}
-
-		if ( $node->hasAttribute( 'cacheDirectory' ) ) {
-			$node->removeAttribute( 'cacheDirectory' );
-		}
-	}
+        if ($node->hasAttribute('cacheDirectory')) {
+            $node->removeAttribute('cacheDirectory');
+        }
+    }
 }

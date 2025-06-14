@@ -21,31 +21,32 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ThrowableToStringMapper {
+final readonly class ThrowableToStringMapper
+{
+    public static function map(Throwable $t): string
+    {
+        if ($t instanceof ErrorException) {
+            return $t->getMessage();
+        }
 
-	public static function map( Throwable $t ): string {
-		if ( $t instanceof ErrorException ) {
-			return $t->getMessage();
-		}
+        if ($t instanceof SelfDescribing) {
+            $buffer = $t->toString();
 
-		if ( $t instanceof SelfDescribing ) {
-			$buffer = $t->toString();
+            if ($t instanceof ExpectationFailedException && $t->getComparisonFailure() !== null) {
+                $buffer .= $t->getComparisonFailure()->getDiff();
+            }
 
-			if ( $t instanceof ExpectationFailedException && $t->getComparisonFailure() ) {
-				$buffer .= $t->getComparisonFailure()->getDiff();
-			}
+            if ($t instanceof PhptAssertionFailedError) {
+                $buffer .= $t->diff();
+            }
 
-			if ( $t instanceof PhptAssertionFailedError ) {
-				$buffer .= $t->diff();
-			}
+            if ($buffer !== '') {
+                $buffer = trim($buffer) . "\n";
+            }
 
-			if ( ! empty( $buffer ) ) {
-				$buffer = trim( $buffer ) . "\n";
-			}
+            return $buffer;
+        }
 
-			return $buffer;
-		}
-
-		return $t::class . ': ' . $t->getMessage() . "\n";
-	}
+        return $t::class . ': ' . $t->getMessage() . "\n";
+    }
 }

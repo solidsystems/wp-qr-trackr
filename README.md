@@ -417,3 +417,42 @@ When enabled, debug logs are written to the PHP error log. Logs include activati
 - **GitHub Actions vs. Local:**
   - GitHub Actions may apply additional filters, checks, or environment constraints that are not present in local development. For example, CI/CD may lint or test files in ways not covered by local scripts, or enforce stricter dependency resolution.
   - This acts as a 'belt and suspenders' approach: pre-commit hooks catch most issues before code is pushed, while CI/CD provides a final, independent verification before merge.
+
+## Modern WordPress Plugin Testing Setup (2024+)
+
+### Test Environment
+- Uses **Yoast/wp-test-utils** and **Brain Monkey** for mocking WordPress functions and globals.
+- **Patchwork** is configured via `patchwork.json` to allow mocking of internal PHP functions (e.g., `class_exists`).
+- All plugin modules are loaded via a modular `bootstrap.php` that defines `ABSPATH` and loads dependencies in the correct order.
+- **QR code generation is fully mocked** in tests:
+  - A dummy `QRcode` class and the `QR_ECLEVEL_L` constant are defined in test files if not present.
+  - The QR library is only required if present, so tests do not fail if the library is missing.
+- All WordPress core functions used by the plugin are mocked in test setup (e.g., `get_option`, `plugin_dir_path`).
+
+### Running Tests
+- Run `vendor/bin/phpunit --configuration wp-content/plugins/wp-qr-trackr/phpunit.xml` from the project root.
+- To debug test loading, set `CI_DEBUG=true` in your environment to see module load output.
+
+### Contributor Setup
+- Ensure you have run `composer install` at the project root.
+- No need to install the QR code library for unit tests; it is mocked.
+- If you add new WordPress or plugin dependencies, mock them in your test setup.
+- If you add new environment variables, update `.env.example`.
+
+### patchwork.json
+```
+{
+  "redefinable-internals": ["class_exists"]
+}
+```
+This is required for Brain Monkey to mock `class_exists`.
+
+### Best Practices
+- All plugin logic is modularized under `includes/`.
+- The main plugin file only bootstraps modules.
+- Each module handles a single concern and registers its own hooks.
+- All test and CI/CD workflows are documented and up to date.
+
+---
+
+For more details, see inline comments in `bootstrap.php`, `PluginTest.php`, and the `includes/` modules.

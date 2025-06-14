@@ -9,7 +9,6 @@
  */
 namespace PHPUnit\Runner\Baseline;
 
-use function assert;
 use function dirname;
 use function file_put_contents;
 use XMLWriter;
@@ -19,48 +18,47 @@ use XMLWriter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Writer {
+final readonly class Writer
+{
+    /**
+     * @param non-empty-string $baselineFile
+     */
+    public function write(string $baselineFile, Baseline $baseline): void
+    {
+        $pathCalculator = new RelativePathCalculator(dirname($baselineFile));
 
-	/**
-	 * @psalm-param non-empty-string $baselineFile
-	 */
-	public function write( string $baselineFile, Baseline $baseline ): void {
-		$pathCalculator = new RelativePathCalculator( dirname( $baselineFile ) );
+        $writer = new XMLWriter;
 
-		$writer = new XMLWriter();
+        $writer->openMemory();
+        $writer->setIndent(true);
+        $writer->startDocument();
 
-		$writer->openMemory();
-		$writer->setIndent( true );
-		$writer->startDocument();
+        $writer->startElement('files');
+        $writer->writeAttribute('version', (string) Baseline::VERSION);
 
-		$writer->startElement( 'files' );
-		$writer->writeAttribute( 'version', (string) Baseline::VERSION );
+        foreach ($baseline->groupedByFileAndLine() as $file => $lines) {
+            $writer->startElement('file');
+            $writer->writeAttribute('path', $pathCalculator->calculate($file));
 
-		foreach ( $baseline->groupedByFileAndLine() as $file => $lines ) {
-			assert( ! empty( $file ) );
+            foreach ($lines as $line => $issues) {
+                $writer->startElement('line');
+                $writer->writeAttribute('number', (string) $line);
+                $writer->writeAttribute('hash', $issues[0]->hash());
 
-			$writer->startElement( 'file' );
-			$writer->writeAttribute( 'path', $pathCalculator->calculate( $file ) );
+                foreach ($issues as $issue) {
+                    $writer->startElement('issue');
+                    $writer->writeCdata($issue->description());
+                    $writer->endElement();
+                }
 
-			foreach ( $lines as $line => $issues ) {
-				$writer->startElement( 'line' );
-				$writer->writeAttribute( 'number', (string) $line );
-				$writer->writeAttribute( 'hash', $issues[0]->hash() );
+                $writer->endElement();
+            }
 
-				foreach ( $issues as $issue ) {
-					$writer->startElement( 'issue' );
-					$writer->writeCData( $issue->description() );
-					$writer->endElement();
-				}
+            $writer->endElement();
+        }
 
-				$writer->endElement();
-			}
+        $writer->endElement();
 
-			$writer->endElement();
-		}
-
-		$writer->endElement();
-
-		file_put_contents( $baselineFile, $writer->outputMemory() );
-	}
+        file_put_contents($baselineFile, $writer->outputMemory());
+    }
 }

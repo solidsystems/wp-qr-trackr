@@ -16,44 +16,50 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @psalm-immutable
+ * @immutable
  *
  * @template-implements IteratorAggregate<int, FilterDirectory>
  */
-final class FilterDirectoryCollection implements Countable, IteratorAggregate {
+final readonly class FilterDirectoryCollection implements Countable, IteratorAggregate
+{
+    /**
+     * @var list<FilterDirectory>
+     */
+    private array $directories;
 
-	/**
-	 * @psalm-var list<FilterDirectory>
-	 */
-	private readonly array $directories;
+    /**
+     * @param list<FilterDirectory> $directories
+     */
+    public static function fromArray(array $directories): self
+    {
+        return new self(...$directories);
+    }
 
-	/**
-	 * @psalm-param list<FilterDirectory> $directories
-	 */
-	public static function fromArray( array $directories ): self {
-		return new self( ...$directories );
-	}
+    private function __construct(FilterDirectory ...$directories)
+    {
+        $this->directories = $directories;
+    }
 
-	private function __construct( FilterDirectory ...$directories ) {
-		$this->directories = $directories;
-	}
+    /**
+     * @return list<FilterDirectory>
+     */
+    public function asArray(): array
+    {
+        return $this->directories;
+    }
 
-	/**
-	 * @psalm-return list<FilterDirectory>
-	 */
-	public function asArray(): array {
-		return $this->directories;
-	}
+    public function count(): int
+    {
+        return count($this->directories);
+    }
 
-	public function count(): int {
-		return count( $this->directories );
-	}
+    public function notEmpty(): bool
+    {
+        return $this->directories !== [];
+    }
 
-	public function notEmpty(): bool {
-		return ! empty( $this->directories );
-	}
-
-	public function getIterator(): FilterDirectoryCollectionIterator {
-		return new FilterDirectoryCollectionIterator( $this );
-	}
+    public function getIterator(): FilterDirectoryCollectionIterator
+    {
+        return new FilterDirectoryCollectionIterator($this);
+    }
 }

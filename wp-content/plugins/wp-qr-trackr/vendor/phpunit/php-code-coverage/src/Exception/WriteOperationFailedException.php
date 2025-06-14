@@ -7,15 +7,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace SebastianBergmann\CodeCoverage\Driver;
+namespace SebastianBergmann\CodeCoverage;
 
 use function sprintf;
 use RuntimeException;
-use SebastianBergmann\CodeCoverage\Exception;
 
-final class WriteOperationFailedException extends RuntimeException implements Exception {
-
-	public function __construct( string $path ) {
-		parent::__construct( sprintf( 'Cannot write to "%s"', $path ) );
-	}
+final class WriteOperationFailedException extends RuntimeException implements Exception
+{
+    public function __construct(string $path)
+    {
+        parent::__construct(sprintf('Cannot write to "%s"', $path));
+    }
 }

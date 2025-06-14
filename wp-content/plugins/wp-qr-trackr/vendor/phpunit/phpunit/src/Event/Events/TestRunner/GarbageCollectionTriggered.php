@@ -13,23 +13,29 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @psalm-immutable
+ * @immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class GarbageCollectionTriggered implements Event {
+final readonly class GarbageCollectionTriggered implements Event
+{
+    private Telemetry\Info $telemetryInfo;
 
-	private readonly Telemetry\Info $telemetryInfo;
+    public function __construct(Telemetry\Info $telemetryInfo)
+    {
+        $this->telemetryInfo = $telemetryInfo;
+    }
 
-	public function __construct( Telemetry\Info $telemetryInfo ) {
-		$this->telemetryInfo = $telemetryInfo;
-	}
+    public function telemetryInfo(): Telemetry\Info
+    {
+        return $this->telemetryInfo;
+    }
 
-	public function telemetryInfo(): Telemetry\Info {
-		return $this->telemetryInfo;
-	}
-
-	public function asString(): string {
-		return 'Test Runner Triggered Garbage Collection';
-	}
+    /**
+     * @return non-empty-string
+     */
+    public function asString(): string
+    {
+        return 'Test Runner Triggered Garbage Collection';
+    }
 }

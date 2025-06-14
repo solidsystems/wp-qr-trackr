@@ -21,54 +21,58 @@ use SebastianBergmann\CodeCoverage\Filter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CodeCoverageFilterRegistry {
+final class CodeCoverageFilterRegistry
+{
+    private static ?self $instance = null;
+    private ?Filter $filter        = null;
+    private bool $configured       = false;
 
-	private static ?self $instance = null;
-	private ?Filter $filter        = null;
-	private bool $configured       = false;
+    public static function instance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self;
+        }
 
-	public static function instance(): self {
-		if ( self::$instance === null ) {
-			self::$instance = new self();
-		}
+        return self::$instance;
+    }
 
-		return self::$instance;
-	}
+    /**
+     * @codeCoverageIgnore
+     */
+    public function get(): Filter
+    {
+        assert($this->filter !== null);
 
-	/**
-	 * @codeCoverageIgnore
-	 */
-	public function get(): Filter {
-		assert( $this->filter !== null );
+        return $this->filter;
+    }
 
-		return $this->filter;
-	}
+    /**
+     * @codeCoverageIgnore
+     */
+    public function init(Configuration $configuration, bool $force = false): void
+    {
+        if (!$configuration->hasCoverageReport() && !$force) {
+            return;
+        }
 
-	/**
-	 * @codeCoverageIgnore
-	 */
-	public function init( Configuration $configuration, bool $force = false ): void {
-		if ( ! $configuration->hasCoverageReport() && ! $force ) {
-			return;
-		}
+        if ($this->configured && !$force) {
+            return;
+        }
 
-		if ( $this->configured && ! $force ) {
-			return;
-		}
+        $this->filter = new Filter;
 
-		$this->filter = new Filter();
+        if ($configuration->source()->notEmpty()) {
+            $this->filter->includeFiles(array_keys((new SourceMapper)->map($configuration->source())));
 
-		if ( $configuration->source()->notEmpty() ) {
-			$this->filter->includeFiles( array_keys( ( new SourceMapper() )->map( $configuration->source() ) ) );
+            $this->configured = true;
+        }
+    }
 
-			$this->configured = true;
-		}
-	}
-
-	/**
-	 * @codeCoverageIgnore
-	 */
-	public function configured(): bool {
-		return $this->configured;
-	}
+    /**
+     * @codeCoverageIgnore
+     */
+    public function configured(): bool
+    {
+        return $this->configured;
+    }
 }

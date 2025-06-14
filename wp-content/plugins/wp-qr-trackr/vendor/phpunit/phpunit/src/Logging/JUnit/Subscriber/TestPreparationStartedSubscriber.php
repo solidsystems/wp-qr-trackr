@@ -18,12 +18,13 @@ use PHPUnit\Event\Test\PreparationStartedSubscriber;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestPreparationStartedSubscriber extends Subscriber implements PreparationStartedSubscriber {
-
-	/**
-	 * @throws InvalidArgumentException
-	 */
-	public function notify( PreparationStarted $event ): void {
-		$this->logger()->testPreparationStarted( $event );
-	}
+final readonly class TestPreparationStartedSubscriber extends Subscriber implements PreparationStartedSubscriber
+{
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function notify(PreparationStarted $event): void
+    {
+        $this->logger()->testPreparationStarted($event);
+    }
 }

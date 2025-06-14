@@ -28,80 +28,88 @@ use PHPUnit\Util\VersionComparisonOperator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Registry {
+final class Registry
+{
+    private static ?Configuration $instance = null;
 
-	private static ?Configuration $instance = null;
+    public static function saveTo(string $path): bool
+    {
+        $result = file_put_contents(
+            $path,
+            serialize(self::get()),
+        );
 
-	public static function saveTo( string $path ): bool {
-		$result = file_put_contents(
-			$path,
-			serialize( self::get() ),
-		);
+        if ($result) {
+            return true;
+        }
 
-		if ( $result ) {
-			return true;
-		}
+        // @codeCoverageIgnoreStart
+        return false;
+        // @codeCoverageIgnoreEnd
+    }
 
-		// @codeCoverageIgnoreStart
-		return false;
-		// @codeCoverageIgnoreEnd
-	}
+    /**
+     * This method is used by the "run test(s) in separate process" templates.
+     *
+     * @noinspection PhpUnused
+     *
+     * @codeCoverageIgnore
+     */
+    public static function loadFrom(string $path): void
+    {
+        $buffer = file_get_contents($path);
 
-	/**
-	 * This method is used by the "run test(s) in separate process" templates.
-	 *
-	 * @noinspection PhpUnused
-	 *
-	 * @codeCoverageIgnore
-	 */
-	public static function loadFrom( string $path ): void {
-		self::$instance = unserialize(
-			file_get_contents( $path ),
-			array(
-				'allowed_classes' => array(
-					Configuration::class,
-					Php::class,
-					ConstantCollection::class,
-					Constant::class,
-					IniSettingCollection::class,
-					IniSetting::class,
-					VariableCollection::class,
-					Variable::class,
-					DirectoryCollection::class,
-					Directory::class,
-					FileCollection::class,
-					File::class,
-					FilterDirectoryCollection::class,
-					FilterDirectory::class,
-					TestDirectoryCollection::class,
-					TestDirectory::class,
-					TestFileCollection::class,
-					TestFile::class,
-					TestSuiteCollection::class,
-					TestSuite::class,
-					VersionComparisonOperator::class,
-					Source::class,
-				),
-			),
-		);
-	}
+        assert($buffer !== false);
 
-	public static function get(): Configuration {
-		assert( self::$instance instanceof Configuration );
+        self::$instance = unserialize(
+            $buffer,
+            [
+                'allowed_classes' => [
+                    Configuration::class,
+                    Php::class,
+                    ConstantCollection::class,
+                    Constant::class,
+                    IniSettingCollection::class,
+                    IniSetting::class,
+                    VariableCollection::class,
+                    Variable::class,
+                    DirectoryCollection::class,
+                    Directory::class,
+                    FileCollection::class,
+                    File::class,
+                    FilterDirectoryCollection::class,
+                    FilterDirectory::class,
+                    TestDirectoryCollection::class,
+                    TestDirectory::class,
+                    TestFileCollection::class,
+                    TestFile::class,
+                    TestSuiteCollection::class,
+                    TestSuite::class,
+                    VersionComparisonOperator::class,
+                    Source::class,
+                ],
+            ],
+        );
+    }
 
-		return self::$instance;
-	}
+    public static function get(): Configuration
+    {
+        assert(self::$instance instanceof Configuration);
 
-	/**
-	 * @throws \PHPUnit\TextUI\XmlConfiguration\Exception
-	 * @throws Exception
-	 * @throws NoCustomCssFileException
-	 */
-	public static function init( CliConfiguration $cliConfiguration, XmlConfiguration $xmlConfiguration ): Configuration {
-		self::$instance = ( new Merger() )->merge( $cliConfiguration, $xmlConfiguration );
+        return self::$instance;
+    }
 
-		EventFacade::emitter()->testRunnerConfigured( self::$instance );
+    /**
+     * @throws \PHPUnit\TextUI\XmlConfiguration\Exception
+     * @throws Exception
+     * @throws NoCustomCssFileException
+     */
+    public static function init(CliConfiguration $cliConfiguration, XmlConfiguration $xmlConfiguration): Configuration
+    {
+        self::$instance = (new Merger)->merge($cliConfiguration, $xmlConfiguration);
 
-		return self::$instance;
-	}
+        EventFacade::emitter()->testRunnerConfigured(self::$instance);
+
+        return self::$instance;
+    }
 }
