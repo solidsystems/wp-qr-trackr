@@ -73,7 +73,7 @@ yarn lint
 - The root `lint` script delegates to the plugin's lint script, ensuring Husky and CI both use the correct config and ignore patterns.
 - All linting, formatting, and standards checks run automatically before commit, with no need for skip flags.
 
-## PR Summary (June 2024)
+## PR Summary (June 2025)
 
 - Fixed ESLint config to use flat config ignores and updated lint scripts for standards compliance.
 - Updated pre-commit hook to only lint staged JS source files, excluding config files, for robust and standards-compliant workflow.
