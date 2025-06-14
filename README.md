@@ -433,26 +433,30 @@ When enabled, debug logs are written to the PHP error log. Logs include activati
 - Run `vendor/bin/phpunit --configuration wp-content/plugins/wp-qr-trackr/phpunit.xml` from the project root.
 - To debug test loading, set `CI_DEBUG=true` in your environment to see module load output.
 
+### Test Framework Rationale
+- **Industry Standard:** The WordPress plugin ecosystem in 2025 uses PHPUnit 9.x as the most stable and compatible version for WordPress development.
+- **Ecosystem Compatibility:** WordPress-specific testing utilities (Brain Monkey, Yoast/wp-test-utils) are optimized for PHPUnit 9.x. WordPress Core and major plugins use this version.
+- **Future-Proof:** PHPUnit 10+ introduces breaking changes not yet supported by the WordPress testing ecosystem. This project will migrate when the ecosystem evolves.
+
 ### Contributor Setup
 - Ensure you have run `composer install` at the project root.
 - No need to install the QR code library for unit tests; it is mocked.
 - If you add new WordPress or plugin dependencies, mock them in your test setup.
 - If you add new environment variables, update `.env.example`.
 
-### patchwork.json
-```
+### Configuration Files
+**patchwork.json:**
+```json
 {
   "redefinable-internals": ["class_exists"]
 }
 ```
-This is required for Brain Monkey to mock `class_exists`.
+This configuration is required for Brain Monkey to mock `class_exists`.
 
 ### Best Practices
 - All plugin logic is modularized under `includes/`.
 - The main plugin file only bootstraps modules.
 - Each module handles a single concern and registers its own hooks.
 - All test and CI/CD workflows are documented and up to date.
-
----
 
 For more details, see inline comments in `bootstrap.php`, `PluginTest.php`, and the `includes/` modules.
