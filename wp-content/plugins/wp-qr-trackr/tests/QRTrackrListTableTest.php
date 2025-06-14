@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 
-// Dummy WP_List_Table is defined in bootstrap
+// Dummy WP_List_Table is defined in bootstrap.
 
 require_once __DIR__ . '/../includes/class-qr-trackr-list-table.php';
 
@@ -24,6 +24,8 @@ require_once __DIR__ . '/../includes/class-qr-trackr-list-table.php';
 class QRTrackrListTableTest extends TestCase {
 	/**
 	 * Set up test environment.
+	 *
+	 * @return void
 	 */
 	protected function setUp(): void {
 		parent::setUp();
@@ -36,7 +38,7 @@ class QRTrackrListTableTest extends TestCase {
 			)
 		);
 		Functions\when( 'wp_mkdir_p' )->justReturn( true );
-		// Mock needed WordPress functions
+		// Mock needed WordPress functions.
 		Functions\when( 'get_post' )->justReturn( (object) array( 'post_title' => 'Test Post' ) );
 		Functions\when( 'get_edit_post_link' )->justReturn( 'http://example.com/edit' );
 		Functions\when( 'get_permalink' )->justReturn( 'http://example.com/post' );
@@ -73,6 +75,8 @@ class QRTrackrListTableTest extends TestCase {
 	}
 	/**
 	 * Tear down test environment.
+	 *
+	 * @return void
 	 */
 	protected function tearDown(): void {
 		Monkey\tearDown();
@@ -81,25 +85,69 @@ class QRTrackrListTableTest extends TestCase {
 	/**
 	 * Test prepare_items method.
 	 *
+	 * @return void
 	 * @coversNothing
 	 */
 	public function testPrepareItems() {
 		global $wpdb;
 		$wpdb            = new class() {
+			/**
+			 * Get variable (dummy).
+			 *
+			 * @param string $query SQL query.
+			 * @return int Always returns 0.
+			 */
 			public function get_var( $query ) {
-				return 0; }
+				return 0;
+			}
+			/**
+			 * Prepare (dummy).
+			 *
+			 * @param string $query SQL query.
+			 * @param mixed  ...$args Additional arguments.
+			 * @return string Returns the query string.
+			 */
 			public function prepare( $query, ...$args ) {
-				return $query; }
+				return $query;
+			}
+			/**
+			 * Get results (dummy).
+			 *
+			 * @param string $query SQL query.
+			 * @return array Always returns an empty array.
+			 */
 			public function get_results( $query ) {
-				return array(); }
+				return array();
+			}
 		};
 		$table           = new class() extends QR_Trackr_List_Table {
-			public function get_items_per_page( $option, $default = 20 ) {
-				return $default; }
+			/**
+			 * Get items per page (dummy).
+			 *
+			 * @param string $option Option name.
+			 * @param int    $default_value Default value.
+			 * @return int Items per page.
+			 */
+			public function get_items_per_page( $option, $default_value = 20 ) {
+				return $default_value;
+			}
+			/**
+			 * Get page number (dummy).
+			 *
+			 * @return int Always returns 1.
+			 */
 			public function get_pagenum() {
-				return 1; }
+				return 1;
+			}
+			/**
+			 * Set pagination args (dummy).
+			 *
+			 * @param array $args Pagination arguments.
+			 * @return void
+			 */
 			protected function set_pagination_args( $args ) {
-				/* no-op for test */ }
+				// Set pagination args.
+			}
 		};
 		$_GET['orderby'] = 'id';
 		$_GET['order']   = 'asc';
@@ -109,6 +157,7 @@ class QRTrackrListTableTest extends TestCase {
 	/**
 	 * Test display_rows method.
 	 *
+	 * @return void
 	 * @coversNothing
 	 */
 	public function testDisplayRows() {
@@ -121,6 +170,7 @@ class QRTrackrListTableTest extends TestCase {
 	/**
 	 * Test extra_tablenav method.
 	 *
+	 * @return void
 	 * @coversNothing
 	 */
 	public function testExtraTableNav() {
@@ -133,6 +183,7 @@ class QRTrackrListTableTest extends TestCase {
 	/**
 	 * Test constructor.
 	 *
+	 * @return void
 	 * @coversNothing
 	 */
 	public function testConstruct() {
@@ -142,6 +193,7 @@ class QRTrackrListTableTest extends TestCase {
 	/**
 	 * Test get_columns method.
 	 *
+	 * @return void
 	 * @coversNothing
 	 */
 	public function testGetColumns() {
@@ -153,6 +205,7 @@ class QRTrackrListTableTest extends TestCase {
 	/**
 	 * Test get_sortable_columns method.
 	 *
+	 * @return void
 	 * @coversNothing
 	 */
 	public function testGetSortableColumns() {
@@ -163,6 +216,7 @@ class QRTrackrListTableTest extends TestCase {
 	/**
 	 * Test column_default method.
 	 *
+	 * @return void
 	 * @coversNothing
 	 */
 	public function testColumnDefault() {
@@ -177,72 +231,78 @@ class QRTrackrListTableTest extends TestCase {
 	}
 	/**
 	 * Test list table columns (mocked).
+	 *
+	 * @return void
 	 */
 	public function testListTableColumns() {
 		$this->assertTrue( true );
 	}
 	/**
 	 * Test list table sorting (mocked).
+	 *
+	 * @return void
 	 */
 	public function testListTableSorting() {
 		$this->assertTrue( true );
 	}
 	/**
 	 * Test list table bulk actions (mocked).
+	 *
+	 * @return void
 	 */
 	public function testListTableBulkActions() {
 		$this->assertTrue( true );
 	}
 	/**
-	 * Get a variable from the database (mocked).
+	 * Get variable (dummy).
 	 *
-	 * @return mixed
+	 * @return null Always returns null.
 	 */
 	public function get_var() {
 		return null;
 	}
 	/**
-	 * Prepare a SQL query (mocked).
+	 * Prepare (dummy).
 	 *
-	 * @param string $query The SQL query.
-	 * @return string
+	 * @return string Always returns an empty string.
 	 */
-	public function prepare( $query ) {
-		return $query;
+	public function prepare() {
+		return '';
 	}
 	/**
-	 * Get results from the database (mocked).
+	 * Get results (dummy).
 	 *
-	 * @return array
+	 * @return array Always returns an empty array.
 	 */
 	public function get_results() {
 		return array();
 	}
 	/**
-	 * Get items per page (mocked).
+	 * Get items per page (dummy).
 	 *
 	 * @param string $option Option name.
-	 * @param int    $default Default value.
-	 * @return int
+	 * @param int    $default_value Default value.
+	 * @return int Items per page.
 	 */
-	public function get_items_per_page( $option, $default ) {
-		return $default;
+	public function get_items_per_page( $option, $default_value = 20 ) {
+		return $default_value;
 	}
 	/**
-	 * Get current page number (mocked).
+	 * Get page number (dummy).
 	 *
-	 * @return int
+	 * @return int Always returns 1.
 	 */
 	public function get_pagenum() {
 		return 1;
 	}
 	/**
-	 * Set pagination arguments (mocked).
+	 * Set pagination args (dummy).
 	 *
 	 * @param array $args Pagination arguments.
 	 * @return void
 	 */
 	public function set_pagination_args( $args ) {
-		// No-op for test.
+		// Dummy implementation.
 	}
+	// This is a test stub.
 }

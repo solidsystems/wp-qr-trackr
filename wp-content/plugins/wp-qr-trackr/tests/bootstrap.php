@@ -1,19 +1,37 @@
-<?php
+// phpcs:disable WordPress.Files.FileName.NotClassFileName
+// Exception: This file intentionally does not follow the class file naming convention because it is a test bootstrap and not a class file. See CODEGEN-REMEDIATION-TRACKING.md for context.
+
 /**
  * PHPUnit bootstrap file for QR Trackr plugin.
  *
  * @package QR_Trackr
+ *
+ * @note PHPCS: File/class naming does not match standard; see remediation tracker for planned rename.
  */
 
-// Define dummy WP_List_Table for admin table tests (must be first)
+// Define dummy WP_List_Table for admin table tests (must be first).
 if ( ! class_exists( 'WP_List_Table' ) ) {
+	/**
+	 * Dummy WP_List_Table class for admin table tests.
+	 */
 	class WP_List_Table {
+		/**
+		 * Constructor.
+		 */
 		public function __construct() {}
-		public function get_items_per_page( $option, $default = 20 ) {
-			return $default; }
+		/**
+		 * Get items per page (dummy).
+		 *
+		 * @param string $option Option name.
+		 * @param int    $default_value Default value.
+		 * @return int Items per page.
+		 */
+		public function get_items_per_page( $option, $default_value = 20 ) {
+			return $default_value;
+		}
 	}
 }
-// Mock wp_upload_dir globally for tests
+// Mock wp_upload_dir globally for tests.
 if ( class_exists( 'Brain\Monkey\Functions' ) ) {
 	Brain\Monkey\Functions\when( 'wp_upload_dir' )->justReturn(
 		array(
@@ -28,10 +46,10 @@ if ( class_exists( 'Brain\Monkey\Functions' ) ) {
 		)
 	);
 }
-// PHPUnit bootstrap for QR Trackr plugin
+// PHPUnit bootstrap for QR Trackr plugin.
 require_once __DIR__ . '/../vendor/autoload.php';
-// Define QR_TRACKR_PLUGIN_DIR for plugin file loading
+// Define QR_TRACKR_PLUGIN_DIR for plugin file loading.
 if ( ! defined( 'QR_TRACKR_PLUGIN_DIR' ) ) {
 	define( 'QR_TRACKR_PLUGIN_DIR', dirname( __DIR__ ) . '/' );
 }
-// Brain Monkey will be set up/teared down in each test class as needed
+// Brain Monkey will be set up/teared down in each test class as needed.
