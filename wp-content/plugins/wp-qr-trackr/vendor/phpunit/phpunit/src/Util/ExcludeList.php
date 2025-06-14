@@ -49,183 +49,178 @@ use TheSeer\Tokenizer\Tokenizer;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ExcludeList
-{
-    /**
-     * @psalm-var array<string,int>
-     */
-    private const EXCLUDED_CLASS_NAMES = [
-        // composer
-        ClassLoader::class => 1,
+final class ExcludeList {
 
-        // myclabs/deepcopy
-        DeepCopy::class => 1,
+	/**
+	 * @psalm-var array<string,int>
+	 */
+	private const EXCLUDED_CLASS_NAMES = array(
+		// composer
+		ClassLoader::class        => 1,
 
-        // nikic/php-parser
-        Parser::class => 1,
+		// myclabs/deepcopy
+		DeepCopy::class           => 1,
 
-        // phar-io/manifest
-        Manifest::class => 1,
+		// nikic/php-parser
+		Parser::class             => 1,
 
-        // phar-io/version
-        PharIoVersion::class => 1,
+		// phar-io/manifest
+		Manifest::class           => 1,
 
-        // phpunit/phpunit
-        TestCase::class => 2,
+		// phar-io/version
+		PharIoVersion::class      => 1,
 
-        // phpunit/php-code-coverage
-        CodeCoverage::class => 1,
+		// phpunit/phpunit
+		TestCase::class           => 2,
 
-        // phpunit/php-file-iterator
-        FileIteratorFacade::class => 1,
+		// phpunit/php-code-coverage
+		CodeCoverage::class       => 1,
 
-        // phpunit/php-invoker
-        Invoker::class => 1,
+		// phpunit/php-file-iterator
+		FileIteratorFacade::class => 1,
 
-        // phpunit/php-text-template
-        Template::class => 1,
+		// phpunit/php-invoker
+		Invoker::class            => 1,
 
-        // phpunit/php-timer
-        Timer::class => 1,
+		// phpunit/php-text-template
+		Template::class           => 1,
 
-        // sebastian/cli-parser
-        CliParser::class => 1,
+		// phpunit/php-timer
+		Timer::class              => 1,
 
-        // sebastian/code-unit
-        CodeUnit::class => 1,
+		// sebastian/cli-parser
+		CliParser::class          => 1,
 
-        // sebastian/code-unit-reverse-lookup
-        Wizard::class => 1,
+		// sebastian/code-unit
+		CodeUnit::class           => 1,
 
-        // sebastian/comparator
-        Comparator::class => 1,
+		// sebastian/code-unit-reverse-lookup
+		Wizard::class             => 1,
 
-        // sebastian/complexity
-        Calculator::class => 1,
+		// sebastian/comparator
+		Comparator::class         => 1,
 
-        // sebastian/diff
-        Diff::class => 1,
+		// sebastian/complexity
+		Calculator::class         => 1,
 
-        // sebastian/environment
-        Runtime::class => 1,
+		// sebastian/diff
+		Diff::class               => 1,
 
-        // sebastian/exporter
-        Exporter::class => 1,
+		// sebastian/environment
+		Runtime::class            => 1,
 
-        // sebastian/global-state
-        Snapshot::class => 1,
+		// sebastian/exporter
+		Exporter::class           => 1,
 
-        // sebastian/lines-of-code
-        Counter::class => 1,
+		// sebastian/global-state
+		Snapshot::class           => 1,
 
-        // sebastian/object-enumerator
-        Enumerator::class => 1,
+		// sebastian/lines-of-code
+		Counter::class            => 1,
 
-        // sebastian/object-reflector
-        ObjectReflector::class => 1,
+		// sebastian/object-enumerator
+		Enumerator::class         => 1,
 
-        // sebastian/recursion-context
-        Context::class => 1,
+		// sebastian/object-reflector
+		ObjectReflector::class    => 1,
 
-        // sebastian/type
-        TypeName::class => 1,
+		// sebastian/recursion-context
+		Context::class            => 1,
 
-        // sebastian/version
-        Version::class => 1,
+		// sebastian/type
+		TypeName::class           => 1,
 
-        // theseer/tokenizer
-        Tokenizer::class => 1,
-    ];
+		// sebastian/version
+		Version::class            => 1,
 
-    /**
-     * @psalm-var list<string>
-     */
-    private static array $directories = [];
-    private static bool $initialized  = false;
-    private readonly bool $enabled;
+		// theseer/tokenizer
+		Tokenizer::class          => 1,
+	);
 
-    /**
-     * @psalm-param non-empty-string $directory
-     *
-     * @throws InvalidDirectoryException
-     */
-    public static function addDirectory(string $directory): void
-    {
-        if (!is_dir($directory)) {
-            throw new InvalidDirectoryException($directory);
-        }
+	/**
+	 * @psalm-var list<string>
+	 */
+	private static array $directories = array();
+	private static bool $initialized  = false;
+	private readonly bool $enabled;
 
-        self::$directories[] = realpath($directory);
-    }
+	/**
+	 * @psalm-param non-empty-string $directory
+	 *
+	 * @throws InvalidDirectoryException
+	 */
+	public static function addDirectory( string $directory ): void {
+		if ( ! is_dir( $directory ) ) {
+			throw new InvalidDirectoryException( $directory );
+		}
 
-    public function __construct(?bool $enabled = null)
-    {
-        if ($enabled === null) {
-            $enabled = !defined('PHPUNIT_TESTSUITE');
-        }
+		self::$directories[] = realpath( $directory );
+	}
 
-        $this->enabled = $enabled;
-    }
+	public function __construct( ?bool $enabled = null ) {
+		if ( $enabled === null ) {
+			$enabled = ! defined( 'PHPUNIT_TESTSUITE' );
+		}
 
-    /**
-     * @psalm-return list<string>
-     */
-    public function getExcludedDirectories(): array
-    {
-        self::initialize();
+		$this->enabled = $enabled;
+	}
 
-        return self::$directories;
-    }
+	/**
+	 * @psalm-return list<string>
+	 */
+	public function getExcludedDirectories(): array {
+		self::initialize();
 
-    public function isExcluded(string $file): bool
-    {
-        if (!$this->enabled) {
-            return false;
-        }
+		return self::$directories;
+	}
 
-        self::initialize();
+	public function isExcluded( string $file ): bool {
+		if ( ! $this->enabled ) {
+			return false;
+		}
 
-        foreach (self::$directories as $directory) {
-            if (str_starts_with($file, $directory)) {
-                return true;
-            }
-        }
+		self::initialize();
 
-        return false;
-    }
+		foreach ( self::$directories as $directory ) {
+			if ( str_starts_with( $file, $directory ) ) {
+				return true;
+			}
+		}
 
-    private static function initialize(): void
-    {
-        if (self::$initialized) {
-            return;
-        }
+		return false;
+	}
 
-        foreach (self::EXCLUDED_CLASS_NAMES as $className => $parent) {
-            if (!class_exists($className)) {
-                continue;
-            }
+	private static function initialize(): void {
+		if ( self::$initialized ) {
+			return;
+		}
 
-            $directory = (new ReflectionClass($className))->getFileName();
+		foreach ( self::EXCLUDED_CLASS_NAMES as $className => $parent ) {
+			if ( ! class_exists( $className ) ) {
+				continue;
+			}
 
-            for ($i = 0; $i < $parent; $i++) {
-                $directory = dirname($directory);
-            }
+			$directory = ( new ReflectionClass( $className ) )->getFileName();
 
-            self::$directories[] = $directory;
-        }
+			for ( $i = 0; $i < $parent; $i++ ) {
+				$directory = dirname( $directory );
+			}
 
-        /**
-         * Hide process isolation workaround on Windows:
-         * tempnam() prefix is limited to first 3 characters.
-         *
-         * @see https://php.net/manual/en/function.tempnam.php
-         */
-        if (PHP_OS_FAMILY === 'Windows') {
-            // @codeCoverageIgnoreStart
-            self::$directories[] = sys_get_temp_dir() . '\\PHP';
-            // @codeCoverageIgnoreEnd
-        }
+			self::$directories[] = $directory;
+		}
 
-        self::$initialized = true;
-    }
+		/**
+		 * Hide process isolation workaround on Windows:
+		 * tempnam() prefix is limited to first 3 characters.
+		 *
+		 * @see https://php.net/manual/en/function.tempnam.php
+		 */
+		if ( PHP_OS_FAMILY === 'Windows' ) {
+			// @codeCoverageIgnoreStart
+			self::$directories[] = sys_get_temp_dir() . '\\PHP';
+			// @codeCoverageIgnoreEnd
+		}
+
+		self::$initialized = true;
+	}
 }

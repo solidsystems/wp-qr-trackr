@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -17,79 +17,75 @@ use Brain\Monkey\Name\FunctionName;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class FunctionStubFactory
-{
+class FunctionStubFactory {
 
-    const SCOPE_STUB        = 'a stub';
-    const SCOPE_EXPECTATION = 'an expectation';
 
-    /**
-     * @var array
-     */
-    private $storage = [];
+	const SCOPE_STUB        = 'a stub';
+	const SCOPE_EXPECTATION = 'an expectation';
 
-    /**
-     * @param \Brain\Monkey\Name\FunctionName $name
-     * @param string                          $scope
-     * @return \Brain\Monkey\Expectation\FunctionStub
-     */
-    public function create(FunctionName $name, $scope)
-    {
-        $stored_type = $this->storedType($name);
+	/**
+	 * @var array
+	 */
+	private $storage = array();
 
-        if ( ! $stored_type) {
+	/**
+	 * @param \Brain\Monkey\Name\FunctionName $name
+	 * @param string                          $scope
+	 * @return \Brain\Monkey\Expectation\FunctionStub
+	 */
+	public function create( FunctionName $name, $scope ) {
+		$stored_type = $this->storedType( $name );
 
-            $stub = new FunctionStub($name);
-            $this->storage[$name->fullyQualifiedName()] = [$stub, $scope];
+		if ( ! $stored_type ) {
 
-            return $stub;
-        }
+			$stub = new FunctionStub( $name );
+			$this->storage[ $name->fullyQualifiedName() ] = array( $stub, $scope );
 
-        if ($scope !== $stored_type) {
-            throw new Exception\Exception(
-                sprintf(
-                    'It was not possible to create %s for function "%s" because %s for it already exists.',
-                    $scope,
-                    $name->fullyQualifiedName(),
-                    $stored_type
-                )
-            );
-        }
+			return $stub;
+		}
 
-        list($stub) = $this->storage[$name->fullyQualifiedName()];
+		if ( $scope !== $stored_type ) {
+			throw new Exception\Exception(
+				sprintf(
+					'It was not possible to create %s for function "%s" because %s for it already exists.',
+					$scope,
+					$name->fullyQualifiedName(),
+					$stored_type
+				)
+			);
+		}
 
-        return $stub;
-    }
+		list($stub) = $this->storage[ $name->fullyQualifiedName() ];
 
-    /**
-     * @param \Brain\Monkey\Name\FunctionName $name
-     * @return bool
-     */
-    public function has(FunctionName $name)
-    {
-        return array_key_exists($name->fullyQualifiedName(), $this->storage);
-    }
+		return $stub;
+	}
 
-    /**
-     * @return void
-     */
-    public function reset()
-    {
-        $this->storage = [];
-    }
+	/**
+	 * @param \Brain\Monkey\Name\FunctionName $name
+	 * @return bool
+	 */
+	public function has( FunctionName $name ) {
+		return array_key_exists( $name->fullyQualifiedName(), $this->storage );
+	}
 
-    /**
-     * @param \Brain\Monkey\Name\FunctionName $name
-     * @return string
-     */
-    private function storedType(FunctionName $name)
-    {
-        if ( ! $this->has($name)) {
-            return '';
-        }
+	/**
+	 * @return void
+	 */
+	public function reset() {
+		$this->storage = array();
+	}
 
-        list(, $stored_type) = $this->storage[$name->fullyQualifiedName()];
+	/**
+	 * @param \Brain\Monkey\Name\FunctionName $name
+	 * @return string
+	 */
+	private function storedType( FunctionName $name ) {
+		if ( ! $this->has( $name ) ) {
+			return '';
+		}
 
-        return $stored_type;
-    }
+		list(, $stored_type) = $this->storage[ $name->fullyQualifiedName() ];
+
+		return $stored_type;
+	}
 }

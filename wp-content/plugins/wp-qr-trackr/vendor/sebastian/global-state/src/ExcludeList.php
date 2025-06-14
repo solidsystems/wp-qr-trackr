@@ -13,83 +13,75 @@ use function in_array;
 use function str_starts_with;
 use ReflectionClass;
 
-final class ExcludeList
-{
-    private array $globalVariables   = [];
-    private array $classes           = [];
-    private array $classNamePrefixes = [];
-    private array $parentClasses     = [];
-    private array $interfaces        = [];
-    private array $staticProperties  = [];
+final class ExcludeList {
 
-    public function addGlobalVariable(string $variableName): void
-    {
-        $this->globalVariables[$variableName] = true;
-    }
+	private array $globalVariables   = array();
+	private array $classes           = array();
+	private array $classNamePrefixes = array();
+	private array $parentClasses     = array();
+	private array $interfaces        = array();
+	private array $staticProperties  = array();
 
-    public function addClass(string $className): void
-    {
-        $this->classes[] = $className;
-    }
+	public function addGlobalVariable( string $variableName ): void {
+		$this->globalVariables[ $variableName ] = true;
+	}
 
-    public function addSubclassesOf(string $className): void
-    {
-        $this->parentClasses[] = $className;
-    }
+	public function addClass( string $className ): void {
+		$this->classes[] = $className;
+	}
 
-    public function addImplementorsOf(string $interfaceName): void
-    {
-        $this->interfaces[] = $interfaceName;
-    }
+	public function addSubclassesOf( string $className ): void {
+		$this->parentClasses[] = $className;
+	}
 
-    public function addClassNamePrefix(string $classNamePrefix): void
-    {
-        $this->classNamePrefixes[] = $classNamePrefix;
-    }
+	public function addImplementorsOf( string $interfaceName ): void {
+		$this->interfaces[] = $interfaceName;
+	}
 
-    public function addStaticProperty(string $className, string $propertyName): void
-    {
-        if (!isset($this->staticProperties[$className])) {
-            $this->staticProperties[$className] = [];
-        }
+	public function addClassNamePrefix( string $classNamePrefix ): void {
+		$this->classNamePrefixes[] = $classNamePrefix;
+	}
 
-        $this->staticProperties[$className][$propertyName] = true;
-    }
+	public function addStaticProperty( string $className, string $propertyName ): void {
+		if ( ! isset( $this->staticProperties[ $className ] ) ) {
+			$this->staticProperties[ $className ] = array();
+		}
 
-    public function isGlobalVariableExcluded(string $variableName): bool
-    {
-        return isset($this->globalVariables[$variableName]);
-    }
+		$this->staticProperties[ $className ][ $propertyName ] = true;
+	}
 
-    /**
-     * @psalm-param class-string $className
-     */
-    public function isStaticPropertyExcluded(string $className, string $propertyName): bool
-    {
-        if (in_array($className, $this->classes, true)) {
-            return true;
-        }
+	public function isGlobalVariableExcluded( string $variableName ): bool {
+		return isset( $this->globalVariables[ $variableName ] );
+	}
 
-        foreach ($this->classNamePrefixes as $prefix) {
-            if (str_starts_with($className, $prefix)) {
-                return true;
-            }
-        }
+	/**
+	 * @psalm-param class-string $className
+	 */
+	public function isStaticPropertyExcluded( string $className, string $propertyName ): bool {
+		if ( in_array( $className, $this->classes, true ) ) {
+			return true;
+		}
 
-        $class = new ReflectionClass($className);
+		foreach ( $this->classNamePrefixes as $prefix ) {
+			if ( str_starts_with( $className, $prefix ) ) {
+				return true;
+			}
+		}
 
-        foreach ($this->parentClasses as $type) {
-            if ($class->isSubclassOf($type)) {
-                return true;
-            }
-        }
+		$class = new ReflectionClass( $className );
 
-        foreach ($this->interfaces as $type) {
-            if ($class->implementsInterface($type)) {
-                return true;
-            }
-        }
+		foreach ( $this->parentClasses as $type ) {
+			if ( $class->isSubclassOf( $type ) ) {
+				return true;
+			}
+		}
 
-        return isset($this->staticProperties[$className][$propertyName]);
-    }
+		foreach ( $this->interfaces as $type ) {
+			if ( $class->implementsInterface( $type ) ) {
+				return true;
+			}
+		}
+
+		return isset( $this->staticProperties[ $className ][ $propertyName ] );
+	}
 }

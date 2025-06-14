@@ -14,86 +14,80 @@ use function array_replace_recursive;
 use function implode;
 use function is_array;
 
-class Subset extends MatcherAbstract
-{
-    private $expected;
+class Subset extends MatcherAbstract {
 
-    private $strict = true;
+	private $expected;
 
-    /**
-     * @param array $expected Expected subset of data
-     * @param bool  $strict   Whether to run a strict or loose comparison
-     */
-    public function __construct(array $expected, $strict = true)
-    {
-        $this->expected = $expected;
-        $this->strict = $strict;
-    }
+	private $strict = true;
 
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<Subset' . $this->formatArray($this->expected) . '>';
-    }
+	/**
+	 * @param array $expected Expected subset of data
+	 * @param bool  $strict   Whether to run a strict or loose comparison
+	 */
+	public function __construct( array $expected, $strict = true ) {
+		$this->expected = $expected;
+		$this->strict   = $strict;
+	}
 
-    /**
-     * @param array $expected Expected subset of data
-     *
-     * @return Subset
-     */
-    public static function loose(array $expected)
-    {
-        return new static($expected, false);
-    }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<Subset' . $this->formatArray( $this->expected ) . '>';
+	}
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        if (! is_array($actual)) {
-            return false;
-        }
+	/**
+	 * @param array $expected Expected subset of data
+	 *
+	 * @return Subset
+	 */
+	public static function loose( array $expected ) {
+		return new static( $expected, false );
+	}
 
-        if ($this->strict) {
-            return $actual === array_replace_recursive($actual, $this->expected);
-        }
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		if ( ! is_array( $actual ) ) {
+			return false;
+		}
 
-        return $actual == array_replace_recursive($actual, $this->expected);
-    }
+		if ( $this->strict ) {
+			return $actual === array_replace_recursive( $actual, $this->expected );
+		}
 
-    /**
-     * @param array $expected Expected subset of data
-     *
-     * @return Subset
-     */
-    public static function strict(array $expected)
-    {
-        return new static($expected, true);
-    }
+		return $actual == array_replace_recursive( $actual, $this->expected );
+	}
 
-    /**
-     * Recursively format an array into the string representation for this matcher
-     *
-     * @return string
-     */
-    protected function formatArray(array $array)
-    {
-        $elements = [];
-        foreach ($array as $k => $v) {
-            $elements[] = $k . '=' . (is_array($v) ? $this->formatArray($v) : (string) $v);
-        }
+	/**
+	 * @param array $expected Expected subset of data
+	 *
+	 * @return Subset
+	 */
+	public static function strict( array $expected ) {
+		return new static( $expected, true );
+	}
 
-        return '[' . implode(', ', $elements) . ']';
-    }
+	/**
+	 * Recursively format an array into the string representation for this matcher
+	 *
+	 * @return string
+	 */
+	protected function formatArray( array $array ) {
+		$elements = array();
+		foreach ( $array as $k => $v ) {
+			$elements[] = $k . '=' . ( is_array( $v ) ? $this->formatArray( $v ) : (string) $v );
+		}
+
+		return '[' . implode( ', ', $elements ) . ']';
+	}
 }

@@ -17,21 +17,19 @@ use PHPUnit\Runner\Version;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class AtLeastVersionCommand implements Command
-{
-    private readonly string $version;
+final class AtLeastVersionCommand implements Command {
 
-    public function __construct(string $version)
-    {
-        $this->version = $version;
-    }
+	private readonly string $version;
 
-    public function execute(): Result
-    {
-        if (version_compare(Version::id(), $this->version, '>=')) {
-            return Result::from();
-        }
+	public function __construct( string $version ) {
+		$this->version = $version;
+	}
 
-        return Result::from('', Result::FAILURE);
-    }
+	public function execute(): Result {
+		if ( version_compare( Version::id(), $this->version, '>=' ) ) {
+			return Result::from();
+		}
+
+		return Result::from( '', Result::FAILURE );
+	}
 }

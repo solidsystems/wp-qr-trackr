@@ -5,6 +5,6 @@ namespace DASPRiD\Enum\Exception;
 
 use Exception;
 
-final class UnserializeNotSupportedException extends Exception implements ExceptionInterface
-{
+final class UnserializeNotSupportedException extends Exception implements ExceptionInterface {
+
 }

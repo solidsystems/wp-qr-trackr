@@ -16,27 +16,25 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final class ExcludeGlobalVariableFromBackup
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $globalVariableName;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
+final class ExcludeGlobalVariableFromBackup {
 
-    /**
-     * @psalm-param non-empty-string $globalVariableName
-     */
-    public function __construct(string $globalVariableName)
-    {
-        $this->globalVariableName = $globalVariableName;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $globalVariableName;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function globalVariableName(): string
-    {
-        return $this->globalVariableName;
-    }
+	/**
+	 * @psalm-param non-empty-string $globalVariableName
+	 */
+	public function __construct( string $globalVariableName ) {
+		$this->globalVariableName = $globalVariableName;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function globalVariableName(): string {
+		return $this->globalVariableName;
+	}
 }

@@ -15,36 +15,33 @@ use PHPUnit\Framework\EmptyStringException;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class StringStartsWith extends Constraint
-{
-    private readonly string $prefix;
+final class StringStartsWith extends Constraint {
 
-    /**
-     * @throws EmptyStringException
-     */
-    public function __construct(string $prefix)
-    {
-        if ($prefix === '') {
-            throw new EmptyStringException;
-        }
+	private readonly string $prefix;
 
-        $this->prefix = $prefix;
-    }
+	/**
+	 * @throws EmptyStringException
+	 */
+	public function __construct( string $prefix ) {
+		if ( $prefix === '' ) {
+			throw new EmptyStringException();
+		}
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        return 'starts with "' . $this->prefix . '"';
-    }
+		$this->prefix = $prefix;
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        return str_starts_with((string) $other, $this->prefix);
-    }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		return 'starts with "' . $this->prefix . '"';
+	}
+
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		return str_starts_with( (string) $other, $this->prefix );
+	}
 }

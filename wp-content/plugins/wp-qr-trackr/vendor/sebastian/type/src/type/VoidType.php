@@ -9,28 +9,24 @@
  */
 namespace SebastianBergmann\Type;
 
-final class VoidType extends Type
-{
-    public function isAssignable(Type $other): bool
-    {
-        return $other instanceof self;
-    }
+final class VoidType extends Type {
 
-    public function name(): string
-    {
-        return 'void';
-    }
+	public function isAssignable( Type $other ): bool {
+		return $other instanceof self;
+	}
 
-    public function allowsNull(): bool
-    {
-        return false;
-    }
+	public function name(): string {
+		return 'void';
+	}
 
-    /**
-     * @psalm-assert-if-true VoidType $this
-     */
-    public function isVoid(): bool
-    {
-        return true;
-    }
+	public function allowsNull(): bool {
+		return false;
+	}
+
+	/**
+	 * @psalm-assert-if-true VoidType $this
+	 */
+	public function isVoid(): bool {
+		return true;
+	}
 }

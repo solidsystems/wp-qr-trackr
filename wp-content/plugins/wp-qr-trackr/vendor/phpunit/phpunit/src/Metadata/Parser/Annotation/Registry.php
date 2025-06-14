@@ -23,76 +23,73 @@ use ReflectionMethod;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Registry
-{
-    private static ?Registry $instance = null;
+final class Registry {
 
-    /**
-     * @psalm-var array<string, DocBlock> indexed by class name
-     */
-    private array $classDocBlocks = [];
+	private static ?Registry $instance = null;
 
-    /**
-     * @psalm-var array<string, array<string, DocBlock>> indexed by class name and method name
-     */
-    private array $methodDocBlocks = [];
+	/**
+	 * @psalm-var array<string, DocBlock> indexed by class name
+	 */
+	private array $classDocBlocks = array();
 
-    public static function getInstance(): self
-    {
-        return self::$instance ?? self::$instance = new self;
-    }
+	/**
+	 * @psalm-var array<string, array<string, DocBlock>> indexed by class name and method name
+	 */
+	private array $methodDocBlocks = array();
 
-    /**
-     * @psalm-param class-string $class
-     *
-     * @throws AnnotationsAreNotSupportedForInternalClassesException
-     * @throws ReflectionException
-     */
-    public function forClassName(string $class): DocBlock
-    {
-        if (array_key_exists($class, $this->classDocBlocks)) {
-            return $this->classDocBlocks[$class];
-        }
+	public static function getInstance(): self {
+		return self::$instance ?? self::$instance = new self();
+	}
 
-        try {
-            $reflection = new ReflectionClass($class);
-            // @codeCoverageIgnoreStart
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e,
-            );
-        }
-        // @codeCoverageIgnoreEnd
+	/**
+	 * @psalm-param class-string $class
+	 *
+	 * @throws AnnotationsAreNotSupportedForInternalClassesException
+	 * @throws ReflectionException
+	 */
+	public function forClassName( string $class ): DocBlock {
+		if ( array_key_exists( $class, $this->classDocBlocks ) ) {
+			return $this->classDocBlocks[ $class ];
+		}
 
-        return $this->classDocBlocks[$class] = DocBlock::ofClass($reflection);
-    }
+		try {
+			$reflection = new ReflectionClass( $class );
+			// @codeCoverageIgnoreStart
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e,
+			);
+		}
+		// @codeCoverageIgnoreEnd
 
-    /**
-     * @psalm-param class-string $classInHierarchy
-     *
-     * @throws AnnotationsAreNotSupportedForInternalClassesException
-     * @throws ReflectionException
-     */
-    public function forMethod(string $classInHierarchy, string $method): DocBlock
-    {
-        if (isset($this->methodDocBlocks[$classInHierarchy][$method])) {
-            return $this->methodDocBlocks[$classInHierarchy][$method];
-        }
+		return $this->classDocBlocks[ $class ] = DocBlock::ofClass( $reflection );
+	}
 
-        try {
-            $reflection = new ReflectionMethod($classInHierarchy, $method);
-            // @codeCoverageIgnoreStart
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e,
-            );
-        }
-        // @codeCoverageIgnoreEnd
+	/**
+	 * @psalm-param class-string $classInHierarchy
+	 *
+	 * @throws AnnotationsAreNotSupportedForInternalClassesException
+	 * @throws ReflectionException
+	 */
+	public function forMethod( string $classInHierarchy, string $method ): DocBlock {
+		if ( isset( $this->methodDocBlocks[ $classInHierarchy ][ $method ] ) ) {
+			return $this->methodDocBlocks[ $classInHierarchy ][ $method ];
+		}
 
-        return $this->methodDocBlocks[$classInHierarchy][$method] = DocBlock::ofMethod($reflection);
-    }
+		try {
+			$reflection = new ReflectionMethod( $classInHierarchy, $method );
+			// @codeCoverageIgnoreStart
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e,
+			);
+		}
+		// @codeCoverageIgnoreEnd
+
+		return $this->methodDocBlocks[ $classInHierarchy ][ $method ] = DocBlock::ofMethod( $reflection );
+	}
 }

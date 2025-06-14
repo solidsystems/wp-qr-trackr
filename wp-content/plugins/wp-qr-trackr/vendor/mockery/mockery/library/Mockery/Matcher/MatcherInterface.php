@@ -12,25 +12,25 @@ declare(strict_types=1);
 
 namespace Mockery\Matcher;
 
-interface MatcherInterface
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString();
+interface MatcherInterface {
 
-    /**
-     * Check if the actual value matches the expected.
-     * Actual passed by reference to preserve reference trail (where applicable)
-     * back to the original method parameter.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual);
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString();
+
+	/**
+	 * Check if the actual value matches the expected.
+	 * Actual passed by reference to preserve reference trail (where applicable)
+	 * back to the original method parameter.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual );
 }

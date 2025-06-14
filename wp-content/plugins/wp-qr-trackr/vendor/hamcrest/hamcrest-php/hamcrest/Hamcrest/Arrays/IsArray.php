@@ -2,11 +2,11 @@
 namespace Hamcrest\Arrays;
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 
 // NOTE: This class is not exactly a direct port of Java's since Java handles
-//       arrays quite differently than PHP
+// arrays quite differently than PHP
 
 // TODO: Allow this to take matchers or values within the array
 use Hamcrest\Description;
@@ -17,102 +17,93 @@ use Hamcrest\Util;
  * Matcher for array whose elements satisfy a sequence of matchers.
  * The array size must equal the number of element matchers.
  */
-class IsArray extends TypeSafeMatcher
-{
+class IsArray extends TypeSafeMatcher {
 
-    private $_elementMatchers;
 
-    public function __construct(array $elementMatchers)
-    {
-        parent::__construct(self::TYPE_ARRAY);
+	private $_elementMatchers;
 
-        Util::checkAllAreMatchers($elementMatchers);
+	public function __construct( array $elementMatchers ) {
+		parent::__construct( self::TYPE_ARRAY );
 
-        $this->_elementMatchers = $elementMatchers;
-    }
+		Util::checkAllAreMatchers( $elementMatchers );
 
-    protected function matchesSafely($array)
-    {
-        if (array_keys($array) != array_keys($this->_elementMatchers)) {
-            return false;
-        }
+		$this->_elementMatchers = $elementMatchers;
+	}
 
-        /** @var $matcher \Hamcrest\Matcher */
-        foreach ($this->_elementMatchers as $k => $matcher) {
-            if (!$matcher->matches($array[$k])) {
-                return false;
-            }
-        }
+	protected function matchesSafely( $array ) {
+		if ( array_keys( $array ) != array_keys( $this->_elementMatchers ) ) {
+			return false;
+		}
 
-        return true;
-    }
+		/** @var $matcher \Hamcrest\Matcher */
+		foreach ( $this->_elementMatchers as $k => $matcher ) {
+			if ( ! $matcher->matches( $array[ $k ] ) ) {
+				return false;
+			}
+		}
 
-    protected function describeMismatchSafely($actual, Description $mismatchDescription)
-    {
-        if (count($actual) != count($this->_elementMatchers)) {
-            $mismatchDescription->appendText('array length was ' . count($actual));
+		return true;
+	}
 
-            return;
-        } elseif (array_keys($actual) != array_keys($this->_elementMatchers)) {
-            $mismatchDescription->appendText('array keys were ')
-                                                    ->appendValueList(
-                                                        $this->descriptionStart(),
-                                                        $this->descriptionSeparator(),
-                                                        $this->descriptionEnd(),
-                                                        array_keys($actual)
-                                                    )
-                                                    ;
+	protected function describeMismatchSafely( $actual, Description $mismatchDescription ) {
+		if ( count( $actual ) != count( $this->_elementMatchers ) ) {
+			$mismatchDescription->appendText( 'array length was ' . count( $actual ) );
 
-            return;
-        }
+			return;
+		} elseif ( array_keys( $actual ) != array_keys( $this->_elementMatchers ) ) {
+			$mismatchDescription->appendText( 'array keys were ' )
+													->appendValueList(
+														$this->descriptionStart(),
+														$this->descriptionSeparator(),
+														$this->descriptionEnd(),
+														array_keys( $actual )
+													);
 
-        /** @var $matcher \Hamcrest\Matcher */
-        foreach ($this->_elementMatchers as $k => $matcher) {
-            if (!$matcher->matches($actual[$k])) {
-                $mismatchDescription->appendText('element ')->appendValue($k)
-                    ->appendText(' was ')->appendValue($actual[$k]);
+			return;
+		}
 
-                return;
-            }
-        }
-    }
+		/** @var $matcher \Hamcrest\Matcher */
+		foreach ( $this->_elementMatchers as $k => $matcher ) {
+			if ( ! $matcher->matches( $actual[ $k ] ) ) {
+				$mismatchDescription->appendText( 'element ' )->appendValue( $k )
+					->appendText( ' was ' )->appendValue( $actual[ $k ] );
 
-    public function describeTo(Description $description)
-    {
-        $description->appendList(
-            $this->descriptionStart(),
-            $this->descriptionSeparator(),
-            $this->descriptionEnd(),
-            $this->_elementMatchers
-        );
-    }
+				return;
+			}
+		}
+	}
 
-    /**
-     * Evaluates to true only if each $matcher[$i] is satisfied by $array[$i].
-     *
-     * @factory ...
-     */
-    public static function anArray(/* args... */)
-    {
-        $args = func_get_args();
+	public function describeTo( Description $description ) {
+		$description->appendList(
+			$this->descriptionStart(),
+			$this->descriptionSeparator(),
+			$this->descriptionEnd(),
+			$this->_elementMatchers
+		);
+	}
 
-        return new self(Util::createMatcherArray($args));
-    }
+	/**
+	 * Evaluates to true only if each $matcher[$i] is satisfied by $array[$i].
+	 *
+	 * @factory ...
+	 */
+	public static function anArray( /* args... */ ) {
+		$args = func_get_args();
 
-    // -- Protected Methods
+		return new self( Util::createMatcherArray( $args ) );
+	}
 
-    protected function descriptionStart()
-    {
-        return '[';
-    }
+	// -- Protected Methods
 
-    protected function descriptionSeparator()
-    {
-        return ', ';
-    }
+	protected function descriptionStart() {
+		return '[';
+	}
 
-    protected function descriptionEnd()
-    {
-        return ']';
-    }
+	protected function descriptionSeparator() {
+		return ', ';
+	}
+
+	protected function descriptionEnd() {
+		return ']';
+	}
 }

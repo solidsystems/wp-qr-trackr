@@ -2,42 +2,39 @@
 namespace Hamcrest\Core;
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 
 use Hamcrest\BaseMatcher;
 use Hamcrest\Description;
 use Hamcrest\Util;
 
-abstract class ShortcutCombination extends BaseMatcher
-{
+abstract class ShortcutCombination extends BaseMatcher {
 
-    /**
-     * @var array<\Hamcrest\Matcher>
-     */
-    private $_matchers;
 
-    public function __construct(array $matchers)
-    {
-        Util::checkAllAreMatchers($matchers);
+	/**
+	 * @var array<\Hamcrest\Matcher>
+	 */
+	private $_matchers;
 
-        $this->_matchers = $matchers;
-    }
+	public function __construct( array $matchers ) {
+		Util::checkAllAreMatchers( $matchers );
 
-    protected function matchesWithShortcut($item, $shortcut)
-    {
-        /** @var $matcher \Hamcrest\Matcher */
-        foreach ($this->_matchers as $matcher) {
-            if ($matcher->matches($item) == $shortcut) {
-                return $shortcut;
-            }
-        }
+		$this->_matchers = $matchers;
+	}
 
-        return !$shortcut;
-    }
+	protected function matchesWithShortcut( $item, $shortcut ) {
+		/** @var $matcher \Hamcrest\Matcher */
+		foreach ( $this->_matchers as $matcher ) {
+			if ( $matcher->matches( $item ) == $shortcut ) {
+				return $shortcut;
+			}
+		}
 
-    public function describeToWithOperator(Description $description, $operator)
-    {
-        $description->appendList('(', ' ' . $operator . ' ', ')', $this->_matchers);
-    }
+		return ! $shortcut;
+	}
+
+	public function describeToWithOperator( Description $description, $operator ) {
+		$description->appendList( '(', ' ' . $operator . ' ', ')', $this->_matchers );
+	}
 }

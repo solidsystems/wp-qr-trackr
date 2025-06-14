@@ -11,129 +11,127 @@ use Endroid\QrCode\QrCodeInterface;
 use Endroid\QrCode\Writer\Result\PdfResult;
 use Endroid\QrCode\Writer\Result\ResultInterface;
 
-final readonly class PdfWriter implements WriterInterface
-{
-    public const WRITER_OPTION_UNIT = 'unit';
-    public const WRITER_OPTION_PDF = 'fpdf';
-    public const WRITER_OPTION_X = 'x';
-    public const WRITER_OPTION_Y = 'y';
-    public const WRITER_OPTION_LINK = 'link';
+final readonly class PdfWriter implements WriterInterface {
 
-    public function write(QrCodeInterface $qrCode, ?LogoInterface $logo = null, ?LabelInterface $label = null, array $options = []): ResultInterface
-    {
-        $matrixFactory = new MatrixFactory();
-        $matrix = $matrixFactory->create($qrCode);
+	public const WRITER_OPTION_UNIT = 'unit';
+	public const WRITER_OPTION_PDF  = 'fpdf';
+	public const WRITER_OPTION_X    = 'x';
+	public const WRITER_OPTION_Y    = 'y';
+	public const WRITER_OPTION_LINK = 'link';
 
-        $unit = 'mm';
-        if (isset($options[self::WRITER_OPTION_UNIT])) {
-            $unit = $options[self::WRITER_OPTION_UNIT];
-        }
+	public function write( QrCodeInterface $qrCode, ?LogoInterface $logo = null, ?LabelInterface $label = null, array $options = array() ): ResultInterface {
+		$matrixFactory = new MatrixFactory();
+		$matrix        = $matrixFactory->create( $qrCode );
 
-        $allowedUnits = ['mm', 'pt', 'cm', 'in'];
-        if (!in_array($unit, $allowedUnits)) {
-            throw new \Exception(sprintf('PDF Measure unit should be one of [%s]', implode(', ', $allowedUnits)));
-        }
+		$unit = 'mm';
+		if ( isset( $options[ self::WRITER_OPTION_UNIT ] ) ) {
+			$unit = $options[ self::WRITER_OPTION_UNIT ];
+		}
 
-        $labelSpace = 0;
-        if ($label instanceof LabelInterface) {
-            $labelSpace = 30;
-        }
+		$allowedUnits = array( 'mm', 'pt', 'cm', 'in' );
+		if ( ! in_array( $unit, $allowedUnits ) ) {
+			throw new \Exception( sprintf( 'PDF Measure unit should be one of [%s]', implode( ', ', $allowedUnits ) ) );
+		}
 
-        if (!class_exists(\FPDF::class)) {
-            throw new \Exception('Unable to find FPDF: check your installation');
-        }
+		$labelSpace = 0;
+		if ( $label instanceof LabelInterface ) {
+			$labelSpace = 30;
+		}
 
-        $foregroundColor = $qrCode->getForegroundColor();
-        if ($foregroundColor->getAlpha() > 0) {
-            throw new \Exception('PDF Writer does not support alpha channels');
-        }
-        $backgroundColor = $qrCode->getBackgroundColor();
-        if ($backgroundColor->getAlpha() > 0) {
-            throw new \Exception('PDF Writer does not support alpha channels');
-        }
+		if ( ! class_exists( \FPDF::class ) ) {
+			throw new \Exception( 'Unable to find FPDF: check your installation' );
+		}
 
-        if (isset($options[self::WRITER_OPTION_PDF])) {
-            $fpdf = $options[self::WRITER_OPTION_PDF];
-            if (!$fpdf instanceof \FPDF) {
-                throw new \Exception('pdf option must be an instance of FPDF');
-            }
-        } else {
-            // @todo Check how to add label height later
-            $fpdf = new \FPDF('P', $unit, [$matrix->getOuterSize(), $matrix->getOuterSize() + $labelSpace]);
-            $fpdf->AddPage();
-        }
+		$foregroundColor = $qrCode->getForegroundColor();
+		if ( $foregroundColor->getAlpha() > 0 ) {
+			throw new \Exception( 'PDF Writer does not support alpha channels' );
+		}
+		$backgroundColor = $qrCode->getBackgroundColor();
+		if ( $backgroundColor->getAlpha() > 0 ) {
+			throw new \Exception( 'PDF Writer does not support alpha channels' );
+		}
 
-        $x = 0;
-        if (isset($options[self::WRITER_OPTION_X])) {
-            $x = $options[self::WRITER_OPTION_X];
-        }
-        $y = 0;
-        if (isset($options[self::WRITER_OPTION_Y])) {
-            $y = $options[self::WRITER_OPTION_Y];
-        }
+		if ( isset( $options[ self::WRITER_OPTION_PDF ] ) ) {
+			$fpdf = $options[ self::WRITER_OPTION_PDF ];
+			if ( ! $fpdf instanceof \FPDF ) {
+				throw new \Exception( 'pdf option must be an instance of FPDF' );
+			}
+		} else {
+			// @todo Check how to add label height later
+			$fpdf = new \FPDF( 'P', $unit, array( $matrix->getOuterSize(), $matrix->getOuterSize() + $labelSpace ) );
+			$fpdf->AddPage();
+		}
 
-        $fpdf->SetFillColor($backgroundColor->getRed(), $backgroundColor->getGreen(), $backgroundColor->getBlue());
-        $fpdf->Rect($x, $y, $matrix->getOuterSize(), $matrix->getOuterSize(), 'F');
-        $fpdf->SetFillColor($foregroundColor->getRed(), $foregroundColor->getGreen(), $foregroundColor->getBlue());
+		$x = 0;
+		if ( isset( $options[ self::WRITER_OPTION_X ] ) ) {
+			$x = $options[ self::WRITER_OPTION_X ];
+		}
+		$y = 0;
+		if ( isset( $options[ self::WRITER_OPTION_Y ] ) ) {
+			$y = $options[ self::WRITER_OPTION_Y ];
+		}
 
-        for ($rowIndex = 0; $rowIndex < $matrix->getBlockCount(); ++$rowIndex) {
-            for ($columnIndex = 0; $columnIndex < $matrix->getBlockCount(); ++$columnIndex) {
-                if (1 === $matrix->getBlockValue($rowIndex, $columnIndex)) {
-                    $fpdf->Rect(
-                        $x + $matrix->getMarginLeft() + ($columnIndex * $matrix->getBlockSize()),
-                        $y + $matrix->getMarginLeft() + ($rowIndex * $matrix->getBlockSize()),
-                        $matrix->getBlockSize(),
-                        $matrix->getBlockSize(),
-                        'F'
-                    );
-                }
-            }
-        }
+		$fpdf->SetFillColor( $backgroundColor->getRed(), $backgroundColor->getGreen(), $backgroundColor->getBlue() );
+		$fpdf->Rect( $x, $y, $matrix->getOuterSize(), $matrix->getOuterSize(), 'F' );
+		$fpdf->SetFillColor( $foregroundColor->getRed(), $foregroundColor->getGreen(), $foregroundColor->getBlue() );
 
-        if ($logo instanceof LogoInterface) {
-            $this->addLogo($logo, $fpdf, $x, $y, $matrix->getOuterSize());
-        }
+		for ( $rowIndex = 0; $rowIndex < $matrix->getBlockCount(); ++$rowIndex ) {
+			for ( $columnIndex = 0; $columnIndex < $matrix->getBlockCount(); ++$columnIndex ) {
+				if ( 1 === $matrix->getBlockValue( $rowIndex, $columnIndex ) ) {
+					$fpdf->Rect(
+						$x + $matrix->getMarginLeft() + ( $columnIndex * $matrix->getBlockSize() ),
+						$y + $matrix->getMarginLeft() + ( $rowIndex * $matrix->getBlockSize() ),
+						$matrix->getBlockSize(),
+						$matrix->getBlockSize(),
+						'F'
+					);
+				}
+			}
+		}
 
-        if ($label instanceof LabelInterface) {
-            $fpdf->SetXY($x, $y + $matrix->getOuterSize() + $labelSpace - 25);
-            $fpdf->SetFont('Helvetica', '', $label->getFont()->getSize());
-            $fpdf->Cell($matrix->getOuterSize(), 0, $label->getText(), 0, 0, 'C');
-        }
+		if ( $logo instanceof LogoInterface ) {
+			$this->addLogo( $logo, $fpdf, $x, $y, $matrix->getOuterSize() );
+		}
 
-        if (isset($options[self::WRITER_OPTION_LINK])) {
-            $link = $options[self::WRITER_OPTION_LINK];
-            $fpdf->Link($x, $y, $x + $matrix->getOuterSize(), $y + $matrix->getOuterSize(), $link);
-        }
+		if ( $label instanceof LabelInterface ) {
+			$fpdf->SetXY( $x, $y + $matrix->getOuterSize() + $labelSpace - 25 );
+			$fpdf->SetFont( 'Helvetica', '', $label->getFont()->getSize() );
+			$fpdf->Cell( $matrix->getOuterSize(), 0, $label->getText(), 0, 0, 'C' );
+		}
 
-        return new PdfResult($matrix, $fpdf);
-    }
+		if ( isset( $options[ self::WRITER_OPTION_LINK ] ) ) {
+			$link = $options[ self::WRITER_OPTION_LINK ];
+			$fpdf->Link( $x, $y, $x + $matrix->getOuterSize(), $y + $matrix->getOuterSize(), $link );
+		}
 
-    private function addLogo(LogoInterface $logo, \FPDF $fpdf, float $x, float $y, float $size): void
-    {
-        $logoPath = $logo->getPath();
-        $logoHeight = $logo->getResizeToHeight();
-        $logoWidth = $logo->getResizeToWidth();
+		return new PdfResult( $matrix, $fpdf );
+	}
 
-        if (null === $logoHeight || null === $logoWidth) {
-            $imageSize = \getimagesize($logoPath);
-            if (!$imageSize) {
-                throw new \Exception(sprintf('Unable to read image size for logo "%s"', $logoPath));
-            }
-            [$logoSourceWidth, $logoSourceHeight] = $imageSize;
+	private function addLogo( LogoInterface $logo, \FPDF $fpdf, float $x, float $y, float $size ): void {
+		$logoPath   = $logo->getPath();
+		$logoHeight = $logo->getResizeToHeight();
+		$logoWidth  = $logo->getResizeToWidth();
 
-            if (null === $logoWidth) {
-                $logoWidth = (int) $logoSourceWidth;
-            }
+		if ( null === $logoHeight || null === $logoWidth ) {
+			$imageSize = \getimagesize( $logoPath );
+			if ( ! $imageSize ) {
+				throw new \Exception( sprintf( 'Unable to read image size for logo "%s"', $logoPath ) );
+			}
+			[$logoSourceWidth, $logoSourceHeight] = $imageSize;
 
-            if (null === $logoHeight) {
-                $aspectRatio = $logoWidth / $logoSourceWidth;
-                $logoHeight = (int) ($logoSourceHeight * $aspectRatio);
-            }
-        }
+			if ( null === $logoWidth ) {
+				$logoWidth = (int) $logoSourceWidth;
+			}
 
-        $logoX = $x + $size / 2 - $logoWidth / 2;
-        $logoY = $y + $size / 2 - $logoHeight / 2;
+			if ( null === $logoHeight ) {
+				$aspectRatio = $logoWidth / $logoSourceWidth;
+				$logoHeight  = (int) ( $logoSourceHeight * $aspectRatio );
+			}
+		}
 
-        $fpdf->Image($logoPath, $logoX, $logoY, $logoWidth, $logoHeight);
-    }
+		$logoX = $x + $size / 2 - $logoWidth / 2;
+		$logoY = $y + $size / 2 - $logoHeight / 2;
+
+		$fpdf->Image( $logoPath, $logoX, $logoY, $logoWidth, $logoHeight );
+	}
 }

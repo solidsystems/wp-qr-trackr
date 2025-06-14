@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -10,52 +10,48 @@
 
 namespace Brain\Monkey\Name;
 
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-final class MethodName
-{
+final class MethodName {
 
-    /**
-     * @var string
-     */
-    private $name;
 
-    /**
-     * @param string $method_name
-     */
-    public function __construct($method_name)
-    {
-        try {
-            $function_name = new FunctionName($method_name);
-        } catch (Exception\InvalidName $e) {
-            throw Exception\InvalidName::forMethod($method_name);
-        }
+	/**
+	 * @var string
+	 */
+	private $name;
 
-        if ($function_name->getNamespace()) {
-            throw Exception\InvalidName::forMethod($method_name);
-        }
+	/**
+	 * @param string $method_name
+	 */
+	public function __construct( $method_name ) {
+		try {
+			$function_name = new FunctionName( $method_name );
+		} catch ( Exception\InvalidName $e ) {
+			throw Exception\InvalidName::forMethod( $method_name );
+		}
 
-        $this->name = $function_name->shortName();
-    }
+		if ( $function_name->getNamespace() ) {
+			throw Exception\InvalidName::forMethod( $method_name );
+		}
 
-    /**
-     * @return string
-     */
-    public function name()
-    {
-        return $this->name;
-    }
+		$this->name = $function_name->shortName();
+	}
 
-    /**
-     * @param \Brain\Monkey\Name\MethodName $name
-     * @return bool
-     */
-    public function equals(MethodName $name)
-    {
-        return $this->name() === $name->name();
-    }
+	/**
+	 * @return string
+	 */
+	public function name() {
+		return $this->name;
+	}
+
+	/**
+	 * @param \Brain\Monkey\Name\MethodName $name
+	 * @return bool
+	 */
+	public function equals( MethodName $name ) {
+		return $this->name() === $name->name();
+	}
 }

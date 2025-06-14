@@ -9,43 +9,38 @@
  */
 namespace SebastianBergmann\Type;
 
-final class GenericObjectType extends Type
-{
-    private bool $allowsNull;
+final class GenericObjectType extends Type {
 
-    public function __construct(bool $nullable)
-    {
-        $this->allowsNull = $nullable;
-    }
+	private bool $allowsNull;
 
-    public function isAssignable(Type $other): bool
-    {
-        if ($this->allowsNull && $other instanceof NullType) {
-            return true;
-        }
+	public function __construct( bool $nullable ) {
+		$this->allowsNull = $nullable;
+	}
 
-        if (!$other instanceof ObjectType) {
-            return false;
-        }
+	public function isAssignable( Type $other ): bool {
+		if ( $this->allowsNull && $other instanceof NullType ) {
+			return true;
+		}
 
-        return true;
-    }
+		if ( ! $other instanceof ObjectType ) {
+			return false;
+		}
 
-    public function name(): string
-    {
-        return 'object';
-    }
+		return true;
+	}
 
-    public function allowsNull(): bool
-    {
-        return $this->allowsNull;
-    }
+	public function name(): string {
+		return 'object';
+	}
 
-    /**
-     * @psalm-assert-if-true GenericObjectType $this
-     */
-    public function isGenericObject(): bool
-    {
-        return true;
-    }
+	public function allowsNull(): bool {
+		return $this->allowsNull;
+	}
+
+	/**
+	 * @psalm-assert-if-true GenericObjectType $this
+	 */
+	public function isGenericObject(): bool {
+		return true;
+	}
 }

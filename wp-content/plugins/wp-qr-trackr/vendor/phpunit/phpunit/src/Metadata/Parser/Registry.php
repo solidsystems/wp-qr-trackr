@@ -17,22 +17,20 @@ namespace PHPUnit\Metadata\Parser;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Registry
-{
-    private static ?Parser $instance = null;
+final class Registry {
 
-    public static function parser(): Parser
-    {
-        return self::$instance ?? self::$instance = self::build();
-    }
+	private static ?Parser $instance = null;
 
-    private static function build(): Parser
-    {
-        return new CachingParser(
-            new ParserChain(
-                new AttributeParser,
-                new AnnotationParser,
-            ),
-        );
-    }
+	public static function parser(): Parser {
+		return self::$instance ?? self::$instance = self::build();
+	}
+
+	private static function build(): Parser {
+		return new CachingParser(
+			new ParserChain(
+				new AttributeParser(),
+				new AnnotationParser(),
+			),
+		);
+	}
 }

@@ -22,46 +22,41 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Errored implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
-    private readonly Code\Test $test;
-    private readonly Throwable $throwable;
+final class Errored implements Event {
 
-    public function __construct(Telemetry\Info $telemetryInfo, Code\Test $test, Throwable $throwable)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->test          = $test;
-        $this->throwable     = $throwable;
-    }
+	private readonly Telemetry\Info $telemetryInfo;
+	private readonly Code\Test $test;
+	private readonly Throwable $throwable;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	public function __construct( Telemetry\Info $telemetryInfo, Code\Test $test, Throwable $throwable ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->test          = $test;
+		$this->throwable     = $throwable;
+	}
 
-    public function test(): Code\Test
-    {
-        return $this->test;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function throwable(): Throwable
-    {
-        return $this->throwable;
-    }
+	public function test(): Code\Test {
+		return $this->test;
+	}
 
-    public function asString(): string
-    {
-        $message = trim($this->throwable->message());
+	public function throwable(): Throwable {
+		return $this->throwable;
+	}
 
-        if (!empty($message)) {
-            $message = PHP_EOL . $message;
-        }
+	public function asString(): string {
+		$message = trim( $this->throwable->message() );
 
-        return sprintf(
-            'Test Errored (%s)%s',
-            $this->test->id(),
-            $message,
-        );
-    }
+		if ( ! empty( $message ) ) {
+			$message = PHP_EOL . $message;
+		}
+
+		return sprintf(
+			'Test Errored (%s)%s',
+			$this->test->id(),
+			$message,
+		);
+	}
 }

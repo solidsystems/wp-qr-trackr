@@ -12,23 +12,20 @@ namespace SebastianBergmann\CodeCoverage\Test\TestSize;
 /**
  * @psalm-immutable
  */
-final class Medium extends Known
-{
-    /**
-     * @psalm-assert-if-true Medium $this
-     */
-    public function isMedium(): bool
-    {
-        return true;
-    }
+final class Medium extends Known {
 
-    public function isGreaterThan(TestSize $other): bool
-    {
-        return $other->isSmall();
-    }
+	/**
+	 * @psalm-assert-if-true Medium $this
+	 */
+	public function isMedium(): bool {
+		return true;
+	}
 
-    public function asString(): string
-    {
-        return 'medium';
-    }
+	public function isGreaterThan( TestSize $other ): bool {
+		return $other->isSmall();
+	}
+
+	public function asString(): string {
+		return 'medium';
+	}
 }

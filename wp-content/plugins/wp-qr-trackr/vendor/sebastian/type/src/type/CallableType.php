@@ -22,161 +22,151 @@ use Closure;
 use ReflectionClass;
 use ReflectionObject;
 
-final class CallableType extends Type
-{
-    private bool $allowsNull;
+final class CallableType extends Type {
 
-    public function __construct(bool $nullable)
-    {
-        $this->allowsNull = $nullable;
-    }
+	private bool $allowsNull;
 
-    public function isAssignable(Type $other): bool
-    {
-        if ($this->allowsNull && $other instanceof NullType) {
-            return true;
-        }
+	public function __construct( bool $nullable ) {
+		$this->allowsNull = $nullable;
+	}
 
-        if ($other instanceof self) {
-            return true;
-        }
+	public function isAssignable( Type $other ): bool {
+		if ( $this->allowsNull && $other instanceof NullType ) {
+			return true;
+		}
 
-        if ($other instanceof ObjectType) {
-            if ($this->isClosure($other)) {
-                return true;
-            }
+		if ( $other instanceof self ) {
+			return true;
+		}
 
-            if ($this->hasInvokeMethod($other)) {
-                return true;
-            }
-        }
+		if ( $other instanceof ObjectType ) {
+			if ( $this->isClosure( $other ) ) {
+				return true;
+			}
 
-        if ($other instanceof SimpleType) {
-            if ($this->isFunction($other)) {
-                return true;
-            }
+			if ( $this->hasInvokeMethod( $other ) ) {
+				return true;
+			}
+		}
 
-            if ($this->isClassCallback($other)) {
-                return true;
-            }
+		if ( $other instanceof SimpleType ) {
+			if ( $this->isFunction( $other ) ) {
+				return true;
+			}
 
-            if ($this->isObjectCallback($other)) {
-                return true;
-            }
-        }
+			if ( $this->isClassCallback( $other ) ) {
+				return true;
+			}
 
-        return false;
-    }
+			if ( $this->isObjectCallback( $other ) ) {
+				return true;
+			}
+		}
 
-    public function name(): string
-    {
-        return 'callable';
-    }
+		return false;
+	}
 
-    public function allowsNull(): bool
-    {
-        return $this->allowsNull;
-    }
+	public function name(): string {
+		return 'callable';
+	}
 
-    /**
-     * @psalm-assert-if-true CallableType $this
-     */
-    public function isCallable(): bool
-    {
-        return true;
-    }
+	public function allowsNull(): bool {
+		return $this->allowsNull;
+	}
 
-    private function isClosure(ObjectType $type): bool
-    {
-        return $type->className()->qualifiedName() === Closure::class;
-    }
+	/**
+	 * @psalm-assert-if-true CallableType $this
+	 */
+	public function isCallable(): bool {
+		return true;
+	}
 
-    private function hasInvokeMethod(ObjectType $type): bool
-    {
-        $className = $type->className()->qualifiedName();
+	private function isClosure( ObjectType $type ): bool {
+		return $type->className()->qualifiedName() === Closure::class;
+	}
 
-        assert(class_exists($className));
+	private function hasInvokeMethod( ObjectType $type ): bool {
+		$className = $type->className()->qualifiedName();
 
-        return (new ReflectionClass($className))->hasMethod('__invoke');
-    }
+		assert( class_exists( $className ) );
 
-    private function isFunction(SimpleType $type): bool
-    {
-        if (!is_string($type->value())) {
-            return false;
-        }
+		return ( new ReflectionClass( $className ) )->hasMethod( '__invoke' );
+	}
 
-        return function_exists($type->value());
-    }
+	private function isFunction( SimpleType $type ): bool {
+		if ( ! is_string( $type->value() ) ) {
+			return false;
+		}
 
-    private function isObjectCallback(SimpleType $type): bool
-    {
-        if (!is_array($type->value())) {
-            return false;
-        }
+		return function_exists( $type->value() );
+	}
 
-        if (count($type->value()) !== 2) {
-            return false;
-        }
+	private function isObjectCallback( SimpleType $type ): bool {
+		if ( ! is_array( $type->value() ) ) {
+			return false;
+		}
 
-        if (!isset($type->value()[0], $type->value()[1])) {
-            return false;
-        }
+		if ( count( $type->value() ) !== 2 ) {
+			return false;
+		}
 
-        if (!is_object($type->value()[0]) || !is_string($type->value()[1])) {
-            return false;
-        }
+		if ( ! isset( $type->value()[0], $type->value()[1] ) ) {
+			return false;
+		}
 
-        [$object, $methodName] = $type->value();
+		if ( ! is_object( $type->value()[0] ) || ! is_string( $type->value()[1] ) ) {
+			return false;
+		}
 
-        return (new ReflectionObject($object))->hasMethod($methodName);
-    }
+		[$object, $methodName] = $type->value();
 
-    private function isClassCallback(SimpleType $type): bool
-    {
-        if (!is_string($type->value()) && !is_array($type->value())) {
-            return false;
-        }
+		return ( new ReflectionObject( $object ) )->hasMethod( $methodName );
+	}
 
-        if (is_string($type->value())) {
-            if (!str_contains($type->value(), '::')) {
-                return false;
-            }
+	private function isClassCallback( SimpleType $type ): bool {
+		if ( ! is_string( $type->value() ) && ! is_array( $type->value() ) ) {
+			return false;
+		}
 
-            [$className, $methodName] = explode('::', $type->value());
-        }
+		if ( is_string( $type->value() ) ) {
+			if ( ! str_contains( $type->value(), '::' ) ) {
+				return false;
+			}
 
-        if (is_array($type->value())) {
-            if (count($type->value()) !== 2) {
-                return false;
-            }
+			[$className, $methodName] = explode( '::', $type->value() );
+		}
 
-            if (!isset($type->value()[0], $type->value()[1])) {
-                return false;
-            }
+		if ( is_array( $type->value() ) ) {
+			if ( count( $type->value() ) !== 2 ) {
+				return false;
+			}
 
-            if (!is_string($type->value()[0]) || !is_string($type->value()[1])) {
-                return false;
-            }
+			if ( ! isset( $type->value()[0], $type->value()[1] ) ) {
+				return false;
+			}
 
-            [$className, $methodName] = $type->value();
-        }
+			if ( ! is_string( $type->value()[0] ) || ! is_string( $type->value()[1] ) ) {
+				return false;
+			}
 
-        assert(isset($className) && is_string($className));
-        assert(isset($methodName) && is_string($methodName));
+			[$className, $methodName] = $type->value();
+		}
 
-        if (!class_exists($className)) {
-            return false;
-        }
+		assert( isset( $className ) && is_string( $className ) );
+		assert( isset( $methodName ) && is_string( $methodName ) );
 
-        $class = new ReflectionClass($className);
+		if ( ! class_exists( $className ) ) {
+			return false;
+		}
 
-        if (!$class->hasMethod($methodName)) {
-            return false;
-        }
+		$class = new ReflectionClass( $className );
 
-        $method = $class->getMethod($methodName);
+		if ( ! $class->hasMethod( $methodName ) ) {
+			return false;
+		}
 
-        return $method->isPublic() && $method->isStatic();
-    }
+		$method = $class->getMethod( $methodName );
+
+		return $method->isPublic() && $method->isStatic();
+	}
 }

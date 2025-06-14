@@ -11,73 +11,66 @@ namespace SebastianBergmann\Type;
 
 use function strtolower;
 
-final class SimpleType extends Type
-{
-    private string $name;
-    private bool $allowsNull;
-    private mixed $value;
+final class SimpleType extends Type {
 
-    public function __construct(string $name, bool $nullable, mixed $value = null)
-    {
-        $this->name       = $this->normalize($name);
-        $this->allowsNull = $nullable;
-        $this->value      = $value;
-    }
+	private string $name;
+	private bool $allowsNull;
+	private mixed $value;
 
-    public function isAssignable(Type $other): bool
-    {
-        if ($this->allowsNull && $other instanceof NullType) {
-            return true;
-        }
+	public function __construct( string $name, bool $nullable, mixed $value = null ) {
+		$this->name       = $this->normalize( $name );
+		$this->allowsNull = $nullable;
+		$this->value      = $value;
+	}
 
-        if ($this->name === 'bool' && $other->name() === 'true') {
-            return true;
-        }
+	public function isAssignable( Type $other ): bool {
+		if ( $this->allowsNull && $other instanceof NullType ) {
+			return true;
+		}
 
-        if ($this->name === 'bool' && $other->name() === 'false') {
-            return true;
-        }
+		if ( $this->name === 'bool' && $other->name() === 'true' ) {
+			return true;
+		}
 
-        if ($other instanceof self) {
-            return $this->name === $other->name;
-        }
+		if ( $this->name === 'bool' && $other->name() === 'false' ) {
+			return true;
+		}
 
-        return false;
-    }
+		if ( $other instanceof self ) {
+			return $this->name === $other->name;
+		}
 
-    public function name(): string
-    {
-        return $this->name;
-    }
+		return false;
+	}
 
-    public function allowsNull(): bool
-    {
-        return $this->allowsNull;
-    }
+	public function name(): string {
+		return $this->name;
+	}
 
-    public function value(): mixed
-    {
-        return $this->value;
-    }
+	public function allowsNull(): bool {
+		return $this->allowsNull;
+	}
 
-    /**
-     * @psalm-assert-if-true SimpleType $this
-     */
-    public function isSimple(): bool
-    {
-        return true;
-    }
+	public function value(): mixed {
+		return $this->value;
+	}
 
-    private function normalize(string $name): string
-    {
-        $name = strtolower($name);
+	/**
+	 * @psalm-assert-if-true SimpleType $this
+	 */
+	public function isSimple(): bool {
+		return true;
+	}
 
-        return match ($name) {
-            'boolean' => 'bool',
-            'real', 'double' => 'float',
-            'integer' => 'int',
-            '[]'      => 'array',
-            default   => $name,
-        };
-    }
+	private function normalize( string $name ): string {
+		$name = strtolower( $name );
+
+		return match ( $name ) {
+			'boolean' => 'bool',
+			'real', 'double' => 'float',
+			'integer' => 'int',
+			'[]'      => 'array',
+			default   => $name,
+		};
+	}
 }

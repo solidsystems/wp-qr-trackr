@@ -6,30 +6,28 @@ namespace Endroid\QrCode\Writer\Result;
 
 use Endroid\QrCode\Matrix\MatrixInterface;
 
-final class WebPResult extends GdResult
-{
-    public function __construct(
-        MatrixInterface $matrix,
-        \GdImage $image,
-        private readonly int $quality = -1,
-    ) {
-        parent::__construct($matrix, $image);
-    }
+final class WebPResult extends GdResult {
 
-    public function getString(): string
-    {
-        if (!function_exists('imagewebp')) {
-            throw new \Exception('WebP support is not available in your GD installation');
-        }
+	public function __construct(
+		MatrixInterface $matrix,
+		\GdImage $image,
+		private readonly int $quality = -1,
+	) {
+		parent::__construct( $matrix, $image );
+	}
 
-        ob_start();
-        imagewebp($this->image, quality: $this->quality);
+	public function getString(): string {
+		if ( ! function_exists( 'imagewebp' ) ) {
+			throw new \Exception( 'WebP support is not available in your GD installation' );
+		}
 
-        return strval(ob_get_clean());
-    }
+		ob_start();
+		imagewebp( $this->image, quality: $this->quality );
 
-    public function getMimeType(): string
-    {
-        return 'image/webp';
-    }
+		return strval( ob_get_clean() );
+	}
+
+	public function getMimeType(): string {
+		return 'image/webp';
+	}
 }

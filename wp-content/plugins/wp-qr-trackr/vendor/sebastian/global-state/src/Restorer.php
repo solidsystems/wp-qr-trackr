@@ -18,89 +18,86 @@ use function is_array;
 use ReflectionClass;
 use ReflectionProperty;
 
-final class Restorer
-{
-    public function restoreGlobalVariables(Snapshot $snapshot): void
-    {
-        $superGlobalArrays = $snapshot->superGlobalArrays();
+final class Restorer {
 
-        foreach ($superGlobalArrays as $superGlobalArray) {
-            $this->restoreSuperGlobalArray($snapshot, $superGlobalArray);
-        }
+	public function restoreGlobalVariables( Snapshot $snapshot ): void {
+		$superGlobalArrays = $snapshot->superGlobalArrays();
 
-        $globalVariables = $snapshot->globalVariables();
+		foreach ( $superGlobalArrays as $superGlobalArray ) {
+			$this->restoreSuperGlobalArray( $snapshot, $superGlobalArray );
+		}
 
-        foreach (array_keys($GLOBALS) as $key) {
-            if ($key !== 'GLOBALS' &&
-                !in_array($key, $superGlobalArrays, true) &&
-                !$snapshot->excludeList()->isGlobalVariableExcluded($key)) {
-                if (array_key_exists($key, $globalVariables)) {
-                    $GLOBALS[$key] = $globalVariables[$key];
-                } else {
-                    unset($GLOBALS[$key]);
-                }
-            }
-        }
-    }
+		$globalVariables = $snapshot->globalVariables();
 
-    public function restoreStaticProperties(Snapshot $snapshot): void
-    {
-        $current    = new Snapshot($snapshot->excludeList(), false, false, false, false, true, false, false, false, false);
-        $newClasses = array_diff($current->classes(), $snapshot->classes());
+		foreach ( array_keys( $GLOBALS ) as $key ) {
+			if ( $key !== 'GLOBALS' &&
+				! in_array( $key, $superGlobalArrays, true ) &&
+				! $snapshot->excludeList()->isGlobalVariableExcluded( $key ) ) {
+				if ( array_key_exists( $key, $globalVariables ) ) {
+					$GLOBALS[ $key ] = $globalVariables[ $key ];
+				} else {
+					unset( $GLOBALS[ $key ] );
+				}
+			}
+		}
+	}
 
-        unset($current);
+	public function restoreStaticProperties( Snapshot $snapshot ): void {
+		$current    = new Snapshot( $snapshot->excludeList(), false, false, false, false, true, false, false, false, false );
+		$newClasses = array_diff( $current->classes(), $snapshot->classes() );
 
-        foreach ($snapshot->staticProperties() as $className => $staticProperties) {
-            foreach ($staticProperties as $name => $value) {
-                $reflector = new ReflectionProperty($className, $name);
-                $reflector->setValue(null, $value);
-            }
-        }
+		unset( $current );
 
-        foreach ($newClasses as $className) {
-            $class    = new ReflectionClass($className);
-            $defaults = $class->getDefaultProperties();
+		foreach ( $snapshot->staticProperties() as $className => $staticProperties ) {
+			foreach ( $staticProperties as $name => $value ) {
+				$reflector = new ReflectionProperty( $className, $name );
+				$reflector->setValue( null, $value );
+			}
+		}
 
-            foreach ($class->getProperties() as $property) {
-                if (!$property->isStatic()) {
-                    continue;
-                }
+		foreach ( $newClasses as $className ) {
+			$class    = new ReflectionClass( $className );
+			$defaults = $class->getDefaultProperties();
 
-                $name = $property->getName();
+			foreach ( $class->getProperties() as $property ) {
+				if ( ! $property->isStatic() ) {
+					continue;
+				}
 
-                if ($snapshot->excludeList()->isStaticPropertyExcluded($className, $name)) {
-                    continue;
-                }
+				$name = $property->getName();
 
-                if (!isset($defaults[$name])) {
-                    continue;
-                }
+				if ( $snapshot->excludeList()->isStaticPropertyExcluded( $className, $name ) ) {
+					continue;
+				}
 
-                $property->setValue(null, $defaults[$name]);
-            }
-        }
-    }
+				if ( ! isset( $defaults[ $name ] ) ) {
+					continue;
+				}
 
-    private function restoreSuperGlobalArray(Snapshot $snapshot, string $superGlobalArray): void
-    {
-        $superGlobalVariables = $snapshot->superGlobalVariables();
+				$property->setValue( null, $defaults[ $name ] );
+			}
+		}
+	}
 
-        if (isset($GLOBALS[$superGlobalArray], $superGlobalVariables[$superGlobalArray]) &&
-            is_array($GLOBALS[$superGlobalArray])) {
-            $keys = array_keys(
-                array_merge(
-                    $GLOBALS[$superGlobalArray],
-                    $superGlobalVariables[$superGlobalArray],
-                ),
-            );
+	private function restoreSuperGlobalArray( Snapshot $snapshot, string $superGlobalArray ): void {
+		$superGlobalVariables = $snapshot->superGlobalVariables();
 
-            foreach ($keys as $key) {
-                if (isset($superGlobalVariables[$superGlobalArray][$key])) {
-                    $GLOBALS[$superGlobalArray][$key] = $superGlobalVariables[$superGlobalArray][$key];
-                } else {
-                    unset($GLOBALS[$superGlobalArray][$key]);
-                }
-            }
-        }
-    }
+		if ( isset( $GLOBALS[ $superGlobalArray ], $superGlobalVariables[ $superGlobalArray ] ) &&
+			is_array( $GLOBALS[ $superGlobalArray ] ) ) {
+			$keys = array_keys(
+				array_merge(
+					$GLOBALS[ $superGlobalArray ],
+					$superGlobalVariables[ $superGlobalArray ],
+				),
+			);
+
+			foreach ( $keys as $key ) {
+				if ( isset( $superGlobalVariables[ $superGlobalArray ][ $key ] ) ) {
+					$GLOBALS[ $superGlobalArray ][ $key ] = $superGlobalVariables[ $superGlobalArray ][ $key ];
+				} else {
+					unset( $GLOBALS[ $superGlobalArray ][ $key ] );
+				}
+			}
+		}
+	}
 }

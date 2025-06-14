@@ -20,135 +20,127 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class InvocationHandler
-{
-    /**
-     * @psalm-var list<Matcher>
-     */
-    private array $matchers = [];
+final class InvocationHandler {
 
-    /**
-     * @psalm-var array<string,Matcher>
-     */
-    private array $matcherMap = [];
+	/**
+	 * @psalm-var list<Matcher>
+	 */
+	private array $matchers = array();
 
-    /**
-     * @psalm-var list<ConfigurableMethod>
-     */
-    private readonly array $configurableMethods;
-    private readonly bool $returnValueGeneration;
+	/**
+	 * @psalm-var array<string,Matcher>
+	 */
+	private array $matcherMap = array();
 
-    /**
-     * @psalm-param list<ConfigurableMethod> $configurableMethods
-     */
-    public function __construct(array $configurableMethods, bool $returnValueGeneration)
-    {
-        $this->configurableMethods   = $configurableMethods;
-        $this->returnValueGeneration = $returnValueGeneration;
-    }
+	/**
+	 * @psalm-var list<ConfigurableMethod>
+	 */
+	private readonly array $configurableMethods;
+	private readonly bool $returnValueGeneration;
 
-    public function hasMatchers(): bool
-    {
-        foreach ($this->matchers as $matcher) {
-            if ($matcher->hasMatchers()) {
-                return true;
-            }
-        }
+	/**
+	 * @psalm-param list<ConfigurableMethod> $configurableMethods
+	 */
+	public function __construct( array $configurableMethods, bool $returnValueGeneration ) {
+		$this->configurableMethods   = $configurableMethods;
+		$this->returnValueGeneration = $returnValueGeneration;
+	}
 
-        return false;
-    }
+	public function hasMatchers(): bool {
+		foreach ( $this->matchers as $matcher ) {
+			if ( $matcher->hasMatchers() ) {
+				return true;
+			}
+		}
 
-    /**
-     * Looks up the match builder with identification $id and returns it.
-     */
-    public function lookupMatcher(string $id): ?Matcher
-    {
-        return $this->matcherMap[$id] ?? null;
-    }
+		return false;
+	}
 
-    /**
-     * Registers a matcher with the identification $id. The matcher can later be
-     * looked up using lookupMatcher() to figure out if it has been invoked.
-     *
-     * @throws MatcherAlreadyRegisteredException
-     */
-    public function registerMatcher(string $id, Matcher $matcher): void
-    {
-        if (isset($this->matcherMap[$id])) {
-            throw new MatcherAlreadyRegisteredException($id);
-        }
+	/**
+	 * Looks up the match builder with identification $id and returns it.
+	 */
+	public function lookupMatcher( string $id ): ?Matcher {
+		return $this->matcherMap[ $id ] ?? null;
+	}
 
-        $this->matcherMap[$id] = $matcher;
-    }
+	/**
+	 * Registers a matcher with the identification $id. The matcher can later be
+	 * looked up using lookupMatcher() to figure out if it has been invoked.
+	 *
+	 * @throws MatcherAlreadyRegisteredException
+	 */
+	public function registerMatcher( string $id, Matcher $matcher ): void {
+		if ( isset( $this->matcherMap[ $id ] ) ) {
+			throw new MatcherAlreadyRegisteredException( $id );
+		}
 
-    public function expects(InvocationOrder $rule): InvocationMocker
-    {
-        $matcher = new Matcher($rule);
-        $this->addMatcher($matcher);
+		$this->matcherMap[ $id ] = $matcher;
+	}
 
-        return new InvocationMocker(
-            $this,
-            $matcher,
-            ...$this->configurableMethods,
-        );
-    }
+	public function expects( InvocationOrder $rule ): InvocationMocker {
+		$matcher = new Matcher( $rule );
+		$this->addMatcher( $matcher );
 
-    /**
-     * @throws \PHPUnit\Framework\MockObject\Exception
-     * @throws Exception
-     */
-    public function invoke(Invocation $invocation): mixed
-    {
-        $exception      = null;
-        $hasReturnValue = false;
-        $returnValue    = null;
+		return new InvocationMocker(
+			$this,
+			$matcher,
+			...$this->configurableMethods,
+		);
+	}
 
-        foreach ($this->matchers as $match) {
-            try {
-                if ($match->matches($invocation)) {
-                    $value = $match->invoked($invocation);
+	/**
+	 * @throws \PHPUnit\Framework\MockObject\Exception
+	 * @throws Exception
+	 */
+	public function invoke( Invocation $invocation ): mixed {
+		$exception      = null;
+		$hasReturnValue = false;
+		$returnValue    = null;
 
-                    if (!$hasReturnValue) {
-                        $returnValue    = $value;
-                        $hasReturnValue = true;
-                    }
-                }
-            } catch (Exception $e) {
-                $exception = $e;
-            }
-        }
+		foreach ( $this->matchers as $match ) {
+			try {
+				if ( $match->matches( $invocation ) ) {
+					$value = $match->invoked( $invocation );
 
-        if ($exception !== null) {
-            throw $exception;
-        }
+					if ( ! $hasReturnValue ) {
+						$returnValue    = $value;
+						$hasReturnValue = true;
+					}
+				}
+			} catch ( Exception $e ) {
+				$exception = $e;
+			}
+		}
 
-        if ($hasReturnValue) {
-            return $returnValue;
-        }
+		if ( $exception !== null ) {
+			throw $exception;
+		}
 
-        if (!$this->returnValueGeneration) {
-            if (strtolower($invocation->methodName()) === '__tostring') {
-                return '';
-            }
+		if ( $hasReturnValue ) {
+			return $returnValue;
+		}
 
-            throw new ReturnValueNotConfiguredException($invocation);
-        }
+		if ( ! $this->returnValueGeneration ) {
+			if ( strtolower( $invocation->methodName() ) === '__tostring' ) {
+				return '';
+			}
 
-        return $invocation->generateReturnValue();
-    }
+			throw new ReturnValueNotConfiguredException( $invocation );
+		}
 
-    /**
-     * @throws Throwable
-     */
-    public function verify(): void
-    {
-        foreach ($this->matchers as $matcher) {
-            $matcher->verify();
-        }
-    }
+		return $invocation->generateReturnValue();
+	}
 
-    private function addMatcher(Matcher $matcher): void
-    {
-        $this->matchers[] = $matcher;
-    }
+	/**
+	 * @throws Throwable
+	 */
+	public function verify(): void {
+		foreach ( $this->matchers as $matcher ) {
+			$matcher->verify();
+		}
+	}
+
+	private function addMatcher( Matcher $matcher ): void {
+		$this->matchers[] = $matcher;
+	}
 }

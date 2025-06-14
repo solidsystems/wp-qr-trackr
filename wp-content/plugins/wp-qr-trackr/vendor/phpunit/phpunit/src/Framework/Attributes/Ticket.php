@@ -16,27 +16,25 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final class Ticket
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $text;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
+final class Ticket {
 
-    /**
-     * @psalm-param non-empty-string $text
-     */
-    public function __construct(string $text)
-    {
-        $this->text = $text;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $text;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function text(): string
-    {
-        return $this->text;
-    }
+	/**
+	 * @psalm-param non-empty-string $text
+	 */
+	public function __construct( string $text ) {
+		$this->text = $text;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function text(): string {
+		return $this->text;
+	}
 }

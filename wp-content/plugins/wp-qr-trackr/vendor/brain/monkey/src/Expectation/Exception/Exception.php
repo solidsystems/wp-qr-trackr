@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -17,21 +17,19 @@ use Brain\Monkey\Exception as BaseException;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class Exception extends BaseException
-{
+class Exception extends BaseException {
 
-    /**
-     *
-     * @param \Exception $exception
-     * @return static
-     */
-    public static function becauseOf(\Exception $exception)
-    {
-        return new static(
-            $exception->getMessage(),
-            $exception->getCode(),
-            $exception
-        );
-    }
 
+	/**
+	 *
+	 * @param \Exception $exception
+	 * @return static
+	 */
+	public static function becauseOf( \Exception $exception ) {
+		return new static(
+			$exception->getMessage(),
+			$exception->getCode(),
+			$exception
+		);
+	}
 }

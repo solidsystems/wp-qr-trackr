@@ -21,61 +21,59 @@ use SebastianBergmann\Exporter\Exporter;
 /**
  * Compares scalar or NULL values for equality.
  */
-class ScalarComparator extends Comparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        return ((is_scalar($expected) xor null === $expected) &&
-               (is_scalar($actual) xor null === $actual)) ||
-               // allow comparison between strings and objects featuring __toString()
-               (is_string($expected) && is_object($actual) && method_exists($actual, '__toString')) ||
-               (is_object($expected) && method_exists($expected, '__toString') && is_string($actual));
-    }
+class ScalarComparator extends Comparator {
 
-    /**
-     * @throws ComparisonFailure
-     */
-    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false): void
-    {
-        $expectedToCompare = $expected;
-        $actualToCompare   = $actual;
-        $exporter          = new Exporter;
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		return ( ( is_scalar( $expected ) xor null === $expected ) &&
+				( is_scalar( $actual ) xor null === $actual ) ) ||
+				// allow comparison between strings and objects featuring __toString()
+				( is_string( $expected ) && is_object( $actual ) && method_exists( $actual, '__toString' ) ) ||
+				( is_object( $expected ) && method_exists( $expected, '__toString' ) && is_string( $actual ) );
+	}
 
-        // always compare as strings to avoid strange behaviour
-        // otherwise 0 == 'Foobar'
-        if ((is_string($expected) && !is_bool($actual)) || (is_string($actual) && !is_bool($expected))) {
-            $expectedToCompare = (string) $expectedToCompare;
-            $actualToCompare   = (string) $actualToCompare;
+	/**
+	 * @throws ComparisonFailure
+	 */
+	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false ): void {
+		$expectedToCompare = $expected;
+		$actualToCompare   = $actual;
+		$exporter          = new Exporter();
 
-            if ($ignoreCase) {
-                $expectedToCompare = mb_strtolower($expectedToCompare, 'UTF-8');
-                $actualToCompare   = mb_strtolower($actualToCompare, 'UTF-8');
-            }
-        }
+		// always compare as strings to avoid strange behaviour
+		// otherwise 0 == 'Foobar'
+		if ( ( is_string( $expected ) && ! is_bool( $actual ) ) || ( is_string( $actual ) && ! is_bool( $expected ) ) ) {
+			$expectedToCompare = (string) $expectedToCompare;
+			$actualToCompare   = (string) $actualToCompare;
 
-        if ($expectedToCompare !== $actualToCompare && is_string($expected) && is_string($actual)) {
-            throw new ComparisonFailure(
-                $expected,
-                $actual,
-                $exporter->export($expected),
-                $exporter->export($actual),
-                'Failed asserting that two strings are equal.',
-            );
-        }
+			if ( $ignoreCase ) {
+				$expectedToCompare = mb_strtolower( $expectedToCompare, 'UTF-8' );
+				$actualToCompare   = mb_strtolower( $actualToCompare, 'UTF-8' );
+			}
+		}
 
-        if ($expectedToCompare != $actualToCompare) {
-            throw new ComparisonFailure(
-                $expected,
-                $actual,
-                // no diff is required
-                '',
-                '',
-                sprintf(
-                    'Failed asserting that %s matches expected %s.',
-                    $exporter->export($actual),
-                    $exporter->export($expected),
-                ),
-            );
-        }
-    }
+		if ( $expectedToCompare !== $actualToCompare && is_string( $expected ) && is_string( $actual ) ) {
+			throw new ComparisonFailure(
+				$expected,
+				$actual,
+				$exporter->export( $expected ),
+				$exporter->export( $actual ),
+				'Failed asserting that two strings are equal.',
+			);
+		}
+
+		if ( $expectedToCompare != $actualToCompare ) {
+			throw new ComparisonFailure(
+				$expected,
+				$actual,
+				// no diff is required
+				'',
+				'',
+				sprintf(
+					'Failed asserting that %s matches expected %s.',
+					$exporter->export( $actual ),
+					$exporter->export( $expected ),
+				),
+			);
+		}
+	}
 }

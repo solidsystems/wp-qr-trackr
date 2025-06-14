@@ -17,43 +17,41 @@ use function is_string;
 use function strtolower;
 use function ucfirst;
 
-class Type extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<' . ucfirst($this->_expected) . '>';
-    }
+class Type extends MatcherAbstract {
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        $function = $this->_expected === 'real' ? 'is_float' : 'is_' . strtolower($this->_expected);
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<' . ucfirst( $this->_expected ) . '>';
+	}
 
-        if (function_exists($function)) {
-            return $function($actual);
-        }
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		$function = $this->_expected === 'real' ? 'is_float' : 'is_' . strtolower( $this->_expected );
 
-        if (! is_string($this->_expected)) {
-            return false;
-        }
+		if ( function_exists( $function ) ) {
+			return $function( $actual );
+		}
 
-        if (class_exists($this->_expected) || interface_exists($this->_expected)) {
-            return $actual instanceof $this->_expected;
-        }
+		if ( ! is_string( $this->_expected ) ) {
+			return false;
+		}
 
-        return false;
-    }
+		if ( class_exists( $this->_expected ) || interface_exists( $this->_expected ) ) {
+			return $actual instanceof $this->_expected;
+		}
+
+		return false;
+	}
 }

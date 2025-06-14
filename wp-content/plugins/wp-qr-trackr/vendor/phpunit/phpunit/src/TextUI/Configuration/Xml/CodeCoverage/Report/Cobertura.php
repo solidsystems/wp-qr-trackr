@@ -18,17 +18,15 @@ use PHPUnit\TextUI\Configuration\File;
  *
  * @psalm-immutable
  */
-final class Cobertura
-{
-    private readonly File $target;
+final class Cobertura {
 
-    public function __construct(File $target)
-    {
-        $this->target = $target;
-    }
+	private readonly File $target;
 
-    public function target(): File
-    {
-        return $this->target;
-    }
+	public function __construct( File $target ) {
+		$this->target = $target;
+	}
+
+	public function target(): File {
+		return $this->target;
+	}
 }

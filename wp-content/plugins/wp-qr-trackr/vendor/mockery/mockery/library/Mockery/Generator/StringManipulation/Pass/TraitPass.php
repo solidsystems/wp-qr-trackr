@@ -16,24 +16,26 @@ use function implode;
 use function ltrim;
 use function preg_replace;
 
-class TraitPass implements Pass
-{
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        $traits = $config->getTargetTraits();
+class TraitPass implements Pass {
 
-        if ($traits === []) {
-            return $code;
-        }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		$traits = $config->getTargetTraits();
 
-        $useStatements = array_map(static function ($trait) {
-            return 'use \\\\' . ltrim($trait->getName(), '\\') . ';';
-        }, $traits);
+		if ( $traits === array() ) {
+			return $code;
+		}
 
-        return preg_replace('/^{$/m', "{\n    " . implode("\n    ", $useStatements) . "\n", $code);
-    }
+		$useStatements = array_map(
+			static function ( $trait ) {
+				return 'use \\\\' . ltrim( $trait->getName(), '\\' ) . ';';
+			},
+			$traits
+		);
+
+		return preg_replace( '/^{$/m', "{\n    " . implode( "\n    ", $useStatements ) . "\n", $code );
+	}
 }

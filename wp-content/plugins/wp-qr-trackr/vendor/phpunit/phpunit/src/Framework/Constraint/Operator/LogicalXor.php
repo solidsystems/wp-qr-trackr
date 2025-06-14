@@ -16,51 +16,47 @@ use PHPUnit\Framework\ExpectationFailedException;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class LogicalXor extends BinaryOperator
-{
-    public static function fromConstraints(mixed ...$constraints): self
-    {
-        return new self(...$constraints);
-    }
+final class LogicalXor extends BinaryOperator {
 
-    /**
-     * Returns the name of this operator.
-     */
-    public function operator(): string
-    {
-        return 'xor';
-    }
+	public static function fromConstraints( mixed ...$constraints ): self {
+		return new self( ...$constraints );
+	}
 
-    /**
-     * Returns this operator's precedence.
-     *
-     * @see https://www.php.net/manual/en/language.operators.precedence.php.
-     */
-    public function precedence(): int
-    {
-        return 23;
-    }
+	/**
+	 * Returns the name of this operator.
+	 */
+	public function operator(): string {
+		return 'xor';
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     *
-     * @throws ExpectationFailedException
-     */
-    public function matches(mixed $other): bool
-    {
-        $constraints = $this->constraints();
+	/**
+	 * Returns this operator's precedence.
+	 *
+	 * @see https://www.php.net/manual/en/language.operators.precedence.php.
+	 */
+	public function precedence(): int {
+		return 23;
+	}
 
-        $initial = array_shift($constraints);
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 *
+	 * @throws ExpectationFailedException
+	 */
+	public function matches( mixed $other ): bool {
+		$constraints = $this->constraints();
 
-        if ($initial === null) {
-            return false;
-        }
+		$initial = array_shift( $constraints );
 
-        return array_reduce(
-            $constraints,
-            static fn (bool $matches, Constraint $constraint): bool => $matches xor $constraint->evaluate($other, '', true),
-            $initial->evaluate($other, '', true),
-        );
-    }
+		if ( $initial === null ) {
+			return false;
+		}
+
+		return array_reduce(
+			$constraints,
+			static fn ( bool $matches, Constraint $constraint ): bool => $matches xor $constraint->evaluate( $other, '', true ),
+			$initial->evaluate( $other, '', true ),
+		);
+	}
 }

@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -15,27 +15,24 @@ namespace Brain\Monkey\Name\Exception;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class InvalidCallable extends Exception
-{
+class InvalidCallable extends Exception {
 
-    /**
-     * @param mixed $callback
-     * @return \Brain\Monkey\Name\Exception\InvalidCallable|\Brain\Monkey\Name\Exception\NotInvokableObjectAsCallback
-     */
-    public static function forCallable($callback)
-    {
-        if (is_object($callback)) {
-            return new NotInvokableObjectAsCallback();
-        }
 
-        return new static(
-            sprintf(
-                'Given %s "%s" is not a valid PHP callable.',
-                gettype($callback),
-                is_string($callback) ? "{$callback}" : var_export($callback, true)
-            )
-        );
+	/**
+	 * @param mixed $callback
+	 * @return \Brain\Monkey\Name\Exception\InvalidCallable|\Brain\Monkey\Name\Exception\NotInvokableObjectAsCallback
+	 */
+	public static function forCallable( $callback ) {
+		if ( is_object( $callback ) ) {
+			return new NotInvokableObjectAsCallback();
+		}
 
-    }
-
+		return new static(
+			sprintf(
+				'Given %s "%s" is not a valid PHP callable.',
+				gettype( $callback ),
+				is_string( $callback ) ? "{$callback}" : var_export( $callback, true )
+			)
+		);
+	}
 }

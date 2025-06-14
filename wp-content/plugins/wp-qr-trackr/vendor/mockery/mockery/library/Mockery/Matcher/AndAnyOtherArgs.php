@@ -10,29 +10,27 @@
 
 namespace Mockery\Matcher;
 
-class AndAnyOtherArgs extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<AndAnyOthers>';
-    }
+class AndAnyOtherArgs extends MatcherAbstract {
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        return true;
-    }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<AndAnyOthers>';
+	}
+
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		return true;
+	}
 }

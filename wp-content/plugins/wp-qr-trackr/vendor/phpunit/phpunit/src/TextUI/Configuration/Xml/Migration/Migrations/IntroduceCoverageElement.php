@@ -16,15 +16,14 @@ use DOMDocument;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class IntroduceCoverageElement implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $coverage = $document->createElement('coverage');
+final class IntroduceCoverageElement implements Migration {
 
-        $document->documentElement->insertBefore(
-            $coverage,
-            $document->documentElement->firstChild,
-        );
-    }
+	public function migrate( DOMDocument $document ): void {
+		$coverage = $document->createElement( 'coverage' );
+
+		$document->documentElement->insertBefore(
+			$coverage,
+			$document->documentElement->firstChild,
+		);
+	}
 }

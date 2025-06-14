@@ -10,36 +10,34 @@
 
 namespace Mockery\Matcher;
 
-class NotAnyOf extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<AnyOf>';
-    }
+class NotAnyOf extends MatcherAbstract {
 
-    /**
-     * Check if the actual value does not match the expected (in this
-     * case it's specifically NOT expected).
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        foreach ($this->_expected as $exp) {
-            if ($actual === $exp || $actual == $exp) {
-                return false;
-            }
-        }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<AnyOf>';
+	}
 
-        return true;
-    }
+	/**
+	 * Check if the actual value does not match the expected (in this
+	 * case it's specifically NOT expected).
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		foreach ( $this->_expected as $exp ) {
+			if ( $actual === $exp || $actual == $exp ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

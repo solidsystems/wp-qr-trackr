@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -17,23 +17,21 @@ use Brain\Monkey\Expectation\ExpectationTarget;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class InvalidExpectationName extends Exception
-{
+class InvalidExpectationName extends Exception {
 
-    /**
-     * @param mixed  $name
-     * @param string $type
-     * @return static
-     */
-    public static function forNameAndType($name, $type)
-    {
-        return new static(
-            sprintf(
-                '%s name to set expectation for must be in a string, got %s.',
-                $type === ExpectationTarget::TYPE_FUNCTION ? 'Function' : 'Hook',
-                is_object($name) ? 'instance of '.get_class($name) : gettype($name)
-            )
-        );
-    }
 
+	/**
+	 * @param mixed  $name
+	 * @param string $type
+	 * @return static
+	 */
+	public static function forNameAndType( $name, $type ) {
+		return new static(
+			sprintf(
+				'%s name to set expectation for must be in a string, got %s.',
+				$type === ExpectationTarget::TYPE_FUNCTION ? 'Function' : 'Hook',
+				is_object( $name ) ? 'instance of ' . get_class( $name ) : gettype( $name )
+			)
+		);
+	}
 }

@@ -16,23 +16,20 @@ namespace PHPUnit\Framework\TestStatus;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Incomplete extends Known
-{
-    /**
-     * @psalm-assert-if-true Incomplete $this
-     */
-    public function isIncomplete(): bool
-    {
-        return true;
-    }
+final class Incomplete extends Known {
 
-    public function asInt(): int
-    {
-        return 2;
-    }
+	/**
+	 * @psalm-assert-if-true Incomplete $this
+	 */
+	public function isIncomplete(): bool {
+		return true;
+	}
 
-    public function asString(): string
-    {
-        return 'incomplete';
-    }
+	public function asInt(): int {
+		return 2;
+	}
+
+	public function asString(): string {
+		return 'incomplete';
+	}
 }

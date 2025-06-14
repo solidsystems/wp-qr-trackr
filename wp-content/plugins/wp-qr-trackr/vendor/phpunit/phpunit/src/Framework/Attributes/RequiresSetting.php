@@ -16,42 +16,39 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final class RequiresSetting
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $setting;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
+final class RequiresSetting {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $value;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $setting;
 
-    /**
-     * @psalm-param non-empty-string $setting
-     * @psalm-param non-empty-string $value
-     */
-    public function __construct(string $setting, string $value)
-    {
-        $this->setting = $setting;
-        $this->value   = $value;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $value;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function setting(): string
-    {
-        return $this->setting;
-    }
+	/**
+	 * @psalm-param non-empty-string $setting
+	 * @psalm-param non-empty-string $value
+	 */
+	public function __construct( string $setting, string $value ) {
+		$this->setting = $setting;
+		$this->value   = $value;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function value(): string
-    {
-        return $this->value;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function setting(): string {
+		return $this->setting;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function value(): string {
+		return $this->value;
+	}
 }

@@ -16,109 +16,96 @@ use Traversable;
 /**
  * @template-implements IteratorAggregate<int, Line>
  */
-final class Chunk implements IteratorAggregate
-{
-    private int $start;
-    private int $startRange;
-    private int $end;
-    private int $endRange;
-    private array $lines;
+final class Chunk implements IteratorAggregate {
 
-    public function __construct(int $start = 0, int $startRange = 1, int $end = 0, int $endRange = 1, array $lines = [])
-    {
-        $this->start      = $start;
-        $this->startRange = $startRange;
-        $this->end        = $end;
-        $this->endRange   = $endRange;
-        $this->lines      = $lines;
-    }
+	private int $start;
+	private int $startRange;
+	private int $end;
+	private int $endRange;
+	private array $lines;
 
-    public function start(): int
-    {
-        return $this->start;
-    }
+	public function __construct( int $start = 0, int $startRange = 1, int $end = 0, int $endRange = 1, array $lines = array() ) {
+		$this->start      = $start;
+		$this->startRange = $startRange;
+		$this->end        = $end;
+		$this->endRange   = $endRange;
+		$this->lines      = $lines;
+	}
 
-    public function startRange(): int
-    {
-        return $this->startRange;
-    }
+	public function start(): int {
+		return $this->start;
+	}
 
-    public function end(): int
-    {
-        return $this->end;
-    }
+	public function startRange(): int {
+		return $this->startRange;
+	}
 
-    public function endRange(): int
-    {
-        return $this->endRange;
-    }
+	public function end(): int {
+		return $this->end;
+	}
 
-    /**
-     * @psalm-return list<Line>
-     */
-    public function lines(): array
-    {
-        return $this->lines;
-    }
+	public function endRange(): int {
+		return $this->endRange;
+	}
 
-    /**
-     * @psalm-param list<Line> $lines
-     */
-    public function setLines(array $lines): void
-    {
-        foreach ($lines as $line) {
-            if (!$line instanceof Line) {
-                throw new InvalidArgumentException;
-            }
-        }
+	/**
+	 * @psalm-return list<Line>
+	 */
+	public function lines(): array {
+		return $this->lines;
+	}
 
-        $this->lines = $lines;
-    }
+	/**
+	 * @psalm-param list<Line> $lines
+	 */
+	public function setLines( array $lines ): void {
+		foreach ( $lines as $line ) {
+			if ( ! $line instanceof Line ) {
+				throw new InvalidArgumentException();
+			}
+		}
 
-    /**
-     * @deprecated Use start() instead
-     */
-    public function getStart(): int
-    {
-        return $this->start;
-    }
+		$this->lines = $lines;
+	}
 
-    /**
-     * @deprecated Use startRange() instead
-     */
-    public function getStartRange(): int
-    {
-        return $this->startRange;
-    }
+	/**
+	 * @deprecated Use start() instead
+	 */
+	public function getStart(): int {
+		return $this->start;
+	}
 
-    /**
-     * @deprecated Use end() instead
-     */
-    public function getEnd(): int
-    {
-        return $this->end;
-    }
+	/**
+	 * @deprecated Use startRange() instead
+	 */
+	public function getStartRange(): int {
+		return $this->startRange;
+	}
 
-    /**
-     * @deprecated Use endRange() instead
-     */
-    public function getEndRange(): int
-    {
-        return $this->endRange;
-    }
+	/**
+	 * @deprecated Use end() instead
+	 */
+	public function getEnd(): int {
+		return $this->end;
+	}
 
-    /**
-     * @psalm-return list<Line>
-     *
-     * @deprecated Use lines() instead
-     */
-    public function getLines(): array
-    {
-        return $this->lines;
-    }
+	/**
+	 * @deprecated Use endRange() instead
+	 */
+	public function getEndRange(): int {
+		return $this->endRange;
+	}
 
-    public function getIterator(): Traversable
-    {
-        return new ArrayIterator($this->lines);
-    }
+	/**
+	 * @psalm-return list<Line>
+	 *
+	 * @deprecated Use lines() instead
+	 */
+	public function getLines(): array {
+		return $this->lines;
+	}
+
+	public function getIterator(): Traversable {
+		return new ArrayIterator( $this->lines );
+	}
 }

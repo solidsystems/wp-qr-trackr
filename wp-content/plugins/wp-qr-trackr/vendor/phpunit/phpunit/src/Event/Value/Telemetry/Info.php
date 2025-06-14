@@ -16,70 +16,60 @@ use function sprintf;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Info
-{
-    private readonly Snapshot $current;
-    private readonly Duration $durationSinceStart;
-    private readonly MemoryUsage $memorySinceStart;
-    private readonly Duration $durationSincePrevious;
-    private readonly MemoryUsage $memorySincePrevious;
+final class Info {
 
-    public function __construct(Snapshot $current, Duration $durationSinceStart, MemoryUsage $memorySinceStart, Duration $durationSincePrevious, MemoryUsage $memorySincePrevious)
-    {
-        $this->current               = $current;
-        $this->durationSinceStart    = $durationSinceStart;
-        $this->memorySinceStart      = $memorySinceStart;
-        $this->durationSincePrevious = $durationSincePrevious;
-        $this->memorySincePrevious   = $memorySincePrevious;
-    }
+	private readonly Snapshot $current;
+	private readonly Duration $durationSinceStart;
+	private readonly MemoryUsage $memorySinceStart;
+	private readonly Duration $durationSincePrevious;
+	private readonly MemoryUsage $memorySincePrevious;
 
-    public function time(): HRTime
-    {
-        return $this->current->time();
-    }
+	public function __construct( Snapshot $current, Duration $durationSinceStart, MemoryUsage $memorySinceStart, Duration $durationSincePrevious, MemoryUsage $memorySincePrevious ) {
+		$this->current               = $current;
+		$this->durationSinceStart    = $durationSinceStart;
+		$this->memorySinceStart      = $memorySinceStart;
+		$this->durationSincePrevious = $durationSincePrevious;
+		$this->memorySincePrevious   = $memorySincePrevious;
+	}
 
-    public function memoryUsage(): MemoryUsage
-    {
-        return $this->current->memoryUsage();
-    }
+	public function time(): HRTime {
+		return $this->current->time();
+	}
 
-    public function peakMemoryUsage(): MemoryUsage
-    {
-        return $this->current->peakMemoryUsage();
-    }
+	public function memoryUsage(): MemoryUsage {
+		return $this->current->memoryUsage();
+	}
 
-    public function durationSinceStart(): Duration
-    {
-        return $this->durationSinceStart;
-    }
+	public function peakMemoryUsage(): MemoryUsage {
+		return $this->current->peakMemoryUsage();
+	}
 
-    public function memoryUsageSinceStart(): MemoryUsage
-    {
-        return $this->memorySinceStart;
-    }
+	public function durationSinceStart(): Duration {
+		return $this->durationSinceStart;
+	}
 
-    public function durationSincePrevious(): Duration
-    {
-        return $this->durationSincePrevious;
-    }
+	public function memoryUsageSinceStart(): MemoryUsage {
+		return $this->memorySinceStart;
+	}
 
-    public function memoryUsageSincePrevious(): MemoryUsage
-    {
-        return $this->memorySincePrevious;
-    }
+	public function durationSincePrevious(): Duration {
+		return $this->durationSincePrevious;
+	}
 
-    public function garbageCollectorStatus(): GarbageCollectorStatus
-    {
-        return $this->current->garbageCollectorStatus();
-    }
+	public function memoryUsageSincePrevious(): MemoryUsage {
+		return $this->memorySincePrevious;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            '[%s / %s] [%d bytes]',
-            $this->durationSinceStart()->asString(),
-            $this->durationSincePrevious()->asString(),
-            $this->memoryUsage()->bytes(),
-        );
-    }
+	public function garbageCollectorStatus(): GarbageCollectorStatus {
+		return $this->current->garbageCollectorStatus();
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'[%s / %s] [%d bytes]',
+			$this->durationSinceStart()->asString(),
+			$this->durationSincePrevious()->asString(),
+			$this->memoryUsage()->bytes(),
+		);
+	}
 }

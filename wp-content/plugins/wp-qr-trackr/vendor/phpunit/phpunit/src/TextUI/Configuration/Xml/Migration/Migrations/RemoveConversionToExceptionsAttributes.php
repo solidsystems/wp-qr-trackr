@@ -18,28 +18,27 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveConversionToExceptionsAttributes implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $root = $document->documentElement;
+final class RemoveConversionToExceptionsAttributes implements Migration {
 
-        assert($root instanceof DOMElement);
+	public function migrate( DOMDocument $document ): void {
+		$root = $document->documentElement;
 
-        if ($root->hasAttribute('convertDeprecationsToExceptions')) {
-            $root->removeAttribute('convertDeprecationsToExceptions');
-        }
+		assert( $root instanceof DOMElement );
 
-        if ($root->hasAttribute('convertErrorsToExceptions')) {
-            $root->removeAttribute('convertErrorsToExceptions');
-        }
+		if ( $root->hasAttribute( 'convertDeprecationsToExceptions' ) ) {
+			$root->removeAttribute( 'convertDeprecationsToExceptions' );
+		}
 
-        if ($root->hasAttribute('convertNoticesToExceptions')) {
-            $root->removeAttribute('convertNoticesToExceptions');
-        }
+		if ( $root->hasAttribute( 'convertErrorsToExceptions' ) ) {
+			$root->removeAttribute( 'convertErrorsToExceptions' );
+		}
 
-        if ($root->hasAttribute('convertWarningsToExceptions')) {
-            $root->removeAttribute('convertWarningsToExceptions');
-        }
-    }
+		if ( $root->hasAttribute( 'convertNoticesToExceptions' ) ) {
+			$root->removeAttribute( 'convertNoticesToExceptions' );
+		}
+
+		if ( $root->hasAttribute( 'convertWarningsToExceptions' ) ) {
+			$root->removeAttribute( 'convertWarningsToExceptions' );
+		}
+	}
 }

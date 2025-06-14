@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -20,57 +20,53 @@ namespace Brain\Monkey\Hook;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-final class HookRunningStack
-{
+final class HookRunningStack {
 
-    /**
-     * @var array
-     */
-    private $stack = [];
 
-    /**
-     * @param string $hook_name
-     * @return static
-     */
-    public function push($hook_name)
-    {
-        $this->stack[] = $hook_name;
+	/**
+	 * @var array
+	 */
+	private $stack = array();
 
-        return $this;
-    }
+	/**
+	 * @param string $hook_name
+	 * @return static
+	 */
+	public function push( $hook_name ) {
+		$this->stack[] = $hook_name;
 
-    /**
-     * @return string
-     */
-    public function last()
-    {
-        if ( ! $this->stack) {
-            return '';
-        }
+		return $this;
+	}
 
-        return end($this->stack);
-    }
+	/**
+	 * @return string
+	 */
+	public function last() {
+		if ( ! $this->stack ) {
+			return '';
+		}
 
-    /**
-     * @param string $hook_name
-     * @return bool
-     */
-    public function has($hook_name = null)
-    {
-        if ( ! $this->stack) {
-            return false;
-        }
+		return end( $this->stack );
+	}
 
-        return $hook_name === null ? true : in_array($hook_name, $this->stack, true);
-    }
+	/**
+	 * @param string $hook_name
+	 * @return bool
+	 */
+	public function has( $hook_name = null ) {
+		if ( ! $this->stack ) {
+			return false;
+		}
 
-    /**
-     * @return static
-     */
-    public function reset()
-    {
-        $this->stack = [];
+		return $hook_name === null ? true : in_array( $hook_name, $this->stack, true );
+	}
 
-        return $this;
-    }
+	/**
+	 * @return static
+	 */
+	public function reset() {
+		$this->stack = array();
+
+		return $this;
+	}
 }

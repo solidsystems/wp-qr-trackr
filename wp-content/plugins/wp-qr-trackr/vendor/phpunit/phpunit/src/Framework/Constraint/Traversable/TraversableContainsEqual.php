@@ -14,25 +14,24 @@ use SplObjectStorage;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TraversableContainsEqual extends TraversableContains
-{
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        if ($other instanceof SplObjectStorage) {
-            return $other->contains($this->value());
-        }
+final class TraversableContainsEqual extends TraversableContains {
 
-        foreach ($other as $element) {
-            /* @noinspection TypeUnsafeComparisonInspection */
-            if ($this->value() == $element) {
-                return true;
-            }
-        }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		if ( $other instanceof SplObjectStorage ) {
+			return $other->contains( $this->value() );
+		}
 
-        return false;
-    }
+		foreach ( $other as $element ) {
+			/* @noinspection TypeUnsafeComparisonInspection */
+			if ( $this->value() == $element ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

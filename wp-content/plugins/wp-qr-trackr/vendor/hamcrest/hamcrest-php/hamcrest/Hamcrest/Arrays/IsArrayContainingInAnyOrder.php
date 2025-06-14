@@ -2,7 +2,7 @@
 namespace Hamcrest\Arrays;
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 use Hamcrest\Description;
 use Hamcrest\TypeSafeDiagnosingMatcher;
@@ -11,49 +11,44 @@ use Hamcrest\Util;
 /**
  * Matches if an array contains a set of items satisfying nested matchers.
  */
-class IsArrayContainingInAnyOrder extends TypeSafeDiagnosingMatcher
-{
+class IsArrayContainingInAnyOrder extends TypeSafeDiagnosingMatcher {
 
-    private $_elementMatchers;
 
-    public function __construct(array $elementMatchers)
-    {
-        parent::__construct(self::TYPE_ARRAY);
+	private $_elementMatchers;
 
-        Util::checkAllAreMatchers($elementMatchers);
+	public function __construct( array $elementMatchers ) {
+		parent::__construct( self::TYPE_ARRAY );
 
-        $this->_elementMatchers = $elementMatchers;
-    }
+		Util::checkAllAreMatchers( $elementMatchers );
 
-    protected function matchesSafelyWithDiagnosticDescription($array, Description $mismatchDescription)
-    {
-        $matching = new MatchingOnce($this->_elementMatchers, $mismatchDescription);
+		$this->_elementMatchers = $elementMatchers;
+	}
 
-        foreach ($array as $element) {
-            if (!$matching->matches($element)) {
-                return false;
-            }
-        }
+	protected function matchesSafelyWithDiagnosticDescription( $array, Description $mismatchDescription ) {
+		$matching = new MatchingOnce( $this->_elementMatchers, $mismatchDescription );
 
-        return $matching->isFinished($array);
-    }
+		foreach ( $array as $element ) {
+			if ( ! $matching->matches( $element ) ) {
+				return false;
+			}
+		}
 
-    public function describeTo(Description $description)
-    {
-        $description->appendList('[', ', ', ']', $this->_elementMatchers)
-                                ->appendText(' in any order')
-                                ;
-    }
+		return $matching->isFinished( $array );
+	}
 
-    /**
-     * An array with elements that match the given matchers.
-     *
-     * @factory containsInAnyOrder ...
-     */
-    public static function arrayContainingInAnyOrder(/* args... */)
-    {
-        $args = func_get_args();
+	public function describeTo( Description $description ) {
+		$description->appendList( '[', ', ', ']', $this->_elementMatchers )
+								->appendText( ' in any order' );
+	}
 
-        return new self(Util::createMatcherArray($args));
-    }
+	/**
+	 * An array with elements that match the given matchers.
+	 *
+	 * @factory containsInAnyOrder ...
+	 */
+	public static function arrayContainingInAnyOrder( /* args... */ ) {
+		$args = func_get_args();
+
+		return new self( Util::createMatcherArray( $args ) );
+	}
 }

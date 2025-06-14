@@ -17,81 +17,79 @@ use function count;
 use function in_array;
 use function max;
 
-final class MemoryEfficientLongestCommonSubsequenceCalculator implements LongestCommonSubsequenceCalculator
-{
-    /**
-     * @inheritDoc
-     */
-    public function calculate(array $from, array $to): array
-    {
-        $cFrom = count($from);
-        $cTo   = count($to);
+final class MemoryEfficientLongestCommonSubsequenceCalculator implements LongestCommonSubsequenceCalculator {
 
-        if ($cFrom === 0) {
-            return [];
-        }
+	/**
+	 * @inheritDoc
+	 */
+	public function calculate( array $from, array $to ): array {
+		$cFrom = count( $from );
+		$cTo   = count( $to );
 
-        if ($cFrom === 1) {
-            if (in_array($from[0], $to, true)) {
-                return [$from[0]];
-            }
+		if ( $cFrom === 0 ) {
+			return array();
+		}
 
-            return [];
-        }
+		if ( $cFrom === 1 ) {
+			if ( in_array( $from[0], $to, true ) ) {
+				return array( $from[0] );
+			}
 
-        $i         = (int) ($cFrom / 2);
-        $fromStart = array_slice($from, 0, $i);
-        $fromEnd   = array_slice($from, $i);
-        $llB       = $this->length($fromStart, $to);
-        $llE       = $this->length(array_reverse($fromEnd), array_reverse($to));
-        $jMax      = 0;
-        $max       = 0;
+			return array();
+		}
 
-        for ($j = 0; $j <= $cTo; $j++) {
-            $m = $llB[$j] + $llE[$cTo - $j];
+		$i         = (int) ( $cFrom / 2 );
+		$fromStart = array_slice( $from, 0, $i );
+		$fromEnd   = array_slice( $from, $i );
+		$llB       = $this->length( $fromStart, $to );
+		$llE       = $this->length( array_reverse( $fromEnd ), array_reverse( $to ) );
+		$jMax      = 0;
+		$max       = 0;
 
-            if ($m >= $max) {
-                $max  = $m;
-                $jMax = $j;
-            }
-        }
+		for ( $j = 0; $j <= $cTo; $j++ ) {
+			$m = $llB[ $j ] + $llE[ $cTo - $j ];
 
-        $toStart = array_slice($to, 0, $jMax);
-        $toEnd   = array_slice($to, $jMax);
+			if ( $m >= $max ) {
+				$max  = $m;
+				$jMax = $j;
+			}
+		}
 
-        return array_merge(
-            $this->calculate($fromStart, $toStart),
-            $this->calculate($fromEnd, $toEnd),
-        );
-    }
+		$toStart = array_slice( $to, 0, $jMax );
+		$toEnd   = array_slice( $to, $jMax );
 
-    private function length(array $from, array $to): array
-    {
-        $current = array_fill(0, count($to) + 1, 0);
-        $cFrom   = count($from);
-        $cTo     = count($to);
+		return array_merge(
+			$this->calculate( $fromStart, $toStart ),
+			$this->calculate( $fromEnd, $toEnd ),
+		);
+	}
 
-        for ($i = 0; $i < $cFrom; $i++) {
-            $prev = $current;
+	private function length( array $from, array $to ): array {
+		$current = array_fill( 0, count( $to ) + 1, 0 );
+		$cFrom   = count( $from );
+		$cTo     = count( $to );
 
-            for ($j = 0; $j < $cTo; $j++) {
-                if ($from[$i] === $to[$j]) {
-                    $current[$j + 1] = $prev[$j] + 1;
-                } else {
-                    /**
-                     * @noinspection PhpConditionCanBeReplacedWithMinMaxCallInspection
-                     *
-                     * We do not use max() here to avoid the function call overhead
-                     */
-                    if ($current[$j] > $prev[$j + 1]) {
-                        $current[$j + 1] = $current[$j];
-                    } else {
-                        $current[$j + 1] = $prev[$j + 1];
-                    }
-                }
-            }
-        }
+		for ( $i = 0; $i < $cFrom; $i++ ) {
+			$prev = $current;
 
-        return $current;
-    }
+			for ( $j = 0; $j < $cTo; $j++ ) {
+				if ( $from[ $i ] === $to[ $j ] ) {
+					$current[ $j + 1 ] = $prev[ $j ] + 1;
+				} else {
+					/**
+					 * @noinspection PhpConditionCanBeReplacedWithMinMaxCallInspection
+					 *
+					 * We do not use max() here to avoid the function call overhead
+					 */
+					if ( $current[ $j ] > $prev[ $j + 1 ] ) {
+						$current[ $j + 1 ] = $current[ $j ];
+					} else {
+						$current[ $j + 1 ] = $prev[ $j + 1 ];
+					}
+				}
+			}
+		}
+
+		return $current;
+	}
 }

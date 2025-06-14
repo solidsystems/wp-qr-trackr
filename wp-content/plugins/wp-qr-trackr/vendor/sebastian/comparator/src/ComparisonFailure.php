@@ -13,56 +13,49 @@ use RuntimeException;
 use SebastianBergmann\Diff\Differ;
 use SebastianBergmann\Diff\Output\UnifiedDiffOutputBuilder;
 
-final class ComparisonFailure extends RuntimeException
-{
-    private mixed $expected;
-    private mixed $actual;
-    private string $expectedAsString;
-    private string $actualAsString;
+final class ComparisonFailure extends RuntimeException {
 
-    public function __construct(mixed $expected, mixed $actual, string $expectedAsString, string $actualAsString, string $message = '')
-    {
-        parent::__construct($message);
+	private mixed $expected;
+	private mixed $actual;
+	private string $expectedAsString;
+	private string $actualAsString;
 
-        $this->expected         = $expected;
-        $this->actual           = $actual;
-        $this->expectedAsString = $expectedAsString;
-        $this->actualAsString   = $actualAsString;
-    }
+	public function __construct( mixed $expected, mixed $actual, string $expectedAsString, string $actualAsString, string $message = '' ) {
+		parent::__construct( $message );
 
-    public function getActual(): mixed
-    {
-        return $this->actual;
-    }
+		$this->expected         = $expected;
+		$this->actual           = $actual;
+		$this->expectedAsString = $expectedAsString;
+		$this->actualAsString   = $actualAsString;
+	}
 
-    public function getExpected(): mixed
-    {
-        return $this->expected;
-    }
+	public function getActual(): mixed {
+		return $this->actual;
+	}
 
-    public function getActualAsString(): string
-    {
-        return $this->actualAsString;
-    }
+	public function getExpected(): mixed {
+		return $this->expected;
+	}
 
-    public function getExpectedAsString(): string
-    {
-        return $this->expectedAsString;
-    }
+	public function getActualAsString(): string {
+		return $this->actualAsString;
+	}
 
-    public function getDiff(): string
-    {
-        if (!$this->actualAsString && !$this->expectedAsString) {
-            return '';
-        }
+	public function getExpectedAsString(): string {
+		return $this->expectedAsString;
+	}
 
-        $differ = new Differ(new UnifiedDiffOutputBuilder("\n--- Expected\n+++ Actual\n"));
+	public function getDiff(): string {
+		if ( ! $this->actualAsString && ! $this->expectedAsString ) {
+			return '';
+		}
 
-        return $differ->diff($this->expectedAsString, $this->actualAsString);
-    }
+		$differ = new Differ( new UnifiedDiffOutputBuilder( "\n--- Expected\n+++ Actual\n" ) );
 
-    public function toString(): string
-    {
-        return $this->getMessage() . $this->getDiff();
-    }
+		return $differ->diff( $this->expectedAsString, $this->actualAsString );
+	}
+
+	public function toString(): string {
+		return $this->getMessage() . $this->getDiff();
+	}
 }

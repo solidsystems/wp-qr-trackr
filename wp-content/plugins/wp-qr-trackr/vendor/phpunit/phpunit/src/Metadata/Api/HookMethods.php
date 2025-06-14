@@ -21,88 +21,86 @@ use ReflectionClass;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class HookMethods
-{
-    /**
-     * @psalm-var array<class-string, array{beforeClass: list<non-empty-string>, before: list<non-empty-string>, preCondition: list<non-empty-string>, postCondition: list<non-empty-string>, after: list<non-empty-string>, afterClass: list<non-empty-string>}>
-     */
-    private static array $hookMethods = [];
+final class HookMethods {
 
-    /**
-     * @psalm-param class-string $className
-     *
-     * @psalm-return array{beforeClass: list<non-empty-string>, before: list<non-empty-string>, preCondition: list<non-empty-string>, postCondition: list<non-empty-string>, after: list<non-empty-string>, afterClass: list<non-empty-string>}
-     */
-    public function hookMethods(string $className): array
-    {
-        if (!class_exists($className)) {
-            return self::emptyHookMethodsArray();
-        }
+	/**
+	 * @psalm-var array<class-string, array{beforeClass: list<non-empty-string>, before: list<non-empty-string>, preCondition: list<non-empty-string>, postCondition: list<non-empty-string>, after: list<non-empty-string>, afterClass: list<non-empty-string>}>
+	 */
+	private static array $hookMethods = array();
 
-        if (isset(self::$hookMethods[$className])) {
-            return self::$hookMethods[$className];
-        }
+	/**
+	 * @psalm-param class-string $className
+	 *
+	 * @psalm-return array{beforeClass: list<non-empty-string>, before: list<non-empty-string>, preCondition: list<non-empty-string>, postCondition: list<non-empty-string>, after: list<non-empty-string>, afterClass: list<non-empty-string>}
+	 */
+	public function hookMethods( string $className ): array {
+		if ( ! class_exists( $className ) ) {
+			return self::emptyHookMethodsArray();
+		}
 
-        self::$hookMethods[$className] = self::emptyHookMethodsArray();
+		if ( isset( self::$hookMethods[ $className ] ) ) {
+			return self::$hookMethods[ $className ];
+		}
 
-        foreach (Reflection::methodsInTestClass(new ReflectionClass($className)) as $method) {
-            $methodName = $method->getName();
+		self::$hookMethods[ $className ] = self::emptyHookMethodsArray();
 
-            assert(!empty($methodName));
+		foreach ( Reflection::methodsInTestClass( new ReflectionClass( $className ) ) as $method ) {
+			$methodName = $method->getName();
 
-            $metadata = Registry::parser()->forMethod($className, $methodName);
+			assert( ! empty( $methodName ) );
 
-            if ($method->isStatic()) {
-                if ($metadata->isBeforeClass()->isNotEmpty()) {
-                    array_unshift(
-                        self::$hookMethods[$className]['beforeClass'],
-                        $methodName,
-                    );
-                }
+			$metadata = Registry::parser()->forMethod( $className, $methodName );
 
-                if ($metadata->isAfterClass()->isNotEmpty()) {
-                    self::$hookMethods[$className]['afterClass'][] = $methodName;
-                }
-            }
+			if ( $method->isStatic() ) {
+				if ( $metadata->isBeforeClass()->isNotEmpty() ) {
+					array_unshift(
+						self::$hookMethods[ $className ]['beforeClass'],
+						$methodName,
+					);
+				}
 
-            if ($metadata->isBefore()->isNotEmpty()) {
-                array_unshift(
-                    self::$hookMethods[$className]['before'],
-                    $methodName,
-                );
-            }
+				if ( $metadata->isAfterClass()->isNotEmpty() ) {
+					self::$hookMethods[ $className ]['afterClass'][] = $methodName;
+				}
+			}
 
-            if ($metadata->isPreCondition()->isNotEmpty()) {
-                array_unshift(
-                    self::$hookMethods[$className]['preCondition'],
-                    $methodName,
-                );
-            }
+			if ( $metadata->isBefore()->isNotEmpty() ) {
+				array_unshift(
+					self::$hookMethods[ $className ]['before'],
+					$methodName,
+				);
+			}
 
-            if ($metadata->isPostCondition()->isNotEmpty()) {
-                self::$hookMethods[$className]['postCondition'][] = $methodName;
-            }
+			if ( $metadata->isPreCondition()->isNotEmpty() ) {
+				array_unshift(
+					self::$hookMethods[ $className ]['preCondition'],
+					$methodName,
+				);
+			}
 
-            if ($metadata->isAfter()->isNotEmpty()) {
-                self::$hookMethods[$className]['after'][] = $methodName;
-            }
-        }
+			if ( $metadata->isPostCondition()->isNotEmpty() ) {
+				self::$hookMethods[ $className ]['postCondition'][] = $methodName;
+			}
 
-        return self::$hookMethods[$className];
-    }
+			if ( $metadata->isAfter()->isNotEmpty() ) {
+				self::$hookMethods[ $className ]['after'][] = $methodName;
+			}
+		}
 
-    /**
-     * @psalm-return array{beforeClass: list<non-empty-string>, before: list<non-empty-string>, preCondition: list<non-empty-string>, postCondition: list<non-empty-string>, after: list<non-empty-string>, afterClass: list<non-empty-string>}
-     */
-    private function emptyHookMethodsArray(): array
-    {
-        return [
-            'beforeClass'   => ['setUpBeforeClass'],
-            'before'        => ['setUp'],
-            'preCondition'  => ['assertPreConditions'],
-            'postCondition' => ['assertPostConditions'],
-            'after'         => ['tearDown'],
-            'afterClass'    => ['tearDownAfterClass'],
-        ];
-    }
+		return self::$hookMethods[ $className ];
+	}
+
+	/**
+	 * @psalm-return array{beforeClass: list<non-empty-string>, before: list<non-empty-string>, preCondition: list<non-empty-string>, postCondition: list<non-empty-string>, after: list<non-empty-string>, afterClass: list<non-empty-string>}
+	 */
+	private function emptyHookMethodsArray(): array {
+		return array(
+			'beforeClass'   => array( 'setUpBeforeClass' ),
+			'before'        => array( 'setUp' ),
+			'preCondition'  => array( 'assertPreConditions' ),
+			'postCondition' => array( 'assertPostConditions' ),
+			'after'         => array( 'tearDown' ),
+			'afterClass'    => array( 'tearDownAfterClass' ),
+		);
+	}
 }

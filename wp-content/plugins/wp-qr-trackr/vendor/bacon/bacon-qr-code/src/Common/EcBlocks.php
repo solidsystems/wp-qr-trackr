@@ -10,57 +10,52 @@ namespace BaconQrCode\Common;
  * set of blocks. It also holds the number of error-correction codewords per block since it will be the same across all
  * blocks within one version.
  */
-final class EcBlocks
-{
-    /**
-     * List of EC blocks.
-     *
-     * @var EcBlock[]
-     */
-    private array $ecBlocks;
+final class EcBlocks {
 
-    public function __construct(private readonly int $ecCodewordsPerBlock, EcBlock ...$ecBlocks)
-    {
-        $this->ecBlocks = $ecBlocks;
-    }
+	/**
+	 * List of EC blocks.
+	 *
+	 * @var EcBlock[]
+	 */
+	private array $ecBlocks;
 
-    /**
-     * Returns the number of EC codewords per block.
-     */
-    public function getEcCodewordsPerBlock() : int
-    {
-        return $this->ecCodewordsPerBlock;
-    }
+	public function __construct( private readonly int $ecCodewordsPerBlock, EcBlock ...$ecBlocks ) {
+		$this->ecBlocks = $ecBlocks;
+	}
 
-    /**
-     * Returns the total number of EC block appearances.
-     */
-    public function getNumBlocks() : int
-    {
-        $total = 0;
+	/**
+	 * Returns the number of EC codewords per block.
+	 */
+	public function getEcCodewordsPerBlock(): int {
+		return $this->ecCodewordsPerBlock;
+	}
 
-        foreach ($this->ecBlocks as $ecBlock) {
-            $total += $ecBlock->getCount();
-        }
+	/**
+	 * Returns the total number of EC block appearances.
+	 */
+	public function getNumBlocks(): int {
+		$total = 0;
 
-        return $total;
-    }
+		foreach ( $this->ecBlocks as $ecBlock ) {
+			$total += $ecBlock->getCount();
+		}
 
-    /**
-     * Returns the total count of EC codewords.
-     */
-    public function getTotalEcCodewords() : int
-    {
-        return $this->ecCodewordsPerBlock * $this->getNumBlocks();
-    }
+		return $total;
+	}
 
-    /**
-     * Returns the EC blocks included in this collection.
-     *
-     * @return EcBlock[]
-     */
-    public function getEcBlocks() : array
-    {
-        return $this->ecBlocks;
-    }
+	/**
+	 * Returns the total count of EC codewords.
+	 */
+	public function getTotalEcCodewords(): int {
+		return $this->ecCodewordsPerBlock * $this->getNumBlocks();
+	}
+
+	/**
+	 * Returns the EC blocks included in this collection.
+	 *
+	 * @return EcBlock[]
+	 */
+	public function getEcBlocks(): array {
+		return $this->ecBlocks;
+	}
 }

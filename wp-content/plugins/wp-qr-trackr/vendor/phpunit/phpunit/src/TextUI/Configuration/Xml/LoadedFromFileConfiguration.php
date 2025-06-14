@@ -23,45 +23,40 @@ use PHPUnit\TextUI\XmlConfiguration\Logging\Logging;
  *
  * @psalm-immutable
  */
-final class LoadedFromFileConfiguration extends Configuration
-{
-    private readonly string $filename;
-    private readonly ValidationResult $validationResult;
+final class LoadedFromFileConfiguration extends Configuration {
 
-    public function __construct(string $filename, ValidationResult $validationResult, ExtensionBootstrapCollection $extensions, Source $source, CodeCoverage $codeCoverage, Groups $groups, Logging $logging, Php $php, PHPUnit $phpunit, TestSuiteCollection $testSuite)
-    {
-        $this->filename         = $filename;
-        $this->validationResult = $validationResult;
+	private readonly string $filename;
+	private readonly ValidationResult $validationResult;
 
-        parent::__construct(
-            $extensions,
-            $source,
-            $codeCoverage,
-            $groups,
-            $logging,
-            $php,
-            $phpunit,
-            $testSuite,
-        );
-    }
+	public function __construct( string $filename, ValidationResult $validationResult, ExtensionBootstrapCollection $extensions, Source $source, CodeCoverage $codeCoverage, Groups $groups, Logging $logging, Php $php, PHPUnit $phpunit, TestSuiteCollection $testSuite ) {
+		$this->filename         = $filename;
+		$this->validationResult = $validationResult;
 
-    public function filename(): string
-    {
-        return $this->filename;
-    }
+		parent::__construct(
+			$extensions,
+			$source,
+			$codeCoverage,
+			$groups,
+			$logging,
+			$php,
+			$phpunit,
+			$testSuite,
+		);
+	}
 
-    public function hasValidationErrors(): bool
-    {
-        return $this->validationResult->hasValidationErrors();
-    }
+	public function filename(): string {
+		return $this->filename;
+	}
 
-    public function validationErrors(): string
-    {
-        return $this->validationResult->asString();
-    }
+	public function hasValidationErrors(): bool {
+		return $this->validationResult->hasValidationErrors();
+	}
 
-    public function wasLoadedFromFile(): bool
-    {
-        return true;
-    }
+	public function validationErrors(): string {
+		return $this->validationResult->asString();
+	}
+
+	public function wasLoadedFromFile(): bool {
+		return true;
+	}
 }

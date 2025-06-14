@@ -16,10 +16,9 @@ use function in_array;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class IncludeGroupFilterIterator extends GroupFilterIterator
-{
-    protected function doAccept(int $id): bool
-    {
-        return in_array($id, $this->groupTests, true);
-    }
+final class IncludeGroupFilterIterator extends GroupFilterIterator {
+
+	protected function doAccept( int $id ): bool {
+		return in_array( $id, $this->groupTests, true );
+	}
 }

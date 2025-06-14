@@ -14,27 +14,26 @@ use Mockery\Generator\MockConfiguration;
 use function implode;
 use function str_replace;
 
-class ClassAttributesPass implements Pass
-{
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        $class = $config->getTargetClass();
+class ClassAttributesPass implements Pass {
 
-        if (! $class) {
-            return $code;
-        }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		$class = $config->getTargetClass();
 
-        /** @var array<string> $attributes */
-        $attributes = $class->getAttributes();
+		if ( ! $class ) {
+			return $code;
+		}
 
-        if ($attributes !== []) {
-            return str_replace('#[\AllowDynamicProperties]', '#[' . implode(',', $attributes) . ']', $code);
-        }
+		/** @var array<string> $attributes */
+		$attributes = $class->getAttributes();
 
-        return $code;
-    }
+		if ( $attributes !== array() ) {
+			return str_replace( '#[\AllowDynamicProperties]', '#[' . implode( ',', $attributes ) . ']', $code );
+		}
+
+		return $code;
+	}
 }

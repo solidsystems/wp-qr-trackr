@@ -16,27 +16,25 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
-final class RequiresPhp
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $versionRequirement;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD )]
+final class RequiresPhp {
 
-    /**
-     * @psalm-param non-empty-string $versionRequirement
-     */
-    public function __construct(string $versionRequirement)
-    {
-        $this->versionRequirement = $versionRequirement;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $versionRequirement;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function versionRequirement(): string
-    {
-        return $this->versionRequirement;
-    }
+	/**
+	 * @psalm-param non-empty-string $versionRequirement
+	 */
+	public function __construct( string $versionRequirement ) {
+		$this->versionRequirement = $versionRequirement;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function versionRequirement(): string {
+		return $this->versionRequirement;
+	}
 }

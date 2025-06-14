@@ -21,119 +21,113 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class DirectDispatcher implements SubscribableDispatcher
-{
-    private readonly TypeMap $typeMap;
+final class DirectDispatcher implements SubscribableDispatcher {
 
-    /**
-     * @psalm-var array<class-string, list<Subscriber>>
-     */
-    private array $subscribers = [];
+	private readonly TypeMap $typeMap;
 
-    /**
-     * @psalm-var list<Tracer\Tracer>
-     */
-    private array $tracers = [];
+	/**
+	 * @psalm-var array<class-string, list<Subscriber>>
+	 */
+	private array $subscribers = array();
 
-    public function __construct(TypeMap $map)
-    {
-        $this->typeMap = $map;
-    }
+	/**
+	 * @psalm-var list<Tracer\Tracer>
+	 */
+	private array $tracers = array();
 
-    public function registerTracer(Tracer\Tracer $tracer): void
-    {
-        $this->tracers[] = $tracer;
-    }
+	public function __construct( TypeMap $map ) {
+		$this->typeMap = $map;
+	}
 
-    /**
-     * @throws MapError
-     * @throws UnknownSubscriberTypeException
-     */
-    public function registerSubscriber(Subscriber $subscriber): void
-    {
-        if (!$this->typeMap->isKnownSubscriberType($subscriber)) {
-            throw new UnknownSubscriberTypeException(
-                sprintf(
-                    'Subscriber "%s" does not implement any known interface - did you forget to register it?',
-                    $subscriber::class,
-                ),
-            );
-        }
+	public function registerTracer( Tracer\Tracer $tracer ): void {
+		$this->tracers[] = $tracer;
+	}
 
-        $eventClassName = $this->typeMap->map($subscriber);
+	/**
+	 * @throws MapError
+	 * @throws UnknownSubscriberTypeException
+	 */
+	public function registerSubscriber( Subscriber $subscriber ): void {
+		if ( ! $this->typeMap->isKnownSubscriberType( $subscriber ) ) {
+			throw new UnknownSubscriberTypeException(
+				sprintf(
+					'Subscriber "%s" does not implement any known interface - did you forget to register it?',
+					$subscriber::class,
+				),
+			);
+		}
 
-        if (!array_key_exists($eventClassName, $this->subscribers)) {
-            $this->subscribers[$eventClassName] = [];
-        }
+		$eventClassName = $this->typeMap->map( $subscriber );
 
-        $this->subscribers[$eventClassName][] = $subscriber;
-    }
+		if ( ! array_key_exists( $eventClassName, $this->subscribers ) ) {
+			$this->subscribers[ $eventClassName ] = array();
+		}
 
-    /**
-     * @throws Throwable
-     * @throws UnknownEventTypeException
-     */
-    public function dispatch(Event $event): void
-    {
-        $eventClassName = $event::class;
+		$this->subscribers[ $eventClassName ][] = $subscriber;
+	}
 
-        if (!$this->typeMap->isKnownEventType($event)) {
-            throw new UnknownEventTypeException(
-                sprintf(
-                    'Unknown event type "%s"',
-                    $eventClassName,
-                ),
-            );
-        }
+	/**
+	 * @throws Throwable
+	 * @throws UnknownEventTypeException
+	 */
+	public function dispatch( Event $event ): void {
+		$eventClassName = $event::class;
 
-        foreach ($this->tracers as $tracer) {
-            try {
-                $tracer->trace($event);
-                // @codeCoverageIgnoreStart
-            } catch (Throwable $t) {
-                $this->handleThrowable($t);
-            }
-            // @codeCoverageIgnoreEnd
-        }
+		if ( ! $this->typeMap->isKnownEventType( $event ) ) {
+			throw new UnknownEventTypeException(
+				sprintf(
+					'Unknown event type "%s"',
+					$eventClassName,
+				),
+			);
+		}
 
-        if (!array_key_exists($eventClassName, $this->subscribers)) {
-            return;
-        }
+		foreach ( $this->tracers as $tracer ) {
+			try {
+				$tracer->trace( $event );
+				// @codeCoverageIgnoreStart
+			} catch ( Throwable $t ) {
+				$this->handleThrowable( $t );
+			}
+			// @codeCoverageIgnoreEnd
+		}
 
-        foreach ($this->subscribers[$eventClassName] as $subscriber) {
-            try {
-                $subscriber->notify($event);
-            } catch (Throwable $t) {
-                $this->handleThrowable($t);
-            }
-        }
-    }
+		if ( ! array_key_exists( $eventClassName, $this->subscribers ) ) {
+			return;
+		}
 
-    /**
-     * @throws Throwable
-     */
-    public function handleThrowable(Throwable $t): void
-    {
-        if ($this->isThrowableFromThirdPartySubscriber($t)) {
-            Facade::emitter()->testRunnerTriggeredPhpunitWarning(
-                sprintf(
-                    'Exception in third-party event subscriber: %s%s%s',
-                    $t->getMessage(),
-                    PHP_EOL,
-                    $t->getTraceAsString(),
-                ),
-            );
+		foreach ( $this->subscribers[ $eventClassName ] as $subscriber ) {
+			try {
+				$subscriber->notify( $event );
+			} catch ( Throwable $t ) {
+				$this->handleThrowable( $t );
+			}
+		}
+	}
 
-            return;
-        }
+	/**
+	 * @throws Throwable
+	 */
+	public function handleThrowable( Throwable $t ): void {
+		if ( $this->isThrowableFromThirdPartySubscriber( $t ) ) {
+			Facade::emitter()->testRunnerTriggeredPhpunitWarning(
+				sprintf(
+					'Exception in third-party event subscriber: %s%s%s',
+					$t->getMessage(),
+					PHP_EOL,
+					$t->getTraceAsString(),
+				),
+			);
 
-        // @codeCoverageIgnoreStart
-        throw $t;
-        // @codeCoverageIgnoreEnd
-    }
+			return;
+		}
 
-    private function isThrowableFromThirdPartySubscriber(Throwable $t): bool
-    {
-        return !str_starts_with($t->getFile(), dirname(__DIR__, 2));
-    }
+		// @codeCoverageIgnoreStart
+		throw $t;
+		// @codeCoverageIgnoreEnd
+	}
+
+	private function isThrowableFromThirdPartySubscriber( Throwable $t ): bool {
+		return ! str_starts_with( $t->getFile(), dirname( __DIR__, 2 ) );
+	}
 }

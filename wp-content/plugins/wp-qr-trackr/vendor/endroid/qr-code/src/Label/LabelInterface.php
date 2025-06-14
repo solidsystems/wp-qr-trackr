@@ -8,15 +8,15 @@ use Endroid\QrCode\Color\ColorInterface;
 use Endroid\QrCode\Label\Font\FontInterface;
 use Endroid\QrCode\Label\Margin\MarginInterface;
 
-interface LabelInterface
-{
-    public function getText(): string;
+interface LabelInterface {
 
-    public function getFont(): FontInterface;
+	public function getText(): string;
 
-    public function getAlignment(): LabelAlignment;
+	public function getFont(): FontInterface;
 
-    public function getMargin(): MarginInterface;
+	public function getAlignment(): LabelAlignment;
 
-    public function getTextColor(): ColorInterface;
+	public function getMargin(): MarginInterface;
+
+	public function getTextColor(): ColorInterface;
 }

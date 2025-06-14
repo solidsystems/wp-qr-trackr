@@ -20,41 +20,36 @@ use IteratorAggregate;
  *
  * @template-implements IteratorAggregate<int, Variable>
  */
-final class VariableCollection implements Countable, IteratorAggregate
-{
-    /**
-     * @psalm-var list<Variable>
-     */
-    private readonly array $variables;
+final class VariableCollection implements Countable, IteratorAggregate {
 
-    /**
-     * @psalm-param list<Variable> $variables
-     */
-    public static function fromArray(array $variables): self
-    {
-        return new self(...$variables);
-    }
+	/**
+	 * @psalm-var list<Variable>
+	 */
+	private readonly array $variables;
 
-    private function __construct(Variable ...$variables)
-    {
-        $this->variables = $variables;
-    }
+	/**
+	 * @psalm-param list<Variable> $variables
+	 */
+	public static function fromArray( array $variables ): self {
+		return new self( ...$variables );
+	}
 
-    /**
-     * @psalm-return list<Variable>
-     */
-    public function asArray(): array
-    {
-        return $this->variables;
-    }
+	private function __construct( Variable ...$variables ) {
+		$this->variables = $variables;
+	}
 
-    public function count(): int
-    {
-        return count($this->variables);
-    }
+	/**
+	 * @psalm-return list<Variable>
+	 */
+	public function asArray(): array {
+		return $this->variables;
+	}
 
-    public function getIterator(): VariableCollectionIterator
-    {
-        return new VariableCollectionIterator($this);
-    }
+	public function count(): int {
+		return count( $this->variables );
+	}
+
+	public function getIterator(): VariableCollectionIterator {
+		return new VariableCollectionIterator( $this );
+	}
 }

@@ -9,34 +9,30 @@
  */
 namespace SebastianBergmann\Type;
 
-final class FalseType extends Type
-{
-    public function isAssignable(Type $other): bool
-    {
-        if ($other instanceof self) {
-            return true;
-        }
+final class FalseType extends Type {
 
-        return $other instanceof SimpleType &&
-              $other->name() === 'bool' &&
-              $other->value() === false;
-    }
+	public function isAssignable( Type $other ): bool {
+		if ( $other instanceof self ) {
+			return true;
+		}
 
-    public function name(): string
-    {
-        return 'false';
-    }
+		return $other instanceof SimpleType &&
+				$other->name() === 'bool' &&
+				$other->value() === false;
+	}
 
-    public function allowsNull(): bool
-    {
-        return false;
-    }
+	public function name(): string {
+		return 'false';
+	}
 
-    /**
-     * @psalm-assert-if-true FalseType $this
-     */
-    public function isFalse(): bool
-    {
-        return true;
-    }
+	public function allowsNull(): bool {
+		return false;
+	}
+
+	/**
+	 * @psalm-assert-if-true FalseType $this
+	 */
+	public function isFalse(): bool {
+		return true;
+	}
 }

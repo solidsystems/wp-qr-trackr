@@ -18,64 +18,60 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Exception extends Constraint
-{
-    private readonly string $className;
+final class Exception extends Constraint {
 
-    public function __construct(string $className)
-    {
-        $this->className = $className;
-    }
+	private readonly string $className;
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        return sprintf(
-            'exception of type "%s"',
-            $this->className,
-        );
-    }
+	public function __construct( string $className ) {
+		$this->className = $className;
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        return $other instanceof $this->className;
-    }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		return sprintf(
+			'exception of type "%s"',
+			$this->className,
+		);
+	}
 
-    /**
-     * Returns the description of the failure.
-     *
-     * The beginning of failure messages is "Failed asserting that" in most
-     * cases. This method should return the second part of that sentence.
-     *
-     * @throws \PHPUnit\Framework\Exception
-     */
-    protected function failureDescription(mixed $other): string
-    {
-        if ($other === null) {
-            return sprintf(
-                'exception of type "%s" is thrown',
-                $this->className,
-            );
-        }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		return $other instanceof $this->className;
+	}
 
-        $message = '';
+	/**
+	 * Returns the description of the failure.
+	 *
+	 * The beginning of failure messages is "Failed asserting that" in most
+	 * cases. This method should return the second part of that sentence.
+	 *
+	 * @throws \PHPUnit\Framework\Exception
+	 */
+	protected function failureDescription( mixed $other ): string {
+		if ( $other === null ) {
+			return sprintf(
+				'exception of type "%s" is thrown',
+				$this->className,
+			);
+		}
 
-        if ($other instanceof Throwable) {
-            $message = '. Message was: "' . $other->getMessage() . '" at'
-                . "\n" . Filter::getFilteredStacktrace($other);
-        }
+		$message = '';
 
-        return sprintf(
-            'exception of type "%s" matches expected exception "%s"%s',
-            $other::class,
-            $this->className,
-            $message,
-        );
-    }
+		if ( $other instanceof Throwable ) {
+			$message = '. Message was: "' . $other->getMessage() . '" at'
+				. "\n" . Filter::getFilteredStacktrace( $other );
+		}
+
+		return sprintf(
+			'exception of type "%s" matches expected exception "%s"%s',
+			$other::class,
+			$this->className,
+			$message,
+		);
+	}
 }

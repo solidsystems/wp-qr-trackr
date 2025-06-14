@@ -19,15 +19,14 @@ use PHPUnit\Framework\MockObject\Rule\AnyInvokedCount;
  *
  * @internal This trait is not covered by the backward compatibility promise for PHPUnit
  */
-trait Method
-{
-    public function method(): InvocationMocker
-    {
-        $expects = $this->expects(new AnyInvokedCount);
+trait Method {
 
-        return call_user_func_array(
-            [$expects, 'method'],
-            func_get_args(),
-        );
-    }
+	public function method(): InvocationMocker {
+		$expects = $this->expects( new AnyInvokedCount() );
+
+		return call_user_func_array(
+			array( $expects, 'method' ),
+			func_get_args(),
+		);
+	}
 }

@@ -13,126 +13,116 @@ use function count;
 use function implode;
 use function sort;
 
-final class UnionType extends Type
-{
-    /**
-     * @psalm-var non-empty-list<Type>
-     */
-    private array $types;
+final class UnionType extends Type {
 
-    /**
-     * @throws RuntimeException
-     */
-    public function __construct(Type ...$types)
-    {
-        $this->ensureMinimumOfTwoTypes(...$types);
-        $this->ensureOnlyValidTypes(...$types);
+	/**
+	 * @psalm-var non-empty-list<Type>
+	 */
+	private array $types;
 
-        $this->types = $types;
-    }
+	/**
+	 * @throws RuntimeException
+	 */
+	public function __construct( Type ...$types ) {
+		$this->ensureMinimumOfTwoTypes( ...$types );
+		$this->ensureOnlyValidTypes( ...$types );
 
-    public function isAssignable(Type $other): bool
-    {
-        foreach ($this->types as $type) {
-            if ($type->isAssignable($other)) {
-                return true;
-            }
-        }
+		$this->types = $types;
+	}
 
-        return false;
-    }
+	public function isAssignable( Type $other ): bool {
+		foreach ( $this->types as $type ) {
+			if ( $type->isAssignable( $other ) ) {
+				return true;
+			}
+		}
 
-    public function asString(): string
-    {
-        return $this->name();
-    }
+		return false;
+	}
 
-    public function name(): string
-    {
-        $types = [];
+	public function asString(): string {
+		return $this->name();
+	}
 
-        foreach ($this->types as $type) {
-            if ($type->isIntersection()) {
-                $types[] = '(' . $type->name() . ')';
+	public function name(): string {
+		$types = array();
 
-                continue;
-            }
+		foreach ( $this->types as $type ) {
+			if ( $type->isIntersection() ) {
+				$types[] = '(' . $type->name() . ')';
 
-            $types[] = $type->name();
-        }
+				continue;
+			}
 
-        sort($types);
+			$types[] = $type->name();
+		}
 
-        return implode('|', $types);
-    }
+		sort( $types );
 
-    public function allowsNull(): bool
-    {
-        foreach ($this->types as $type) {
-            if ($type instanceof NullType) {
-                return true;
-            }
-        }
+		return implode( '|', $types );
+	}
 
-        return false;
-    }
+	public function allowsNull(): bool {
+		foreach ( $this->types as $type ) {
+			if ( $type instanceof NullType ) {
+				return true;
+			}
+		}
 
-    /**
-     * @psalm-assert-if-true UnionType $this
-     */
-    public function isUnion(): bool
-    {
-        return true;
-    }
+		return false;
+	}
 
-    public function containsIntersectionTypes(): bool
-    {
-        foreach ($this->types as $type) {
-            if ($type->isIntersection()) {
-                return true;
-            }
-        }
+	/**
+	 * @psalm-assert-if-true UnionType $this
+	 */
+	public function isUnion(): bool {
+		return true;
+	}
 
-        return false;
-    }
+	public function containsIntersectionTypes(): bool {
+		foreach ( $this->types as $type ) {
+			if ( $type->isIntersection() ) {
+				return true;
+			}
+		}
 
-    /**
-     * @psalm-return non-empty-list<Type>
-     */
-    public function types(): array
-    {
-        return $this->types;
-    }
+		return false;
+	}
 
-    /**
-     * @throws RuntimeException
-     */
-    private function ensureMinimumOfTwoTypes(Type ...$types): void
-    {
-        if (count($types) < 2) {
-            throw new RuntimeException(
-                'A union type must be composed of at least two types'
-            );
-        }
-    }
+	/**
+	 * @psalm-return non-empty-list<Type>
+	 */
+	public function types(): array {
+		return $this->types;
+	}
 
-    /**
-     * @throws RuntimeException
-     */
-    private function ensureOnlyValidTypes(Type ...$types): void
-    {
-        foreach ($types as $type) {
-            if ($type instanceof UnknownType) {
-                throw new RuntimeException(
-                    'A union type must not be composed of an unknown type'
-                );
-            }
+	/**
+	 * @throws RuntimeException
+	 */
+	private function ensureMinimumOfTwoTypes( Type ...$types ): void {
+		if ( count( $types ) < 2 ) {
+			throw new RuntimeException(
+				'A union type must be composed of at least two types'
+			);
+		}
+	}
 
-            if ($type instanceof VoidType) {
-                throw new RuntimeException(
-                    'A union type must not be composed of a void type'
-                );
-            }
-        }
-    }
+	/**
+	 * @throws RuntimeException
+	 */
+	private function ensureOnlyValidTypes( Type ...$types ): void {
+		foreach ( $types as $type ) {
+			if ( $type instanceof UnknownType ) {
+				throw new RuntimeException(
+					'A union type must not be composed of an unknown type'
+				);
+			}
+
+			if ( $type instanceof VoidType ) {
+				throw new RuntimeException(
+					'A union type must not be composed of a void type'
+				);
+			}
+		}
+	}
 }

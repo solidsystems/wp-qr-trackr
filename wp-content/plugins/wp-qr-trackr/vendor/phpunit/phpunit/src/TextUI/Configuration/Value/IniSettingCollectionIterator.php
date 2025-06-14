@@ -19,46 +19,39 @@ use Iterator;
  *
  * @template-implements Iterator<int, IniSetting>
  */
-final class IniSettingCollectionIterator implements Countable, Iterator
-{
-    /**
-     * @psalm-var list<IniSetting>
-     */
-    private readonly array $iniSettings;
-    private int $position = 0;
+final class IniSettingCollectionIterator implements Countable, Iterator {
 
-    public function __construct(IniSettingCollection $iniSettings)
-    {
-        $this->iniSettings = $iniSettings->asArray();
-    }
+	/**
+	 * @psalm-var list<IniSetting>
+	 */
+	private readonly array $iniSettings;
+	private int $position = 0;
 
-    public function count(): int
-    {
-        return iterator_count($this);
-    }
+	public function __construct( IniSettingCollection $iniSettings ) {
+		$this->iniSettings = $iniSettings->asArray();
+	}
 
-    public function rewind(): void
-    {
-        $this->position = 0;
-    }
+	public function count(): int {
+		return iterator_count( $this );
+	}
 
-    public function valid(): bool
-    {
-        return $this->position < count($this->iniSettings);
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function key(): int
-    {
-        return $this->position;
-    }
+	public function valid(): bool {
+		return $this->position < count( $this->iniSettings );
+	}
 
-    public function current(): IniSetting
-    {
-        return $this->iniSettings[$this->position];
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function next(): void
-    {
-        $this->position++;
-    }
+	public function current(): IniSetting {
+		return $this->iniSettings[ $this->position ];
+	}
+
+	public function next(): void {
+		++$this->position;
+	}
 }

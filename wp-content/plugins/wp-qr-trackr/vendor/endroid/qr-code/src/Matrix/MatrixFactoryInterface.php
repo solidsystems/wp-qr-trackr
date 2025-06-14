@@ -6,7 +6,7 @@ namespace Endroid\QrCode\Matrix;
 
 use Endroid\QrCode\QrCodeInterface;
 
-interface MatrixFactoryInterface
-{
-    public function create(QrCodeInterface $qrCode): MatrixInterface;
+interface MatrixFactoryInterface {
+
+	public function create( QrCodeInterface $qrCode ): MatrixInterface;
 }

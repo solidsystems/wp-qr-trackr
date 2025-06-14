@@ -19,31 +19,29 @@ use PHPUnit\Framework\MockObject\Invocation;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ReturnValueMap implements Stub
-{
-    private readonly array $valueMap;
+final class ReturnValueMap implements Stub {
 
-    public function __construct(array $valueMap)
-    {
-        $this->valueMap = $valueMap;
-    }
+	private readonly array $valueMap;
 
-    public function invoke(Invocation $invocation): mixed
-    {
-        $parameterCount = count($invocation->parameters());
+	public function __construct( array $valueMap ) {
+		$this->valueMap = $valueMap;
+	}
 
-        foreach ($this->valueMap as $map) {
-            if (!is_array($map) || $parameterCount !== (count($map) - 1)) {
-                continue;
-            }
+	public function invoke( Invocation $invocation ): mixed {
+		$parameterCount = count( $invocation->parameters() );
 
-            $return = array_pop($map);
+		foreach ( $this->valueMap as $map ) {
+			if ( ! is_array( $map ) || $parameterCount !== ( count( $map ) - 1 ) ) {
+				continue;
+			}
 
-            if ($invocation->parameters() === $map) {
-                return $return;
-            }
-        }
+			$return = array_pop( $map );
 
-        return null;
-    }
+			if ( $invocation->parameters() === $map ) {
+				return $return;
+			}
+		}
+
+		return null;
+	}
 }

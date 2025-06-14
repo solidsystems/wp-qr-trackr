@@ -10,29 +10,27 @@
 
 namespace Mockery\Matcher;
 
-class Closure extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<Closure===true>';
-    }
+class Closure extends MatcherAbstract {
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        return ($this->_expected)($actual) === true;
-    }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<Closure===true>';
+	}
+
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		return ( $this->_expected )( $actual ) === true;
+	}
 }

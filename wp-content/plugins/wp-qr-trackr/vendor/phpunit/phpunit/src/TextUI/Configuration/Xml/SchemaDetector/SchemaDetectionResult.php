@@ -18,21 +18,19 @@ use PHPUnit\Util\Xml\XmlException;
  *
  * @psalm-immutable
  */
-abstract class SchemaDetectionResult
-{
-    /**
-     * @psalm-assert-if-true SuccessfulSchemaDetectionResult $this
-     */
-    public function detected(): bool
-    {
-        return false;
-    }
+abstract class SchemaDetectionResult {
 
-    /**
-     * @throws XmlException
-     */
-    public function version(): string
-    {
-        throw new XmlException('No supported schema was detected');
-    }
+	/**
+	 * @psalm-assert-if-true SuccessfulSchemaDetectionResult $this
+	 */
+	public function detected(): bool {
+		return false;
+	}
+
+	/**
+	 * @throws XmlException
+	 */
+	public function version(): string {
+		throw new XmlException( 'No supported schema was detected' );
+	}
 }

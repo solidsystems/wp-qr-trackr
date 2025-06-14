@@ -20,169 +20,155 @@ use function array_unique;
 
 use const PHP_VERSION_ID;
 
-class DefinedTargetClass implements TargetClassInterface
-{
-    /**
-     * @var class-string
-     */
-    private $name;
+class DefinedTargetClass implements TargetClassInterface {
 
-    /**
-     * @var ReflectionClass
-     */
-    private $rfc;
+	/**
+	 * @var class-string
+	 */
+	private $name;
 
-    /**
-     * @param ReflectionClass   $rfc
-     * @param class-string|null $alias
-     */
-    public function __construct(ReflectionClass $rfc, $alias = null)
-    {
-        $this->rfc = $rfc;
-        $this->name = $alias ?? $rfc->getName();
-    }
+	/**
+	 * @var ReflectionClass
+	 */
+	private $rfc;
 
-    /**
-     * @return class-string
-     */
-    public function __toString()
-    {
-        return $this->name;
-    }
+	/**
+	 * @param ReflectionClass   $rfc
+	 * @param class-string|null $alias
+	 */
+	public function __construct( ReflectionClass $rfc, $alias = null ) {
+		$this->rfc  = $rfc;
+		$this->name = $alias ?? $rfc->getName();
+	}
 
-    /**
-     * @param  class-string      $name
-     * @param  class-string|null $alias
-     * @return self
-     */
-    public static function factory($name, $alias = null)
-    {
-        return new self(new ReflectionClass($name), $alias);
-    }
+	/**
+	 * @return class-string
+	 */
+	public function __toString() {
+		return $this->name;
+	}
 
-    /**
-     * @return list<class-string>
-     */
-    public function getAttributes()
-    {
-        if (PHP_VERSION_ID < 80000) {
-            return [];
-        }
+	/**
+	 * @param  class-string      $name
+	 * @param  class-string|null $alias
+	 * @return self
+	 */
+	public static function factory( $name, $alias = null ) {
+		return new self( new ReflectionClass( $name ), $alias );
+	}
 
-        return array_unique(
-            array_merge(
-                ['\AllowDynamicProperties'],
-                array_map(
-                    static function (ReflectionAttribute $attribute): string {
-                        return '\\' . $attribute->getName();
-                    },
-                    $this->rfc->getAttributes()
-                )
-            )
-        );
-    }
+	/**
+	 * @return list<class-string>
+	 */
+	public function getAttributes() {
+		if ( PHP_VERSION_ID < 80000 ) {
+			return array();
+		}
 
-    /**
-     * @return array<class-string,self>
-     */
-    public function getInterfaces()
-    {
-        return array_map(
-            static function (ReflectionClass $interface): self {
-                return new self($interface);
-            },
-            $this->rfc->getInterfaces()
-        );
-    }
+		return array_unique(
+			array_merge(
+				array( '\AllowDynamicProperties' ),
+				array_map(
+					static function ( ReflectionAttribute $attribute ): string {
+						return '\\' . $attribute->getName();
+					},
+					$this->rfc->getAttributes()
+				)
+			)
+		);
+	}
 
-    /**
-     * @return list<Method>
-     */
-    public function getMethods()
-    {
-        return array_map(
-            static function (ReflectionMethod $method): Method {
-                return new Method($method);
-            },
-            $this->rfc->getMethods()
-        );
-    }
+	/**
+	 * @return array<class-string,self>
+	 */
+	public function getInterfaces() {
+		return array_map(
+			static function ( ReflectionClass $interface ): self {
+				return new self( $interface );
+			},
+			$this->rfc->getInterfaces()
+		);
+	}
 
-    /**
-     * @return class-string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+	/**
+	 * @return list<Method>
+	 */
+	public function getMethods() {
+		return array_map(
+			static function ( ReflectionMethod $method ): Method {
+				return new Method( $method );
+			},
+			$this->rfc->getMethods()
+		);
+	}
 
-    /**
-     * @return string
-     */
-    public function getNamespaceName()
-    {
-        return $this->rfc->getNamespaceName();
-    }
+	/**
+	 * @return class-string
+	 */
+	public function getName() {
+		return $this->name;
+	}
 
-    /**
-     * @return string
-     */
-    public function getShortName()
-    {
-        return $this->rfc->getShortName();
-    }
+	/**
+	 * @return string
+	 */
+	public function getNamespaceName() {
+		return $this->rfc->getNamespaceName();
+	}
 
-    /**
-     * @return bool
-     */
-    public function hasInternalAncestor()
-    {
-        if ($this->rfc->isInternal()) {
-            return true;
-        }
+	/**
+	 * @return string
+	 */
+	public function getShortName() {
+		return $this->rfc->getShortName();
+	}
 
-        $child = $this->rfc;
-        while ($parent = $child->getParentClass()) {
-            if ($parent->isInternal()) {
-                return true;
-            }
+	/**
+	 * @return bool
+	 */
+	public function hasInternalAncestor() {
+		if ( $this->rfc->isInternal() ) {
+			return true;
+		}
 
-            $child = $parent;
-        }
+		$child = $this->rfc;
+		while ( $parent = $child->getParentClass() ) {
+			if ( $parent->isInternal() ) {
+				return true;
+			}
 
-        return false;
-    }
+			$child = $parent;
+		}
 
-    /**
-     * @param  class-string $interface
-     * @return bool
-     */
-    public function implementsInterface($interface)
-    {
-        return $this->rfc->implementsInterface($interface);
-    }
+		return false;
+	}
 
-    /**
-     * @return bool
-     */
-    public function inNamespace()
-    {
-        return $this->rfc->inNamespace();
-    }
+	/**
+	 * @param  class-string $interface
+	 * @return bool
+	 */
+	public function implementsInterface( $interface ) {
+		return $this->rfc->implementsInterface( $interface );
+	}
 
-    /**
-     * @return bool
-     */
-    public function isAbstract()
-    {
-        return $this->rfc->isAbstract();
-    }
+	/**
+	 * @return bool
+	 */
+	public function inNamespace() {
+		return $this->rfc->inNamespace();
+	}
 
-    /**
-     * @return bool
-     */
-    public function isFinal()
-    {
-        return $this->rfc->isFinal();
-    }
+	/**
+	 * @return bool
+	 */
+	public function isAbstract() {
+		return $this->rfc->isAbstract();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isFinal() {
+		return $this->rfc->isFinal();
+	}
 }

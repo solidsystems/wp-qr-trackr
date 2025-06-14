@@ -14,7 +14,7 @@ use PHPUnit\Event\Subscriber;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface PreConditionFinishedSubscriber extends Subscriber
-{
-    public function notify(PreConditionFinished $event): void;
+interface PreConditionFinishedSubscriber extends Subscriber {
+
+	public function notify( PreConditionFinished $event ): void;
 }

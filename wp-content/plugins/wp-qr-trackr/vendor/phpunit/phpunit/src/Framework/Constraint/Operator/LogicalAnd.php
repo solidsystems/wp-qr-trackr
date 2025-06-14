@@ -12,43 +12,39 @@ namespace PHPUnit\Framework\Constraint;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class LogicalAnd extends BinaryOperator
-{
-    public static function fromConstraints(mixed ...$constraints): self
-    {
-        return new self(...$constraints);
-    }
+final class LogicalAnd extends BinaryOperator {
 
-    /**
-     * Returns the name of this operator.
-     */
-    public function operator(): string
-    {
-        return 'and';
-    }
+	public static function fromConstraints( mixed ...$constraints ): self {
+		return new self( ...$constraints );
+	}
 
-    /**
-     * Returns this operator's precedence.
-     *
-     * @see https://www.php.net/manual/en/language.operators.precedence.php
-     */
-    public function precedence(): int
-    {
-        return 22;
-    }
+	/**
+	 * Returns the name of this operator.
+	 */
+	public function operator(): string {
+		return 'and';
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        foreach ($this->constraints() as $constraint) {
-            if (!$constraint->evaluate($other, '', true)) {
-                return false;
-            }
-        }
+	/**
+	 * Returns this operator's precedence.
+	 *
+	 * @see https://www.php.net/manual/en/language.operators.precedence.php
+	 */
+	public function precedence(): int {
+		return 22;
+	}
 
-        return [] !== $this->constraints();
-    }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		foreach ( $this->constraints() as $constraint ) {
+			if ( ! $constraint->evaluate( $other, '', true ) ) {
+				return false;
+			}
+		}
+
+		return array() !== $this->constraints();
+	}
 }

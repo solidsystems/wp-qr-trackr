@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -17,35 +17,33 @@ use Brain\Monkey\Expectation\ExpectationTarget;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class ExpectationArgsRequired extends Exception
-{
+class ExpectationArgsRequired extends Exception {
 
-    /**
-     * @param \Brain\Monkey\Expectation\ExpectationTarget $target
-     * @return static
-     */
-    public static function forExpectationType(ExpectationTarget $target)
-    {
-        $type = 'given';
 
-        switch ($target->type()) {
-            case ExpectationTarget::TYPE_ACTION_ADDED:
-                $type = "added action";
-                break;
-            case ExpectationTarget::TYPE_ACTION_DONE:
-                $type = "done action";
-                break;
-            case ExpectationTarget::TYPE_FILTER_ADDED:
-                $type = "added filter";
-                break;
-            case ExpectationTarget::TYPE_FILTER_APPLIED:
-                $type = "applied filter";
-                break;
-        }
+	/**
+	 * @param \Brain\Monkey\Expectation\ExpectationTarget $target
+	 * @return static
+	 */
+	public static function forExpectationType( ExpectationTarget $target ) {
+		$type = 'given';
 
-        return new static(
-            "Can't use `withNoArgs()` for {$type} expectations: they require at least one argument."
-        );
-    }
+		switch ( $target->type() ) {
+			case ExpectationTarget::TYPE_ACTION_ADDED:
+				$type = 'added action';
+				break;
+			case ExpectationTarget::TYPE_ACTION_DONE:
+				$type = 'done action';
+				break;
+			case ExpectationTarget::TYPE_FILTER_ADDED:
+				$type = 'added filter';
+				break;
+			case ExpectationTarget::TYPE_FILTER_APPLIED:
+				$type = 'applied filter';
+				break;
+		}
 
+		return new static(
+			"Can't use `withNoArgs()` for {$type} expectations: they require at least one argument."
+		);
+	}
 }

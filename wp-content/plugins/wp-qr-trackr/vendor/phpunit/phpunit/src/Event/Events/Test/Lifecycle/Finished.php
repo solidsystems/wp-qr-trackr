@@ -19,39 +19,34 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Finished implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
-    private readonly Code\Test $test;
-    private readonly int $numberOfAssertionsPerformed;
+final class Finished implements Event {
 
-    public function __construct(Telemetry\Info $telemetryInfo, Code\Test $test, int $numberOfAssertionsPerformed)
-    {
-        $this->telemetryInfo               = $telemetryInfo;
-        $this->test                        = $test;
-        $this->numberOfAssertionsPerformed = $numberOfAssertionsPerformed;
-    }
+	private readonly Telemetry\Info $telemetryInfo;
+	private readonly Code\Test $test;
+	private readonly int $numberOfAssertionsPerformed;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	public function __construct( Telemetry\Info $telemetryInfo, Code\Test $test, int $numberOfAssertionsPerformed ) {
+		$this->telemetryInfo               = $telemetryInfo;
+		$this->test                        = $test;
+		$this->numberOfAssertionsPerformed = $numberOfAssertionsPerformed;
+	}
 
-    public function test(): Code\Test
-    {
-        return $this->test;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function numberOfAssertionsPerformed(): int
-    {
-        return $this->numberOfAssertionsPerformed;
-    }
+	public function test(): Code\Test {
+		return $this->test;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            'Test Finished (%s)',
-            $this->test->id(),
-        );
-    }
+	public function numberOfAssertionsPerformed(): int {
+		return $this->numberOfAssertionsPerformed;
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'Test Finished (%s)',
+			$this->test->id(),
+		);
+	}
 }

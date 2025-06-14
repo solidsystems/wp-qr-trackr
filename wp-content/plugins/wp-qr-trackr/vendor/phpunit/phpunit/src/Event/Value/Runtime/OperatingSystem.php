@@ -17,24 +17,21 @@ use const PHP_OS_FAMILY;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class OperatingSystem
-{
-    private readonly string $operatingSystem;
-    private readonly string $operatingSystemFamily;
+final class OperatingSystem {
 
-    public function __construct()
-    {
-        $this->operatingSystem       = PHP_OS;
-        $this->operatingSystemFamily = PHP_OS_FAMILY;
-    }
+	private readonly string $operatingSystem;
+	private readonly string $operatingSystemFamily;
 
-    public function operatingSystem(): string
-    {
-        return $this->operatingSystem;
-    }
+	public function __construct() {
+		$this->operatingSystem       = PHP_OS;
+		$this->operatingSystemFamily = PHP_OS_FAMILY;
+	}
 
-    public function operatingSystemFamily(): string
-    {
-        return $this->operatingSystemFamily;
-    }
+	public function operatingSystem(): string {
+		return $this->operatingSystem;
+	}
+
+	public function operatingSystemFamily(): string {
+		return $this->operatingSystemFamily;
+	}
 }

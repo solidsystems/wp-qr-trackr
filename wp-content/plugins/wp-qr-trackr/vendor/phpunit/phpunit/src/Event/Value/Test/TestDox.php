@@ -14,30 +14,27 @@ namespace PHPUnit\Event\Code;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestDox
-{
-    private readonly string $prettifiedClassName;
-    private readonly string $prettifiedMethodName;
-    private readonly string $prettifiedAndColorizedMethodName;
+final class TestDox {
 
-    public function __construct(string $prettifiedClassName, string $prettifiedMethodName, string $prettifiedAndColorizedMethodName)
-    {
-        $this->prettifiedClassName              = $prettifiedClassName;
-        $this->prettifiedMethodName             = $prettifiedMethodName;
-        $this->prettifiedAndColorizedMethodName = $prettifiedAndColorizedMethodName;
-    }
+	private readonly string $prettifiedClassName;
+	private readonly string $prettifiedMethodName;
+	private readonly string $prettifiedAndColorizedMethodName;
 
-    public function prettifiedClassName(): string
-    {
-        return $this->prettifiedClassName;
-    }
+	public function __construct( string $prettifiedClassName, string $prettifiedMethodName, string $prettifiedAndColorizedMethodName ) {
+		$this->prettifiedClassName              = $prettifiedClassName;
+		$this->prettifiedMethodName             = $prettifiedMethodName;
+		$this->prettifiedAndColorizedMethodName = $prettifiedAndColorizedMethodName;
+	}
 
-    public function prettifiedMethodName(bool $colorize = false): string
-    {
-        if ($colorize) {
-            return $this->prettifiedAndColorizedMethodName;
-        }
+	public function prettifiedClassName(): string {
+		return $this->prettifiedClassName;
+	}
 
-        return $this->prettifiedMethodName;
-    }
+	public function prettifiedMethodName( bool $colorize = false ): string {
+		if ( $colorize ) {
+			return $this->prettifiedAndColorizedMethodName;
+		}
+
+		return $this->prettifiedMethodName;
+	}
 }

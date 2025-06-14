@@ -10,29 +10,27 @@
 
 namespace Mockery\Matcher;
 
-class IsSame extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<IsSame>';
-    }
+class IsSame extends MatcherAbstract {
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        return $this->_expected === $actual;
-    }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<IsSame>';
+	}
+
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		return $this->_expected === $actual;
+	}
 }

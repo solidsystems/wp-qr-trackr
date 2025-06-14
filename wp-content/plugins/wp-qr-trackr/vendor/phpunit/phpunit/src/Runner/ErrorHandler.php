@@ -38,188 +38,182 @@ use PHPUnit\Util\ExcludeList;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ErrorHandler
-{
-    private const UNHANDLEABLE_LEVELS         = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING;
-    private const INSUPPRESSIBLE_LEVELS       = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
-    private static ?self $instance            = null;
-    private ?Baseline $baseline               = null;
-    private bool $enabled                     = false;
-    private ?int $originalErrorReportingLevel = null;
+final class ErrorHandler {
 
-    public static function instance(): self
-    {
-        return self::$instance ?? self::$instance = new self;
-    }
+	private const UNHANDLEABLE_LEVELS         = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING;
+	private const INSUPPRESSIBLE_LEVELS       = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
+	private static ?self $instance            = null;
+	private ?Baseline $baseline               = null;
+	private bool $enabled                     = false;
+	private ?int $originalErrorReportingLevel = null;
 
-    /**
-     * @throws NoTestCaseObjectOnCallStackException
-     */
-    public function __invoke(int $errorNumber, string $errorString, string $errorFile, int $errorLine): bool
-    {
-        $suppressed = (error_reporting() & ~self::INSUPPRESSIBLE_LEVELS) === 0;
+	public static function instance(): self {
+		return self::$instance ?? self::$instance = new self();
+	}
 
-        if ($suppressed && (new ExcludeList)->isExcluded($errorFile)) {
-            return false;
-        }
+	/**
+	 * @throws NoTestCaseObjectOnCallStackException
+	 */
+	public function __invoke( int $errorNumber, string $errorString, string $errorFile, int $errorLine ): bool {
+		$suppressed = ( error_reporting() & ~self::INSUPPRESSIBLE_LEVELS ) === 0;
 
-        /**
-         * E_STRICT is deprecated since PHP 8.4.
-         *
-         * @see https://github.com/sebastianbergmann/phpunit/issues/5956
-         */
-        if (defined('E_STRICT') && $errorNumber === 2048) {
-            $errorNumber = E_NOTICE;
-        }
+		if ( $suppressed && ( new ExcludeList() )->isExcluded( $errorFile ) ) {
+			return false;
+		}
 
-        $test = Event\Code\TestMethodBuilder::fromCallStack();
+		/**
+		 * E_STRICT is deprecated since PHP 8.4.
+		 *
+		 * @see https://github.com/sebastianbergmann/phpunit/issues/5956
+		 */
+		if ( defined( 'E_STRICT' ) && $errorNumber === 2048 ) {
+			$errorNumber = E_NOTICE;
+		}
 
-        $ignoredByBaseline = $this->ignoredByBaseline($errorFile, $errorLine, $errorString);
-        $ignoredByTest     = $test->metadata()->isIgnoreDeprecations()->isNotEmpty();
+		$test = Event\Code\TestMethodBuilder::fromCallStack();
 
-        switch ($errorNumber) {
-            case E_NOTICE:
-                Event\Facade::emitter()->testTriggeredPhpNotice(
-                    $test,
-                    $errorString,
-                    $errorFile,
-                    $errorLine,
-                    $suppressed,
-                    $ignoredByBaseline,
-                );
+		$ignoredByBaseline = $this->ignoredByBaseline( $errorFile, $errorLine, $errorString );
+		$ignoredByTest     = $test->metadata()->isIgnoreDeprecations()->isNotEmpty();
 
-                break;
+		switch ( $errorNumber ) {
+			case E_NOTICE:
+				Event\Facade::emitter()->testTriggeredPhpNotice(
+					$test,
+					$errorString,
+					$errorFile,
+					$errorLine,
+					$suppressed,
+					$ignoredByBaseline,
+				);
 
-            case E_USER_NOTICE:
-                Event\Facade::emitter()->testTriggeredNotice(
-                    $test,
-                    $errorString,
-                    $errorFile,
-                    $errorLine,
-                    $suppressed,
-                    $ignoredByBaseline,
-                );
+				break;
 
-                break;
+			case E_USER_NOTICE:
+				Event\Facade::emitter()->testTriggeredNotice(
+					$test,
+					$errorString,
+					$errorFile,
+					$errorLine,
+					$suppressed,
+					$ignoredByBaseline,
+				);
 
-            case E_WARNING:
-                Event\Facade::emitter()->testTriggeredPhpWarning(
-                    $test,
-                    $errorString,
-                    $errorFile,
-                    $errorLine,
-                    $suppressed,
-                    $ignoredByBaseline,
-                );
+				break;
 
-                break;
+			case E_WARNING:
+				Event\Facade::emitter()->testTriggeredPhpWarning(
+					$test,
+					$errorString,
+					$errorFile,
+					$errorLine,
+					$suppressed,
+					$ignoredByBaseline,
+				);
 
-            case E_USER_WARNING:
-                Event\Facade::emitter()->testTriggeredWarning(
-                    $test,
-                    $errorString,
-                    $errorFile,
-                    $errorLine,
-                    $suppressed,
-                    $ignoredByBaseline,
-                );
+				break;
 
-                break;
+			case E_USER_WARNING:
+				Event\Facade::emitter()->testTriggeredWarning(
+					$test,
+					$errorString,
+					$errorFile,
+					$errorLine,
+					$suppressed,
+					$ignoredByBaseline,
+				);
 
-            case E_DEPRECATED:
-                Event\Facade::emitter()->testTriggeredPhpDeprecation(
-                    $test,
-                    $errorString,
-                    $errorFile,
-                    $errorLine,
-                    $suppressed,
-                    $ignoredByBaseline,
-                    $ignoredByTest,
-                );
+				break;
 
-                break;
+			case E_DEPRECATED:
+				Event\Facade::emitter()->testTriggeredPhpDeprecation(
+					$test,
+					$errorString,
+					$errorFile,
+					$errorLine,
+					$suppressed,
+					$ignoredByBaseline,
+					$ignoredByTest,
+				);
 
-            case E_USER_DEPRECATED:
-                Event\Facade::emitter()->testTriggeredDeprecation(
-                    $test,
-                    $errorString,
-                    $errorFile,
-                    $errorLine,
-                    $suppressed,
-                    $ignoredByBaseline,
-                    $ignoredByTest,
-                );
+				break;
 
-                break;
+			case E_USER_DEPRECATED:
+				Event\Facade::emitter()->testTriggeredDeprecation(
+					$test,
+					$errorString,
+					$errorFile,
+					$errorLine,
+					$suppressed,
+					$ignoredByBaseline,
+					$ignoredByTest,
+				);
 
-            case E_USER_ERROR:
-                Event\Facade::emitter()->testTriggeredError(
-                    $test,
-                    $errorString,
-                    $errorFile,
-                    $errorLine,
-                    $suppressed,
-                );
+				break;
 
-                throw new ErrorException('E_USER_ERROR was triggered');
+			case E_USER_ERROR:
+				Event\Facade::emitter()->testTriggeredError(
+					$test,
+					$errorString,
+					$errorFile,
+					$errorLine,
+					$suppressed,
+				);
 
-            default:
-                return false;
-        }
+				throw new ErrorException( 'E_USER_ERROR was triggered' );
 
-        return false;
-    }
+			default:
+				return false;
+		}
 
-    public function enable(): void
-    {
-        if ($this->enabled) {
-            return;
-        }
+		return false;
+	}
 
-        $oldErrorHandler = set_error_handler($this);
+	public function enable(): void {
+		if ( $this->enabled ) {
+			return;
+		}
 
-        if ($oldErrorHandler !== null) {
-            restore_error_handler();
+		$oldErrorHandler = set_error_handler( $this );
 
-            return;
-        }
+		if ( $oldErrorHandler !== null ) {
+			restore_error_handler();
 
-        $this->enabled                     = true;
-        $this->originalErrorReportingLevel = error_reporting();
+			return;
+		}
 
-        error_reporting($this->originalErrorReportingLevel & self::UNHANDLEABLE_LEVELS);
-    }
+		$this->enabled                     = true;
+		$this->originalErrorReportingLevel = error_reporting();
 
-    public function disable(): void
-    {
-        if (!$this->enabled) {
-            return;
-        }
+		error_reporting( $this->originalErrorReportingLevel & self::UNHANDLEABLE_LEVELS );
+	}
 
-        restore_error_handler();
+	public function disable(): void {
+		if ( ! $this->enabled ) {
+			return;
+		}
 
-        error_reporting(error_reporting() | $this->originalErrorReportingLevel);
+		restore_error_handler();
 
-        $this->enabled                     = false;
-        $this->originalErrorReportingLevel = null;
-    }
+		error_reporting( error_reporting() | $this->originalErrorReportingLevel );
 
-    public function use(Baseline $baseline): void
-    {
-        $this->baseline = $baseline;
-    }
+		$this->enabled                     = false;
+		$this->originalErrorReportingLevel = null;
+	}
 
-    /**
-     * @psalm-param non-empty-string $file
-     * @psalm-param positive-int $line
-     * @psalm-param non-empty-string $description
-     */
-    private function ignoredByBaseline(string $file, int $line, string $description): bool
-    {
-        if ($this->baseline === null) {
-            return false;
-        }
+	public function use( Baseline $baseline ): void {
+		$this->baseline = $baseline;
+	}
 
-        return $this->baseline->has(Issue::from($file, $line, null, $description));
-    }
+	/**
+	 * @psalm-param non-empty-string $file
+	 * @psalm-param positive-int $line
+	 * @psalm-param non-empty-string $description
+	 */
+	private function ignoredByBaseline( string $file, int $line, string $description ): bool {
+		if ( $this->baseline === null ) {
+			return false;
+		}
+
+		return $this->baseline->has( Issue::from( $file, $line, null, $description ) );
+	}
 }

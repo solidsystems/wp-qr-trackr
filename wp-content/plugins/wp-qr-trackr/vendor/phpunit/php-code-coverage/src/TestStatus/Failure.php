@@ -12,18 +12,16 @@ namespace SebastianBergmann\CodeCoverage\Test\TestStatus;
 /**
  * @psalm-immutable
  */
-final class Failure extends Known
-{
-    /**
-     * @psalm-assert-if-true Failure $this
-     */
-    public function isFailure(): bool
-    {
-        return true;
-    }
+final class Failure extends Known {
 
-    public function asString(): string
-    {
-        return 'failure';
-    }
+	/**
+	 * @psalm-assert-if-true Failure $this
+	 */
+	public function isFailure(): bool {
+		return true;
+	}
+
+	public function asString(): string {
+		return 'failure';
+	}
 }

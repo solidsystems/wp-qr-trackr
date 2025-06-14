@@ -14,47 +14,42 @@ namespace PHPUnit\TextUI\Configuration;
  *
  * @psalm-immutable
  */
-final class TestSuite
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $name;
-    private readonly TestDirectoryCollection $directories;
-    private readonly TestFileCollection $files;
-    private readonly FileCollection $exclude;
+final class TestSuite {
 
-    /**
-     * @psalm-param non-empty-string $name
-     */
-    public function __construct(string $name, TestDirectoryCollection $directories, TestFileCollection $files, FileCollection $exclude)
-    {
-        $this->name        = $name;
-        $this->directories = $directories;
-        $this->files       = $files;
-        $this->exclude     = $exclude;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $name;
+	private readonly TestDirectoryCollection $directories;
+	private readonly TestFileCollection $files;
+	private readonly FileCollection $exclude;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function name(): string
-    {
-        return $this->name;
-    }
+	/**
+	 * @psalm-param non-empty-string $name
+	 */
+	public function __construct( string $name, TestDirectoryCollection $directories, TestFileCollection $files, FileCollection $exclude ) {
+		$this->name        = $name;
+		$this->directories = $directories;
+		$this->files       = $files;
+		$this->exclude     = $exclude;
+	}
 
-    public function directories(): TestDirectoryCollection
-    {
-        return $this->directories;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function name(): string {
+		return $this->name;
+	}
 
-    public function files(): TestFileCollection
-    {
-        return $this->files;
-    }
+	public function directories(): TestDirectoryCollection {
+		return $this->directories;
+	}
 
-    public function exclude(): FileCollection
-    {
-        return $this->exclude;
-    }
+	public function files(): TestFileCollection {
+		return $this->files;
+	}
+
+	public function exclude(): FileCollection {
+		return $this->exclude;
+	}
 }

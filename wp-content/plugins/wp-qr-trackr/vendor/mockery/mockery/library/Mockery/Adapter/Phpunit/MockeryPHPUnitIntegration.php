@@ -20,67 +20,61 @@ use function method_exists;
  * Integrates Mockery into PHPUnit. Ensures Mockery expectations are verified
  * for each test and are included by the assertion counter.
  */
-trait MockeryPHPUnitIntegration
-{
-    use MockeryPHPUnitIntegrationAssertPostConditions;
+trait MockeryPHPUnitIntegration {
 
-    protected $mockeryOpen;
+	use MockeryPHPUnitIntegrationAssertPostConditions;
 
-    protected function addMockeryExpectationsToAssertionCount()
-    {
-        $this->addToAssertionCount(Mockery::getContainer()->mockery_getExpectationCount());
-    }
+	protected $mockeryOpen;
 
-    protected function checkMockeryExceptions()
-    {
-        if (! method_exists($this, 'markAsRisky')) {
-            return;
-        }
+	protected function addMockeryExpectationsToAssertionCount() {
+		$this->addToAssertionCount( Mockery::getContainer()->mockery_getExpectationCount() );
+	}
 
-        foreach (Mockery::getContainer()->mockery_thrownExceptions() as $e) {
-            if (! $e->dismissed()) {
-                $this->markAsRisky();
-            }
-        }
-    }
+	protected function checkMockeryExceptions() {
+		if ( ! method_exists( $this, 'markAsRisky' ) ) {
+			return;
+		}
 
-    protected function closeMockery()
-    {
-        Mockery::close();
-        $this->mockeryOpen = false;
-    }
+		foreach ( Mockery::getContainer()->mockery_thrownExceptions() as $e ) {
+			if ( ! $e->dismissed() ) {
+				$this->markAsRisky();
+			}
+		}
+	}
 
-    /**
-     * Performs assertions shared by all tests of a test case. This method is
-     * called before execution of a test ends and before the tearDown method.
-     */
-    protected function mockeryAssertPostConditions()
-    {
-        $this->addMockeryExpectationsToAssertionCount();
-        $this->checkMockeryExceptions();
-        $this->closeMockery();
+	protected function closeMockery() {
+		Mockery::close();
+		$this->mockeryOpen = false;
+	}
 
-        parent::assertPostConditions();
-    }
+	/**
+	 * Performs assertions shared by all tests of a test case. This method is
+	 * called before execution of a test ends and before the tearDown method.
+	 */
+	protected function mockeryAssertPostConditions() {
+		$this->addMockeryExpectationsToAssertionCount();
+		$this->checkMockeryExceptions();
+		$this->closeMockery();
 
-    /**
-     * @after
-     */
-    #[After]
-    protected function purgeMockeryContainer()
-    {
-        if ($this->mockeryOpen) {
-            // post conditions wasn't called, so test probably failed
-            Mockery::close();
-        }
-    }
+		parent::assertPostConditions();
+	}
 
-    /**
-     * @before
-     */
-    #[Before]
-    protected function startMockery()
-    {
-        $this->mockeryOpen = true;
-    }
+	/**
+	 * @after
+	 */
+	#[After]
+	protected function purgeMockeryContainer() {
+		if ( $this->mockeryOpen ) {
+			// post conditions wasn't called, so test probably failed
+			Mockery::close();
+		}
+	}
+
+	/**
+	 * @before
+	 */
+	#[Before]
+	protected function startMockery() {
+		$this->mockeryOpen = true;
+	}
 }

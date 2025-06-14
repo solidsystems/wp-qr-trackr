@@ -17,63 +17,58 @@ use SebastianBergmann\Environment\Runtime;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class BuildInformation
-{
-    private readonly DOMElement $contextNode;
+final class BuildInformation {
 
-    public function __construct(DOMElement $contextNode)
-    {
-        $this->contextNode = $contextNode;
-    }
+	private readonly DOMElement $contextNode;
 
-    public function setRuntimeInformation(Runtime $runtime): void
-    {
-        $runtimeNode = $this->nodeByName('runtime');
+	public function __construct( DOMElement $contextNode ) {
+		$this->contextNode = $contextNode;
+	}
 
-        $runtimeNode->setAttribute('name', $runtime->getName());
-        $runtimeNode->setAttribute('version', $runtime->getVersion());
-        $runtimeNode->setAttribute('url', $runtime->getVendorUrl());
+	public function setRuntimeInformation( Runtime $runtime ): void {
+		$runtimeNode = $this->nodeByName( 'runtime' );
 
-        $driverNode = $this->nodeByName('driver');
+		$runtimeNode->setAttribute( 'name', $runtime->getName() );
+		$runtimeNode->setAttribute( 'version', $runtime->getVersion() );
+		$runtimeNode->setAttribute( 'url', $runtime->getVendorUrl() );
 
-        if ($runtime->hasXdebug()) {
-            $driverNode->setAttribute('name', 'xdebug');
-            $driverNode->setAttribute('version', phpversion('xdebug'));
-        }
+		$driverNode = $this->nodeByName( 'driver' );
 
-        if ($runtime->hasPCOV()) {
-            $driverNode->setAttribute('name', 'pcov');
-            $driverNode->setAttribute('version', phpversion('pcov'));
-        }
-    }
+		if ( $runtime->hasXdebug() ) {
+			$driverNode->setAttribute( 'name', 'xdebug' );
+			$driverNode->setAttribute( 'version', phpversion( 'xdebug' ) );
+		}
 
-    public function setBuildTime(DateTimeImmutable $date): void
-    {
-        $this->contextNode->setAttribute('time', $date->format('D M j G:i:s T Y'));
-    }
+		if ( $runtime->hasPCOV() ) {
+			$driverNode->setAttribute( 'name', 'pcov' );
+			$driverNode->setAttribute( 'version', phpversion( 'pcov' ) );
+		}
+	}
 
-    public function setGeneratorVersions(string $phpUnitVersion, string $coverageVersion): void
-    {
-        $this->contextNode->setAttribute('phpunit', $phpUnitVersion);
-        $this->contextNode->setAttribute('coverage', $coverageVersion);
-    }
+	public function setBuildTime( DateTimeImmutable $date ): void {
+		$this->contextNode->setAttribute( 'time', $date->format( 'D M j G:i:s T Y' ) );
+	}
 
-    private function nodeByName(string $name): DOMElement
-    {
-        $node = $this->contextNode->getElementsByTagNameNS(
-            'https://schema.phpunit.de/coverage/1.0',
-            $name,
-        )->item(0);
+	public function setGeneratorVersions( string $phpUnitVersion, string $coverageVersion ): void {
+		$this->contextNode->setAttribute( 'phpunit', $phpUnitVersion );
+		$this->contextNode->setAttribute( 'coverage', $coverageVersion );
+	}
 
-        if (!$node) {
-            $node = $this->contextNode->appendChild(
-                $this->contextNode->ownerDocument->createElementNS(
-                    'https://schema.phpunit.de/coverage/1.0',
-                    $name,
-                ),
-            );
-        }
+	private function nodeByName( string $name ): DOMElement {
+		$node = $this->contextNode->getElementsByTagNameNS(
+			'https://schema.phpunit.de/coverage/1.0',
+			$name,
+		)->item( 0 );
 
-        return $node;
-    }
+		if ( ! $node ) {
+			$node = $this->contextNode->appendChild(
+				$this->contextNode->ownerDocument->createElementNS(
+					'https://schema.phpunit.de/coverage/1.0',
+					$name,
+				),
+			);
+		}
+
+		return $node;
+	}
 }

@@ -19,42 +19,37 @@ use PHPUnit\Event\Telemetry\Info;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DataProviderMethodCalled implements Event
-{
-    private readonly Info $telemetryInfo;
-    private readonly ClassMethod $testMethod;
-    private readonly ClassMethod $dataProviderMethod;
+final class DataProviderMethodCalled implements Event {
 
-    public function __construct(Info $telemetryInfo, ClassMethod $testMethod, ClassMethod $dataProviderMethod)
-    {
-        $this->telemetryInfo      = $telemetryInfo;
-        $this->testMethod         = $testMethod;
-        $this->dataProviderMethod = $dataProviderMethod;
-    }
+	private readonly Info $telemetryInfo;
+	private readonly ClassMethod $testMethod;
+	private readonly ClassMethod $dataProviderMethod;
 
-    public function telemetryInfo(): Info
-    {
-        return $this->telemetryInfo;
-    }
+	public function __construct( Info $telemetryInfo, ClassMethod $testMethod, ClassMethod $dataProviderMethod ) {
+		$this->telemetryInfo      = $telemetryInfo;
+		$this->testMethod         = $testMethod;
+		$this->dataProviderMethod = $dataProviderMethod;
+	}
 
-    public function testMethod(): ClassMethod
-    {
-        return $this->testMethod;
-    }
+	public function telemetryInfo(): Info {
+		return $this->telemetryInfo;
+	}
 
-    public function dataProviderMethod(): ClassMethod
-    {
-        return $this->dataProviderMethod;
-    }
+	public function testMethod(): ClassMethod {
+		return $this->testMethod;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            'Data Provider Method Called (%s::%s for test method %s::%s)',
-            $this->dataProviderMethod->className(),
-            $this->dataProviderMethod->methodName(),
-            $this->testMethod->className(),
-            $this->testMethod->methodName(),
-        );
-    }
+	public function dataProviderMethod(): ClassMethod {
+		return $this->dataProviderMethod;
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'Data Provider Method Called (%s::%s for test method %s::%s)',
+			$this->dataProviderMethod->className(),
+			$this->dataProviderMethod->methodName(),
+			$this->testMethod->className(),
+			$this->testMethod->methodName(),
+		);
+	}
 }

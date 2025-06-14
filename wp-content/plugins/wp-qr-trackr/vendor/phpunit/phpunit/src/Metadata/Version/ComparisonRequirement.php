@@ -17,24 +17,21 @@ use PHPUnit\Util\VersionComparisonOperator;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ComparisonRequirement extends Requirement
-{
-    private readonly string $version;
-    private readonly VersionComparisonOperator $operator;
+final class ComparisonRequirement extends Requirement {
 
-    public function __construct(string $version, VersionComparisonOperator $operator)
-    {
-        $this->version  = $version;
-        $this->operator = $operator;
-    }
+	private readonly string $version;
+	private readonly VersionComparisonOperator $operator;
 
-    public function isSatisfiedBy(string $version): bool
-    {
-        return version_compare($version, $this->version, $this->operator->asString());
-    }
+	public function __construct( string $version, VersionComparisonOperator $operator ) {
+		$this->version  = $version;
+		$this->operator = $operator;
+	}
 
-    public function asString(): string
-    {
-        return $this->operator->asString() . ' ' . $this->version;
-    }
+	public function isSatisfiedBy( string $version ): bool {
+		return version_compare( $version, $this->version, $this->operator->asString() );
+	}
+
+	public function asString(): string {
+		return $this->operator->asString() . ' ' . $this->version;
+	}
 }

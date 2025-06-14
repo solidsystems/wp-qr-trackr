@@ -10,20 +10,18 @@
 
 namespace Mockery;
 
-class VerificationExpectation extends Expectation
-{
-    public function __clone()
-    {
-        parent::__clone();
+class VerificationExpectation extends Expectation {
 
-        $this->_actualCount = 0;
-    }
+	public function __clone() {
+		parent::__clone();
 
-    /**
-     * @return void
-     */
-    public function clearCountValidators()
-    {
-        $this->_countValidators = [];
-    }
+		$this->_actualCount = 0;
+	}
+
+	/**
+	 * @return void
+	 */
+	public function clearCountValidators() {
+		$this->_countValidators = array();
+	}
 }

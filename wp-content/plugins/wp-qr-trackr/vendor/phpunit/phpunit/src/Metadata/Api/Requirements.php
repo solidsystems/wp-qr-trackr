@@ -37,118 +37,117 @@ use PHPUnit\Runner\Version;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Requirements
-{
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     *
-     * @psalm-return list<string>
-     */
-    public function requirementsNotSatisfiedFor(string $className, string $methodName): array
-    {
-        $notSatisfied = [];
+final class Requirements {
 
-        foreach (Registry::parser()->forClassAndMethod($className, $methodName) as $metadata) {
-            if ($metadata->isRequiresPhp()) {
-                assert($metadata instanceof RequiresPhp);
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 *
+	 * @psalm-return list<string>
+	 */
+	public function requirementsNotSatisfiedFor( string $className, string $methodName ): array {
+		$notSatisfied = array();
 
-                if (!$metadata->versionRequirement()->isSatisfiedBy(PHP_VERSION)) {
-                    $notSatisfied[] = sprintf(
-                        'PHP %s is required.',
-                        $metadata->versionRequirement()->asString(),
-                    );
-                }
-            }
+		foreach ( Registry::parser()->forClassAndMethod( $className, $methodName ) as $metadata ) {
+			if ( $metadata->isRequiresPhp() ) {
+				assert( $metadata instanceof RequiresPhp );
 
-            if ($metadata->isRequiresPhpExtension()) {
-                assert($metadata instanceof RequiresPhpExtension);
+				if ( ! $metadata->versionRequirement()->isSatisfiedBy( PHP_VERSION ) ) {
+					$notSatisfied[] = sprintf(
+						'PHP %s is required.',
+						$metadata->versionRequirement()->asString(),
+					);
+				}
+			}
 
-                if (!extension_loaded($metadata->extension()) ||
-                    ($metadata->hasVersionRequirement() &&
-                        !$metadata->versionRequirement()->isSatisfiedBy(phpversion($metadata->extension())))) {
-                    $notSatisfied[] = sprintf(
-                        'PHP extension %s%s is required.',
-                        $metadata->extension(),
-                        $metadata->hasVersionRequirement() ? (' ' . $metadata->versionRequirement()->asString()) : '',
-                    );
-                }
-            }
+			if ( $metadata->isRequiresPhpExtension() ) {
+				assert( $metadata instanceof RequiresPhpExtension );
 
-            if ($metadata->isRequiresPhpunit()) {
-                assert($metadata instanceof RequiresPhpunit);
+				if ( ! extension_loaded( $metadata->extension() ) ||
+					( $metadata->hasVersionRequirement() &&
+						! $metadata->versionRequirement()->isSatisfiedBy( phpversion( $metadata->extension() ) ) ) ) {
+					$notSatisfied[] = sprintf(
+						'PHP extension %s%s is required.',
+						$metadata->extension(),
+						$metadata->hasVersionRequirement() ? ( ' ' . $metadata->versionRequirement()->asString() ) : '',
+					);
+				}
+			}
 
-                if (!$metadata->versionRequirement()->isSatisfiedBy(Version::id())) {
-                    $notSatisfied[] = sprintf(
-                        'PHPUnit %s is required.',
-                        $metadata->versionRequirement()->asString(),
-                    );
-                }
-            }
+			if ( $metadata->isRequiresPhpunit() ) {
+				assert( $metadata instanceof RequiresPhpunit );
 
-            if ($metadata->isRequiresOperatingSystemFamily()) {
-                assert($metadata instanceof RequiresOperatingSystemFamily);
+				if ( ! $metadata->versionRequirement()->isSatisfiedBy( Version::id() ) ) {
+					$notSatisfied[] = sprintf(
+						'PHPUnit %s is required.',
+						$metadata->versionRequirement()->asString(),
+					);
+				}
+			}
 
-                if ($metadata->operatingSystemFamily() !== PHP_OS_FAMILY) {
-                    $notSatisfied[] = sprintf(
-                        'Operating system %s is required.',
-                        $metadata->operatingSystemFamily(),
-                    );
-                }
-            }
+			if ( $metadata->isRequiresOperatingSystemFamily() ) {
+				assert( $metadata instanceof RequiresOperatingSystemFamily );
 
-            if ($metadata->isRequiresOperatingSystem()) {
-                assert($metadata instanceof RequiresOperatingSystem);
+				if ( $metadata->operatingSystemFamily() !== PHP_OS_FAMILY ) {
+					$notSatisfied[] = sprintf(
+						'Operating system %s is required.',
+						$metadata->operatingSystemFamily(),
+					);
+				}
+			}
 
-                $pattern = sprintf(
-                    '/%s/i',
-                    addcslashes($metadata->operatingSystem(), '/'),
-                );
+			if ( $metadata->isRequiresOperatingSystem() ) {
+				assert( $metadata instanceof RequiresOperatingSystem );
 
-                if (!preg_match($pattern, PHP_OS)) {
-                    $notSatisfied[] = sprintf(
-                        'Operating system %s is required.',
-                        $metadata->operatingSystem(),
-                    );
-                }
-            }
+				$pattern = sprintf(
+					'/%s/i',
+					addcslashes( $metadata->operatingSystem(), '/' ),
+				);
 
-            if ($metadata->isRequiresFunction()) {
-                assert($metadata instanceof RequiresFunction);
+				if ( ! preg_match( $pattern, PHP_OS ) ) {
+					$notSatisfied[] = sprintf(
+						'Operating system %s is required.',
+						$metadata->operatingSystem(),
+					);
+				}
+			}
 
-                if (!function_exists($metadata->functionName())) {
-                    $notSatisfied[] = sprintf(
-                        'Function %s() is required.',
-                        $metadata->functionName(),
-                    );
-                }
-            }
+			if ( $metadata->isRequiresFunction() ) {
+				assert( $metadata instanceof RequiresFunction );
 
-            if ($metadata->isRequiresMethod()) {
-                assert($metadata instanceof RequiresMethod);
+				if ( ! function_exists( $metadata->functionName() ) ) {
+					$notSatisfied[] = sprintf(
+						'Function %s() is required.',
+						$metadata->functionName(),
+					);
+				}
+			}
 
-                if (!method_exists($metadata->className(), $metadata->methodName())) {
-                    $notSatisfied[] = sprintf(
-                        'Method %s::%s() is required.',
-                        $metadata->className(),
-                        $metadata->methodName(),
-                    );
-                }
-            }
+			if ( $metadata->isRequiresMethod() ) {
+				assert( $metadata instanceof RequiresMethod );
 
-            if ($metadata->isRequiresSetting()) {
-                assert($metadata instanceof RequiresSetting);
+				if ( ! method_exists( $metadata->className(), $metadata->methodName() ) ) {
+					$notSatisfied[] = sprintf(
+						'Method %s::%s() is required.',
+						$metadata->className(),
+						$metadata->methodName(),
+					);
+				}
+			}
 
-                if (ini_get($metadata->setting()) !== $metadata->value()) {
-                    $notSatisfied[] = sprintf(
-                        'Setting "%s" is required to be "%s".',
-                        $metadata->setting(),
-                        $metadata->value(),
-                    );
-                }
-            }
-        }
+			if ( $metadata->isRequiresSetting() ) {
+				assert( $metadata instanceof RequiresSetting );
 
-        return $notSatisfied;
-    }
+				if ( ini_get( $metadata->setting() ) !== $metadata->value() ) {
+					$notSatisfied[] = sprintf(
+						'Setting "%s" is required to be "%s".',
+						$metadata->setting(),
+						$metadata->value(),
+					);
+				}
+			}
+		}
+
+		return $notSatisfied;
+	}
 }

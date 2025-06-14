@@ -21,63 +21,60 @@ use PHPUnit\TextUI\Configuration\Registry;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ListGroupsCommand implements Command
-{
-    private readonly TestSuite $suite;
+final class ListGroupsCommand implements Command {
 
-    public function __construct(TestSuite $suite)
-    {
-        $this->suite = $suite;
-    }
+	private readonly TestSuite $suite;
 
-    public function execute(): Result
-    {
-        $buffer = $this->warnAboutConflictingOptions();
-        $buffer .= 'Available test group(s):' . PHP_EOL;
+	public function __construct( TestSuite $suite ) {
+		$this->suite = $suite;
+	}
 
-        $groups = $this->suite->groups();
-        sort($groups);
+	public function execute(): Result {
+		$buffer  = $this->warnAboutConflictingOptions();
+		$buffer .= 'Available test group(s):' . PHP_EOL;
 
-        foreach ($groups as $group) {
-            if (str_starts_with($group, '__phpunit_')) {
-                continue;
-            }
+		$groups = $this->suite->groups();
+		sort( $groups );
 
-            $buffer .= sprintf(
-                ' - %s' . PHP_EOL,
-                $group,
-            );
-        }
+		foreach ( $groups as $group ) {
+			if ( str_starts_with( $group, '__phpunit_' ) ) {
+				continue;
+			}
 
-        return Result::from($buffer);
-    }
+			$buffer .= sprintf(
+				' - %s' . PHP_EOL,
+				$group,
+			);
+		}
 
-    private function warnAboutConflictingOptions(): string
-    {
-        $buffer = '';
+		return Result::from( $buffer );
+	}
 
-        $configuration = Registry::get();
+	private function warnAboutConflictingOptions(): string {
+		$buffer = '';
 
-        if ($configuration->hasFilter()) {
-            $buffer .= 'The --filter and --list-groups options cannot be combined, --filter is ignored' . PHP_EOL;
-        }
+		$configuration = Registry::get();
 
-        if ($configuration->hasGroups()) {
-            $buffer .= 'The --group and --list-groups options cannot be combined, --group is ignored' . PHP_EOL;
-        }
+		if ( $configuration->hasFilter() ) {
+			$buffer .= 'The --filter and --list-groups options cannot be combined, --filter is ignored' . PHP_EOL;
+		}
 
-        if ($configuration->hasExcludeGroups()) {
-            $buffer .= 'The --exclude-group and --list-groups options cannot be combined, --exclude-group is ignored' . PHP_EOL;
-        }
+		if ( $configuration->hasGroups() ) {
+			$buffer .= 'The --group and --list-groups options cannot be combined, --group is ignored' . PHP_EOL;
+		}
 
-        if ($configuration->includeTestSuite() !== '') {
-            $buffer .= 'The --testsuite and --list-groups options cannot be combined, --exclude-group is ignored' . PHP_EOL;
-        }
+		if ( $configuration->hasExcludeGroups() ) {
+			$buffer .= 'The --exclude-group and --list-groups options cannot be combined, --exclude-group is ignored' . PHP_EOL;
+		}
 
-        if (!empty($buffer)) {
-            $buffer .= PHP_EOL;
-        }
+		if ( $configuration->includeTestSuite() !== '' ) {
+			$buffer .= 'The --testsuite and --list-groups options cannot be combined, --exclude-group is ignored' . PHP_EOL;
+		}
 
-        return $buffer;
-    }
+		if ( ! empty( $buffer ) ) {
+			$buffer .= PHP_EOL;
+		}
+
+		return $buffer;
+	}
 }

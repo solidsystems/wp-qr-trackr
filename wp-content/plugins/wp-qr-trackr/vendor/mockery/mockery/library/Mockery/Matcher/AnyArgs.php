@@ -10,22 +10,20 @@
 
 namespace Mockery\Matcher;
 
-class AnyArgs extends MatcherAbstract implements ArgumentListMatcher
-{
-    public function __toString()
-    {
-        return '<Any Arguments>';
-    }
+class AnyArgs extends MatcherAbstract implements ArgumentListMatcher {
 
-    /**
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        return true;
-    }
+	public function __toString() {
+		return '<Any Arguments>';
+	}
+
+	/**
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		return true;
+	}
 }

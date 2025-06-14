@@ -14,24 +14,21 @@ namespace PHPUnit\TextUI\Configuration;
  *
  * @psalm-immutable
  */
-final class Constant
-{
-    private readonly string $name;
-    private readonly bool|string $value;
+final class Constant {
 
-    public function __construct(string $name, bool|string $value)
-    {
-        $this->name  = $name;
-        $this->value = $value;
-    }
+	private readonly string $name;
+	private readonly bool|string $value;
 
-    public function name(): string
-    {
-        return $this->name;
-    }
+	public function __construct( string $name, bool|string $value ) {
+		$this->name  = $name;
+		$this->value = $value;
+	}
 
-    public function value(): bool|string
-    {
-        return $this->value;
-    }
+	public function name(): string {
+		return $this->name;
+	}
+
+	public function value(): bool|string {
+		return $this->value;
+	}
 }

@@ -14,87 +14,75 @@ namespace PHPUnit\TextUI\Configuration;
  *
  * @psalm-immutable
  */
-final class Php
-{
-    private readonly DirectoryCollection $includePaths;
-    private readonly IniSettingCollection $iniSettings;
-    private readonly ConstantCollection $constants;
-    private readonly VariableCollection $globalVariables;
-    private readonly VariableCollection $envVariables;
-    private readonly VariableCollection $postVariables;
-    private readonly VariableCollection $getVariables;
-    private readonly VariableCollection $cookieVariables;
-    private readonly VariableCollection $serverVariables;
-    private readonly VariableCollection $filesVariables;
-    private readonly VariableCollection $requestVariables;
+final class Php {
 
-    public function __construct(DirectoryCollection $includePaths, IniSettingCollection $iniSettings, ConstantCollection $constants, VariableCollection $globalVariables, VariableCollection $envVariables, VariableCollection $postVariables, VariableCollection $getVariables, VariableCollection $cookieVariables, VariableCollection $serverVariables, VariableCollection $filesVariables, VariableCollection $requestVariables)
-    {
-        $this->includePaths     = $includePaths;
-        $this->iniSettings      = $iniSettings;
-        $this->constants        = $constants;
-        $this->globalVariables  = $globalVariables;
-        $this->envVariables     = $envVariables;
-        $this->postVariables    = $postVariables;
-        $this->getVariables     = $getVariables;
-        $this->cookieVariables  = $cookieVariables;
-        $this->serverVariables  = $serverVariables;
-        $this->filesVariables   = $filesVariables;
-        $this->requestVariables = $requestVariables;
-    }
+	private readonly DirectoryCollection $includePaths;
+	private readonly IniSettingCollection $iniSettings;
+	private readonly ConstantCollection $constants;
+	private readonly VariableCollection $globalVariables;
+	private readonly VariableCollection $envVariables;
+	private readonly VariableCollection $postVariables;
+	private readonly VariableCollection $getVariables;
+	private readonly VariableCollection $cookieVariables;
+	private readonly VariableCollection $serverVariables;
+	private readonly VariableCollection $filesVariables;
+	private readonly VariableCollection $requestVariables;
 
-    public function includePaths(): DirectoryCollection
-    {
-        return $this->includePaths;
-    }
+	public function __construct( DirectoryCollection $includePaths, IniSettingCollection $iniSettings, ConstantCollection $constants, VariableCollection $globalVariables, VariableCollection $envVariables, VariableCollection $postVariables, VariableCollection $getVariables, VariableCollection $cookieVariables, VariableCollection $serverVariables, VariableCollection $filesVariables, VariableCollection $requestVariables ) {
+		$this->includePaths     = $includePaths;
+		$this->iniSettings      = $iniSettings;
+		$this->constants        = $constants;
+		$this->globalVariables  = $globalVariables;
+		$this->envVariables     = $envVariables;
+		$this->postVariables    = $postVariables;
+		$this->getVariables     = $getVariables;
+		$this->cookieVariables  = $cookieVariables;
+		$this->serverVariables  = $serverVariables;
+		$this->filesVariables   = $filesVariables;
+		$this->requestVariables = $requestVariables;
+	}
 
-    public function iniSettings(): IniSettingCollection
-    {
-        return $this->iniSettings;
-    }
+	public function includePaths(): DirectoryCollection {
+		return $this->includePaths;
+	}
 
-    public function constants(): ConstantCollection
-    {
-        return $this->constants;
-    }
+	public function iniSettings(): IniSettingCollection {
+		return $this->iniSettings;
+	}
 
-    public function globalVariables(): VariableCollection
-    {
-        return $this->globalVariables;
-    }
+	public function constants(): ConstantCollection {
+		return $this->constants;
+	}
 
-    public function envVariables(): VariableCollection
-    {
-        return $this->envVariables;
-    }
+	public function globalVariables(): VariableCollection {
+		return $this->globalVariables;
+	}
 
-    public function postVariables(): VariableCollection
-    {
-        return $this->postVariables;
-    }
+	public function envVariables(): VariableCollection {
+		return $this->envVariables;
+	}
 
-    public function getVariables(): VariableCollection
-    {
-        return $this->getVariables;
-    }
+	public function postVariables(): VariableCollection {
+		return $this->postVariables;
+	}
 
-    public function cookieVariables(): VariableCollection
-    {
-        return $this->cookieVariables;
-    }
+	public function getVariables(): VariableCollection {
+		return $this->getVariables;
+	}
 
-    public function serverVariables(): VariableCollection
-    {
-        return $this->serverVariables;
-    }
+	public function cookieVariables(): VariableCollection {
+		return $this->cookieVariables;
+	}
 
-    public function filesVariables(): VariableCollection
-    {
-        return $this->filesVariables;
-    }
+	public function serverVariables(): VariableCollection {
+		return $this->serverVariables;
+	}
 
-    public function requestVariables(): VariableCollection
-    {
-        return $this->requestVariables;
-    }
+	public function filesVariables(): VariableCollection {
+		return $this->filesVariables;
+	}
+
+	public function requestVariables(): VariableCollection {
+		return $this->requestVariables;
+	}
 }

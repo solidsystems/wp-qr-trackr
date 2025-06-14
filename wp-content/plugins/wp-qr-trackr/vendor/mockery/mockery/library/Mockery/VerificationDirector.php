@@ -10,159 +10,145 @@
 
 namespace Mockery;
 
-class VerificationDirector
-{
-    /**
-     * @var VerificationExpectation
-     */
-    private $expectation;
+class VerificationDirector {
 
-    /**
-     * @var ReceivedMethodCalls
-     */
-    private $receivedMethodCalls;
+	/**
+	 * @var VerificationExpectation
+	 */
+	private $expectation;
 
-    public function __construct(ReceivedMethodCalls $receivedMethodCalls, VerificationExpectation $expectation)
-    {
-        $this->receivedMethodCalls = $receivedMethodCalls;
-        $this->expectation = $expectation;
-    }
+	/**
+	 * @var ReceivedMethodCalls
+	 */
+	private $receivedMethodCalls;
 
-    /**
-     * @return self
-     */
-    public function atLeast()
-    {
-        return $this->cloneWithoutCountValidatorsApplyAndVerify('atLeast', []);
-    }
+	public function __construct( ReceivedMethodCalls $receivedMethodCalls, VerificationExpectation $expectation ) {
+		$this->receivedMethodCalls = $receivedMethodCalls;
+		$this->expectation         = $expectation;
+	}
 
-    /**
-     * @return self
-     */
-    public function atMost()
-    {
-        return $this->cloneWithoutCountValidatorsApplyAndVerify('atMost', []);
-    }
+	/**
+	 * @return self
+	 */
+	public function atLeast() {
+		return $this->cloneWithoutCountValidatorsApplyAndVerify( 'atLeast', array() );
+	}
 
-    /**
-     * @param int $minimum
-     * @param int $maximum
-     *
-     * @return self
-     */
-    public function between($minimum, $maximum)
-    {
-        return $this->cloneWithoutCountValidatorsApplyAndVerify('between', [$minimum, $maximum]);
-    }
+	/**
+	 * @return self
+	 */
+	public function atMost() {
+		return $this->cloneWithoutCountValidatorsApplyAndVerify( 'atMost', array() );
+	}
 
-    /**
-     * @return self
-     */
-    public function once()
-    {
-        return $this->cloneWithoutCountValidatorsApplyAndVerify('once', []);
-    }
+	/**
+	 * @param int $minimum
+	 * @param int $maximum
+	 *
+	 * @return self
+	 */
+	public function between( $minimum, $maximum ) {
+		return $this->cloneWithoutCountValidatorsApplyAndVerify( 'between', array( $minimum, $maximum ) );
+	}
 
-    /**
-     * @param int $limit
-     *
-     * @return self
-     */
-    public function times($limit = null)
-    {
-        return $this->cloneWithoutCountValidatorsApplyAndVerify('times', [$limit]);
-    }
+	/**
+	 * @return self
+	 */
+	public function once() {
+		return $this->cloneWithoutCountValidatorsApplyAndVerify( 'once', array() );
+	}
 
-    /**
-     * @return self
-     */
-    public function twice()
-    {
-        return $this->cloneWithoutCountValidatorsApplyAndVerify('twice', []);
-    }
+	/**
+	 * @param int $limit
+	 *
+	 * @return self
+	 */
+	public function times( $limit = null ) {
+		return $this->cloneWithoutCountValidatorsApplyAndVerify( 'times', array( $limit ) );
+	}
 
-    public function verify()
-    {
-        $this->receivedMethodCalls->verify($this->expectation);
-    }
+	/**
+	 * @return self
+	 */
+	public function twice() {
+		return $this->cloneWithoutCountValidatorsApplyAndVerify( 'twice', array() );
+	}
 
-    /**
-     * @template TArgs
-     *
-     * @param TArgs $args
-     *
-     * @return self
-     */
-    public function with(...$args)
-    {
-        return $this->cloneApplyAndVerify('with', $args);
-    }
+	public function verify() {
+		$this->receivedMethodCalls->verify( $this->expectation );
+	}
 
-    /**
-     * @return self
-     */
-    public function withAnyArgs()
-    {
-        return $this->cloneApplyAndVerify('withAnyArgs', []);
-    }
+	/**
+	 * @template TArgs
+	 *
+	 * @param TArgs $args
+	 *
+	 * @return self
+	 */
+	public function with( ...$args ) {
+		return $this->cloneApplyAndVerify( 'with', $args );
+	}
 
-    /**
-     * @template TArgs
-     *
-     * @param TArgs $args
-     *
-     * @return self
-     */
-    public function withArgs($args)
-    {
-        return $this->cloneApplyAndVerify('withArgs', [$args]);
-    }
+	/**
+	 * @return self
+	 */
+	public function withAnyArgs() {
+		return $this->cloneApplyAndVerify( 'withAnyArgs', array() );
+	}
 
-    /**
-     * @return self
-     */
-    public function withNoArgs()
-    {
-        return $this->cloneApplyAndVerify('withNoArgs', []);
-    }
+	/**
+	 * @template TArgs
+	 *
+	 * @param TArgs $args
+	 *
+	 * @return self
+	 */
+	public function withArgs( $args ) {
+		return $this->cloneApplyAndVerify( 'withArgs', array( $args ) );
+	}
 
-    /**
-     * @param string $method
-     * @param array  $args
-     *
-     * @return self
-     */
-    protected function cloneApplyAndVerify($method, $args)
-    {
-        $verificationExpectation = clone $this->expectation;
+	/**
+	 * @return self
+	 */
+	public function withNoArgs() {
+		return $this->cloneApplyAndVerify( 'withNoArgs', array() );
+	}
 
-        $verificationExpectation->{$method}(...$args);
+	/**
+	 * @param string $method
+	 * @param array  $args
+	 *
+	 * @return self
+	 */
+	protected function cloneApplyAndVerify( $method, $args ) {
+		$verificationExpectation = clone $this->expectation;
 
-        $verificationDirector = new self($this->receivedMethodCalls, $verificationExpectation);
+		$verificationExpectation->{$method}( ...$args );
 
-        $verificationDirector->verify();
+		$verificationDirector = new self( $this->receivedMethodCalls, $verificationExpectation );
 
-        return $verificationDirector;
-    }
+		$verificationDirector->verify();
 
-    /**
-     * @param string $method
-     * @param array  $args
-     *
-     * @return self
-     */
-    protected function cloneWithoutCountValidatorsApplyAndVerify($method, $args)
-    {
-        $verificationExpectation = clone $this->expectation;
+		return $verificationDirector;
+	}
 
-        $verificationExpectation->clearCountValidators();
+	/**
+	 * @param string $method
+	 * @param array  $args
+	 *
+	 * @return self
+	 */
+	protected function cloneWithoutCountValidatorsApplyAndVerify( $method, $args ) {
+		$verificationExpectation = clone $this->expectation;
 
-        $verificationExpectation->{$method}(...$args);
+		$verificationExpectation->clearCountValidators();
 
-        $verificationDirector = new self($this->receivedMethodCalls, $verificationExpectation);
+		$verificationExpectation->{$method}( ...$args );
 
-        $verificationDirector->verify();
+		$verificationDirector = new self( $this->receivedMethodCalls, $verificationExpectation );
 
-        return $verificationDirector;
-    }
+		$verificationDirector->verify();
+
+		return $verificationDirector;
+	}
 }

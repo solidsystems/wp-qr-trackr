@@ -10,30 +10,28 @@
 
 namespace Mockery\Matcher;
 
-class Not extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<Not>';
-    }
+class Not extends MatcherAbstract {
 
-    /**
-     * Check if the actual value does not match the expected (in this
-     * case it's specifically NOT expected).
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        return $actual !== $this->_expected;
-    }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<Not>';
+	}
+
+	/**
+	 * Check if the actual value does not match the expected (in this
+	 * case it's specifically NOT expected).
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		return $actual !== $this->_expected;
+	}
 }

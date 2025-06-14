@@ -18,34 +18,33 @@ use function substr_replace;
 use function var_export;
 use const PHP_EOL;
 
-class ConstantsPass implements Pass
-{
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        $cm = $config->getConstantsMap();
-        if ($cm === []) {
-            return $code;
-        }
+class ConstantsPass implements Pass {
 
-        $name = $config->getName();
-        if (! array_key_exists($name, $cm)) {
-            return $code;
-        }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		$cm = $config->getConstantsMap();
+		if ( $cm === array() ) {
+			return $code;
+		}
 
-        $constantsCode = '';
-        foreach ($cm[$name] as $constant => $value) {
-            $constantsCode .= sprintf("\n    const %s = %s;\n", $constant, var_export($value, true));
-        }
+		$name = $config->getName();
+		if ( ! array_key_exists( $name, $cm ) ) {
+			return $code;
+		}
 
-        $offset = strrpos($code, '}');
-        if ($offset === false) {
-            return $code;
-        }
+		$constantsCode = '';
+		foreach ( $cm[ $name ] as $constant => $value ) {
+			$constantsCode .= sprintf( "\n    const %s = %s;\n", $constant, var_export( $value, true ) );
+		}
 
-        return substr_replace($code, $constantsCode, $offset) . '}' . PHP_EOL;
-    }
+		$offset = strrpos( $code, '}' );
+		if ( $offset === false ) {
+			return $code;
+		}
+
+		return substr_replace( $code, $constantsCode, $offset ) . '}' . PHP_EOL;
+	}
 }

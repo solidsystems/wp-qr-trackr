@@ -14,7 +14,7 @@ use PHPUnit\Event\Subscriber;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface SortedSubscriber extends Subscriber
-{
-    public function notify(Sorted $event): void;
+interface SortedSubscriber extends Subscriber {
+
+	public function notify( Sorted $event ): void;
 }

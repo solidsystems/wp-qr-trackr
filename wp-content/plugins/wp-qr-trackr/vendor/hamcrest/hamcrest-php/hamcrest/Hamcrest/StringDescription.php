@@ -2,56 +2,51 @@
 namespace Hamcrest;
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 
 /**
  * A {@link Hamcrest\Description} that is stored as a string.
  */
-class StringDescription extends BaseDescription
-{
+class StringDescription extends BaseDescription {
 
-    private $_out;
 
-    public function __construct($out = '')
-    {
-        $this->_out = (string) $out;
-    }
+	private $_out;
 
-    public function __toString()
-    {
-        return $this->_out;
-    }
+	public function __construct( $out = '' ) {
+		$this->_out = (string) $out;
+	}
 
-    /**
-     * Return the description of a {@link Hamcrest\SelfDescribing} object as a
-     * String.
-     *
-     * @param \Hamcrest\SelfDescribing $selfDescribing
-     *   The object to be described.
-     *
-     * @return string
-     *   The description of the object.
-     */
-    public static function toString(SelfDescribing $selfDescribing)
-    {
-        $self = new self();
+	public function __toString() {
+		return $this->_out;
+	}
 
-        return (string) $self->appendDescriptionOf($selfDescribing);
-    }
+	/**
+	 * Return the description of a {@link Hamcrest\SelfDescribing} object as a
+	 * String.
+	 *
+	 * @param \Hamcrest\SelfDescribing $selfDescribing
+	 *   The object to be described.
+	 *
+	 * @return string
+	 *   The description of the object.
+	 */
+	public static function toString( SelfDescribing $selfDescribing ) {
+		$self = new self();
 
-    /**
-     * Alias for {@link toString()}.
-     */
-    public static function asString(SelfDescribing $selfDescribing)
-    {
-        return self::toString($selfDescribing);
-    }
+		return (string) $self->appendDescriptionOf( $selfDescribing );
+	}
 
-    // -- Protected Methods
+	/**
+	 * Alias for {@link toString()}.
+	 */
+	public static function asString( SelfDescribing $selfDescribing ) {
+		return self::toString( $selfDescribing );
+	}
 
-    protected function append($str)
-    {
-        $this->_out .= $str;
-    }
+	// -- Protected Methods
+
+	protected function append( $str ) {
+		$this->_out .= $str;
+	}
 }

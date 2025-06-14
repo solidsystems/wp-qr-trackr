@@ -10,29 +10,29 @@
 
 namespace Mockery;
 
-interface ExpectationInterface
-{
-    /**
-     * @template TArgs
-     *
-     * @param TArgs ...$args
-     *
-     * @return self
-     */
-    public function andReturn(...$args);
+interface ExpectationInterface {
 
-    /**
-     * @return self
-     */
-    public function andReturns();
+	/**
+	 * @template TArgs
+	 *
+	 * @param TArgs ...$args
+	 *
+	 * @return self
+	 */
+	public function andReturn( ...$args );
 
-    /**
-     * @return LegacyMockInterface|MockInterface
-     */
-    public function getMock();
+	/**
+	 * @return self
+	 */
+	public function andReturns();
 
-    /**
-     * @return int
-     */
-    public function getOrderNumber();
+	/**
+	 * @return LegacyMockInterface|MockInterface
+	 */
+	public function getMock();
+
+	/**
+	 * @return int
+	 */
+	public function getOrderNumber();
 }

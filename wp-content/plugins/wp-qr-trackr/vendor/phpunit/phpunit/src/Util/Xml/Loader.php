@@ -25,101 +25,99 @@ use DOMDocument;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Loader
-{
-    /**
-     * @throws XmlException
-     */
-    public function loadFile(string $filename): DOMDocument
-    {
-        $reporting = error_reporting(0);
-        $contents  = file_get_contents($filename);
+final class Loader {
 
-        error_reporting($reporting);
+	/**
+	 * @throws XmlException
+	 */
+	public function loadFile( string $filename ): DOMDocument {
+		$reporting = error_reporting( 0 );
+		$contents  = file_get_contents( $filename );
 
-        if ($contents === false) {
-            throw new XmlException(
-                sprintf(
-                    'Could not read XML from file "%s"',
-                    $filename,
-                ),
-            );
-        }
+		error_reporting( $reporting );
 
-        return $this->load($contents, $filename);
-    }
+		if ( $contents === false ) {
+			throw new XmlException(
+				sprintf(
+					'Could not read XML from file "%s"',
+					$filename,
+				),
+			);
+		}
 
-    /**
-     * @throws XmlException
-     */
-    public function load(string $actual, ?string $filename = null): DOMDocument
-    {
-        if ($actual === '') {
-            if ($filename === null) {
-                throw new XmlException('Could not parse XML from empty string');
-            }
+		return $this->load( $contents, $filename );
+	}
 
-            throw new XmlException(
-                sprintf(
-                    'Could not parse XML from empty file "%s"',
-                    $filename,
-                ),
-            );
-        }
+	/**
+	 * @throws XmlException
+	 */
+	public function load( string $actual, ?string $filename = null ): DOMDocument {
+		if ( $actual === '' ) {
+			if ( $filename === null ) {
+				throw new XmlException( 'Could not parse XML from empty string' );
+			}
 
-        $document                     = new DOMDocument;
-        $document->preserveWhiteSpace = false;
+			throw new XmlException(
+				sprintf(
+					'Could not parse XML from empty file "%s"',
+					$filename,
+				),
+			);
+		}
 
-        $internal  = libxml_use_internal_errors(true);
-        $message   = '';
-        $reporting = error_reporting(0);
+		$document                     = new DOMDocument();
+		$document->preserveWhiteSpace = false;
 
-        // Required for XInclude
-        if ($filename !== null) {
-            // Required for XInclude on Windows
-            if (PHP_OS_FAMILY === 'Windows') {
-                $cwd = getcwd();
-                @chdir(dirname($filename));
-            }
+		$internal  = libxml_use_internal_errors( true );
+		$message   = '';
+		$reporting = error_reporting( 0 );
 
-            $document->documentURI = $filename;
-        }
+		// Required for XInclude
+		if ( $filename !== null ) {
+			// Required for XInclude on Windows
+			if ( PHP_OS_FAMILY === 'Windows' ) {
+				$cwd = getcwd();
+				@chdir( dirname( $filename ) );
+			}
 
-        $loaded = $document->loadXML($actual);
+			$document->documentURI = $filename;
+		}
 
-        if ($filename !== null) {
-            $document->xinclude();
-        }
+		$loaded = $document->loadXML( $actual );
 
-        foreach (libxml_get_errors() as $error) {
-            $message .= "\n" . $error->message;
-        }
+		if ( $filename !== null ) {
+			$document->xinclude();
+		}
 
-        libxml_use_internal_errors($internal);
-        error_reporting($reporting);
+		foreach ( libxml_get_errors() as $error ) {
+			$message .= "\n" . $error->message;
+		}
 
-        if (isset($cwd)) {
-            @chdir($cwd);
-        }
+		libxml_use_internal_errors( $internal );
+		error_reporting( $reporting );
 
-        if ($loaded === false || $message !== '') {
-            if ($filename !== null) {
-                throw new XmlException(
-                    sprintf(
-                        'Could not load "%s"%s',
-                        $filename,
-                        $message !== '' ? ":\n" . $message : '',
-                    ),
-                );
-            }
+		if ( isset( $cwd ) ) {
+			@chdir( $cwd );
+		}
 
-            if ($message === '') {
-                $message = 'Could not load XML for unknown reason';
-            }
+		if ( $loaded === false || $message !== '' ) {
+			if ( $filename !== null ) {
+				throw new XmlException(
+					sprintf(
+						'Could not load "%s"%s',
+						$filename,
+						$message !== '' ? ":\n" . $message : '',
+					),
+				);
+			}
 
-            throw new XmlException($message);
-        }
+			if ( $message === '' ) {
+				$message = 'Could not load XML for unknown reason';
+			}
 
-        return $document;
-    }
+			throw new XmlException( $message );
+		}
+
+		return $document;
+	}
 }

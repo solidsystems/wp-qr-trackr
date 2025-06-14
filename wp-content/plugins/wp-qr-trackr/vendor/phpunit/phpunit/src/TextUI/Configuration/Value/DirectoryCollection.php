@@ -20,46 +20,40 @@ use IteratorAggregate;
  *
  * @template-implements IteratorAggregate<int, Directory>
  */
-final class DirectoryCollection implements Countable, IteratorAggregate
-{
-    /**
-     * @psalm-var list<Directory>
-     */
-    private readonly array $directories;
+final class DirectoryCollection implements Countable, IteratorAggregate {
 
-    /**
-     * @psalm-param list<Directory> $directories
-     */
-    public static function fromArray(array $directories): self
-    {
-        return new self(...$directories);
-    }
+	/**
+	 * @psalm-var list<Directory>
+	 */
+	private readonly array $directories;
 
-    private function __construct(Directory ...$directories)
-    {
-        $this->directories = $directories;
-    }
+	/**
+	 * @psalm-param list<Directory> $directories
+	 */
+	public static function fromArray( array $directories ): self {
+		return new self( ...$directories );
+	}
 
-    /**
-     * @psalm-return list<Directory>
-     */
-    public function asArray(): array
-    {
-        return $this->directories;
-    }
+	private function __construct( Directory ...$directories ) {
+		$this->directories = $directories;
+	}
 
-    public function count(): int
-    {
-        return count($this->directories);
-    }
+	/**
+	 * @psalm-return list<Directory>
+	 */
+	public function asArray(): array {
+		return $this->directories;
+	}
 
-    public function getIterator(): DirectoryCollectionIterator
-    {
-        return new DirectoryCollectionIterator($this);
-    }
+	public function count(): int {
+		return count( $this->directories );
+	}
 
-    public function isEmpty(): bool
-    {
-        return $this->count() === 0;
-    }
+	public function getIterator(): DirectoryCollectionIterator {
+		return new DirectoryCollectionIterator( $this );
+	}
+
+	public function isEmpty(): bool {
+		return $this->count() === 0;
+	}
 }

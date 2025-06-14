@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -15,21 +15,19 @@ namespace Brain\Monkey\Expectation\Exception;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class InvalidExpectationType extends Exception
-{
+class InvalidExpectationType extends Exception {
 
-    /**
-     * @param string $type
-     * @return static
-     */
-    public static function forType($type)
-    {
-        return new static(
-            sprintf(
-                '%s method is not allowed for Brain Monkey expectation.',
-                $type
-            )
-        );
-    }
 
+	/**
+	 * @param string $type
+	 * @return static
+	 */
+	public static function forType( $type ) {
+		return new static(
+			sprintf(
+				'%s method is not allowed for Brain Monkey expectation.',
+				$type
+			)
+		);
+	}
 }

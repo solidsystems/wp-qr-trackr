@@ -14,10 +14,10 @@ namespace PHPUnit\Framework\MockObject\Generator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-interface MockType
-{
-    /**
-     * @psalm-return class-string
-     */
-    public function generate(): string;
+interface MockType {
+
+	/**
+	 * @psalm-return class-string
+	 */
+	public function generate(): string;
 }

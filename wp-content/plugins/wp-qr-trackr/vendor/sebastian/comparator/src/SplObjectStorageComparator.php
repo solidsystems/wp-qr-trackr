@@ -13,45 +13,43 @@ use function assert;
 use SebastianBergmann\Exporter\Exporter;
 use SplObjectStorage;
 
-final class SplObjectStorageComparator extends Comparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        return $expected instanceof SplObjectStorage && $actual instanceof SplObjectStorage;
-    }
+final class SplObjectStorageComparator extends Comparator {
 
-    /**
-     * @throws ComparisonFailure
-     */
-    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false): void
-    {
-        assert($expected instanceof SplObjectStorage);
-        assert($actual instanceof SplObjectStorage);
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		return $expected instanceof SplObjectStorage && $actual instanceof SplObjectStorage;
+	}
 
-        $exporter = new Exporter;
+	/**
+	 * @throws ComparisonFailure
+	 */
+	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false ): void {
+		assert( $expected instanceof SplObjectStorage );
+		assert( $actual instanceof SplObjectStorage );
 
-        foreach ($actual as $object) {
-            if (!$expected->contains($object)) {
-                throw new ComparisonFailure(
-                    $expected,
-                    $actual,
-                    $exporter->export($expected),
-                    $exporter->export($actual),
-                    'Failed asserting that two objects are equal.',
-                );
-            }
-        }
+		$exporter = new Exporter();
 
-        foreach ($expected as $object) {
-            if (!$actual->contains($object)) {
-                throw new ComparisonFailure(
-                    $expected,
-                    $actual,
-                    $exporter->export($expected),
-                    $exporter->export($actual),
-                    'Failed asserting that two objects are equal.',
-                );
-            }
-        }
-    }
+		foreach ( $actual as $object ) {
+			if ( ! $expected->contains( $object ) ) {
+				throw new ComparisonFailure(
+					$expected,
+					$actual,
+					$exporter->export( $expected ),
+					$exporter->export( $actual ),
+					'Failed asserting that two objects are equal.',
+				);
+			}
+		}
+
+		foreach ( $expected as $object ) {
+			if ( ! $actual->contains( $object ) ) {
+				throw new ComparisonFailure(
+					$expected,
+					$actual,
+					$exporter->export( $expected ),
+					$exporter->export( $actual ),
+					'Failed asserting that two objects are equal.',
+				);
+			}
+		}
+	}
 }

@@ -23,43 +23,41 @@ use RecursiveIterator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract class GroupFilterIterator extends RecursiveFilterIterator
-{
-    /**
-     * @psalm-var list<int>
-     */
-    protected array $groupTests = [];
+abstract class GroupFilterIterator extends RecursiveFilterIterator {
 
-    /**
-     * @psalm-param RecursiveIterator<int, Test> $iterator
-     * @psalm-param list<non-empty-string> $groups
-     */
-    public function __construct(RecursiveIterator $iterator, array $groups, TestSuite $suite)
-    {
-        parent::__construct($iterator);
+	/**
+	 * @psalm-var list<int>
+	 */
+	protected array $groupTests = array();
 
-        foreach ($suite->groupDetails() as $group => $tests) {
-            if (in_array((string) $group, $groups, true)) {
-                $testHashes = array_map(
-                    'spl_object_id',
-                    $tests,
-                );
+	/**
+	 * @psalm-param RecursiveIterator<int, Test> $iterator
+	 * @psalm-param list<non-empty-string> $groups
+	 */
+	public function __construct( RecursiveIterator $iterator, array $groups, TestSuite $suite ) {
+		parent::__construct( $iterator );
 
-                array_push($this->groupTests, ...$testHashes);
-            }
-        }
-    }
+		foreach ( $suite->groupDetails() as $group => $tests ) {
+			if ( in_array( (string) $group, $groups, true ) ) {
+				$testHashes = array_map(
+					'spl_object_id',
+					$tests,
+				);
 
-    public function accept(): bool
-    {
-        $test = $this->getInnerIterator()->current();
+				array_push( $this->groupTests, ...$testHashes );
+			}
+		}
+	}
 
-        if ($test instanceof TestSuite) {
-            return true;
-        }
+	public function accept(): bool {
+		$test = $this->getInnerIterator()->current();
 
-        return $this->doAccept(spl_object_id($test));
-    }
+		if ( $test instanceof TestSuite ) {
+			return true;
+		}
 
-    abstract protected function doAccept(int $id): bool;
+		return $this->doAccept( spl_object_id( $test ) );
+	}
+
+	abstract protected function doAccept( int $id ): bool;
 }

@@ -10,41 +10,38 @@
 
 namespace Mockery;
 
-class MethodCall
-{
-    /**
-     * @var array
-     */
-    private $args;
+class MethodCall {
 
-    /**
-     * @var string
-     */
-    private $method;
+	/**
+	 * @var array
+	 */
+	private $args;
 
-    /**
-     * @param string $method
-     * @param array  $args
-     */
-    public function __construct($method, $args)
-    {
-        $this->method = $method;
-        $this->args = $args;
-    }
+	/**
+	 * @var string
+	 */
+	private $method;
 
-    /**
-     * @return array
-     */
-    public function getArgs()
-    {
-        return $this->args;
-    }
+	/**
+	 * @param string $method
+	 * @param array  $args
+	 */
+	public function __construct( $method, $args ) {
+		$this->method = $method;
+		$this->args   = $args;
+	}
 
-    /**
-     * @return string
-     */
-    public function getMethod()
-    {
-        return $this->method;
-    }
+	/**
+	 * @return array
+	 */
+	public function getArgs() {
+		return $this->args;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getMethod() {
+		return $this->method;
+	}
 }

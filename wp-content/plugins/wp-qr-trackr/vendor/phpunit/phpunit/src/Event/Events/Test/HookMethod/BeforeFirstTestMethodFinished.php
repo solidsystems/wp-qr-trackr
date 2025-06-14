@@ -20,63 +20,58 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class BeforeFirstTestMethodFinished implements Event
-{
-    private readonly Telemetry\Info$telemetryInfo;
+final class BeforeFirstTestMethodFinished implements Event {
 
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $testClassName;
+	private readonly Telemetry\Info $telemetryInfo;
 
-    /**
-     * @psalm-var list<Code\ClassMethod>
-     */
-    private readonly array $calledMethods;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $testClassName;
 
-    /**
-     * @psalm-param class-string $testClassName
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod ...$calledMethods)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->testClassName = $testClassName;
-        $this->calledMethods = $calledMethods;
-    }
+	/**
+	 * @psalm-var list<Code\ClassMethod>
+	 */
+	private readonly array $calledMethods;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param class-string $testClassName
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod ...$calledMethods ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->testClassName = $testClassName;
+		$this->calledMethods = $calledMethods;
+	}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function testClassName(): string
-    {
-        return $this->testClassName;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    /**
-     * @psalm-return list<Code\ClassMethod>
-     */
-    public function calledMethods(): array
-    {
-        return $this->calledMethods;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function testClassName(): string {
+		return $this->testClassName;
+	}
 
-    public function asString(): string
-    {
-        $buffer = 'Before First Test Method Finished:';
+	/**
+	 * @psalm-return list<Code\ClassMethod>
+	 */
+	public function calledMethods(): array {
+		return $this->calledMethods;
+	}
 
-        foreach ($this->calledMethods as $calledMethod) {
-            $buffer .= sprintf(
-                PHP_EOL . '- %s::%s',
-                $calledMethod->className(),
-                $calledMethod->methodName(),
-            );
-        }
+	public function asString(): string {
+		$buffer = 'Before First Test Method Finished:';
 
-        return $buffer;
-    }
+		foreach ( $this->calledMethods as $calledMethod ) {
+			$buffer .= sprintf(
+				PHP_EOL . '- %s::%s',
+				$calledMethod->className(),
+				$calledMethod->methodName(),
+			);
+		}
+
+		return $buffer;
+	}
 }

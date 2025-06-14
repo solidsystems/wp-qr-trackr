@@ -19,26 +19,25 @@ use PHPUnit\Util\ThrowableToStringMapper;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ThrowableBuilder
-{
-    /**
-     * @throws Exception
-     * @throws NoPreviousThrowableException
-     */
-    public static function from(\Throwable $t): Throwable
-    {
-        $previous = $t->getPrevious();
+final class ThrowableBuilder {
 
-        if ($previous !== null) {
-            $previous = self::from($previous);
-        }
+	/**
+	 * @throws Exception
+	 * @throws NoPreviousThrowableException
+	 */
+	public static function from( \Throwable $t ): Throwable {
+		$previous = $t->getPrevious();
 
-        return new Throwable(
-            $t::class,
-            $t->getMessage(),
-            ThrowableToStringMapper::map($t),
-            Filter::getFilteredStacktrace($t, false),
-            $previous,
-        );
-    }
+		if ( $previous !== null ) {
+			$previous = self::from( $previous );
+		}
+
+		return new Throwable(
+			$t::class,
+			$t->getMessage(),
+			ThrowableToStringMapper::map( $t ),
+			Filter::getFilteredStacktrace( $t, false ),
+			$previous,
+		);
+	}
 }

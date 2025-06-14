@@ -14,42 +14,37 @@ namespace PHPUnit\Event\TestData;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DataFromDataProvider extends TestData
-{
-    private readonly int|string $dataSetName;
-    private readonly string $dataAsStringForResultOutput;
+final class DataFromDataProvider extends TestData {
 
-    public static function from(int|string $dataSetName, string $data, string $dataAsStringForResultOutput): self
-    {
-        return new self($dataSetName, $data, $dataAsStringForResultOutput);
-    }
+	private readonly int|string $dataSetName;
+	private readonly string $dataAsStringForResultOutput;
 
-    protected function __construct(int|string $dataSetName, string $data, string $dataAsStringForResultOutput)
-    {
-        $this->dataSetName                 = $dataSetName;
-        $this->dataAsStringForResultOutput = $dataAsStringForResultOutput;
+	public static function from( int|string $dataSetName, string $data, string $dataAsStringForResultOutput ): self {
+		return new self( $dataSetName, $data, $dataAsStringForResultOutput );
+	}
 
-        parent::__construct($data);
-    }
+	protected function __construct( int|string $dataSetName, string $data, string $dataAsStringForResultOutput ) {
+		$this->dataSetName                 = $dataSetName;
+		$this->dataAsStringForResultOutput = $dataAsStringForResultOutput;
 
-    public function dataSetName(): int|string
-    {
-        return $this->dataSetName;
-    }
+		parent::__construct( $data );
+	}
 
-    /**
-     * @internal This method is not covered by the backward compatibility promise for PHPUnit
-     */
-    public function dataAsStringForResultOutput(): string
-    {
-        return $this->dataAsStringForResultOutput;
-    }
+	public function dataSetName(): int|string {
+		return $this->dataSetName;
+	}
 
-    /**
-     * @psalm-assert-if-true DataFromDataProvider $this
-     */
-    public function isFromDataProvider(): bool
-    {
-        return true;
-    }
+	/**
+	 * @internal This method is not covered by the backward compatibility promise for PHPUnit
+	 */
+	public function dataAsStringForResultOutput(): string {
+		return $this->dataAsStringForResultOutput;
+	}
+
+	/**
+	 * @psalm-assert-if-true DataFromDataProvider $this
+	 */
+	public function isFromDataProvider(): bool {
+		return true;
+	}
 }

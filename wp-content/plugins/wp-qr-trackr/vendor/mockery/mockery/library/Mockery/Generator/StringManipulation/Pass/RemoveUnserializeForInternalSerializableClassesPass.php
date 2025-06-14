@@ -21,37 +21,35 @@ use const PHP_VERSION_ID;
  * implements Serializable, we need to replace the standard unserialize method
  * definition with a dummy
  */
-class RemoveUnserializeForInternalSerializableClassesPass implements Pass
-{
-    public const DUMMY_METHOD_DEFINITION = 'public function unserialize(string $data): void {} ';
+class RemoveUnserializeForInternalSerializableClassesPass implements Pass {
 
-    public const DUMMY_METHOD_DEFINITION_LEGACY = 'public function unserialize($string) {} ';
+	public const DUMMY_METHOD_DEFINITION = 'public function unserialize(string $data): void {} ';
 
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        $target = $config->getTargetClass();
+	public const DUMMY_METHOD_DEFINITION_LEGACY = 'public function unserialize($string) {} ';
 
-        if (! $target) {
-            return $code;
-        }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		$target = $config->getTargetClass();
 
-        if (! $target->hasInternalAncestor() || ! $target->implementsInterface('Serializable')) {
-            return $code;
-        }
+		if ( ! $target ) {
+			return $code;
+		}
 
-        return $this->appendToClass(
-            $code,
-            PHP_VERSION_ID < 80100 ? self::DUMMY_METHOD_DEFINITION_LEGACY : self::DUMMY_METHOD_DEFINITION
-        );
-    }
+		if ( ! $target->hasInternalAncestor() || ! $target->implementsInterface( 'Serializable' ) ) {
+			return $code;
+		}
 
-    protected function appendToClass($class, $code)
-    {
-        $lastBrace = strrpos($class, '}');
-        return substr($class, 0, $lastBrace) . $code . "\n    }\n";
-    }
+		return $this->appendToClass(
+			$code,
+			PHP_VERSION_ID < 80100 ? self::DUMMY_METHOD_DEFINITION_LEGACY : self::DUMMY_METHOD_DEFINITION
+		);
+	}
+
+	protected function appendToClass( $class, $code ) {
+		$lastBrace = strrpos( $class, '}' );
+		return substr( $class, 0, $lastBrace ) . $code . "\n    }\n";
+	}
 }

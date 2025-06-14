@@ -10,35 +10,32 @@ use BaconQrCode\Renderer\Path\Path;
 /**
  * Groups modules together to a single path.
  */
-final class SquareModule implements ModuleInterface
-{
-    private static ?SquareModule $instance = null;
+final class SquareModule implements ModuleInterface {
 
-    private function __construct()
-    {
-    }
+	private static ?SquareModule $instance = null;
 
-    public static function instance() : self
-    {
-        return self::$instance ?: self::$instance = new self();
-    }
+	private function __construct() {
+	}
 
-    public function createPath(ByteMatrix $matrix) : Path
-    {
-        $path = new Path();
+	public static function instance(): self {
+		return self::$instance ?: self::$instance = new self();
+	}
 
-        foreach (new EdgeIterator($matrix) as $edge) {
-            $points = $edge->getSimplifiedPoints();
-            $length = count($points);
-            $path = $path->move($points[0][0], $points[0][1]);
+	public function createPath( ByteMatrix $matrix ): Path {
+		$path = new Path();
 
-            for ($i = 1; $i < $length; ++$i) {
-                $path = $path->line($points[$i][0], $points[$i][1]);
-            }
+		foreach ( new EdgeIterator( $matrix ) as $edge ) {
+			$points = $edge->getSimplifiedPoints();
+			$length = count( $points );
+			$path   = $path->move( $points[0][0], $points[0][1] );
 
-            $path = $path->close();
-        }
+			for ( $i = 1; $i < $length; ++$i ) {
+				$path = $path->line( $points[ $i ][0], $points[ $i ][1] );
+			}
 
-        return $path;
-    }
+			$path = $path->close();
+		}
+
+		return $path;
+	}
 }

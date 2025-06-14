@@ -20,41 +20,36 @@ use IteratorAggregate;
  *
  * @template-implements IteratorAggregate<int, Constant>
  */
-final class ConstantCollection implements Countable, IteratorAggregate
-{
-    /**
-     * @psalm-var list<Constant>
-     */
-    private readonly array $constants;
+final class ConstantCollection implements Countable, IteratorAggregate {
 
-    /**
-     * @psalm-param list<Constant> $constants
-     */
-    public static function fromArray(array $constants): self
-    {
-        return new self(...$constants);
-    }
+	/**
+	 * @psalm-var list<Constant>
+	 */
+	private readonly array $constants;
 
-    private function __construct(Constant ...$constants)
-    {
-        $this->constants = $constants;
-    }
+	/**
+	 * @psalm-param list<Constant> $constants
+	 */
+	public static function fromArray( array $constants ): self {
+		return new self( ...$constants );
+	}
 
-    /**
-     * @psalm-return list<Constant>
-     */
-    public function asArray(): array
-    {
-        return $this->constants;
-    }
+	private function __construct( Constant ...$constants ) {
+		$this->constants = $constants;
+	}
 
-    public function count(): int
-    {
-        return count($this->constants);
-    }
+	/**
+	 * @psalm-return list<Constant>
+	 */
+	public function asArray(): array {
+		return $this->constants;
+	}
 
-    public function getIterator(): ConstantCollectionIterator
-    {
-        return new ConstantCollectionIterator($this);
-    }
+	public function count(): int {
+		return count( $this->constants );
+	}
+
+	public function getIterator(): ConstantCollectionIterator {
+		return new ConstantCollectionIterator( $this );
+	}
 }

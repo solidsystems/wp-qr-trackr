@@ -28,78 +28,75 @@ use function trim;
  *
  * @see Copied from https://github.com/phpstan/phpstan-src/blob/1.10.33/src/File/ParentDirectoryRelativePathHelper.php
  */
-final class RelativePathCalculator
-{
-    /**
-     * @psalm-var non-empty-string $baselineDirectory
-     */
-    private readonly string $baselineDirectory;
+final class RelativePathCalculator {
 
-    /**
-     * @psalm-param non-empty-string $baselineDirectory
-     */
-    public function __construct(string $baselineDirectory)
-    {
-        $this->baselineDirectory = $baselineDirectory;
-    }
+	/**
+	 * @psalm-var non-empty-string $baselineDirectory
+	 */
+	private readonly string $baselineDirectory;
 
-    /**
-     * @psalm-param non-empty-string $filename
-     *
-     * @psalm-return non-empty-string
-     */
-    public function calculate(string $filename): string
-    {
-        $result = implode('/', $this->parts($filename));
+	/**
+	 * @psalm-param non-empty-string $baselineDirectory
+	 */
+	public function __construct( string $baselineDirectory ) {
+		$this->baselineDirectory = $baselineDirectory;
+	}
 
-        assert($result !== '');
+	/**
+	 * @psalm-param non-empty-string $filename
+	 *
+	 * @psalm-return non-empty-string
+	 */
+	public function calculate( string $filename ): string {
+		$result = implode( '/', $this->parts( $filename ) );
 
-        return $result;
-    }
+		assert( $result !== '' );
 
-    /**
-     * @psalm-param non-empty-string $filename
-     *
-     * @psalm-return list<non-empty-string>
-     */
-    public function parts(string $filename): array
-    {
-        $schemePosition = strpos($filename, '://');
+		return $result;
+	}
 
-        if ($schemePosition !== false) {
-            $filename = substr($filename, $schemePosition + 3);
+	/**
+	 * @psalm-param non-empty-string $filename
+	 *
+	 * @psalm-return list<non-empty-string>
+	 */
+	public function parts( string $filename ): array {
+		$schemePosition = strpos( $filename, '://' );
 
-            assert($filename !== '');
-        }
+		if ( $schemePosition !== false ) {
+			$filename = substr( $filename, $schemePosition + 3 );
 
-        $parentParts        = explode('/', trim(str_replace('\\', '/', $this->baselineDirectory), '/'));
-        $parentPartsCount   = count($parentParts);
-        $filenameParts      = explode('/', trim(str_replace('\\', '/', $filename), '/'));
-        $filenamePartsCount = count($filenameParts);
+			assert( $filename !== '' );
+		}
 
-        $i = 0;
+		$parentParts        = explode( '/', trim( str_replace( '\\', '/', $this->baselineDirectory ), '/' ) );
+		$parentPartsCount   = count( $parentParts );
+		$filenameParts      = explode( '/', trim( str_replace( '\\', '/', $filename ), '/' ) );
+		$filenamePartsCount = count( $filenameParts );
 
-        for (; $i < $filenamePartsCount; $i++) {
-            if ($parentPartsCount < $i + 1) {
-                break;
-            }
+		$i = 0;
 
-            $parentPath   = implode('/', array_slice($parentParts, 0, $i + 1));
-            $filenamePath = implode('/', array_slice($filenameParts, 0, $i + 1));
+		for ( ; $i < $filenamePartsCount; $i++ ) {
+			if ( $parentPartsCount < $i + 1 ) {
+				break;
+			}
 
-            if ($parentPath !== $filenamePath) {
-                break;
-            }
-        }
+			$parentPath   = implode( '/', array_slice( $parentParts, 0, $i + 1 ) );
+			$filenamePath = implode( '/', array_slice( $filenameParts, 0, $i + 1 ) );
 
-        if ($i === 0) {
-            return [$filename];
-        }
+			if ( $parentPath !== $filenamePath ) {
+				break;
+			}
+		}
 
-        $dotsCount = $parentPartsCount - $i;
+		if ( $i === 0 ) {
+			return array( $filename );
+		}
 
-        assert($dotsCount >= 0);
+		$dotsCount = $parentPartsCount - $i;
 
-        return array_merge(array_fill(0, $dotsCount, '..'), array_slice($filenameParts, $i));
-    }
+		assert( $dotsCount >= 0 );
+
+		return array_merge( array_fill( 0, $dotsCount, '..' ), array_slice( $filenameParts, $i ) );
+	}
 }

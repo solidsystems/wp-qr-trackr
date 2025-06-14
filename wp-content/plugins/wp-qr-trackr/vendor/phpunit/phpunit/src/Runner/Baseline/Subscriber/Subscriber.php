@@ -14,17 +14,15 @@ namespace PHPUnit\Runner\Baseline;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract class Subscriber
-{
-    private readonly Generator $generator;
+abstract class Subscriber {
 
-    public function __construct(Generator $generator)
-    {
-        $this->generator = $generator;
-    }
+	private readonly Generator $generator;
 
-    protected function generator(): Generator
-    {
-        return $this->generator;
-    }
+	public function __construct( Generator $generator ) {
+		$this->generator = $generator;
+	}
+
+	protected function generator(): Generator {
+		return $this->generator;
+	}
 }

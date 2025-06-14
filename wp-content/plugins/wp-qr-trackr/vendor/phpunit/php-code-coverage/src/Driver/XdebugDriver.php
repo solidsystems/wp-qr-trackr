@@ -60,103 +60,95 @@ use SebastianBergmann\CodeCoverage\Filter;
  * @psalm-type XdebugCodeCoverageWithoutPathCoverageType = array<string, XdebugLinesCoverageType>
  * @psalm-type XdebugCodeCoverageWithPathCoverageType = array<string, XdebugPathAndBranchesCoverageType>
  */
-final class XdebugDriver extends Driver
-{
-    /**
-     * @throws XdebugNotAvailableException
-     * @throws XdebugNotEnabledException
-     */
-    public function __construct(Filter $filter)
-    {
-        $this->ensureXdebugIsAvailable();
-        $this->ensureXdebugCodeCoverageFeatureIsEnabled();
+final class XdebugDriver extends Driver {
 
-        if (!$filter->isEmpty()) {
-            xdebug_set_filter(
-                XDEBUG_FILTER_CODE_COVERAGE,
-                XDEBUG_PATH_INCLUDE,
-                $filter->files(),
-            );
-        }
-    }
+	/**
+	 * @throws XdebugNotAvailableException
+	 * @throws XdebugNotEnabledException
+	 */
+	public function __construct( Filter $filter ) {
+		$this->ensureXdebugIsAvailable();
+		$this->ensureXdebugCodeCoverageFeatureIsEnabled();
 
-    public function canCollectBranchAndPathCoverage(): bool
-    {
-        return true;
-    }
+		if ( ! $filter->isEmpty() ) {
+			xdebug_set_filter(
+				XDEBUG_FILTER_CODE_COVERAGE,
+				XDEBUG_PATH_INCLUDE,
+				$filter->files(),
+			);
+		}
+	}
 
-    public function canDetectDeadCode(): bool
-    {
-        return true;
-    }
+	public function canCollectBranchAndPathCoverage(): bool {
+		return true;
+	}
 
-    public function start(): void
-    {
-        $flags = XDEBUG_CC_UNUSED;
+	public function canDetectDeadCode(): bool {
+		return true;
+	}
 
-        if ($this->detectsDeadCode() || $this->collectsBranchAndPathCoverage()) {
-            $flags |= XDEBUG_CC_DEAD_CODE;
-        }
+	public function start(): void {
+		$flags = XDEBUG_CC_UNUSED;
 
-        if ($this->collectsBranchAndPathCoverage()) {
-            $flags |= XDEBUG_CC_BRANCH_CHECK;
-        }
+		if ( $this->detectsDeadCode() || $this->collectsBranchAndPathCoverage() ) {
+			$flags |= XDEBUG_CC_DEAD_CODE;
+		}
 
-        xdebug_start_code_coverage($flags);
-    }
+		if ( $this->collectsBranchAndPathCoverage() ) {
+			$flags |= XDEBUG_CC_BRANCH_CHECK;
+		}
 
-    public function stop(): RawCodeCoverageData
-    {
-        $data = xdebug_get_code_coverage();
+		xdebug_start_code_coverage( $flags );
+	}
 
-        xdebug_stop_code_coverage();
+	public function stop(): RawCodeCoverageData {
+		$data = xdebug_get_code_coverage();
 
-        if ($this->collectsBranchAndPathCoverage()) {
-            /* @var XdebugCodeCoverageWithPathCoverageType $data */
-            return RawCodeCoverageData::fromXdebugWithPathCoverage($data);
-        }
+		xdebug_stop_code_coverage();
 
-        /* @var XdebugCodeCoverageWithoutPathCoverageType $data */
-        return RawCodeCoverageData::fromXdebugWithoutPathCoverage($data);
-    }
+		if ( $this->collectsBranchAndPathCoverage() ) {
+			/* @var XdebugCodeCoverageWithPathCoverageType $data */
+			return RawCodeCoverageData::fromXdebugWithPathCoverage( $data );
+		}
 
-    public function nameAndVersion(): string
-    {
-        return 'Xdebug ' . phpversion('xdebug');
-    }
+		/* @var XdebugCodeCoverageWithoutPathCoverageType $data */
+		return RawCodeCoverageData::fromXdebugWithoutPathCoverage( $data );
+	}
 
-    /**
-     * @throws XdebugNotAvailableException
-     */
-    private function ensureXdebugIsAvailable(): void
-    {
-        if (!extension_loaded('xdebug')) {
-            throw new XdebugNotAvailableException;
-        }
-    }
+	public function nameAndVersion(): string {
+		return 'Xdebug ' . phpversion( 'xdebug' );
+	}
 
-    /**
-     * @throws XdebugNotEnabledException
-     */
-    private function ensureXdebugCodeCoverageFeatureIsEnabled(): void
-    {
-        if (version_compare(phpversion('xdebug'), '3.1', '>=')) {
-            if (!in_array('coverage', xdebug_info('mode'), true)) {
-                throw new XdebugNotEnabledException;
-            }
+	/**
+	 * @throws XdebugNotAvailableException
+	 */
+	private function ensureXdebugIsAvailable(): void {
+		if ( ! extension_loaded( 'xdebug' ) ) {
+			throw new XdebugNotAvailableException();
+		}
+	}
 
-            return;
-        }
+	/**
+	 * @throws XdebugNotEnabledException
+	 */
+	private function ensureXdebugCodeCoverageFeatureIsEnabled(): void {
+		if ( version_compare( phpversion( 'xdebug' ), '3.1', '>=' ) ) {
+			if ( ! in_array( 'coverage', xdebug_info( 'mode' ), true ) ) {
+				throw new XdebugNotEnabledException();
+			}
 
-        $mode = getenv('XDEBUG_MODE');
+			return;
+		}
 
-        if ($mode === false || $mode === '') {
-            $mode = ini_get('xdebug.mode');
-        }
+		$mode = getenv( 'XDEBUG_MODE' );
 
-        if ($mode === false ||
-            !in_array('coverage', explode(',', $mode), true)) {
-            throw new XdebugNotEnabledException;
-        }
-    }
+		if ( $mode === false || $mode === '' ) {
+			$mode = ini_get( 'xdebug.mode' );
+		}
+
+		if ( $mode === false ||
+			! in_array( 'coverage', explode( ',', $mode ), true ) ) {
+			throw new XdebugNotEnabledException();
+		}
+	}
 }

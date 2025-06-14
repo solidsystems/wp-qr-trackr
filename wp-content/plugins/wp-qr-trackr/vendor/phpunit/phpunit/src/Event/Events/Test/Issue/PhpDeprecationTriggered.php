@@ -20,120 +20,110 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PhpDeprecationTriggered implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
-    private readonly Test $test;
+final class PhpDeprecationTriggered implements Event {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $message;
+	private readonly Telemetry\Info $telemetryInfo;
+	private readonly Test $test;
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $file;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $message;
 
-    /**
-     * @psalm-var positive-int
-     */
-    private readonly int $line;
-    private readonly bool $suppressed;
-    private readonly bool $ignoredByBaseline;
-    private readonly bool $ignoredByTest;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $file;
 
-    /**
-     * @psalm-param non-empty-string $message
-     * @psalm-param non-empty-string $file
-     * @psalm-param positive-int $line
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, Test $test, string $message, string $file, int $line, bool $suppressed, bool $ignoredByBaseline, bool $ignoredByTest)
-    {
-        $this->telemetryInfo     = $telemetryInfo;
-        $this->test              = $test;
-        $this->message           = $message;
-        $this->file              = $file;
-        $this->line              = $line;
-        $this->suppressed        = $suppressed;
-        $this->ignoredByBaseline = $ignoredByBaseline;
-        $this->ignoredByTest     = $ignoredByTest;
-    }
+	/**
+	 * @psalm-var positive-int
+	 */
+	private readonly int $line;
+	private readonly bool $suppressed;
+	private readonly bool $ignoredByBaseline;
+	private readonly bool $ignoredByTest;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param non-empty-string $message
+	 * @psalm-param non-empty-string $file
+	 * @psalm-param positive-int $line
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, Test $test, string $message, string $file, int $line, bool $suppressed, bool $ignoredByBaseline, bool $ignoredByTest ) {
+		$this->telemetryInfo     = $telemetryInfo;
+		$this->test              = $test;
+		$this->message           = $message;
+		$this->file              = $file;
+		$this->line              = $line;
+		$this->suppressed        = $suppressed;
+		$this->ignoredByBaseline = $ignoredByBaseline;
+		$this->ignoredByTest     = $ignoredByTest;
+	}
 
-    public function test(): Test
-    {
-        return $this->test;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function message(): string
-    {
-        return $this->message;
-    }
+	public function test(): Test {
+		return $this->test;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function file(): string
-    {
-        return $this->file;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function message(): string {
+		return $this->message;
+	}
 
-    /**
-     * @psalm-return positive-int
-     */
-    public function line(): int
-    {
-        return $this->line;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function file(): string {
+		return $this->file;
+	}
 
-    public function wasSuppressed(): bool
-    {
-        return $this->suppressed;
-    }
+	/**
+	 * @psalm-return positive-int
+	 */
+	public function line(): int {
+		return $this->line;
+	}
 
-    public function ignoredByBaseline(): bool
-    {
-        return $this->ignoredByBaseline;
-    }
+	public function wasSuppressed(): bool {
+		return $this->suppressed;
+	}
 
-    public function ignoredByTest(): bool
-    {
-        return $this->ignoredByTest;
-    }
+	public function ignoredByBaseline(): bool {
+		return $this->ignoredByBaseline;
+	}
 
-    public function asString(): string
-    {
-        $message = $this->message;
+	public function ignoredByTest(): bool {
+		return $this->ignoredByTest;
+	}
 
-        if (!empty($message)) {
-            $message = PHP_EOL . $message;
-        }
+	public function asString(): string {
+		$message = $this->message;
 
-        $status = '';
+		if ( ! empty( $message ) ) {
+			$message = PHP_EOL . $message;
+		}
 
-        if ($this->ignoredByTest) {
-            $status = 'Test-Ignored ';
-        } elseif ($this->ignoredByBaseline) {
-            $status = 'Baseline-Ignored ';
-        } elseif ($this->suppressed) {
-            $status = 'Suppressed ';
-        }
+		$status = '';
 
-        return sprintf(
-            'Test Triggered %sPHP Deprecation (%s) in %s:%d%s',
-            $status,
-            $this->test->id(),
-            $this->file,
-            $this->line,
-            $message,
-        );
-    }
+		if ( $this->ignoredByTest ) {
+			$status = 'Test-Ignored ';
+		} elseif ( $this->ignoredByBaseline ) {
+			$status = 'Baseline-Ignored ';
+		} elseif ( $this->suppressed ) {
+			$status = 'Suppressed ';
+		}
+
+		return sprintf(
+			'Test Triggered %sPHP Deprecation (%s) in %s:%d%s',
+			$status,
+			$this->test->id(),
+			$this->file,
+			$this->line,
+			$message,
+		);
+	}
 }

@@ -17,10 +17,9 @@ use PHPUnit\Event\TestRunner\ExecutionFinishedSubscriber;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestRunnerExecutionFinishedSubscriber extends Subscriber implements ExecutionFinishedSubscriber
-{
-    public function notify(ExecutionFinished $event): void
-    {
-        $this->logger()->flush();
-    }
+final class TestRunnerExecutionFinishedSubscriber extends Subscriber implements ExecutionFinishedSubscriber {
+
+	public function notify( ExecutionFinished $event ): void {
+		$this->logger()->flush();
+	}
 }

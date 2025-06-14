@@ -15,33 +15,31 @@ use ArrayAccess;
 use function in_array;
 use function is_array;
 
-class HasValue extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<HasValue[' . (string) $this->_expected . ']>';
-    }
+class HasValue extends MatcherAbstract {
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        if (! is_array($actual) && ! $actual instanceof ArrayAccess) {
-            return false;
-        }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<HasValue[' . (string) $this->_expected . ']>';
+	}
 
-        return in_array($this->_expected, (array) $actual, true);
-    }
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		if ( ! is_array( $actual ) && ! $actual instanceof ArrayAccess ) {
+			return false;
+		}
+
+		return in_array( $this->_expected, (array) $actual, true );
+	}
 }

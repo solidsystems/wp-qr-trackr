@@ -19,48 +19,47 @@ use function array_map;
 /**
  * @mixin ReflectionMethod
  */
-class Method
-{
-    /**
-     * @var ReflectionMethod
-     */
-    private $method;
+class Method {
 
-    public function __construct(ReflectionMethod $method)
-    {
-        $this->method = $method;
-    }
+	/**
+	 * @var ReflectionMethod
+	 */
+	private $method;
 
-    /**
-     * @template TArgs
-     * @template TMixed
-     *
-     * @param string       $method
-     * @param array<TArgs> $args
-     *
-     * @return TMixed
-     */
-    public function __call($method, $args)
-    {
-        /** @var TMixed */
-        return $this->method->{$method}(...$args);
-    }
+	public function __construct( ReflectionMethod $method ) {
+		$this->method = $method;
+	}
 
-    /**
-     * @return list<Parameter>
-     */
-    public function getParameters()
-    {
-        return array_map(static function (ReflectionParameter $parameter) {
-            return new Parameter($parameter);
-        }, $this->method->getParameters());
-    }
+	/**
+	 * @template TArgs
+	 * @template TMixed
+	 *
+	 * @param string       $method
+	 * @param array<TArgs> $args
+	 *
+	 * @return TMixed
+	 */
+	public function __call( $method, $args ) {
+		/** @var TMixed */
+		return $this->method->{$method}( ...$args );
+	}
 
-    /**
-     * @return null|string
-     */
-    public function getReturnType()
-    {
-        return Reflector::getReturnType($this->method);
-    }
+	/**
+	 * @return list<Parameter>
+	 */
+	public function getParameters() {
+		return array_map(
+			static function ( ReflectionParameter $parameter ) {
+				return new Parameter( $parameter );
+			},
+			$this->method->getParameters()
+		);
+	}
+
+	/**
+	 * @return null|string
+	 */
+	public function getReturnType() {
+		return Reflector::getReturnType( $this->method );
+	}
 }

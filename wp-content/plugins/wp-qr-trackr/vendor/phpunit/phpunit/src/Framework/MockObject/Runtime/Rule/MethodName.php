@@ -21,40 +21,36 @@ use PHPUnit\Framework\MockObject\MethodNameConstraint;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MethodName
-{
-    private readonly Constraint $constraint;
+final class MethodName {
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function __construct(Constraint|string $constraint)
-    {
-        if (is_string($constraint)) {
-            $constraint = new MethodNameConstraint($constraint);
-        }
+	private readonly Constraint $constraint;
 
-        $this->constraint = $constraint;
-    }
+	/**
+	 * @throws InvalidArgumentException
+	 */
+	public function __construct( Constraint|string $constraint ) {
+		if ( is_string( $constraint ) ) {
+			$constraint = new MethodNameConstraint( $constraint );
+		}
 
-    public function toString(): string
-    {
-        return 'method name ' . $this->constraint->toString();
-    }
+		$this->constraint = $constraint;
+	}
 
-    /**
-     * @throws ExpectationFailedException
-     */
-    public function matches(BaseInvocation $invocation): bool
-    {
-        return $this->matchesName($invocation->methodName());
-    }
+	public function toString(): string {
+		return 'method name ' . $this->constraint->toString();
+	}
 
-    /**
-     * @throws ExpectationFailedException
-     */
-    public function matchesName(string $methodName): bool
-    {
-        return (bool) $this->constraint->evaluate($methodName, '', true);
-    }
+	/**
+	 * @throws ExpectationFailedException
+	 */
+	public function matches( BaseInvocation $invocation ): bool {
+		return $this->matchesName( $invocation->methodName() );
+	}
+
+	/**
+	 * @throws ExpectationFailedException
+	 */
+	public function matchesName( string $methodName ): bool {
+		return (bool) $this->constraint->evaluate( $methodName, '', true );
+	}
 }

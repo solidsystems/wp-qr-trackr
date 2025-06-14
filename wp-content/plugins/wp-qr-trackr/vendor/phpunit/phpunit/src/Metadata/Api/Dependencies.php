@@ -20,38 +20,37 @@ use PHPUnit\Metadata\Parser\Registry;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Dependencies
-{
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     *
-     * @psalm-return list<ExecutionOrderDependency>
-     */
-    public static function dependencies(string $className, string $methodName): array
-    {
-        $dependencies = [];
+final class Dependencies {
 
-        foreach (Registry::parser()->forClassAndMethod($className, $methodName)->isDepends() as $metadata) {
-            if ($metadata->isDependsOnClass()) {
-                assert($metadata instanceof DependsOnClass);
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 *
+	 * @psalm-return list<ExecutionOrderDependency>
+	 */
+	public static function dependencies( string $className, string $methodName ): array {
+		$dependencies = array();
 
-                $dependencies[] = ExecutionOrderDependency::forClass($metadata);
+		foreach ( Registry::parser()->forClassAndMethod( $className, $methodName )->isDepends() as $metadata ) {
+			if ( $metadata->isDependsOnClass() ) {
+				assert( $metadata instanceof DependsOnClass );
 
-                continue;
-            }
+				$dependencies[] = ExecutionOrderDependency::forClass( $metadata );
 
-            assert($metadata instanceof DependsOnMethod);
+				continue;
+			}
 
-            if (empty($metadata->methodName())) {
-                $dependencies[] = ExecutionOrderDependency::invalid();
+			assert( $metadata instanceof DependsOnMethod );
 
-                continue;
-            }
+			if ( empty( $metadata->methodName() ) ) {
+				$dependencies[] = ExecutionOrderDependency::invalid();
 
-            $dependencies[] = ExecutionOrderDependency::forMethod($metadata);
-        }
+				continue;
+			}
 
-        return $dependencies;
-    }
+			$dependencies[] = ExecutionOrderDependency::forMethod( $metadata );
+		}
+
+		return $dependencies;
+	}
 }

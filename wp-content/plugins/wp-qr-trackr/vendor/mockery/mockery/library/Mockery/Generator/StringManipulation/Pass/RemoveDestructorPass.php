@@ -16,24 +16,23 @@ use function preg_replace;
 /**
  * Remove mock's empty destructor if we tend to use original class destructor
  */
-class RemoveDestructorPass implements Pass
-{
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        $target = $config->getTargetClass();
+class RemoveDestructorPass implements Pass {
 
-        if (! $target) {
-            return $code;
-        }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		$target = $config->getTargetClass();
 
-        if (! $config->isMockOriginalDestructor()) {
-            return preg_replace('/public function __destruct\(\)\s+\{.*?\}/sm', '', $code);
-        }
+		if ( ! $target ) {
+			return $code;
+		}
 
-        return $code;
-    }
+		if ( ! $config->isMockOriginalDestructor() ) {
+			return preg_replace( '/public function __destruct\(\)\s+\{.*?\}/sm', '', $code );
+		}
+
+		return $code;
+	}
 }

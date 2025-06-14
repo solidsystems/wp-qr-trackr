@@ -25,128 +25,121 @@ use SebastianBergmann\Exporter\Exporter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Invocation implements SelfDescribing
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+final class Invocation implements SelfDescribing {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $methodName;
-    private readonly array $parameters;
-    private readonly string $returnType;
-    private readonly bool $isReturnTypeNullable;
-    private readonly bool $proxiedCall;
-    private readonly MockObjectInternal|StubInternal $object;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    public function __construct(string $className, string $methodName, array $parameters, string $returnType, MockObjectInternal|StubInternal $object, bool $cloneObjects = false, bool $proxiedCall = false)
-    {
-        $this->className   = $className;
-        $this->methodName  = $methodName;
-        $this->object      = $object;
-        $this->proxiedCall = $proxiedCall;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $methodName;
+	private readonly array $parameters;
+	private readonly string $returnType;
+	private readonly bool $isReturnTypeNullable;
+	private readonly bool $proxiedCall;
+	private readonly MockObjectInternal|StubInternal $object;
 
-        if (strtolower($methodName) === '__tostring') {
-            $returnType = 'string';
-        }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	public function __construct( string $className, string $methodName, array $parameters, string $returnType, MockObjectInternal|StubInternal $object, bool $cloneObjects = false, bool $proxiedCall = false ) {
+		$this->className   = $className;
+		$this->methodName  = $methodName;
+		$this->object      = $object;
+		$this->proxiedCall = $proxiedCall;
 
-        if (str_starts_with($returnType, '?')) {
-            $returnType                 = substr($returnType, 1);
-            $this->isReturnTypeNullable = true;
-        } else {
-            $this->isReturnTypeNullable = false;
-        }
+		if ( strtolower( $methodName ) === '__tostring' ) {
+			$returnType = 'string';
+		}
 
-        $this->returnType = $returnType;
+		if ( str_starts_with( $returnType, '?' ) ) {
+			$returnType                 = substr( $returnType, 1 );
+			$this->isReturnTypeNullable = true;
+		} else {
+			$this->isReturnTypeNullable = false;
+		}
 
-        if (!$cloneObjects) {
-            $this->parameters = $parameters;
+		$this->returnType = $returnType;
 
-            return;
-        }
+		if ( ! $cloneObjects ) {
+			$this->parameters = $parameters;
 
-        foreach ($parameters as $key => $value) {
-            if (is_object($value)) {
-                $parameters[$key] = Cloner::clone($value);
-            }
-        }
+			return;
+		}
 
-        $this->parameters = $parameters;
-    }
+		foreach ( $parameters as $key => $value ) {
+			if ( is_object( $value ) ) {
+				$parameters[ $key ] = Cloner::clone( $value );
+			}
+		}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+		$this->parameters = $parameters;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function methodName(): string
-    {
-        return $this->methodName;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
 
-    public function parameters(): array
-    {
-        return $this->parameters;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function methodName(): string {
+		return $this->methodName;
+	}
 
-    /**
-     * @throws Exception
-     */
-    public function generateReturnValue(): mixed
-    {
-        if ($this->returnType === 'never') {
-            throw new NeverReturningMethodException(
-                $this->className,
-                $this->methodName,
-            );
-        }
+	public function parameters(): array {
+		return $this->parameters;
+	}
 
-        if ($this->isReturnTypeNullable || $this->proxiedCall) {
-            return null;
-        }
+	/**
+	 * @throws Exception
+	 */
+	public function generateReturnValue(): mixed {
+		if ( $this->returnType === 'never' ) {
+			throw new NeverReturningMethodException(
+				$this->className,
+				$this->methodName,
+			);
+		}
 
-        return (new ReturnValueGenerator)->generate(
-            $this->className,
-            $this->methodName,
-            $this->object::class,
-            $this->returnType,
-        );
-    }
+		if ( $this->isReturnTypeNullable || $this->proxiedCall ) {
+			return null;
+		}
 
-    public function toString(): string
-    {
-        $exporter = new Exporter;
+		return ( new ReturnValueGenerator() )->generate(
+			$this->className,
+			$this->methodName,
+			$this->object::class,
+			$this->returnType,
+		);
+	}
 
-        return sprintf(
-            '%s::%s(%s)%s',
-            $this->className,
-            $this->methodName,
-            implode(
-                ', ',
-                array_map(
-                    [$exporter, 'shortenedExport'],
-                    $this->parameters,
-                ),
-            ),
-            $this->returnType ? sprintf(': %s', $this->returnType) : '',
-        );
-    }
+	public function toString(): string {
+		$exporter = new Exporter();
 
-    public function object(): MockObjectInternal|StubInternal
-    {
-        return $this->object;
-    }
+		return sprintf(
+			'%s::%s(%s)%s',
+			$this->className,
+			$this->methodName,
+			implode(
+				', ',
+				array_map(
+					array( $exporter, 'shortenedExport' ),
+					$this->parameters,
+				),
+			),
+			$this->returnType ? sprintf( ': %s', $this->returnType ) : '',
+		);
+	}
+
+	public function object(): MockObjectInternal|StubInternal {
+		return $this->object;
+	}
 }

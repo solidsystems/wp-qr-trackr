@@ -18,23 +18,22 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RenameForceCoversAnnotationAttribute implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $root = $document->documentElement;
+final class RenameForceCoversAnnotationAttribute implements Migration {
 
-        assert($root instanceof DOMElement);
+	public function migrate( DOMDocument $document ): void {
+		$root = $document->documentElement;
 
-        if ($root->hasAttribute('requireCoverageMetadata')) {
-            return;
-        }
+		assert( $root instanceof DOMElement );
 
-        if (!$root->hasAttribute('forceCoversAnnotation')) {
-            return;
-        }
+		if ( $root->hasAttribute( 'requireCoverageMetadata' ) ) {
+			return;
+		}
 
-        $root->setAttribute('requireCoverageMetadata', $root->getAttribute('forceCoversAnnotation'));
-        $root->removeAttribute('forceCoversAnnotation');
-    }
+		if ( ! $root->hasAttribute( 'forceCoversAnnotation' ) ) {
+			return;
+		}
+
+		$root->setAttribute( 'requireCoverageMetadata', $root->getAttribute( 'forceCoversAnnotation' ) );
+		$root->removeAttribute( 'forceCoversAnnotation' );
+	}
 }

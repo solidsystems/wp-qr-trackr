@@ -15,127 +15,113 @@ use function explode;
 use function implode;
 use function ltrim;
 
-class UndefinedTargetClass implements TargetClassInterface
-{
-    /**
-     * @var class-string
-     */
-    private $name;
+class UndefinedTargetClass implements TargetClassInterface {
 
-    /**
-     * @param class-string $name
-     */
-    public function __construct($name)
-    {
-        $this->name = $name;
-    }
+	/**
+	 * @var class-string
+	 */
+	private $name;
 
-    /**
-     * @return class-string
-     */
-    public function __toString()
-    {
-        return $this->name;
-    }
+	/**
+	 * @param class-string $name
+	 */
+	public function __construct( $name ) {
+		$this->name = $name;
+	}
 
-    /**
-     * @param  class-string $name
-     * @return self
-     */
-    public static function factory($name)
-    {
-        return new self($name);
-    }
+	/**
+	 * @return class-string
+	 */
+	public function __toString() {
+		return $this->name;
+	}
 
-    /**
-     * @return list<class-string>
-     */
-    public function getAttributes()
-    {
-        return [];
-    }
+	/**
+	 * @param  class-string $name
+	 * @return self
+	 */
+	public static function factory( $name ) {
+		return new self( $name );
+	}
 
-    /**
-     * @return list<self>
-     */
-    public function getInterfaces()
-    {
-        return [];
-    }
+	/**
+	 * @return list<class-string>
+	 */
+	public function getAttributes() {
+		return array();
+	}
 
-    /**
-     * @return list<Method>
-     */
-    public function getMethods()
-    {
-        return [];
-    }
+	/**
+	 * @return list<self>
+	 */
+	public function getInterfaces() {
+		return array();
+	}
 
-    /**
-     * @return class-string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
+	/**
+	 * @return list<Method>
+	 */
+	public function getMethods() {
+		return array();
+	}
 
-    /**
-     * @return string
-     */
-    public function getNamespaceName()
-    {
-        $parts = explode('\\', ltrim($this->getName(), '\\'));
-        array_pop($parts);
-        return implode('\\', $parts);
-    }
+	/**
+	 * @return class-string
+	 */
+	public function getName() {
+		return $this->name;
+	}
 
-    /**
-     * @return string
-     */
-    public function getShortName()
-    {
-        $parts = explode('\\', $this->getName());
-        return array_pop($parts);
-    }
+	/**
+	 * @return string
+	 */
+	public function getNamespaceName() {
+		$parts = explode( '\\', ltrim( $this->getName(), '\\' ) );
+		array_pop( $parts );
+		return implode( '\\', $parts );
+	}
 
-    /**
-     * @return bool
-     */
-    public function hasInternalAncestor()
-    {
-        return false;
-    }
+	/**
+	 * @return string
+	 */
+	public function getShortName() {
+		$parts = explode( '\\', $this->getName() );
+		return array_pop( $parts );
+	}
 
-    /**
-     * @param  class-string $interface
-     * @return bool
-     */
-    public function implementsInterface($interface)
-    {
-        return false;
-    }
+	/**
+	 * @return bool
+	 */
+	public function hasInternalAncestor() {
+		return false;
+	}
 
-    /**
-     * @return bool
-     */
-    public function inNamespace()
-    {
-        return $this->getNamespaceName() !== '';
-    }
+	/**
+	 * @param  class-string $interface
+	 * @return bool
+	 */
+	public function implementsInterface( $interface ) {
+		return false;
+	}
 
-    /**
-     * @return bool
-     */
-    public function isAbstract()
-    {
-        return false;
-    }
+	/**
+	 * @return bool
+	 */
+	public function inNamespace() {
+		return $this->getNamespaceName() !== '';
+	}
 
-    /**
-     * @return bool
-     */
-    public function isFinal()
-    {
-        return false;
-    }
+	/**
+	 * @return bool
+	 */
+	public function isAbstract() {
+		return false;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isFinal() {
+		return false;
+	}
 }

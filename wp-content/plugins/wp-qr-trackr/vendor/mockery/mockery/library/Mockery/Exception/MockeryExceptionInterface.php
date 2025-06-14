@@ -14,6 +14,6 @@ namespace Mockery\Exception;
 
 use Throwable;
 
-interface MockeryExceptionInterface extends Throwable
-{
+interface MockeryExceptionInterface extends Throwable {
+
 }

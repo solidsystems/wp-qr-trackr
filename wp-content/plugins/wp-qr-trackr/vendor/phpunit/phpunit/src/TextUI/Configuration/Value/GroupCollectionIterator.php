@@ -19,46 +19,39 @@ use Iterator;
  *
  * @template-implements Iterator<int, Group>
  */
-final class GroupCollectionIterator implements Countable, Iterator
-{
-    /**
-     * @psalm-var list<Group>
-     */
-    private readonly array $groups;
-    private int $position = 0;
+final class GroupCollectionIterator implements Countable, Iterator {
 
-    public function __construct(GroupCollection $groups)
-    {
-        $this->groups = $groups->asArray();
-    }
+	/**
+	 * @psalm-var list<Group>
+	 */
+	private readonly array $groups;
+	private int $position = 0;
 
-    public function count(): int
-    {
-        return iterator_count($this);
-    }
+	public function __construct( GroupCollection $groups ) {
+		$this->groups = $groups->asArray();
+	}
 
-    public function rewind(): void
-    {
-        $this->position = 0;
-    }
+	public function count(): int {
+		return iterator_count( $this );
+	}
 
-    public function valid(): bool
-    {
-        return $this->position < count($this->groups);
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function key(): int
-    {
-        return $this->position;
-    }
+	public function valid(): bool {
+		return $this->position < count( $this->groups );
+	}
 
-    public function current(): Group
-    {
-        return $this->groups[$this->position];
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function next(): void
-    {
-        $this->position++;
-    }
+	public function current(): Group {
+		return $this->groups[ $this->position ];
+	}
+
+	public function next(): void {
+		++$this->position;
+	}
 }

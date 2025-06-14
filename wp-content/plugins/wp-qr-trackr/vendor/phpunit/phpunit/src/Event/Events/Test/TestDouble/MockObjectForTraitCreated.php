@@ -18,42 +18,38 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class MockObjectForTraitCreated implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
+final class MockObjectForTraitCreated implements Event {
 
-    /**
-     * @psalm-var trait-string
-     */
-    private readonly string $traitName;
+	private readonly Telemetry\Info $telemetryInfo;
 
-    /**
-     * @psalm-param trait-string $traitName
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, string $traitName)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->traitName     = $traitName;
-    }
+	/**
+	 * @psalm-var trait-string
+	 */
+	private readonly string $traitName;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param trait-string $traitName
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, string $traitName ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->traitName     = $traitName;
+	}
 
-    /**
-     * @psalm-return trait-string
-     */
-    public function traitName(): string
-    {
-        return $this->traitName;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            'Mock Object Created (%s)',
-            $this->traitName,
-        );
-    }
+	/**
+	 * @psalm-return trait-string
+	 */
+	public function traitName(): string {
+		return $this->traitName;
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'Mock Object Created (%s)',
+			$this->traitName,
+		);
+	}
 }

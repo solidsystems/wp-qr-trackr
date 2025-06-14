@@ -12,13 +12,12 @@ namespace SebastianBergmann\CodeCoverage\Test\TestStatus;
 /**
  * @psalm-immutable
  */
-abstract class Known extends TestStatus
-{
-    /**
-     * @psalm-assert-if-true Known $this
-     */
-    public function isKnown(): bool
-    {
-        return true;
-    }
+abstract class Known extends TestStatus {
+
+	/**
+	 * @psalm-assert-if-true Known $this
+	 */
+	public function isKnown(): bool {
+		return true;
+	}
 }

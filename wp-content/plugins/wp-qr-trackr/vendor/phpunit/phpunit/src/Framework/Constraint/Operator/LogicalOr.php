@@ -12,43 +12,39 @@ namespace PHPUnit\Framework\Constraint;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class LogicalOr extends BinaryOperator
-{
-    public static function fromConstraints(mixed ...$constraints): self
-    {
-        return new self(...$constraints);
-    }
+final class LogicalOr extends BinaryOperator {
 
-    /**
-     * Returns the name of this operator.
-     */
-    public function operator(): string
-    {
-        return 'or';
-    }
+	public static function fromConstraints( mixed ...$constraints ): self {
+		return new self( ...$constraints );
+	}
 
-    /**
-     * Returns this operator's precedence.
-     *
-     * @see https://www.php.net/manual/en/language.operators.precedence.php
-     */
-    public function precedence(): int
-    {
-        return 24;
-    }
+	/**
+	 * Returns the name of this operator.
+	 */
+	public function operator(): string {
+		return 'or';
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    public function matches(mixed $other): bool
-    {
-        foreach ($this->constraints() as $constraint) {
-            if ($constraint->evaluate($other, '', true)) {
-                return true;
-            }
-        }
+	/**
+	 * Returns this operator's precedence.
+	 *
+	 * @see https://www.php.net/manual/en/language.operators.precedence.php
+	 */
+	public function precedence(): int {
+		return 24;
+	}
 
-        return false;
-    }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	public function matches( mixed $other ): bool {
+		foreach ( $this->constraints() as $constraint ) {
+			if ( $constraint->evaluate( $other, '', true ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

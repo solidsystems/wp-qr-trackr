@@ -21,32 +21,31 @@ use PHPUnit\TextUI\XmlConfiguration\Loader;
  *
  * @codeCoverageIgnore
  */
-final class Builder
-{
-    /**
-     * @throws ConfigurationCannotBeBuiltException
-     */
-    public function build(array $argv): Configuration
-    {
-        try {
-            $cliConfiguration  = (new CliConfigurationBuilder)->fromParameters($argv);
-            $configurationFile = (new XmlConfigurationFileFinder)->find($cliConfiguration);
-            $xmlConfiguration  = DefaultConfiguration::create();
+final class Builder {
 
-            if ($configurationFile !== false) {
-                $xmlConfiguration = (new Loader)->load($configurationFile);
-            }
+	/**
+	 * @throws ConfigurationCannotBeBuiltException
+	 */
+	public function build( array $argv ): Configuration {
+		try {
+			$cliConfiguration  = ( new CliConfigurationBuilder() )->fromParameters( $argv );
+			$configurationFile = ( new XmlConfigurationFileFinder() )->find( $cliConfiguration );
+			$xmlConfiguration  = DefaultConfiguration::create();
 
-            return Registry::init(
-                $cliConfiguration,
-                $xmlConfiguration,
-            );
-        } catch (CliConfigurationException|XmlConfigurationException $e) {
-            throw new ConfigurationCannotBeBuiltException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e,
-            );
-        }
-    }
+			if ( $configurationFile !== false ) {
+				$xmlConfiguration = ( new Loader() )->load( $configurationFile );
+			}
+
+			return Registry::init(
+				$cliConfiguration,
+				$xmlConfiguration,
+			);
+		} catch ( CliConfigurationException | XmlConfigurationException $e ) {
+			throw new ConfigurationCannotBeBuiltException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e,
+			);
+		}
+	}
 }

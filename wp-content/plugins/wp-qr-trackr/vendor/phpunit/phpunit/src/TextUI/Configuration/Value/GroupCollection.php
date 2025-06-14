@@ -18,55 +18,49 @@ use IteratorAggregate;
  *
  * @template-implements IteratorAggregate<int, Group>
  */
-final class GroupCollection implements IteratorAggregate
-{
-    /**
-     * @psalm-var list<Group>
-     */
-    private readonly array $groups;
+final class GroupCollection implements IteratorAggregate {
 
-    /**
-     * @psalm-param list<Group> $groups
-     */
-    public static function fromArray(array $groups): self
-    {
-        return new self(...$groups);
-    }
+	/**
+	 * @psalm-var list<Group>
+	 */
+	private readonly array $groups;
 
-    private function __construct(Group ...$groups)
-    {
-        $this->groups = $groups;
-    }
+	/**
+	 * @psalm-param list<Group> $groups
+	 */
+	public static function fromArray( array $groups ): self {
+		return new self( ...$groups );
+	}
 
-    /**
-     * @psalm-return list<Group>
-     */
-    public function asArray(): array
-    {
-        return $this->groups;
-    }
+	private function __construct( Group ...$groups ) {
+		$this->groups = $groups;
+	}
 
-    /**
-     * @psalm-return list<string>
-     */
-    public function asArrayOfStrings(): array
-    {
-        $result = [];
+	/**
+	 * @psalm-return list<Group>
+	 */
+	public function asArray(): array {
+		return $this->groups;
+	}
 
-        foreach ($this->groups as $group) {
-            $result[] = $group->name();
-        }
+	/**
+	 * @psalm-return list<string>
+	 */
+	public function asArrayOfStrings(): array {
+		$result = array();
 
-        return $result;
-    }
+		foreach ( $this->groups as $group ) {
+			$result[] = $group->name();
+		}
 
-    public function isEmpty(): bool
-    {
-        return empty($this->groups);
-    }
+		return $result;
+	}
 
-    public function getIterator(): GroupCollectionIterator
-    {
-        return new GroupCollectionIterator($this);
-    }
+	public function isEmpty(): bool {
+		return empty( $this->groups );
+	}
+
+	public function getIterator(): GroupCollectionIterator {
+		return new GroupCollectionIterator( $this );
+	}
 }

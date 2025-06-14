@@ -2,39 +2,35 @@
 namespace Hamcrest\Text;
 
 /*
- Copyright (c) 2010 hamcrest.org
+Copyright (c) 2010 hamcrest.org
  */
 
 /**
  * Tests if the argument is a string that matches a regular expression.
  */
-class MatchesPattern extends SubstringMatcher
-{
+class MatchesPattern extends SubstringMatcher {
 
-    public function __construct($pattern)
-    {
-        parent::__construct($pattern);
-    }
 
-    /**
-     * Matches if value is a string that matches regular expression $pattern.
-     *
-     * @factory
-     */
-    public static function matchesPattern($pattern)
-    {
-        return new self($pattern);
-    }
+	public function __construct( $pattern ) {
+		parent::__construct( $pattern );
+	}
 
-    // -- Protected Methods
+	/**
+	 * Matches if value is a string that matches regular expression $pattern.
+	 *
+	 * @factory
+	 */
+	public static function matchesPattern( $pattern ) {
+		return new self( $pattern );
+	}
 
-    protected function evalSubstringOf($item)
-    {
-        return preg_match($this->_substring, (string) $item) >= 1;
-    }
+	// -- Protected Methods
 
-    protected function relationship()
-    {
-        return 'matching';
-    }
+	protected function evalSubstringOf( $item ) {
+		return preg_match( $this->_substring, (string) $item ) >= 1;
+	}
+
+	protected function relationship() {
+		return 'matching';
+	}
 }

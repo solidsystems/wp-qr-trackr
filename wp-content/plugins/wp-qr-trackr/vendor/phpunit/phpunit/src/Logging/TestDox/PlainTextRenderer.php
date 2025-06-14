@@ -16,64 +16,62 @@ use function sprintf;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class PlainTextRenderer
-{
-    /**
-     * @psalm-param array<string, TestResultCollection> $tests
-     */
-    public function render(array $tests): string
-    {
-        $buffer = '';
+final class PlainTextRenderer {
 
-        foreach ($tests as $prettifiedClassName => $_tests) {
-            $buffer .= $prettifiedClassName . "\n";
+	/**
+	 * @psalm-param array<string, TestResultCollection> $tests
+	 */
+	public function render( array $tests ): string {
+		$buffer = '';
 
-            foreach ($this->reduce($_tests) as $prettifiedMethodName => $outcome) {
-                $buffer .= sprintf(
-                    ' [%s] %s' . "\n",
-                    $outcome,
-                    $prettifiedMethodName,
-                );
-            }
+		foreach ( $tests as $prettifiedClassName => $_tests ) {
+			$buffer .= $prettifiedClassName . "\n";
 
-            $buffer .= "\n";
-        }
+			foreach ( $this->reduce( $_tests ) as $prettifiedMethodName => $outcome ) {
+				$buffer .= sprintf(
+					' [%s] %s' . "\n",
+					$outcome,
+					$prettifiedMethodName,
+				);
+			}
 
-        return $buffer;
-    }
+			$buffer .= "\n";
+		}
 
-    /**
-     * @psalm-return array<string, 'x'|' '>
-     */
-    private function reduce(TestResultCollection $tests): array
-    {
-        $result = [];
+		return $buffer;
+	}
 
-        foreach ($tests as $test) {
-            $prettifiedMethodName = $test->test()->testDox()->prettifiedMethodName();
+	/**
+	 * @psalm-return array<string, 'x'|' '>
+	 */
+	private function reduce( TestResultCollection $tests ): array {
+		$result = array();
 
-            $success = true;
+		foreach ( $tests as $test ) {
+			$prettifiedMethodName = $test->test()->testDox()->prettifiedMethodName();
 
-            if ($test->status()->isError() ||
-                $test->status()->isFailure() ||
-                $test->status()->isIncomplete() ||
-                $test->status()->isSkipped()) {
-                $success = false;
-            }
+			$success = true;
 
-            if (!isset($result[$prettifiedMethodName])) {
-                $result[$prettifiedMethodName] = $success ? 'x' : ' ';
+			if ( $test->status()->isError() ||
+				$test->status()->isFailure() ||
+				$test->status()->isIncomplete() ||
+				$test->status()->isSkipped() ) {
+				$success = false;
+			}
 
-                continue;
-            }
+			if ( ! isset( $result[ $prettifiedMethodName ] ) ) {
+				$result[ $prettifiedMethodName ] = $success ? 'x' : ' ';
 
-            if ($success) {
-                continue;
-            }
+				continue;
+			}
 
-            $result[$prettifiedMethodName] = ' ';
-        }
+			if ( $success ) {
+				continue;
+			}
 
-        return $result;
-    }
+			$result[ $prettifiedMethodName ] = ' ';
+		}
+
+		return $result;
+	}
 }

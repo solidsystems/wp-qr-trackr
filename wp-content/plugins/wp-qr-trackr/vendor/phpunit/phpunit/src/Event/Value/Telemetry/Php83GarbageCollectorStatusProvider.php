@@ -16,25 +16,24 @@ use function gc_status;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Php83GarbageCollectorStatusProvider implements GarbageCollectorStatusProvider
-{
-    public function status(): GarbageCollectorStatus
-    {
-        $status = gc_status();
+final class Php83GarbageCollectorStatusProvider implements GarbageCollectorStatusProvider {
 
-        return new GarbageCollectorStatus(
-            $status['runs'],
-            $status['collected'],
-            $status['threshold'],
-            $status['roots'],
-            $status['application_time'],
-            $status['collector_time'],
-            $status['destructor_time'],
-            $status['free_time'],
-            $status['running'],
-            $status['protected'],
-            $status['full'],
-            $status['buffer_size'],
-        );
-    }
+	public function status(): GarbageCollectorStatus {
+		$status = gc_status();
+
+		return new GarbageCollectorStatus(
+			$status['runs'],
+			$status['collected'],
+			$status['threshold'],
+			$status['roots'],
+			$status['application_time'],
+			$status['collector_time'],
+			$status['destructor_time'],
+			$status['free_time'],
+			$status['running'],
+			$status['protected'],
+			$status['full'],
+			$status['buffer_size'],
+		);
+	}
 }

@@ -11,19 +11,18 @@ use Endroid\QrCode\Writer\Result\GdResult;
 use Endroid\QrCode\Writer\Result\ResultInterface;
 use Endroid\QrCode\Writer\Result\WebPResult;
 
-final readonly class WebPWriter extends AbstractGdWriter
-{
-    public const WRITER_OPTION_QUALITY = 'quality';
+final readonly class WebPWriter extends AbstractGdWriter {
 
-    public function write(QrCodeInterface $qrCode, ?LogoInterface $logo = null, ?LabelInterface $label = null, array $options = []): ResultInterface
-    {
-        if (!isset($options[self::WRITER_OPTION_QUALITY])) {
-            $options[self::WRITER_OPTION_QUALITY] = -1;
-        }
+	public const WRITER_OPTION_QUALITY = 'quality';
 
-        /** @var GdResult $gdResult */
-        $gdResult = parent::write($qrCode, $logo, $label, $options);
+	public function write( QrCodeInterface $qrCode, ?LogoInterface $logo = null, ?LabelInterface $label = null, array $options = array() ): ResultInterface {
+		if ( ! isset( $options[ self::WRITER_OPTION_QUALITY ] ) ) {
+			$options[ self::WRITER_OPTION_QUALITY ] = -1;
+		}
 
-        return new WebPResult($gdResult->getMatrix(), $gdResult->getImage(), $options[self::WRITER_OPTION_QUALITY]);
-    }
+		/** @var GdResult $gdResult */
+		$gdResult = parent::write( $qrCode, $logo, $label, $options );
+
+		return new WebPResult( $gdResult->getMatrix(), $gdResult->getImage(), $options[ self::WRITER_OPTION_QUALITY ] );
+	}
 }

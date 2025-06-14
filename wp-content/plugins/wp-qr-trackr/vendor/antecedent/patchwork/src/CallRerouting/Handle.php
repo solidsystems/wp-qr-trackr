@@ -8,58 +8,50 @@
  */
 namespace Patchwork\CallRerouting;
 
-class Handle
-{
-    private $references = [];
-    private $expirationHandlers = [];
-    private $silenced = false;
-    private $tags = [];
+class Handle {
 
-    public function __destruct()
-    {
-        $this->expire();
-    }
+	private $references         = array();
+	private $expirationHandlers = array();
+	private $silenced           = false;
+	private $tags               = array();
 
-    public function tag($tag)
-    {
-        $this->tags[] = $tag;
-    }
+	public function __destruct() {
+		$this->expire();
+	}
 
-    public function hasTag($tag)
-    {
-        return in_array($tag, $this->tags);
-    }
+	public function tag( $tag ) {
+		$this->tags[] = $tag;
+	}
 
-    public function addReference(&$reference)
-    {
-        $this->references[] = &$reference;
-    }
+	public function hasTag( $tag ) {
+		return in_array( $tag, $this->tags );
+	}
 
-    public function expire()
-    {
-        foreach ($this->references as &$reference) {
-            $reference = null;
-        }
-        if (!$this->silenced) {
-            foreach ($this->expirationHandlers as $expirationHandler) {
-                $expirationHandler();
-            }
-        }
-        $this->expirationHandlers = [];
-    }
+	public function addReference( &$reference ) {
+		$this->references[] = &$reference;
+	}
 
-    public function addExpirationHandler(callable $expirationHandler)
-    {
-        $this->expirationHandlers[] = $expirationHandler;
-    }
+	public function expire() {
+		foreach ( $this->references as &$reference ) {
+			$reference = null;
+		}
+		if ( ! $this->silenced ) {
+			foreach ( $this->expirationHandlers as $expirationHandler ) {
+				$expirationHandler();
+			}
+		}
+		$this->expirationHandlers = array();
+	}
 
-    public function silence()
-    {
-        $this->silenced = true;
-    }
+	public function addExpirationHandler( callable $expirationHandler ) {
+		$this->expirationHandlers[] = $expirationHandler;
+	}
 
-    public function unsilence()
-    {
-        $this->silenced = false;
-    }
+	public function silence() {
+		$this->silenced = true;
+	}
+
+	public function unsilence() {
+		$this->silenced = false;
+	}
 }

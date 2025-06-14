@@ -17,57 +17,54 @@ use DateInterval;
 use DateTimeInterface;
 use DateTimeZone;
 
-final class DateTimeComparator extends ObjectComparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        return ($expected instanceof DateTimeInterface) &&
-               ($actual instanceof DateTimeInterface);
-    }
+final class DateTimeComparator extends ObjectComparator {
 
-    /**
-     * @throws ComparisonFailure
-     */
-    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = []): void
-    {
-        assert($expected instanceof DateTimeInterface);
-        assert($actual instanceof DateTimeInterface);
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		return ( $expected instanceof DateTimeInterface ) &&
+				( $actual instanceof DateTimeInterface );
+	}
 
-        $absDelta = abs($delta);
-        $delta    = new DateInterval(sprintf('PT%dS', $absDelta));
-        $delta->f = $absDelta - floor($absDelta);
+	/**
+	 * @throws ComparisonFailure
+	 */
+	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = array() ): void {
+		assert( $expected instanceof DateTimeInterface );
+		assert( $actual instanceof DateTimeInterface );
 
-        $actualClone = (clone $actual)
-            ->setTimezone(new DateTimeZone('UTC'));
+		$absDelta = abs( $delta );
+		$delta    = new DateInterval( sprintf( 'PT%dS', $absDelta ) );
+		$delta->f = $absDelta - floor( $absDelta );
 
-        $expectedLower = (clone $expected)
-            ->setTimezone(new DateTimeZone('UTC'))
-            ->sub($delta);
+		$actualClone = ( clone $actual )
+			->setTimezone( new DateTimeZone( 'UTC' ) );
 
-        $expectedUpper = (clone $expected)
-            ->setTimezone(new DateTimeZone('UTC'))
-            ->add($delta);
+		$expectedLower = ( clone $expected )
+			->setTimezone( new DateTimeZone( 'UTC' ) )
+			->sub( $delta );
 
-        if ($actualClone < $expectedLower || $actualClone > $expectedUpper) {
-            throw new ComparisonFailure(
-                $expected,
-                $actual,
-                $this->dateTimeToString($expected),
-                $this->dateTimeToString($actual),
-                'Failed asserting that two DateTime objects are equal.',
-            );
-        }
-    }
+		$expectedUpper = ( clone $expected )
+			->setTimezone( new DateTimeZone( 'UTC' ) )
+			->add( $delta );
 
-    /**
-     * Returns an ISO 8601 formatted string representation of a datetime or
-     * 'Invalid DateTimeInterface object' if the provided DateTimeInterface was not properly
-     * initialized.
-     */
-    private function dateTimeToString(DateTimeInterface $datetime): string
-    {
-        $string = $datetime->format('Y-m-d\TH:i:s.uO');
+		if ( $actualClone < $expectedLower || $actualClone > $expectedUpper ) {
+			throw new ComparisonFailure(
+				$expected,
+				$actual,
+				$this->dateTimeToString( $expected ),
+				$this->dateTimeToString( $actual ),
+				'Failed asserting that two DateTime objects are equal.',
+			);
+		}
+	}
 
-        return $string ?: 'Invalid DateTimeInterface object';
-    }
+	/**
+	 * Returns an ISO 8601 formatted string representation of a datetime or
+	 * 'Invalid DateTimeInterface object' if the provided DateTimeInterface was not properly
+	 * initialized.
+	 */
+	private function dateTimeToString( DateTimeInterface $datetime ): string {
+		$string = $datetime->format( 'Y-m-d\TH:i:s.uO' );
+
+		return $string ?: 'Invalid DateTimeInterface object';
+	}
 }

@@ -12,54 +12,47 @@ namespace SebastianBergmann\CodeCoverage\Test\TestStatus;
 /**
  * @psalm-immutable
  */
-abstract class TestStatus
-{
-    public static function unknown(): self
-    {
-        return new Unknown;
-    }
+abstract class TestStatus {
 
-    public static function success(): self
-    {
-        return new Success;
-    }
+	public static function unknown(): self {
+		return new Unknown();
+	}
 
-    public static function failure(): self
-    {
-        return new Failure;
-    }
+	public static function success(): self {
+		return new Success();
+	}
 
-    /**
-     * @psalm-assert-if-true Known $this
-     */
-    public function isKnown(): bool
-    {
-        return false;
-    }
+	public static function failure(): self {
+		return new Failure();
+	}
 
-    /**
-     * @psalm-assert-if-true Unknown $this
-     */
-    public function isUnknown(): bool
-    {
-        return false;
-    }
+	/**
+	 * @psalm-assert-if-true Known $this
+	 */
+	public function isKnown(): bool {
+		return false;
+	}
 
-    /**
-     * @psalm-assert-if-true Success $this
-     */
-    public function isSuccess(): bool
-    {
-        return false;
-    }
+	/**
+	 * @psalm-assert-if-true Unknown $this
+	 */
+	public function isUnknown(): bool {
+		return false;
+	}
 
-    /**
-     * @psalm-assert-if-true Failure $this
-     */
-    public function isFailure(): bool
-    {
-        return false;
-    }
+	/**
+	 * @psalm-assert-if-true Success $this
+	 */
+	public function isSuccess(): bool {
+		return false;
+	}
 
-    abstract public function asString(): string;
+	/**
+	 * @psalm-assert-if-true Failure $this
+	 */
+	public function isFailure(): bool {
+		return false;
+	}
+
+	abstract public function asString(): string;
 }

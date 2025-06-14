@@ -17,16 +17,15 @@ use RuntimeException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ClassCannotBeFoundException extends RuntimeException implements Exception
-{
-    public function __construct(string $className, string $file)
-    {
-        parent::__construct(
-            sprintf(
-                'Class %s cannot be found in %s',
-                $className,
-                $file,
-            ),
-        );
-    }
+final class ClassCannotBeFoundException extends RuntimeException implements Exception {
+
+	public function __construct( string $className, string $file ) {
+		parent::__construct(
+			sprintf(
+				'Class %s cannot be found in %s',
+				$className,
+				$file,
+			),
+		);
+	}
 }

@@ -27,76 +27,74 @@ use Mockery\Generator\StringManipulation\Pass\RemoveUnserializeForInternalSerial
 use Mockery\Generator\StringManipulation\Pass\TraitPass;
 use function file_get_contents;
 
-class StringManipulationGenerator implements Generator
-{
-    /**
-     * @var list<Pass>
-     */
-    protected $passes = [];
+class StringManipulationGenerator implements Generator {
 
-    /**
-     * @var string
-     */
-    private $code;
+	/**
+	 * @var list<Pass>
+	 */
+	protected $passes = array();
 
-    /**
-     * @param list<Pass> $passes
-     */
-    public function __construct(array $passes)
-    {
-        $this->passes = $passes;
+	/**
+	 * @var string
+	 */
+	private $code;
 
-        $this->code = file_get_contents(__DIR__ . '/../Mock.php');
-    }
+	/**
+	 * @param list<Pass> $passes
+	 */
+	public function __construct( array $passes ) {
+		$this->passes = $passes;
 
-    /**
-     * @param  Pass $pass
-     * @return void
-     */
-    public function addPass(Pass $pass)
-    {
-        $this->passes[] = $pass;
-    }
+		$this->code = file_get_contents( __DIR__ . '/../Mock.php' );
+	}
 
-    /**
-     * @return MockDefinition
-     */
-    public function generate(MockConfiguration $config)
-    {
-        $className = $config->getName() ?: $config->generateName();
+	/**
+	 * @param  Pass $pass
+	 * @return void
+	 */
+	public function addPass( Pass $pass ) {
+		$this->passes[] = $pass;
+	}
 
-        $namedConfig = $config->rename($className);
+	/**
+	 * @return MockDefinition
+	 */
+	public function generate( MockConfiguration $config ) {
+		$className = $config->getName() ?: $config->generateName();
 
-        $code = $this->code;
-        foreach ($this->passes as $pass) {
-            $code = $pass->apply($code, $namedConfig);
-        }
+		$namedConfig = $config->rename( $className );
 
-        return new MockDefinition($namedConfig, $code);
-    }
+		$code = $this->code;
+		foreach ( $this->passes as $pass ) {
+			$code = $pass->apply( $code, $namedConfig );
+		}
 
-    /**
-     * Creates a new StringManipulationGenerator with the default passes
-     *
-     * @return StringManipulationGenerator
-     */
-    public static function withDefaultPasses()
-    {
-        return new static([
-            new CallTypeHintPass(),
-            new MagicMethodTypeHintsPass(),
-            new ClassPass(),
-            new TraitPass(),
-            new ClassNamePass(),
-            new InstanceMockPass(),
-            new InterfacePass(),
-            new AvoidMethodClashPass(),
-            new MethodDefinitionPass(),
-            new RemoveUnserializeForInternalSerializableClassesPass(),
-            new RemoveBuiltinMethodsThatAreFinalPass(),
-            new RemoveDestructorPass(),
-            new ConstantsPass(),
-            new ClassAttributesPass(),
-        ]);
-    }
+		return new MockDefinition( $namedConfig, $code );
+	}
+
+	/**
+	 * Creates a new StringManipulationGenerator with the default passes
+	 *
+	 * @return StringManipulationGenerator
+	 */
+	public static function withDefaultPasses() {
+		return new static(
+			array(
+				new CallTypeHintPass(),
+				new MagicMethodTypeHintsPass(),
+				new ClassPass(),
+				new TraitPass(),
+				new ClassNamePass(),
+				new InstanceMockPass(),
+				new InterfacePass(),
+				new AvoidMethodClashPass(),
+				new MethodDefinitionPass(),
+				new RemoveUnserializeForInternalSerializableClassesPass(),
+				new RemoveBuiltinMethodsThatAreFinalPass(),
+				new RemoveDestructorPass(),
+				new ConstantsPass(),
+				new ClassAttributesPass(),
+			)
+		);
+	}
 }

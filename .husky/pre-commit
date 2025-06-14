@@ -1,0 +1,20 @@
+#!/bin/sh
+# Fast pre-commit: only check staged files in the plugin directory
+
+# Staged PHP files
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACM | grep '\.php$' | grep 'wp-content/plugins/wp-qr-trackr' || true)
+if [ -n "$STAGED_PHP" ]; then
+  ./wp-content/plugins/wp-qr-trackr/vendor/bin/phpcs --standard=.phpcs.xml $STAGED_PHP
+fi
+
+# Staged JS files
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.js$' | grep 'wp-content/plugins/wp-qr-trackr' || true)
+if [ -n "$STAGED_JS" ]; then
+  yarn lint $STAGED_JS
+fi
+
+# Staged CSS files
+STAGED_CSS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.css$' | grep 'wp-content/plugins/wp-qr-trackr' || true)
+if [ -n "$STAGED_CSS" ]; then
+  yarn stylelint $STAGED_CSS
+fi

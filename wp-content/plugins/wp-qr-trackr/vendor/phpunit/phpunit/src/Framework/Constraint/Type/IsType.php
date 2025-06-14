@@ -26,180 +26,177 @@ use PHPUnit\Framework\UnknownTypeException;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsType extends Constraint
-{
-    /**
-     * @var string
-     */
-    public const TYPE_ARRAY = 'array';
+final class IsType extends Constraint {
 
-    /**
-     * @var string
-     */
-    public const TYPE_BOOL = 'bool';
+	/**
+	 * @var string
+	 */
+	public const TYPE_ARRAY = 'array';
 
-    /**
-     * @var string
-     */
-    public const TYPE_FLOAT = 'float';
+	/**
+	 * @var string
+	 */
+	public const TYPE_BOOL = 'bool';
 
-    /**
-     * @var string
-     */
-    public const TYPE_INT = 'int';
+	/**
+	 * @var string
+	 */
+	public const TYPE_FLOAT = 'float';
 
-    /**
-     * @var string
-     */
-    public const TYPE_NULL = 'null';
+	/**
+	 * @var string
+	 */
+	public const TYPE_INT = 'int';
 
-    /**
-     * @var string
-     */
-    public const TYPE_NUMERIC = 'numeric';
+	/**
+	 * @var string
+	 */
+	public const TYPE_NULL = 'null';
 
-    /**
-     * @var string
-     */
-    public const TYPE_OBJECT = 'object';
+	/**
+	 * @var string
+	 */
+	public const TYPE_NUMERIC = 'numeric';
 
-    /**
-     * @var string
-     */
-    public const TYPE_RESOURCE = 'resource';
+	/**
+	 * @var string
+	 */
+	public const TYPE_OBJECT = 'object';
 
-    /**
-     * @var string
-     */
-    public const TYPE_CLOSED_RESOURCE = 'resource (closed)';
+	/**
+	 * @var string
+	 */
+	public const TYPE_RESOURCE = 'resource';
 
-    /**
-     * @var string
-     */
-    public const TYPE_STRING = 'string';
+	/**
+	 * @var string
+	 */
+	public const TYPE_CLOSED_RESOURCE = 'resource (closed)';
 
-    /**
-     * @var string
-     */
-    public const TYPE_SCALAR = 'scalar';
+	/**
+	 * @var string
+	 */
+	public const TYPE_STRING = 'string';
 
-    /**
-     * @var string
-     */
-    public const TYPE_CALLABLE = 'callable';
+	/**
+	 * @var string
+	 */
+	public const TYPE_SCALAR = 'scalar';
 
-    /**
-     * @var string
-     */
-    public const TYPE_ITERABLE = 'iterable';
+	/**
+	 * @var string
+	 */
+	public const TYPE_CALLABLE = 'callable';
 
-    /**
-     * @psalm-var array<string,bool>
-     */
-    private const KNOWN_TYPES = [
-        'array'             => true,
-        'boolean'           => true,
-        'bool'              => true,
-        'double'            => true,
-        'float'             => true,
-        'integer'           => true,
-        'int'               => true,
-        'null'              => true,
-        'numeric'           => true,
-        'object'            => true,
-        'real'              => true,
-        'resource'          => true,
-        'resource (closed)' => true,
-        'string'            => true,
-        'scalar'            => true,
-        'callable'          => true,
-        'iterable'          => true,
-    ];
+	/**
+	 * @var string
+	 */
+	public const TYPE_ITERABLE = 'iterable';
 
-    /**
-     * @psalm-var 'array'|'boolean'|'bool'|'double'|'float'|'integer'|'int'|'null'|'numeric'|'object'|'real'|'resource'|'resource (closed)'|'string'|'scalar'|'callable'|'iterable'
-     */
-    private readonly string $type;
+	/**
+	 * @psalm-var array<string,bool>
+	 */
+	private const KNOWN_TYPES = array(
+		'array'             => true,
+		'boolean'           => true,
+		'bool'              => true,
+		'double'            => true,
+		'float'             => true,
+		'integer'           => true,
+		'int'               => true,
+		'null'              => true,
+		'numeric'           => true,
+		'object'            => true,
+		'real'              => true,
+		'resource'          => true,
+		'resource (closed)' => true,
+		'string'            => true,
+		'scalar'            => true,
+		'callable'          => true,
+		'iterable'          => true,
+	);
 
-    /**
-     * @psalm-param 'array'|'boolean'|'bool'|'double'|'float'|'integer'|'int'|'null'|'numeric'|'object'|'real'|'resource'|'resource (closed)'|'string'|'scalar'|'callable'|'iterable' $type
-     *
-     * @throws UnknownTypeException
-     */
-    public function __construct(string $type)
-    {
-        if (!isset(self::KNOWN_TYPES[$type])) {
-            throw new UnknownTypeException($type);
-        }
+	/**
+	 * @psalm-var 'array'|'boolean'|'bool'|'double'|'float'|'integer'|'int'|'null'|'numeric'|'object'|'real'|'resource'|'resource (closed)'|'string'|'scalar'|'callable'|'iterable'
+	 */
+	private readonly string $type;
 
-        $this->type = $type;
-    }
+	/**
+	 * @psalm-param 'array'|'boolean'|'bool'|'double'|'float'|'integer'|'int'|'null'|'numeric'|'object'|'real'|'resource'|'resource (closed)'|'string'|'scalar'|'callable'|'iterable' $type
+	 *
+	 * @throws UnknownTypeException
+	 */
+	public function __construct( string $type ) {
+		if ( ! isset( self::KNOWN_TYPES[ $type ] ) ) {
+			throw new UnknownTypeException( $type );
+		}
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        return sprintf(
-            'is of type %s',
-            $this->type,
-        );
-    }
+		$this->type = $type;
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        switch ($this->type) {
-            case 'numeric':
-                return is_numeric($other);
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		return sprintf(
+			'is of type %s',
+			$this->type,
+		);
+	}
 
-            case 'integer':
-            case 'int':
-                return is_int($other);
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		switch ( $this->type ) {
+			case 'numeric':
+				return is_numeric( $other );
 
-            case 'double':
-            case 'float':
-            case 'real':
-                return is_float($other);
+			case 'integer':
+			case 'int':
+				return is_int( $other );
 
-            case 'string':
-                return is_string($other);
+			case 'double':
+			case 'float':
+			case 'real':
+				return is_float( $other );
 
-            case 'boolean':
-            case 'bool':
-                return is_bool($other);
+			case 'string':
+				return is_string( $other );
 
-            case 'null':
-                return null === $other;
+			case 'boolean':
+			case 'bool':
+				return is_bool( $other );
 
-            case 'array':
-                return is_array($other);
+			case 'null':
+				return null === $other;
 
-            case 'object':
-                return is_object($other);
+			case 'array':
+				return is_array( $other );
 
-            case 'resource':
-                $type = gettype($other);
+			case 'object':
+				return is_object( $other );
 
-                return $type === 'resource' || $type === 'resource (closed)';
+			case 'resource':
+				$type = gettype( $other );
 
-            case 'resource (closed)':
-                return gettype($other) === 'resource (closed)';
+				return $type === 'resource' || $type === 'resource (closed)';
 
-            case 'scalar':
-                return is_scalar($other);
+			case 'resource (closed)':
+				return gettype( $other ) === 'resource (closed)';
 
-            case 'callable':
-                return is_callable($other);
+			case 'scalar':
+				return is_scalar( $other );
 
-            case 'iterable':
-                return is_iterable($other);
+			case 'callable':
+				return is_callable( $other );
 
-            default:
-                return false;
-        }
-    }
+			case 'iterable':
+				return is_iterable( $other );
+
+			default:
+				return false;
+		}
+	}
 }

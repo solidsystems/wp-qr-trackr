@@ -6,27 +6,24 @@ namespace Endroid\QrCode\Writer\Result;
 
 use Endroid\QrCode\Matrix\MatrixInterface;
 
-class GdResult extends AbstractResult
-{
-    public function __construct(
-        MatrixInterface $matrix,
-        protected readonly \GdImage $image,
-    ) {
-        parent::__construct($matrix);
-    }
+class GdResult extends AbstractResult {
 
-    public function getImage(): \GdImage
-    {
-        return $this->image;
-    }
+	public function __construct(
+		MatrixInterface $matrix,
+		protected readonly \GdImage $image,
+	) {
+		parent::__construct( $matrix );
+	}
 
-    public function getString(): string
-    {
-        throw new \Exception('You can only use this method in a concrete implementation');
-    }
+	public function getImage(): \GdImage {
+		return $this->image;
+	}
 
-    public function getMimeType(): string
-    {
-        throw new \Exception('You can only use this method in a concrete implementation');
-    }
+	public function getString(): string {
+		throw new \Exception( 'You can only use this method in a concrete implementation' );
+	}
+
+	public function getMimeType(): string {
+		throw new \Exception( 'You can only use this method in a concrete implementation' );
+	}
 }

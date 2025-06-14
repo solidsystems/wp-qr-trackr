@@ -16,11 +16,11 @@ use PHPUnit\Framework\Constraint\Constraint;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-interface MethodNameMatch extends ParametersMatch
-{
-    /**
-     * Adds a new method name match and returns the parameter match object for
-     * further matching possibilities.
-     */
-    public function method(Constraint|string $constraint): self;
+interface MethodNameMatch extends ParametersMatch {
+
+	/**
+	 * Adds a new method name match and returns the parameter match object for
+	 * further matching possibilities.
+	 */
+	public function method( Constraint|string $constraint ): self;
 }

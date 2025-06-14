@@ -15,27 +15,25 @@ use Exception;
 /**
  * Compares Exception instances for equality.
  */
-final class ExceptionComparator extends ObjectComparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        return $expected instanceof Exception && $actual instanceof Exception;
-    }
+final class ExceptionComparator extends ObjectComparator {
 
-    protected function toArray(object $object): array
-    {
-        assert($object instanceof Exception);
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		return $expected instanceof Exception && $actual instanceof Exception;
+	}
 
-        $array = parent::toArray($object);
+	protected function toArray( object $object ): array {
+		assert( $object instanceof Exception );
 
-        unset(
-            $array['file'],
-            $array['line'],
-            $array['trace'],
-            $array['string'],
-            $array['xdebug_message'],
-        );
+		$array = parent::toArray( $object );
 
-        return $array;
-    }
+		unset(
+			$array['file'],
+			$array['line'],
+			$array['trace'],
+			$array['string'],
+			$array['xdebug_message'],
+		);
+
+		return $array;
+	}
 }

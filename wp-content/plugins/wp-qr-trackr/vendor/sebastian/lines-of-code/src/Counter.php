@@ -17,74 +17,71 @@ use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 
-final class Counter
-{
-    /**
-     * @throws RuntimeException
-     */
-    public function countInSourceFile(string $sourceFile): LinesOfCode
-    {
-        return $this->countInSourceString(file_get_contents($sourceFile));
-    }
+final class Counter {
 
-    /**
-     * @throws RuntimeException
-     */
-    public function countInSourceString(string $source): LinesOfCode
-    {
-        $linesOfCode = substr_count($source, "\n");
+	/**
+	 * @throws RuntimeException
+	 */
+	public function countInSourceFile( string $sourceFile ): LinesOfCode {
+		return $this->countInSourceString( file_get_contents( $sourceFile ) );
+	}
 
-        if ($linesOfCode === 0 && !empty($source)) {
-            $linesOfCode = 1;
-        }
+	/**
+	 * @throws RuntimeException
+	 */
+	public function countInSourceString( string $source ): LinesOfCode {
+		$linesOfCode = substr_count( $source, "\n" );
 
-        assert($linesOfCode >= 0);
+		if ( $linesOfCode === 0 && ! empty( $source ) ) {
+			$linesOfCode = 1;
+		}
 
-        try {
-            $nodes = (new ParserFactory)->createForHostVersion()->parse($source);
+		assert( $linesOfCode >= 0 );
 
-            assert($nodes !== null);
+		try {
+			$nodes = ( new ParserFactory() )->createForHostVersion()->parse( $source );
 
-            return $this->countInAbstractSyntaxTree($linesOfCode, $nodes);
+			assert( $nodes !== null );
 
-            // @codeCoverageIgnoreStart
-        } catch (Error $error) {
-            throw new RuntimeException(
-                $error->getMessage(),
-                $error->getCode(),
-                $error,
-            );
-        }
-        // @codeCoverageIgnoreEnd
-    }
+			return $this->countInAbstractSyntaxTree( $linesOfCode, $nodes );
 
-    /**
-     * @psalm-param non-negative-int $linesOfCode
-     *
-     * @param Node[] $nodes
-     *
-     * @throws RuntimeException
-     */
-    public function countInAbstractSyntaxTree(int $linesOfCode, array $nodes): LinesOfCode
-    {
-        $traverser = new NodeTraverser;
-        $visitor   = new LineCountingVisitor($linesOfCode);
+			// @codeCoverageIgnoreStart
+		} catch ( Error $error ) {
+			throw new RuntimeException(
+				$error->getMessage(),
+				$error->getCode(),
+				$error,
+			);
+		}
+		// @codeCoverageIgnoreEnd
+	}
 
-        $traverser->addVisitor($visitor);
+	/**
+	 * @psalm-param non-negative-int $linesOfCode
+	 *
+	 * @param Node[] $nodes
+	 *
+	 * @throws RuntimeException
+	 */
+	public function countInAbstractSyntaxTree( int $linesOfCode, array $nodes ): LinesOfCode {
+		$traverser = new NodeTraverser();
+		$visitor   = new LineCountingVisitor( $linesOfCode );
 
-        try {
-            /* @noinspection UnusedFunctionResultInspection */
-            $traverser->traverse($nodes);
-            // @codeCoverageIgnoreStart
-        } catch (Error $error) {
-            throw new RuntimeException(
-                $error->getMessage(),
-                $error->getCode(),
-                $error,
-            );
-        }
-        // @codeCoverageIgnoreEnd
+		$traverser->addVisitor( $visitor );
 
-        return $visitor->result();
-    }
+		try {
+			/* @noinspection UnusedFunctionResultInspection */
+			$traverser->traverse( $nodes );
+			// @codeCoverageIgnoreStart
+		} catch ( Error $error ) {
+			throw new RuntimeException(
+				$error->getMessage(),
+				$error->getCode(),
+				$error,
+			);
+		}
+		// @codeCoverageIgnoreEnd
+
+		return $visitor->result();
+	}
 }

@@ -14,26 +14,24 @@ namespace PHPUnit\TextUI\Configuration;
  *
  * @psalm-immutable
  */
-final class File
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $path;
+final class File {
 
-    /**
-     * @psalm-param non-empty-string $path
-     */
-    public function __construct(string $path)
-    {
-        $this->path = $path;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $path;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function path(): string
-    {
-        return $this->path;
-    }
+	/**
+	 * @psalm-param non-empty-string $path
+	 */
+	public function __construct( string $path ) {
+		$this->path = $path;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function path(): string {
+		return $this->path;
+	}
 }

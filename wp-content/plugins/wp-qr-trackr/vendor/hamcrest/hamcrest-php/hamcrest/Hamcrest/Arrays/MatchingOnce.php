@@ -2,68 +2,62 @@
 namespace Hamcrest\Arrays;
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 
 use Hamcrest\Description;
 
-class MatchingOnce
-{
+class MatchingOnce {
 
-    private $_elementMatchers;
-    private $_mismatchDescription;
 
-    public function __construct(array $elementMatchers, Description $mismatchDescription)
-    {
-        $this->_elementMatchers = $elementMatchers;
-        $this->_mismatchDescription = $mismatchDescription;
-    }
+	private $_elementMatchers;
+	private $_mismatchDescription;
 
-    public function matches($item)
-    {
-        return $this->_isNotSurplus($item) && $this->_isMatched($item);
-    }
+	public function __construct( array $elementMatchers, Description $mismatchDescription ) {
+		$this->_elementMatchers     = $elementMatchers;
+		$this->_mismatchDescription = $mismatchDescription;
+	}
 
-    public function isFinished($items)
-    {
-        if (empty($this->_elementMatchers)) {
-            return true;
-        }
+	public function matches( $item ) {
+		return $this->_isNotSurplus( $item ) && $this->_isMatched( $item );
+	}
 
-        $this->_mismatchDescription
-                 ->appendText('No item matches: ')->appendList('', ', ', '', $this->_elementMatchers)
-                 ->appendText(' in ')->appendValueList('[', ', ', ']', $items)
-                 ;
+	public function isFinished( $items ) {
+		if ( empty( $this->_elementMatchers ) ) {
+			return true;
+		}
 
-        return false;
-    }
+		$this->_mismatchDescription
+				->appendText( 'No item matches: ' )->appendList( '', ', ', '', $this->_elementMatchers )
+				->appendText( ' in ' )->appendValueList( '[', ', ', ']', $items );
 
-    // -- Private Methods
+		return false;
+	}
 
-    private function _isNotSurplus($item)
-    {
-        if (empty($this->_elementMatchers)) {
-            $this->_mismatchDescription->appendText('Not matched: ')->appendValue($item);
+	// -- Private Methods
 
-            return false;
-        }
+	private function _isNotSurplus( $item ) {
+		if ( empty( $this->_elementMatchers ) ) {
+			$this->_mismatchDescription->appendText( 'Not matched: ' )->appendValue( $item );
 
-        return true;
-    }
+			return false;
+		}
 
-    private function _isMatched($item)
-    {
-            /** @var $matcher \Hamcrest\Matcher */
-        foreach ($this->_elementMatchers as $i => $matcher) {
-            if ($matcher->matches($item)) {
-                unset($this->_elementMatchers[$i]);
+		return true;
+	}
 
-                return true;
-            }
-        }
+	private function _isMatched( $item ) {
+			/** @var $matcher \Hamcrest\Matcher */
+		foreach ( $this->_elementMatchers as $i => $matcher ) {
+			if ( $matcher->matches( $item ) ) {
+				unset( $this->_elementMatchers[ $i ] );
 
-        $this->_mismatchDescription->appendText('Not matched: ')->appendValue($item);
+				return true;
+			}
+		}
 
-        return false;
-    }
+		$this->_mismatchDescription->appendText( 'Not matched: ' )->appendValue( $item );
+
+		return false;
+	}
 }

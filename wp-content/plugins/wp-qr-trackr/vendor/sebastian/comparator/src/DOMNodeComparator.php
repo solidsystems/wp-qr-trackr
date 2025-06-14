@@ -16,65 +16,62 @@ use DOMDocument;
 use DOMNode;
 use ValueError;
 
-final class DOMNodeComparator extends ObjectComparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        return $expected instanceof DOMNode && $actual instanceof DOMNode;
-    }
+final class DOMNodeComparator extends ObjectComparator {
 
-    /**
-     * @throws ComparisonFailure
-     */
-    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = []): void
-    {
-        assert($expected instanceof DOMNode);
-        assert($actual instanceof DOMNode);
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		return $expected instanceof DOMNode && $actual instanceof DOMNode;
+	}
 
-        $expectedAsString = $this->nodeToText($expected, true, $ignoreCase);
-        $actualAsString   = $this->nodeToText($actual, true, $ignoreCase);
+	/**
+	 * @throws ComparisonFailure
+	 */
+	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = array() ): void {
+		assert( $expected instanceof DOMNode );
+		assert( $actual instanceof DOMNode );
 
-        if ($expectedAsString !== $actualAsString) {
-            $type = $expected instanceof DOMDocument ? 'documents' : 'nodes';
+		$expectedAsString = $this->nodeToText( $expected, true, $ignoreCase );
+		$actualAsString   = $this->nodeToText( $actual, true, $ignoreCase );
 
-            throw new ComparisonFailure(
-                $expected,
-                $actual,
-                $expectedAsString,
-                $actualAsString,
-                sprintf("Failed asserting that two DOM %s are equal.\n", $type),
-            );
-        }
-    }
+		if ( $expectedAsString !== $actualAsString ) {
+			$type = $expected instanceof DOMDocument ? 'documents' : 'nodes';
 
-    /**
-     * Returns the normalized, whitespace-cleaned, and indented textual
-     * representation of a DOMNode.
-     */
-    private function nodeToText(DOMNode $node, bool $canonicalize, bool $ignoreCase): string
-    {
-        if ($canonicalize) {
-            $document = new DOMDocument;
+			throw new ComparisonFailure(
+				$expected,
+				$actual,
+				$expectedAsString,
+				$actualAsString,
+				sprintf( "Failed asserting that two DOM %s are equal.\n", $type ),
+			);
+		}
+	}
 
-            try {
-                $c14n = $node->C14N();
+	/**
+	 * Returns the normalized, whitespace-cleaned, and indented textual
+	 * representation of a DOMNode.
+	 */
+	private function nodeToText( DOMNode $node, bool $canonicalize, bool $ignoreCase ): string {
+		if ( $canonicalize ) {
+			$document = new DOMDocument();
 
-                assert(!empty($c14n));
+			try {
+				$c14n = $node->C14N();
 
-                @$document->loadXML($c14n);
-            } catch (ValueError) {
-            }
+				assert( ! empty( $c14n ) );
 
-            $node = $document;
-        }
+				@$document->loadXML( $c14n );
+			} catch ( ValueError ) {
+			}
 
-        $document = $node instanceof DOMDocument ? $node : $node->ownerDocument;
+			$node = $document;
+		}
 
-        $document->formatOutput = true;
-        $document->normalizeDocument();
+		$document = $node instanceof DOMDocument ? $node : $node->ownerDocument;
 
-        $text = $node instanceof DOMDocument ? $node->saveXML() : $document->saveXML($node);
+		$document->formatOutput = true;
+		$document->normalizeDocument();
 
-        return $ignoreCase ? mb_strtolower($text, 'UTF-8') : $text;
-    }
+		$text = $node instanceof DOMDocument ? $node->saveXML() : $document->saveXML( $node );
+
+		return $ignoreCase ? mb_strtolower( $text, 'UTF-8' ) : $text;
+	}
 }

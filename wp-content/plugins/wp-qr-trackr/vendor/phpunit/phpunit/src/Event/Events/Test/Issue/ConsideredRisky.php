@@ -20,51 +20,46 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ConsideredRisky implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
-    private readonly Code\Test $test;
+final class ConsideredRisky implements Event {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $message;
+	private readonly Telemetry\Info $telemetryInfo;
+	private readonly Code\Test $test;
 
-    /**
-     * @psalm-param non-empty-string $message
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, Code\Test $test, string $message)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->test          = $test;
-        $this->message       = $message;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $message;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param non-empty-string $message
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, Code\Test $test, string $message ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->test          = $test;
+		$this->message       = $message;
+	}
 
-    public function test(): Code\Test
-    {
-        return $this->test;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function message(): string
-    {
-        return $this->message;
-    }
+	public function test(): Code\Test {
+		return $this->test;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            'Test Considered Risky (%s)%s%s',
-            $this->test->id(),
-            PHP_EOL,
-            $this->message,
-        );
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function message(): string {
+		return $this->message;
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'Test Considered Risky (%s)%s%s',
+			$this->test->id(),
+			PHP_EOL,
+			$this->message,
+		);
+	}
 }

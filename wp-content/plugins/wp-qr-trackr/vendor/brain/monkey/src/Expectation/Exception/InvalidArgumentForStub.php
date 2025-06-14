@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -15,7 +15,7 @@ namespace Brain\Monkey\Expectation\Exception;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class InvalidArgumentForStub extends Exception
-{
+class InvalidArgumentForStub extends Exception {
+
 
 }

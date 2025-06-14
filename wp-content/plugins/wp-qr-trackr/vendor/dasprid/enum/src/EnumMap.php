@@ -22,364 +22,362 @@ use Traversable;
  * Iterators returned by the collection views are not consistent: They may or may not show the effects of modifications
  * to the map that occur while the iteration is in progress.
  */
-final class EnumMap implements Serializable, IteratorAggregate
-{
-    /**
-     * The class name of the key.
-     *
-     * @var string
-     */
-    private $keyType;
+final class EnumMap implements Serializable, IteratorAggregate {
 
-    /**
-     * The type of the value.
-     *
-     * @var string
-     */
-    private $valueType;
+	/**
+	 * The class name of the key.
+	 *
+	 * @var string
+	 */
+	private $keyType;
 
-    /**
-     * @var bool
-     */
-    private $allowNullValues;
+	/**
+	 * The type of the value.
+	 *
+	 * @var string
+	 */
+	private $valueType;
 
-    /**
-     * All of the constants comprising the enum, cached for performance.
-     *
-     * @var array<int, AbstractEnum>
-     */
-    private $keyUniverse;
+	/**
+	 * @var bool
+	 */
+	private $allowNullValues;
 
-    /**
-     * Array representation of this map. The ith element is the value to which universe[i] is currently mapped, or null
-     * if it isn't mapped to anything, or NullValue if it's mapped to null.
-     *
-     * @var array<int, mixed>
-     */
-    private $values;
+	/**
+	 * All of the constants comprising the enum, cached for performance.
+	 *
+	 * @var array<int, AbstractEnum>
+	 */
+	private $keyUniverse;
 
-    /**
-     * @var int
-     */
-    private $size = 0;
+	/**
+	 * Array representation of this map. The ith element is the value to which universe[i] is currently mapped, or null
+	 * if it isn't mapped to anything, or NullValue if it's mapped to null.
+	 *
+	 * @var array<int, mixed>
+	 */
+	private $values;
 
-    /**
-     * Creates a new enum map.
-     *
-     * @param string $keyType the type of the keys, must extend AbstractEnum
-     * @param string $valueType the type of the values
-     * @param bool $allowNullValues whether to allow null values
-     * @throws IllegalArgumentException when key type does not extend AbstractEnum
-     */
-    public function __construct(string $keyType, string $valueType, bool $allowNullValues)
-    {
-        if (! is_subclass_of($keyType, AbstractEnum::class)) {
-            throw new IllegalArgumentException(sprintf(
-                'Class %s does not extend %s',
-                $keyType,
-                AbstractEnum::class
-            ));
-        }
+	/**
+	 * @var int
+	 */
+	private $size = 0;
 
-        $this->keyType = $keyType;
-        $this->valueType = $valueType;
-        $this->allowNullValues = $allowNullValues;
-        $this->keyUniverse = $keyType::values();
-        $this->values = array_fill(0, count($this->keyUniverse), null);
-    }
+	/**
+	 * Creates a new enum map.
+	 *
+	 * @param string $keyType the type of the keys, must extend AbstractEnum
+	 * @param string $valueType the type of the values
+	 * @param bool   $allowNullValues whether to allow null values
+	 * @throws IllegalArgumentException when key type does not extend AbstractEnum
+	 */
+	public function __construct( string $keyType, string $valueType, bool $allowNullValues ) {
+		if ( ! is_subclass_of( $keyType, AbstractEnum::class ) ) {
+			throw new IllegalArgumentException(
+				sprintf(
+					'Class %s does not extend %s',
+					$keyType,
+					AbstractEnum::class
+				)
+			);
+		}
 
-    public function __serialize(): array
-    {
-        $values = [];
+		$this->keyType         = $keyType;
+		$this->valueType       = $valueType;
+		$this->allowNullValues = $allowNullValues;
+		$this->keyUniverse     = $keyType::values();
+		$this->values          = array_fill( 0, count( $this->keyUniverse ), null );
+	}
 
-        foreach ($this->values as $ordinal => $value) {
-            if (null === $value) {
-                continue;
-            }
+	public function __serialize(): array {
+		$values = array();
 
-            $values[$ordinal] = $this->unmaskNull($value);
-        }
+		foreach ( $this->values as $ordinal => $value ) {
+			if ( null === $value ) {
+				continue;
+			}
 
-        return [
-            'keyType' => $this->keyType,
-            'valueType' => $this->valueType,
-            'allowNullValues' => $this->allowNullValues,
-            'values' => $values,
-        ];
-    }
+			$values[ $ordinal ] = $this->unmaskNull( $value );
+		}
 
-    public function __unserialize(array $data): void
-    {
-        $this->unserialize(serialize($data));
-    }
+		return array(
+			'keyType'         => $this->keyType,
+			'valueType'       => $this->valueType,
+			'allowNullValues' => $this->allowNullValues,
+			'values'          => $values,
+		);
+	}
 
-    /**
-     * Checks whether the map types match the supplied ones.
-     *
-     * You should call this method when an EnumMap is passed to you and you want to ensure that it's made up of the
-     * correct types.
-     *
-     * @throws ExpectationException when supplied key type mismatches local key type
-     * @throws ExpectationException when supplied value type mismatches local value type
-     * @throws ExpectationException when the supplied map allows null values, abut should not
-     */
-    public function expect(string $keyType, string $valueType, bool $allowNullValues) : void
-    {
-        if ($keyType !== $this->keyType) {
-            throw new ExpectationException(sprintf(
-                'Callee expected an EnumMap with key type %s, but got %s',
-                $keyType,
-                $this->keyType
-            ));
-        }
+	public function __unserialize( array $data ): void {
+		$this->unserialize( serialize( $data ) );
+	}
 
-        if ($valueType !== $this->valueType) {
-            throw new ExpectationException(sprintf(
-                'Callee expected an EnumMap with value type %s, but got %s',
-                $keyType,
-                $this->keyType
-            ));
-        }
+	/**
+	 * Checks whether the map types match the supplied ones.
+	 *
+	 * You should call this method when an EnumMap is passed to you and you want to ensure that it's made up of the
+	 * correct types.
+	 *
+	 * @throws ExpectationException when supplied key type mismatches local key type
+	 * @throws ExpectationException when supplied value type mismatches local value type
+	 * @throws ExpectationException when the supplied map allows null values, abut should not
+	 */
+	public function expect( string $keyType, string $valueType, bool $allowNullValues ): void {
+		if ( $keyType !== $this->keyType ) {
+			throw new ExpectationException(
+				sprintf(
+					'Callee expected an EnumMap with key type %s, but got %s',
+					$keyType,
+					$this->keyType
+				)
+			);
+		}
 
-        if ($allowNullValues !== $this->allowNullValues) {
-            throw new ExpectationException(sprintf(
-                'Callee expected an EnumMap with nullable flag %s, but got %s',
-                ($allowNullValues ? 'true' : 'false'),
-                ($this->allowNullValues ? 'true' : 'false')
-            ));
-        }
-    }
+		if ( $valueType !== $this->valueType ) {
+			throw new ExpectationException(
+				sprintf(
+					'Callee expected an EnumMap with value type %s, but got %s',
+					$keyType,
+					$this->keyType
+				)
+			);
+		}
 
-    /**
-     * Returns the number of key-value mappings in this map.
-     */
-    public function size() : int
-    {
-        return $this->size;
-    }
+		if ( $allowNullValues !== $this->allowNullValues ) {
+			throw new ExpectationException(
+				sprintf(
+					'Callee expected an EnumMap with nullable flag %s, but got %s',
+					( $allowNullValues ? 'true' : 'false' ),
+					( $this->allowNullValues ? 'true' : 'false' )
+				)
+			);
+		}
+	}
 
-    /**
-     * Returns true if this map maps one or more keys to the specified value.
-     */
-    public function containsValue($value) : bool
-    {
-        return in_array($this->maskNull($value), $this->values, true);
-    }
+	/**
+	 * Returns the number of key-value mappings in this map.
+	 */
+	public function size(): int {
+		return $this->size;
+	}
 
-    /**
-     * Returns true if this map contains a mapping for the specified key.
-     */
-    public function containsKey(AbstractEnum $key) : bool
-    {
-        $this->checkKeyType($key);
-        return null !== $this->values[$key->ordinal()];
-    }
+	/**
+	 * Returns true if this map maps one or more keys to the specified value.
+	 */
+	public function containsValue( $value ): bool {
+		return in_array( $this->maskNull( $value ), $this->values, true );
+	}
 
-    /**
-     * Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.
-     *
-     * More formally, if this map contains a mapping from a key to a value, then this method returns the value;
-     * otherwise it returns null (there can be at most one such mapping).
-     *
-     * A return value of null does not necessarily indicate that the map contains no mapping for the key; it's also
-     * possible that hte map explicitly maps the key to null. The {@see self::containsKey()} operation may be used to
-     * distinguish these two cases.
-     *
-     * @return mixed
-     */
-    public function get(AbstractEnum $key)
-    {
-        $this->checkKeyType($key);
-        return $this->unmaskNull($this->values[$key->ordinal()]);
-    }
+	/**
+	 * Returns true if this map contains a mapping for the specified key.
+	 */
+	public function containsKey( AbstractEnum $key ): bool {
+		$this->checkKeyType( $key );
+		return null !== $this->values[ $key->ordinal() ];
+	}
 
-    /**
-     * Associates the specified value with the specified key in this map.
-     *
-     * If the map previously contained a mapping for this key, the old value is replaced.
-     *
-     * @return mixed the previous value associated with the specified key, or null if there was no mapping for the key.
-     *               (a null return can also indicate that the map previously associated null with the specified key.)
-     * @throws IllegalArgumentException when the passed values does not match the internal value type
-     */
-    public function put(AbstractEnum $key, $value)
-    {
-        $this->checkKeyType($key);
+	/**
+	 * Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.
+	 *
+	 * More formally, if this map contains a mapping from a key to a value, then this method returns the value;
+	 * otherwise it returns null (there can be at most one such mapping).
+	 *
+	 * A return value of null does not necessarily indicate that the map contains no mapping for the key; it's also
+	 * possible that hte map explicitly maps the key to null. The {@see self::containsKey()} operation may be used to
+	 * distinguish these two cases.
+	 *
+	 * @return mixed
+	 */
+	public function get( AbstractEnum $key ) {
+		$this->checkKeyType( $key );
+		return $this->unmaskNull( $this->values[ $key->ordinal() ] );
+	}
 
-        if (! $this->isValidValue($value)) {
-            throw new IllegalArgumentException(sprintf('Value is not of type %s', $this->valueType));
-        }
+	/**
+	 * Associates the specified value with the specified key in this map.
+	 *
+	 * If the map previously contained a mapping for this key, the old value is replaced.
+	 *
+	 * @return mixed the previous value associated with the specified key, or null if there was no mapping for the key.
+	 *               (a null return can also indicate that the map previously associated null with the specified key.)
+	 * @throws IllegalArgumentException when the passed values does not match the internal value type
+	 */
+	public function put( AbstractEnum $key, $value ) {
+		$this->checkKeyType( $key );
 
-        $index = $key->ordinal();
-        $oldValue = $this->values[$index];
-        $this->values[$index] = $this->maskNull($value);
+		if ( ! $this->isValidValue( $value ) ) {
+			throw new IllegalArgumentException( sprintf( 'Value is not of type %s', $this->valueType ) );
+		}
 
-        if (null === $oldValue) {
-            ++$this->size;
-        }
+		$index                  = $key->ordinal();
+		$oldValue               = $this->values[ $index ];
+		$this->values[ $index ] = $this->maskNull( $value );
 
-        return $this->unmaskNull($oldValue);
-    }
+		if ( null === $oldValue ) {
+			++$this->size;
+		}
 
-    /**
-     * Removes the mapping for this key frm this map if present.
-     *
-     * @return mixed the previous value associated with the specified key, or null if there was no mapping for the key.
-     *               (a null return can also indicate that the map previously associated null with the specified key.)
-     */
-    public function remove(AbstractEnum $key)
-    {
-        $this->checkKeyType($key);
+		return $this->unmaskNull( $oldValue );
+	}
 
-        $index = $key->ordinal();
-        $oldValue = $this->values[$index];
-        $this->values[$index] = null;
+	/**
+	 * Removes the mapping for this key frm this map if present.
+	 *
+	 * @return mixed the previous value associated with the specified key, or null if there was no mapping for the key.
+	 *               (a null return can also indicate that the map previously associated null with the specified key.)
+	 */
+	public function remove( AbstractEnum $key ) {
+		$this->checkKeyType( $key );
 
-        if (null !== $oldValue) {
-            --$this->size;
-        }
+		$index                  = $key->ordinal();
+		$oldValue               = $this->values[ $index ];
+		$this->values[ $index ] = null;
 
-        return $this->unmaskNull($oldValue);
-    }
+		if ( null !== $oldValue ) {
+			--$this->size;
+		}
 
-    /**
-     * Removes all mappings from this map.
-     */
-    public function clear() : void
-    {
-        $this->values = array_fill(0, count($this->keyUniverse), null);
-        $this->size = 0;
-    }
+		return $this->unmaskNull( $oldValue );
+	}
 
-    /**
-     * Compares the specified map with this map for quality.
-     *
-     * Returns true if the two maps represent the same mappings.
-     */
-    public function equals(self $other) : bool
-    {
-        if ($this === $other) {
-            return true;
-        }
+	/**
+	 * Removes all mappings from this map.
+	 */
+	public function clear(): void {
+		$this->values = array_fill( 0, count( $this->keyUniverse ), null );
+		$this->size   = 0;
+	}
 
-        if ($this->size !== $other->size) {
-            return false;
-        }
+	/**
+	 * Compares the specified map with this map for quality.
+	 *
+	 * Returns true if the two maps represent the same mappings.
+	 */
+	public function equals( self $other ): bool {
+		if ( $this === $other ) {
+			return true;
+		}
 
-        return $this->values === $other->values;
-    }
+		if ( $this->size !== $other->size ) {
+			return false;
+		}
 
-    /**
-     * Returns the values contained in this map.
-     *
-     * The array will contain the values in the order their corresponding keys appear in the map, which is their natural
-     * order (the order in which the num constants are declared).
-     */
-    public function values() : array
-    {
-        return array_values(array_map(function ($value) {
-            return $this->unmaskNull($value);
-        }, array_filter($this->values, function ($value) : bool {
-            return null !== $value;
-        })));
-    }
+		return $this->values === $other->values;
+	}
 
-    public function serialize() : string
-    {
-        return serialize($this->__serialize());
-    }
+	/**
+	 * Returns the values contained in this map.
+	 *
+	 * The array will contain the values in the order their corresponding keys appear in the map, which is their natural
+	 * order (the order in which the num constants are declared).
+	 */
+	public function values(): array {
+		return array_values(
+			array_map(
+				function ( $value ) {
+					return $this->unmaskNull( $value );
+				},
+				array_filter(
+					$this->values,
+					function ( $value ): bool {
+						return null !== $value;
+					}
+				)
+			)
+		);
+	}
 
-    public function unserialize($serialized) : void
-    {
-        $data = unserialize($serialized);
-        $this->__construct($data['keyType'], $data['valueType'], $data['allowNullValues']);
+	public function serialize(): string {
+		return serialize( $this->__serialize() );
+	}
 
-        foreach ($this->keyUniverse as $key) {
-            if (array_key_exists($key->ordinal(), $data['values'])) {
-                $this->put($key, $data['values'][$key->ordinal()]);
-            }
-        }
-    }
+	public function unserialize( $serialized ): void {
+		$data = unserialize( $serialized );
+		$this->__construct( $data['keyType'], $data['valueType'], $data['allowNullValues'] );
 
-    public function getIterator() : Traversable
-    {
-        foreach ($this->keyUniverse as $key) {
-            if (null === $this->values[$key->ordinal()]) {
-                continue;
-            }
+		foreach ( $this->keyUniverse as $key ) {
+			if ( array_key_exists( $key->ordinal(), $data['values'] ) ) {
+				$this->put( $key, $data['values'][ $key->ordinal() ] );
+			}
+		}
+	}
 
-            yield $key => $this->unmaskNull($this->values[$key->ordinal()]);
-        }
-    }
+	public function getIterator(): Traversable {
+		foreach ( $this->keyUniverse as $key ) {
+			if ( null === $this->values[ $key->ordinal() ] ) {
+				continue;
+			}
 
-    private function maskNull($value)
-    {
-        if (null === $value) {
-            return NullValue::instance();
-        }
+			yield $key => $this->unmaskNull( $this->values[ $key->ordinal() ] );
+		}
+	}
 
-        return $value;
-    }
+	private function maskNull( $value ) {
+		if ( null === $value ) {
+			return NullValue::instance();
+		}
 
-    private function unmaskNull($value)
-    {
-        if ($value instanceof NullValue) {
-            return null;
-        }
+		return $value;
+	}
 
-        return $value;
-    }
+	private function unmaskNull( $value ) {
+		if ( $value instanceof NullValue ) {
+			return null;
+		}
 
-    /**
-     * @throws IllegalArgumentException when the passed key does not match the internal key type
-     */
-    private function checkKeyType(AbstractEnum $key) : void
-    {
-        if (get_class($key) !== $this->keyType) {
-            throw new IllegalArgumentException(sprintf(
-                'Object of type %s is not the same type as %s',
-                get_class($key),
-                $this->keyType
-            ));
-        }
-    }
+		return $value;
+	}
 
-    private function isValidValue($value) : bool
-    {
-        if (null === $value) {
-            if ($this->allowNullValues) {
-                return true;
-            }
+	/**
+	 * @throws IllegalArgumentException when the passed key does not match the internal key type
+	 */
+	private function checkKeyType( AbstractEnum $key ): void {
+		if ( get_class( $key ) !== $this->keyType ) {
+			throw new IllegalArgumentException(
+				sprintf(
+					'Object of type %s is not the same type as %s',
+					get_class( $key ),
+					$this->keyType
+				)
+			);
+		}
+	}
 
-            return false;
-        }
+	private function isValidValue( $value ): bool {
+		if ( null === $value ) {
+			if ( $this->allowNullValues ) {
+				return true;
+			}
 
-        switch ($this->valueType) {
-            case 'mixed':
-                return true;
+			return false;
+		}
 
-            case 'bool':
-            case 'boolean':
-                return is_bool($value);
+		switch ( $this->valueType ) {
+			case 'mixed':
+				return true;
 
-            case 'int':
-            case 'integer':
-                return is_int($value);
+			case 'bool':
+			case 'boolean':
+				return is_bool( $value );
 
-            case 'float':
-            case 'double':
-                return is_float($value);
+			case 'int':
+			case 'integer':
+				return is_int( $value );
 
-            case 'string':
-                return is_string($value);
+			case 'float':
+			case 'double':
+				return is_float( $value );
 
-            case 'object':
-                return is_object($value);
+			case 'string':
+				return is_string( $value );
 
-            case 'array':
-                return is_array($value);
-        }
+			case 'object':
+				return is_object( $value );
 
-        return $value instanceof $this->valueType;
-    }
+			case 'array':
+				return is_array( $value );
+		}
+
+		return $value instanceof $this->valueType;
+	}
 }

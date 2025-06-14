@@ -20,46 +20,41 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Skipped implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
-    private readonly Code\Test $test;
-    private readonly string $message;
+final class Skipped implements Event {
 
-    public function __construct(Telemetry\Info $telemetryInfo, Code\Test $test, string $message)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->test          = $test;
-        $this->message       = $message;
-    }
+	private readonly Telemetry\Info $telemetryInfo;
+	private readonly Code\Test $test;
+	private readonly string $message;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	public function __construct( Telemetry\Info $telemetryInfo, Code\Test $test, string $message ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->test          = $test;
+		$this->message       = $message;
+	}
 
-    public function test(): Code\Test
-    {
-        return $this->test;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function message(): string
-    {
-        return $this->message;
-    }
+	public function test(): Code\Test {
+		return $this->test;
+	}
 
-    public function asString(): string
-    {
-        $message = $this->message;
+	public function message(): string {
+		return $this->message;
+	}
 
-        if (!empty($message)) {
-            $message = PHP_EOL . $message;
-        }
+	public function asString(): string {
+		$message = $this->message;
 
-        return sprintf(
-            'Test Skipped (%s)%s',
-            $this->test->id(),
-            $message,
-        );
-    }
+		if ( ! empty( $message ) ) {
+			$message = PHP_EOL . $message;
+		}
+
+		return sprintf(
+			'Test Skipped (%s)%s',
+			$this->test->id(),
+			$message,
+		);
+	}
 }

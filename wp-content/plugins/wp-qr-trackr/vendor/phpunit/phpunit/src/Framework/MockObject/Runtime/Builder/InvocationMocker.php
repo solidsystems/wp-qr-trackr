@@ -45,281 +45,263 @@ use Throwable;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class InvocationMocker implements InvocationStubber, MethodNameMatch
-{
-    private readonly InvocationHandler $invocationHandler;
-    private readonly Matcher $matcher;
+final class InvocationMocker implements InvocationStubber, MethodNameMatch {
 
-    /**
-     * @psalm-var list<ConfigurableMethod>
-     */
-    private readonly array $configurableMethods;
+	private readonly InvocationHandler $invocationHandler;
+	private readonly Matcher $matcher;
 
-    /**
-     * @psalm-var ?array<string, int>
-     */
-    private ?array $configurableMethodNames = null;
+	/**
+	 * @psalm-var list<ConfigurableMethod>
+	 */
+	private readonly array $configurableMethods;
 
-    public function __construct(InvocationHandler $handler, Matcher $matcher, ConfigurableMethod ...$configurableMethods)
-    {
-        $this->invocationHandler   = $handler;
-        $this->matcher             = $matcher;
-        $this->configurableMethods = $configurableMethods;
-    }
+	/**
+	 * @psalm-var ?array<string, int>
+	 */
+	private ?array $configurableMethodNames = null;
 
-    /**
-     * @throws MatcherAlreadyRegisteredException
-     *
-     * @return $this
-     */
-    public function id(string $id): self
-    {
-        $this->invocationHandler->registerMatcher($id, $this->matcher);
+	public function __construct( InvocationHandler $handler, Matcher $matcher, ConfigurableMethod ...$configurableMethods ) {
+		$this->invocationHandler   = $handler;
+		$this->matcher             = $matcher;
+		$this->configurableMethods = $configurableMethods;
+	}
 
-        return $this;
-    }
+	/**
+	 * @throws MatcherAlreadyRegisteredException
+	 *
+	 * @return $this
+	 */
+	public function id( string $id ): self {
+		$this->invocationHandler->registerMatcher( $id, $this->matcher );
 
-    /**
-     * @return $this
-     */
-    public function will(Stub $stub): Identity
-    {
-        $this->matcher->setStub($stub);
+		return $this;
+	}
 
-        return $this;
-    }
+	/**
+	 * @return $this
+	 */
+	public function will( Stub $stub ): Identity {
+		$this->matcher->setStub( $stub );
 
-    /**
-     * @throws IncompatibleReturnValueException
-     */
-    public function willReturn(mixed $value, mixed ...$nextValues): self
-    {
-        if (count($nextValues) === 0) {
-            $this->ensureTypeOfReturnValues([$value]);
+		return $this;
+	}
 
-            $stub = $value instanceof Stub ? $value : new ReturnStub($value);
+	/**
+	 * @throws IncompatibleReturnValueException
+	 */
+	public function willReturn( mixed $value, mixed ...$nextValues ): self {
+		if ( count( $nextValues ) === 0 ) {
+			$this->ensureTypeOfReturnValues( array( $value ) );
 
-            return $this->will($stub);
-        }
+			$stub = $value instanceof Stub ? $value : new ReturnStub( $value );
 
-        $values = array_merge([$value], $nextValues);
+			return $this->will( $stub );
+		}
 
-        $this->ensureTypeOfReturnValues($values);
+		$values = array_merge( array( $value ), $nextValues );
 
-        $stub = new ConsecutiveCalls($values);
+		$this->ensureTypeOfReturnValues( $values );
 
-        return $this->will($stub);
-    }
+		$stub = new ConsecutiveCalls( $values );
 
-    public function willReturnReference(mixed &$reference): self
-    {
-        $stub = new ReturnReference($reference);
+		return $this->will( $stub );
+	}
 
-        return $this->will($stub);
-    }
+	public function willReturnReference( mixed &$reference ): self {
+		$stub = new ReturnReference( $reference );
 
-    public function willReturnMap(array $valueMap): self
-    {
-        $method = $this->configuredMethod();
+		return $this->will( $stub );
+	}
 
-        assert($method instanceof ConfigurableMethod);
+	public function willReturnMap( array $valueMap ): self {
+		$method = $this->configuredMethod();
 
-        $numberOfParameters = $method->numberOfParameters();
-        $defaultValues      = $method->defaultParameterValues();
-        $hasDefaultValues   = !empty($defaultValues);
+		assert( $method instanceof ConfigurableMethod );
 
-        $_valueMap = [];
+		$numberOfParameters = $method->numberOfParameters();
+		$defaultValues      = $method->defaultParameterValues();
+		$hasDefaultValues   = ! empty( $defaultValues );
 
-        foreach ($valueMap as $mapping) {
-            $numberOfConfiguredParameters = count($mapping) - 1;
+		$_valueMap = array();
 
-            if ($numberOfConfiguredParameters === $numberOfParameters || !$hasDefaultValues) {
-                $_valueMap[] = $mapping;
+		foreach ( $valueMap as $mapping ) {
+			$numberOfConfiguredParameters = count( $mapping ) - 1;
 
-                continue;
-            }
+			if ( $numberOfConfiguredParameters === $numberOfParameters || ! $hasDefaultValues ) {
+				$_valueMap[] = $mapping;
 
-            $_mapping    = [];
-            $returnValue = array_pop($mapping);
+				continue;
+			}
 
-            foreach (range(0, $numberOfParameters - 1) as $i) {
-                if (isset($mapping[$i])) {
-                    $_mapping[] = $mapping[$i];
+			$_mapping    = array();
+			$returnValue = array_pop( $mapping );
 
-                    continue;
-                }
+			foreach ( range( 0, $numberOfParameters - 1 ) as $i ) {
+				if ( isset( $mapping[ $i ] ) ) {
+					$_mapping[] = $mapping[ $i ];
 
-                if (isset($defaultValues[$i])) {
-                    $_mapping[] = $defaultValues[$i];
-                }
-            }
+					continue;
+				}
 
-            $_mapping[]  = $returnValue;
-            $_valueMap[] = $_mapping;
-        }
+				if ( isset( $defaultValues[ $i ] ) ) {
+					$_mapping[] = $defaultValues[ $i ];
+				}
+			}
 
-        $stub = new ReturnValueMap($_valueMap);
+			$_mapping[]  = $returnValue;
+			$_valueMap[] = $_mapping;
+		}
 
-        return $this->will($stub);
-    }
+		$stub = new ReturnValueMap( $_valueMap );
 
-    public function willReturnArgument(int $argumentIndex): self
-    {
-        $stub = new ReturnArgument($argumentIndex);
+		return $this->will( $stub );
+	}
 
-        return $this->will($stub);
-    }
+	public function willReturnArgument( int $argumentIndex ): self {
+		$stub = new ReturnArgument( $argumentIndex );
 
-    public function willReturnCallback(callable $callback): self
-    {
-        $stub = new ReturnCallback($callback);
+		return $this->will( $stub );
+	}
 
-        return $this->will($stub);
-    }
+	public function willReturnCallback( callable $callback ): self {
+		$stub = new ReturnCallback( $callback );
 
-    public function willReturnSelf(): self
-    {
-        $stub = new ReturnSelf;
+		return $this->will( $stub );
+	}
 
-        return $this->will($stub);
-    }
+	public function willReturnSelf(): self {
+		$stub = new ReturnSelf();
 
-    public function willReturnOnConsecutiveCalls(mixed ...$values): self
-    {
-        $stub = new ConsecutiveCalls($values);
+		return $this->will( $stub );
+	}
 
-        return $this->will($stub);
-    }
+	public function willReturnOnConsecutiveCalls( mixed ...$values ): self {
+		$stub = new ConsecutiveCalls( $values );
 
-    public function willThrowException(Throwable $exception): self
-    {
-        $stub = new Exception($exception);
+		return $this->will( $stub );
+	}
 
-        return $this->will($stub);
-    }
+	public function willThrowException( Throwable $exception ): self {
+		$stub = new Exception( $exception );
 
-    /**
-     * @return $this
-     */
-    public function after(string $id): self
-    {
-        $this->matcher->setAfterMatchBuilderId($id);
+		return $this->will( $stub );
+	}
 
-        return $this;
-    }
+	/**
+	 * @return $this
+	 */
+	public function after( string $id ): self {
+		$this->matcher->setAfterMatchBuilderId( $id );
 
-    /**
-     * @throws \PHPUnit\Framework\Exception
-     * @throws MethodNameNotConfiguredException
-     * @throws MethodParametersAlreadyConfiguredException
-     *
-     * @return $this
-     */
-    public function with(mixed ...$arguments): self
-    {
-        $this->ensureParametersCanBeConfigured();
+		return $this;
+	}
 
-        $this->matcher->setParametersRule(new Rule\Parameters($arguments));
+	/**
+	 * @throws \PHPUnit\Framework\Exception
+	 * @throws MethodNameNotConfiguredException
+	 * @throws MethodParametersAlreadyConfiguredException
+	 *
+	 * @return $this
+	 */
+	public function with( mixed ...$arguments ): self {
+		$this->ensureParametersCanBeConfigured();
 
-        return $this;
-    }
+		$this->matcher->setParametersRule( new Rule\Parameters( $arguments ) );
 
-    /**
-     * @throws MethodNameNotConfiguredException
-     * @throws MethodParametersAlreadyConfiguredException
-     *
-     * @return $this
-     */
-    public function withAnyParameters(): self
-    {
-        $this->ensureParametersCanBeConfigured();
+		return $this;
+	}
 
-        $this->matcher->setParametersRule(new Rule\AnyParameters);
+	/**
+	 * @throws MethodNameNotConfiguredException
+	 * @throws MethodParametersAlreadyConfiguredException
+	 *
+	 * @return $this
+	 */
+	public function withAnyParameters(): self {
+		$this->ensureParametersCanBeConfigured();
 
-        return $this;
-    }
+		$this->matcher->setParametersRule( new Rule\AnyParameters() );
 
-    /**
-     * @throws InvalidArgumentException
-     * @throws MethodCannotBeConfiguredException
-     * @throws MethodNameAlreadyConfiguredException
-     *
-     * @return $this
-     */
-    public function method(Constraint|string $constraint): self
-    {
-        if ($this->matcher->hasMethodNameRule()) {
-            throw new MethodNameAlreadyConfiguredException;
-        }
+		return $this;
+	}
 
-        if (is_string($constraint)) {
-            $this->configurableMethodNames ??= array_flip(
-                array_map(
-                    static fn (ConfigurableMethod $configurable) => strtolower($configurable->name()),
-                    $this->configurableMethods,
-                ),
-            );
+	/**
+	 * @throws InvalidArgumentException
+	 * @throws MethodCannotBeConfiguredException
+	 * @throws MethodNameAlreadyConfiguredException
+	 *
+	 * @return $this
+	 */
+	public function method( Constraint|string $constraint ): self {
+		if ( $this->matcher->hasMethodNameRule() ) {
+			throw new MethodNameAlreadyConfiguredException();
+		}
 
-            if (!array_key_exists(strtolower($constraint), $this->configurableMethodNames)) {
-                throw new MethodCannotBeConfiguredException($constraint);
-            }
-        }
+		if ( is_string( $constraint ) ) {
+			$this->configurableMethodNames ??= array_flip(
+				array_map(
+					static fn ( ConfigurableMethod $configurable ) => strtolower( $configurable->name() ),
+					$this->configurableMethods,
+				),
+			);
 
-        $this->matcher->setMethodNameRule(new Rule\MethodName($constraint));
+			if ( ! array_key_exists( strtolower( $constraint ), $this->configurableMethodNames ) ) {
+				throw new MethodCannotBeConfiguredException( $constraint );
+			}
+		}
 
-        return $this;
-    }
+		$this->matcher->setMethodNameRule( new Rule\MethodName( $constraint ) );
 
-    /**
-     * @throws MethodNameNotConfiguredException
-     * @throws MethodParametersAlreadyConfiguredException
-     */
-    private function ensureParametersCanBeConfigured(): void
-    {
-        if (!$this->matcher->hasMethodNameRule()) {
-            throw new MethodNameNotConfiguredException;
-        }
+		return $this;
+	}
 
-        if ($this->matcher->hasParametersRule()) {
-            throw new MethodParametersAlreadyConfiguredException;
-        }
-    }
+	/**
+	 * @throws MethodNameNotConfiguredException
+	 * @throws MethodParametersAlreadyConfiguredException
+	 */
+	private function ensureParametersCanBeConfigured(): void {
+		if ( ! $this->matcher->hasMethodNameRule() ) {
+			throw new MethodNameNotConfiguredException();
+		}
 
-    private function configuredMethod(): ?ConfigurableMethod
-    {
-        $configuredMethod = null;
+		if ( $this->matcher->hasParametersRule() ) {
+			throw new MethodParametersAlreadyConfiguredException();
+		}
+	}
 
-        foreach ($this->configurableMethods as $configurableMethod) {
-            if ($this->matcher->methodNameRule()->matchesName($configurableMethod->name())) {
-                if ($configuredMethod !== null) {
-                    return null;
-                }
+	private function configuredMethod(): ?ConfigurableMethod {
+		$configuredMethod = null;
 
-                $configuredMethod = $configurableMethod;
-            }
-        }
+		foreach ( $this->configurableMethods as $configurableMethod ) {
+			if ( $this->matcher->methodNameRule()->matchesName( $configurableMethod->name() ) ) {
+				if ( $configuredMethod !== null ) {
+					return null;
+				}
 
-        return $configuredMethod;
-    }
+				$configuredMethod = $configurableMethod;
+			}
+		}
 
-    /**
-     * @throws IncompatibleReturnValueException
-     */
-    private function ensureTypeOfReturnValues(array $values): void
-    {
-        $configuredMethod = $this->configuredMethod();
+		return $configuredMethod;
+	}
 
-        if ($configuredMethod === null) {
-            return;
-        }
+	/**
+	 * @throws IncompatibleReturnValueException
+	 */
+	private function ensureTypeOfReturnValues( array $values ): void {
+		$configuredMethod = $this->configuredMethod();
 
-        foreach ($values as $value) {
-            if (!$configuredMethod->mayReturn($value)) {
-                throw new IncompatibleReturnValueException(
-                    $configuredMethod,
-                    $value,
-                );
-            }
-        }
-    }
+		if ( $configuredMethod === null ) {
+			return;
+		}
+
+		foreach ( $values as $value ) {
+			if ( ! $configuredMethod->mayReturn( $value ) ) {
+				throw new IncompatibleReturnValueException(
+					$configuredMethod,
+					$value,
+				);
+			}
+		}
+	}
 }

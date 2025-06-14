@@ -21,64 +21,58 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class AfterLastTestMethodErrored implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
+final class AfterLastTestMethodErrored implements Event {
 
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $testClassName;
-    private readonly Code\ClassMethod $calledMethod;
-    private readonly Throwable $throwable;
+	private readonly Telemetry\Info $telemetryInfo;
 
-    /**
-     * @psalm-param class-string $testClassName
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod $calledMethod, Throwable $throwable)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->testClassName = $testClassName;
-        $this->calledMethod  = $calledMethod;
-        $this->throwable     = $throwable;
-    }
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $testClassName;
+	private readonly Code\ClassMethod $calledMethod;
+	private readonly Throwable $throwable;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param class-string $testClassName
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod $calledMethod, Throwable $throwable ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->testClassName = $testClassName;
+		$this->calledMethod  = $calledMethod;
+		$this->throwable     = $throwable;
+	}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function testClassName(): string
-    {
-        return $this->testClassName;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function calledMethod(): Code\ClassMethod
-    {
-        return $this->calledMethod;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function testClassName(): string {
+		return $this->testClassName;
+	}
 
-    public function throwable(): Throwable
-    {
-        return $this->throwable;
-    }
+	public function calledMethod(): Code\ClassMethod {
+		return $this->calledMethod;
+	}
 
-    public function asString(): string
-    {
-        $message = $this->throwable->message();
+	public function throwable(): Throwable {
+		return $this->throwable;
+	}
 
-        if (!empty($message)) {
-            $message = PHP_EOL . $message;
-        }
+	public function asString(): string {
+		$message = $this->throwable->message();
 
-        return sprintf(
-            'After Last Test Method Errored (%s::%s)%s',
-            $this->calledMethod->className(),
-            $this->calledMethod->methodName(),
-            $message,
-        );
-    }
+		if ( ! empty( $message ) ) {
+			$message = PHP_EOL . $message;
+		}
+
+		return sprintf(
+			'After Last Test Method Errored (%s::%s)%s',
+			$this->calledMethod->className(),
+			$this->calledMethod->methodName(),
+			$message,
+		);
+	}
 }

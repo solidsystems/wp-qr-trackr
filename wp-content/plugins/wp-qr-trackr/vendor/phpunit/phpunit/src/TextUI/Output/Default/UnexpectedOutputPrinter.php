@@ -16,23 +16,21 @@ use PHPUnit\Event\Test\PrintedUnexpectedOutputSubscriber;
 use PHPUnit\Event\UnknownSubscriberTypeException;
 use PHPUnit\TextUI\Output\Printer;
 
-final class UnexpectedOutputPrinter implements PrintedUnexpectedOutputSubscriber
-{
-    private readonly Printer $printer;
+final class UnexpectedOutputPrinter implements PrintedUnexpectedOutputSubscriber {
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
-    public function __construct(Printer $printer, Facade $facade)
-    {
-        $this->printer = $printer;
+	private readonly Printer $printer;
 
-        $facade->registerSubscriber($this);
-    }
+	/**
+	 * @throws EventFacadeIsSealedException
+	 * @throws UnknownSubscriberTypeException
+	 */
+	public function __construct( Printer $printer, Facade $facade ) {
+		$this->printer = $printer;
 
-    public function notify(PrintedUnexpectedOutput $event): void
-    {
-        $this->printer->print($event->output());
-    }
+		$facade->registerSubscriber( $this );
+	}
+
+	public function notify( PrintedUnexpectedOutput $event ): void {
+		$this->printer->print( $event->output() );
+	}
 }

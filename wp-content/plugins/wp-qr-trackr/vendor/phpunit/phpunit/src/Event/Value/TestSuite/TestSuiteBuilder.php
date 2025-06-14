@@ -26,87 +26,85 @@ use ReflectionMethod;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestSuiteBuilder
-{
-    /**
-     * @throws RuntimeException
-     */
-    public static function from(FrameworkTestSuite $testSuite): TestSuite
-    {
-        $tests = [];
+final class TestSuiteBuilder {
 
-        self::process($testSuite, $tests);
+	/**
+	 * @throws RuntimeException
+	 */
+	public static function from( FrameworkTestSuite $testSuite ): TestSuite {
+		$tests = array();
 
-        if ($testSuite instanceof DataProviderTestSuite) {
-            [$className, $methodName] = explode('::', $testSuite->name());
+		self::process( $testSuite, $tests );
 
-            try {
-                $reflector = new ReflectionMethod($className, $methodName);
+		if ( $testSuite instanceof DataProviderTestSuite ) {
+			[$className, $methodName] = explode( '::', $testSuite->name() );
 
-                return new TestSuiteForTestMethodWithDataProvider(
-                    $testSuite->name(),
-                    $testSuite->count(),
-                    TestCollection::fromArray($tests),
-                    $className,
-                    $methodName,
-                    $reflector->getFileName(),
-                    $reflector->getStartLine(),
-                );
-                // @codeCoverageIgnoreStart
-            } catch (ReflectionException $e) {
-                throw new RuntimeException(
-                    $e->getMessage(),
-                    $e->getCode(),
-                    $e,
-                );
-            }
-            // @codeCoverageIgnoreEnd
-        }
+			try {
+				$reflector = new ReflectionMethod( $className, $methodName );
 
-        if ($testSuite->isForTestClass()) {
-            try {
-                $reflector = new ReflectionClass($testSuite->name());
+				return new TestSuiteForTestMethodWithDataProvider(
+					$testSuite->name(),
+					$testSuite->count(),
+					TestCollection::fromArray( $tests ),
+					$className,
+					$methodName,
+					$reflector->getFileName(),
+					$reflector->getStartLine(),
+				);
+				// @codeCoverageIgnoreStart
+			} catch ( ReflectionException $e ) {
+				throw new RuntimeException(
+					$e->getMessage(),
+					$e->getCode(),
+					$e,
+				);
+			}
+			// @codeCoverageIgnoreEnd
+		}
 
-                return new TestSuiteForTestClass(
-                    $testSuite->name(),
-                    $testSuite->count(),
-                    TestCollection::fromArray($tests),
-                    $reflector->getFileName(),
-                    $reflector->getStartLine(),
-                );
-                // @codeCoverageIgnoreStart
-            } catch (ReflectionException $e) {
-                throw new RuntimeException(
-                    $e->getMessage(),
-                    $e->getCode(),
-                    $e,
-                );
-            }
-            // @codeCoverageIgnoreEnd
-        }
+		if ( $testSuite->isForTestClass() ) {
+			try {
+				$reflector = new ReflectionClass( $testSuite->name() );
 
-        return new TestSuiteWithName(
-            $testSuite->name(),
-            $testSuite->count(),
-            TestCollection::fromArray($tests),
-        );
-    }
+				return new TestSuiteForTestClass(
+					$testSuite->name(),
+					$testSuite->count(),
+					TestCollection::fromArray( $tests ),
+					$reflector->getFileName(),
+					$reflector->getStartLine(),
+				);
+				// @codeCoverageIgnoreStart
+			} catch ( ReflectionException $e ) {
+				throw new RuntimeException(
+					$e->getMessage(),
+					$e->getCode(),
+					$e,
+				);
+			}
+			// @codeCoverageIgnoreEnd
+		}
 
-    /**
-     * @psalm-param list<Test> $tests
-     */
-    private static function process(FrameworkTestSuite $testSuite, array &$tests): void
-    {
-        foreach ($testSuite->getIterator() as $test) {
-            if ($test instanceof FrameworkTestSuite) {
-                self::process($test, $tests);
+		return new TestSuiteWithName(
+			$testSuite->name(),
+			$testSuite->count(),
+			TestCollection::fromArray( $tests ),
+		);
+	}
 
-                continue;
-            }
+	/**
+	 * @psalm-param list<Test> $tests
+	 */
+	private static function process( FrameworkTestSuite $testSuite, array &$tests ): void {
+		foreach ( $testSuite->getIterator() as $test ) {
+			if ( $test instanceof FrameworkTestSuite ) {
+				self::process( $test, $tests );
 
-            if ($test instanceof TestCase || $test instanceof PhptTestCase) {
-                $tests[] = $test->valueObjectForEvents();
-            }
-        }
-    }
+				continue;
+			}
+
+			if ( $test instanceof TestCase || $test instanceof PhptTestCase ) {
+				$tests[] = $test->valueObjectForEvents();
+			}
+		}
+	}
 }

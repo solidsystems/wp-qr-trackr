@@ -17,63 +17,59 @@ use PHPUnit\Framework\UnknownClassOrInterfaceException;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsInstanceOf extends Constraint
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $name;
+final class IsInstanceOf extends Constraint {
 
-    /**
-     * @psalm-var 'class'|'interface'
-     */
-    private readonly string $type;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $name;
 
-    /**
-     * @throws UnknownClassOrInterfaceException
-     */
-    public function __construct(string $name)
-    {
-        if (class_exists($name)) {
-            $this->type = 'class';
-        } elseif (interface_exists($name)) {
-            $this->type = 'interface';
-        } else {
-            throw new UnknownClassOrInterfaceException($name);
-        }
+	/**
+	 * @psalm-var 'class'|'interface'
+	 */
+	private readonly string $type;
 
-        $this->name = $name;
-    }
+	/**
+	 * @throws UnknownClassOrInterfaceException
+	 */
+	public function __construct( string $name ) {
+		if ( class_exists( $name ) ) {
+			$this->type = 'class';
+		} elseif ( interface_exists( $name ) ) {
+			$this->type = 'interface';
+		} else {
+			throw new UnknownClassOrInterfaceException( $name );
+		}
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        return sprintf(
-            'is an instance of %s %s',
-            $this->type,
-            $this->name,
-        );
-    }
+		$this->name = $name;
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        return $other instanceof $this->name;
-    }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		return sprintf(
+			'is an instance of %s %s',
+			$this->type,
+			$this->name,
+		);
+	}
 
-    /**
-     * Returns the description of the failure.
-     *
-     * The beginning of failure messages is "Failed asserting that" in most
-     * cases. This method should return the second part of that sentence.
-     */
-    protected function failureDescription(mixed $other): string
-    {
-        return $this->valueToTypeStringFragment($other) . $this->toString(true);
-    }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		return $other instanceof $this->name;
+	}
+
+	/**
+	 * Returns the description of the failure.
+	 *
+	 * The beginning of failure messages is "Failed asserting that" in most
+	 * cases. This method should return the second part of that sentence.
+	 */
+	protected function failureDescription( mixed $other ): string {
+		return $this->valueToTypeStringFragment( $other ) . $this->toString( true );
+	}
 }

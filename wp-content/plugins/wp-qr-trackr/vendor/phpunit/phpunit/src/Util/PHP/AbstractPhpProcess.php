@@ -42,273 +42,259 @@ use SebastianBergmann\Environment\Runtime;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract class AbstractPhpProcess
-{
-    protected bool $stderrRedirection = false;
-    protected string $stdin           = '';
-    protected string $arguments       = '';
+abstract class AbstractPhpProcess {
 
-    /**
-     * @psalm-var array<string, string>
-     */
-    protected array $env = [];
+	protected bool $stderrRedirection = false;
+	protected string $stdin           = '';
+	protected string $arguments       = '';
 
-    public static function factory(): self
-    {
-        return new DefaultPhpProcess;
-    }
+	/**
+	 * @psalm-var array<string, string>
+	 */
+	protected array $env = array();
 
-    /**
-     * Defines if should use STDERR redirection or not.
-     *
-     * Then $stderrRedirection is TRUE, STDERR is redirected to STDOUT.
-     */
-    public function setUseStderrRedirection(bool $stderrRedirection): void
-    {
-        $this->stderrRedirection = $stderrRedirection;
-    }
+	public static function factory(): self {
+		return new DefaultPhpProcess();
+	}
 
-    /**
-     * Returns TRUE if uses STDERR redirection or FALSE if not.
-     */
-    public function useStderrRedirection(): bool
-    {
-        return $this->stderrRedirection;
-    }
+	/**
+	 * Defines if should use STDERR redirection or not.
+	 *
+	 * Then $stderrRedirection is TRUE, STDERR is redirected to STDOUT.
+	 */
+	public function setUseStderrRedirection( bool $stderrRedirection ): void {
+		$this->stderrRedirection = $stderrRedirection;
+	}
 
-    /**
-     * Sets the input string to be sent via STDIN.
-     */
-    public function setStdin(string $stdin): void
-    {
-        $this->stdin = $stdin;
-    }
+	/**
+	 * Returns TRUE if uses STDERR redirection or FALSE if not.
+	 */
+	public function useStderrRedirection(): bool {
+		return $this->stderrRedirection;
+	}
 
-    /**
-     * Returns the input string to be sent via STDIN.
-     */
-    public function getStdin(): string
-    {
-        return $this->stdin;
-    }
+	/**
+	 * Sets the input string to be sent via STDIN.
+	 */
+	public function setStdin( string $stdin ): void {
+		$this->stdin = $stdin;
+	}
 
-    /**
-     * Sets the string of arguments to pass to the php job.
-     */
-    public function setArgs(string $arguments): void
-    {
-        $this->arguments = $arguments;
-    }
+	/**
+	 * Returns the input string to be sent via STDIN.
+	 */
+	public function getStdin(): string {
+		return $this->stdin;
+	}
 
-    /**
-     * Returns the string of arguments to pass to the php job.
-     */
-    public function getArgs(): string
-    {
-        return $this->arguments;
-    }
+	/**
+	 * Sets the string of arguments to pass to the php job.
+	 */
+	public function setArgs( string $arguments ): void {
+		$this->arguments = $arguments;
+	}
 
-    /**
-     * Sets the array of environment variables to start the child process with.
-     *
-     * @psalm-param array<string, string> $env
-     */
-    public function setEnv(array $env): void
-    {
-        $this->env = $env;
-    }
+	/**
+	 * Returns the string of arguments to pass to the php job.
+	 */
+	public function getArgs(): string {
+		return $this->arguments;
+	}
 
-    /**
-     * Returns the array of environment variables to start the child process with.
-     */
-    public function getEnv(): array
-    {
-        return $this->env;
-    }
+	/**
+	 * Sets the array of environment variables to start the child process with.
+	 *
+	 * @psalm-param array<string, string> $env
+	 */
+	public function setEnv( array $env ): void {
+		$this->env = $env;
+	}
 
-    /**
-     * Runs a single test in a separate PHP process.
-     *
-     * @throws \PHPUnit\Runner\Exception
-     * @throws Exception
-     * @throws MoreThanOneDataSetFromDataProviderException
-     * @throws NoPreviousThrowableException
-     */
-    public function runTestJob(string $job, Test $test, string $processResultFile): void
-    {
-        $_result = $this->runJob($job);
+	/**
+	 * Returns the array of environment variables to start the child process with.
+	 */
+	public function getEnv(): array {
+		return $this->env;
+	}
 
-        $processResult = '';
+	/**
+	 * Runs a single test in a separate PHP process.
+	 *
+	 * @throws \PHPUnit\Runner\Exception
+	 * @throws Exception
+	 * @throws MoreThanOneDataSetFromDataProviderException
+	 * @throws NoPreviousThrowableException
+	 */
+	public function runTestJob( string $job, Test $test, string $processResultFile ): void {
+		$_result = $this->runJob( $job );
 
-        if (is_file($processResultFile)) {
-            $processResult = file_get_contents($processResultFile);
+		$processResult = '';
 
-            @unlink($processResultFile);
-        }
+		if ( is_file( $processResultFile ) ) {
+			$processResult = file_get_contents( $processResultFile );
 
-        $this->processChildResult(
-            $test,
-            $processResult,
-            $_result['stderr'],
-        );
-    }
+			@unlink( $processResultFile );
+		}
 
-    /**
-     * Returns the command based into the configurations.
-     *
-     * @return string[]
-     */
-    public function getCommand(array $settings, ?string $file = null): array
-    {
-        $runtime = new Runtime;
+		$this->processChildResult(
+			$test,
+			$processResult,
+			$_result['stderr'],
+		);
+	}
 
-        $command   = [];
-        $command[] = PHP_BINARY;
+	/**
+	 * Returns the command based into the configurations.
+	 *
+	 * @return string[]
+	 */
+	public function getCommand( array $settings, ?string $file = null ): array {
+		$runtime = new Runtime();
 
-        if ($runtime->hasPCOV()) {
-            $settings = array_merge(
-                $settings,
-                $runtime->getCurrentSettings(
-                    array_keys(ini_get_all('pcov')),
-                ),
-            );
-        } elseif ($runtime->hasXdebug()) {
-            $settings = array_merge(
-                $settings,
-                $runtime->getCurrentSettings(
-                    array_keys(ini_get_all('xdebug')),
-                ),
-            );
-        }
+		$command   = array();
+		$command[] = PHP_BINARY;
 
-        $command = array_merge($command, $this->settingsToParameters($settings));
+		if ( $runtime->hasPCOV() ) {
+			$settings = array_merge(
+				$settings,
+				$runtime->getCurrentSettings(
+					array_keys( ini_get_all( 'pcov' ) ),
+				),
+			);
+		} elseif ( $runtime->hasXdebug() ) {
+			$settings = array_merge(
+				$settings,
+				$runtime->getCurrentSettings(
+					array_keys( ini_get_all( 'xdebug' ) ),
+				),
+			);
+		}
 
-        if (PHP_SAPI === 'phpdbg') {
-            $command[] = '-qrr';
+		$command = array_merge( $command, $this->settingsToParameters( $settings ) );
 
-            if (!$file) {
-                $command[] = 's=';
-            }
-        }
+		if ( PHP_SAPI === 'phpdbg' ) {
+			$command[] = '-qrr';
 
-        if ($file) {
-            $command[] = '-f';
-            $command[] = $file;
-        }
+			if ( ! $file ) {
+				$command[] = 's=';
+			}
+		}
 
-        if ($this->arguments) {
-            if (!$file) {
-                $command[] = '--';
-            }
+		if ( $file ) {
+			$command[] = '-f';
+			$command[] = $file;
+		}
 
-            foreach (explode(' ', $this->arguments) as $arg) {
-                $command[] = trim($arg);
-            }
-        }
+		if ( $this->arguments ) {
+			if ( ! $file ) {
+				$command[] = '--';
+			}
 
-        return $command;
-    }
+			foreach ( explode( ' ', $this->arguments ) as $arg ) {
+				$command[] = trim( $arg );
+			}
+		}
 
-    /**
-     * Runs a single job (PHP code) using a separate PHP process.
-     */
-    abstract public function runJob(string $job, array $settings = []): array;
+		return $command;
+	}
 
-    /**
-     * @return list<string>
-     */
-    protected function settingsToParameters(array $settings): array
-    {
-        $buffer = [];
+	/**
+	 * Runs a single job (PHP code) using a separate PHP process.
+	 */
+	abstract public function runJob( string $job, array $settings = array() ): array;
 
-        foreach ($settings as $setting) {
-            $buffer[] = '-d';
-            $buffer[] = $setting;
-        }
+	/**
+	 * @return list<string>
+	 */
+	protected function settingsToParameters( array $settings ): array {
+		$buffer = array();
 
-        return $buffer;
-    }
+		foreach ( $settings as $setting ) {
+			$buffer[] = '-d';
+			$buffer[] = $setting;
+		}
 
-    /**
-     * @throws \PHPUnit\Runner\Exception
-     * @throws Exception
-     * @throws MoreThanOneDataSetFromDataProviderException
-     * @throws NoPreviousThrowableException
-     */
-    private function processChildResult(Test $test, string $stdout, string $stderr): void
-    {
-        if (!empty($stderr)) {
-            $exception = new Exception(trim($stderr));
+		return $buffer;
+	}
 
-            assert($test instanceof TestCase);
+	/**
+	 * @throws \PHPUnit\Runner\Exception
+	 * @throws Exception
+	 * @throws MoreThanOneDataSetFromDataProviderException
+	 * @throws NoPreviousThrowableException
+	 */
+	private function processChildResult( Test $test, string $stdout, string $stderr ): void {
+		if ( ! empty( $stderr ) ) {
+			$exception = new Exception( trim( $stderr ) );
 
-            Facade::emitter()->testErrored(
-                TestMethodBuilder::fromTestCase($test),
-                ThrowableBuilder::from($exception),
-            );
+			assert( $test instanceof TestCase );
 
-            return;
-        }
+			Facade::emitter()->testErrored(
+				TestMethodBuilder::fromTestCase( $test ),
+				ThrowableBuilder::from( $exception ),
+			);
 
-        set_error_handler(
-            /**
-             * @throws ErrorException
-             */
-            static function (int $errno, string $errstr, string $errfile, int $errline): never
-            {
-                throw new ErrorException($errstr, $errno, $errno, $errfile, $errline);
-            },
-        );
+			return;
+		}
 
-        try {
-            $childResult = unserialize($stdout);
+		set_error_handler(
+			/**
+			 * @throws ErrorException
+			 */
+			static function ( int $errno, string $errstr, string $errfile, int $errline ): never {
+				throw new ErrorException( $errstr, $errno, $errno, $errfile, $errline );
+			},
+		);
 
-            restore_error_handler();
+		try {
+			$childResult = unserialize( $stdout );
 
-            if ($childResult === false) {
-                $exception = new AssertionFailedError('Test was run in child process and ended unexpectedly');
+			restore_error_handler();
 
-                assert($test instanceof TestCase);
+			if ( $childResult === false ) {
+				$exception = new AssertionFailedError( 'Test was run in child process and ended unexpectedly' );
 
-                Facade::emitter()->testErrored(
-                    TestMethodBuilder::fromTestCase($test),
-                    ThrowableBuilder::from($exception),
-                );
+				assert( $test instanceof TestCase );
 
-                Facade::emitter()->testFinished(
-                    TestMethodBuilder::fromTestCase($test),
-                    0,
-                );
-            }
-        } catch (ErrorException $e) {
-            restore_error_handler();
+				Facade::emitter()->testErrored(
+					TestMethodBuilder::fromTestCase( $test ),
+					ThrowableBuilder::from( $exception ),
+				);
 
-            $childResult = false;
+				Facade::emitter()->testFinished(
+					TestMethodBuilder::fromTestCase( $test ),
+					0,
+				);
+			}
+		} catch ( ErrorException $e ) {
+			restore_error_handler();
 
-            $exception = new Exception(trim($stdout), 0, $e);
+			$childResult = false;
 
-            assert($test instanceof TestCase);
+			$exception = new Exception( trim( $stdout ), 0, $e );
 
-            Facade::emitter()->testErrored(
-                TestMethodBuilder::fromTestCase($test),
-                ThrowableBuilder::from($exception),
-            );
-        }
+			assert( $test instanceof TestCase );
 
-        if ($childResult !== false) {
-            Facade::instance()->forward($childResult['events']);
-            PassedTests::instance()->import($childResult['passedTests']);
+			Facade::emitter()->testErrored(
+				TestMethodBuilder::fromTestCase( $test ),
+				ThrowableBuilder::from( $exception ),
+			);
+		}
 
-            assert($test instanceof TestCase);
+		if ( $childResult !== false ) {
+			Facade::instance()->forward( $childResult['events'] );
+			PassedTests::instance()->import( $childResult['passedTests'] );
 
-            $test->setResult($childResult['testResult']);
-            $test->addToAssertionCount($childResult['numAssertions']);
+			assert( $test instanceof TestCase );
 
-            if (CodeCoverage::instance()->isActive() && $childResult['codeCoverage'] instanceof \SebastianBergmann\CodeCoverage\CodeCoverage) {
-                CodeCoverage::instance()->codeCoverage()->merge(
-                    $childResult['codeCoverage'],
-                );
-            }
-        }
-    }
+			$test->setResult( $childResult['testResult'] );
+			$test->addToAssertionCount( $childResult['numAssertions'] );
+
+			if ( CodeCoverage::instance()->isActive() && $childResult['codeCoverage'] instanceof \SebastianBergmann\CodeCoverage\CodeCoverage ) {
+				CodeCoverage::instance()->codeCoverage()->merge(
+					$childResult['codeCoverage'],
+				);
+			}
+		}
+	}
 }

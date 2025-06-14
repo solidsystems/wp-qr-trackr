@@ -19,46 +19,39 @@ use Iterator;
  *
  * @template-implements Iterator<int, ExtensionBootstrap>
  */
-final class ExtensionBootstrapCollectionIterator implements Countable, Iterator
-{
-    /**
-     * @psalm-var list<ExtensionBootstrap>
-     */
-    private readonly array $extensionBootstraps;
-    private int $position = 0;
+final class ExtensionBootstrapCollectionIterator implements Countable, Iterator {
 
-    public function __construct(ExtensionBootstrapCollection $extensionBootstraps)
-    {
-        $this->extensionBootstraps = $extensionBootstraps->asArray();
-    }
+	/**
+	 * @psalm-var list<ExtensionBootstrap>
+	 */
+	private readonly array $extensionBootstraps;
+	private int $position = 0;
 
-    public function count(): int
-    {
-        return iterator_count($this);
-    }
+	public function __construct( ExtensionBootstrapCollection $extensionBootstraps ) {
+		$this->extensionBootstraps = $extensionBootstraps->asArray();
+	}
 
-    public function rewind(): void
-    {
-        $this->position = 0;
-    }
+	public function count(): int {
+		return iterator_count( $this );
+	}
 
-    public function valid(): bool
-    {
-        return $this->position < count($this->extensionBootstraps);
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function key(): int
-    {
-        return $this->position;
-    }
+	public function valid(): bool {
+		return $this->position < count( $this->extensionBootstraps );
+	}
 
-    public function current(): ExtensionBootstrap
-    {
-        return $this->extensionBootstraps[$this->position];
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function next(): void
-    {
-        $this->position++;
-    }
+	public function current(): ExtensionBootstrap {
+		return $this->extensionBootstraps[ $this->position ];
+	}
+
+	public function next(): void {
+		++$this->position;
+	}
 }

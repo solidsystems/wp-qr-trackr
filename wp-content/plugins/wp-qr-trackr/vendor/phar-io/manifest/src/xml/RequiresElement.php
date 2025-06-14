@@ -11,9 +11,9 @@
 namespace PharIo\Manifest;
 
 class RequiresElement extends ManifestElement {
-    public function getPHPElement(): PhpElement {
-        return new PhpElement(
-            $this->getChildByName('php')
-        );
-    }
+	public function getPHPElement(): PhpElement {
+		return new PhpElement(
+			$this->getChildByName( 'php' )
+		);
+	}
 }

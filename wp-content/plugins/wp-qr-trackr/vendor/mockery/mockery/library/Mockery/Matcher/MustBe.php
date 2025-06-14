@@ -15,33 +15,31 @@ use function is_object;
 /**
  * @deprecated 2.0 Due to ambiguity, use PHPUnit equivalents
  */
-class MustBe extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<MustBe>';
-    }
+class MustBe extends MatcherAbstract {
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        if (! is_object($actual)) {
-            return $this->_expected === $actual;
-        }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<MustBe>';
+	}
 
-        return $this->_expected == $actual;
-    }
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		if ( ! is_object( $actual ) ) {
+			return $this->_expected === $actual;
+		}
+
+		return $this->_expected == $actual;
+	}
 }

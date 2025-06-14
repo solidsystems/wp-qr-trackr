@@ -12,12 +12,12 @@ namespace Mockery\Loader;
 
 use Mockery\Generator\MockDefinition;
 
-interface Loader
-{
-    /**
-     * Load the given mock definition
-     *
-     * @return void
-     */
-    public function load(MockDefinition $definition);
+interface Loader {
+
+	/**
+	 * Load the given mock definition
+	 *
+	 * @return void
+	 */
+	public function load( MockDefinition $definition );
 }

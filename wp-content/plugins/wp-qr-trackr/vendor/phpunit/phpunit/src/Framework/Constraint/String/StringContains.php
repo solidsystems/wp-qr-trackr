@@ -22,139 +22,132 @@ use PHPUnit\Util\Exporter;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class StringContains extends Constraint
-{
-    private readonly string $needle;
-    private readonly bool $ignoreCase;
-    private readonly bool $ignoreLineEndings;
+final class StringContains extends Constraint {
 
-    public function __construct(string $needle, bool $ignoreCase = false, bool $ignoreLineEndings = false)
-    {
-        if ($ignoreLineEndings) {
-            $needle = $this->normalizeLineEndings($needle);
-        }
+	private readonly string $needle;
+	private readonly bool $ignoreCase;
+	private readonly bool $ignoreLineEndings;
 
-        $this->needle            = $needle;
-        $this->ignoreCase        = $ignoreCase;
-        $this->ignoreLineEndings = $ignoreLineEndings;
-    }
+	public function __construct( string $needle, bool $ignoreCase = false, bool $ignoreLineEndings = false ) {
+		if ( $ignoreLineEndings ) {
+			$needle = $this->normalizeLineEndings( $needle );
+		}
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        $needle = $this->needle;
+		$this->needle            = $needle;
+		$this->ignoreCase        = $ignoreCase;
+		$this->ignoreLineEndings = $ignoreLineEndings;
+	}
 
-        if ($this->ignoreCase) {
-            $needle = mb_strtolower($this->needle, 'UTF-8');
-        }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		$needle = $this->needle;
 
-        return sprintf(
-            'contains "%s" [%s](length: %s)',
-            $needle,
-            $this->getDetectedEncoding($needle),
-            strlen($needle),
-        );
-    }
+		if ( $this->ignoreCase ) {
+			$needle = mb_strtolower( $this->needle, 'UTF-8' );
+		}
 
-    public function failureDescription(mixed $other): string
-    {
-        $stringifiedHaystack = Exporter::export($other, true);
-        $haystackEncoding    = $this->getDetectedEncoding($other);
-        $haystackLength      = $this->getHaystackLength($other);
+		return sprintf(
+			'contains "%s" [%s](length: %s)',
+			$needle,
+			$this->getDetectedEncoding( $needle ),
+			strlen( $needle ),
+		);
+	}
 
-        $haystackInformation = sprintf(
-            '%s [%s](length: %s) ',
-            $stringifiedHaystack,
-            $haystackEncoding,
-            $haystackLength,
-        );
+	public function failureDescription( mixed $other ): string {
+		$stringifiedHaystack = Exporter::export( $other, true );
+		$haystackEncoding    = $this->getDetectedEncoding( $other );
+		$haystackLength      = $this->getHaystackLength( $other );
 
-        $needleInformation = $this->toString(true);
+		$haystackInformation = sprintf(
+			'%s [%s](length: %s) ',
+			$stringifiedHaystack,
+			$haystackEncoding,
+			$haystackLength,
+		);
 
-        return $haystackInformation . $needleInformation;
-    }
+		$needleInformation = $this->toString( true );
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        $haystack = $other;
+		return $haystackInformation . $needleInformation;
+	}
 
-        if ('' === $this->needle) {
-            return true;
-        }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		$haystack = $other;
 
-        if (!is_string($haystack)) {
-            return false;
-        }
+		if ( '' === $this->needle ) {
+			return true;
+		}
 
-        if ($this->ignoreLineEndings) {
-            $haystack = $this->normalizeLineEndings($haystack);
-        }
+		if ( ! is_string( $haystack ) ) {
+			return false;
+		}
 
-        if ($this->ignoreCase) {
-            /*
-             * We must use the multibyte-safe version, so we can accurately compare non-latin uppercase characters with
-             * their lowercase equivalents.
-             */
-            return mb_stripos($haystack, $this->needle, 0, 'UTF-8') !== false;
-        }
+		if ( $this->ignoreLineEndings ) {
+			$haystack = $this->normalizeLineEndings( $haystack );
+		}
 
-        /*
-         * Use the non-multibyte safe functions to see if the string is contained in $other.
-         *
-         * This function is very fast, and we don't care about the character position in the string.
-         *
-         * Additionally, we want this method to be binary safe, so we can check if some binary data is in other binary
-         * data.
-         */
-        return str_contains($haystack, $this->needle);
-    }
+		if ( $this->ignoreCase ) {
+			/*
+			 * We must use the multibyte-safe version, so we can accurately compare non-latin uppercase characters with
+			 * their lowercase equivalents.
+			 */
+			return mb_stripos( $haystack, $this->needle, 0, 'UTF-8' ) !== false;
+		}
 
-    private function getDetectedEncoding(mixed $other): string
-    {
-        if ($this->ignoreCase) {
-            return 'Encoding ignored';
-        }
+		/*
+		 * Use the non-multibyte safe functions to see if the string is contained in $other.
+		 *
+		 * This function is very fast, and we don't care about the character position in the string.
+		 *
+		 * Additionally, we want this method to be binary safe, so we can check if some binary data is in other binary
+		 * data.
+		 */
+		return str_contains( $haystack, $this->needle );
+	}
 
-        if (!is_string($other)) {
-            return 'Encoding detection failed';
-        }
+	private function getDetectedEncoding( mixed $other ): string {
+		if ( $this->ignoreCase ) {
+			return 'Encoding ignored';
+		}
 
-        $detectedEncoding = mb_detect_encoding($other, null, true);
+		if ( ! is_string( $other ) ) {
+			return 'Encoding detection failed';
+		}
 
-        if ($detectedEncoding === false) {
-            return 'Encoding detection failed';
-        }
+		$detectedEncoding = mb_detect_encoding( $other, null, true );
 
-        return $detectedEncoding;
-    }
+		if ( $detectedEncoding === false ) {
+			return 'Encoding detection failed';
+		}
 
-    private function getHaystackLength(mixed $haystack): int
-    {
-        if (!is_string($haystack)) {
-            return 0;
-        }
+		return $detectedEncoding;
+	}
 
-        if ($this->ignoreLineEndings) {
-            $haystack = $this->normalizeLineEndings($haystack);
-        }
+	private function getHaystackLength( mixed $haystack ): int {
+		if ( ! is_string( $haystack ) ) {
+			return 0;
+		}
 
-        return strlen($haystack);
-    }
+		if ( $this->ignoreLineEndings ) {
+			$haystack = $this->normalizeLineEndings( $haystack );
+		}
 
-    private function normalizeLineEndings(string $string): string
-    {
-        return strtr(
-            $string,
-            [
-                "\r\n" => "\n",
-                "\r"   => "\n",
-            ],
-        );
-    }
+		return strlen( $haystack );
+	}
+
+	private function normalizeLineEndings( string $string ): string {
+		return strtr(
+			$string,
+			array(
+				"\r\n" => "\n",
+				"\r"   => "\n",
+			),
+		);
+	}
 }

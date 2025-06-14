@@ -13,49 +13,47 @@ namespace Mockery\Matcher;
 use function array_values;
 use function implode;
 
-class Contains extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        $elements = [];
-        foreach ($this->_expected as $v) {
-            $elements[] = (string) $v;
-        }
+class Contains extends MatcherAbstract {
 
-        return '<Contains[' . implode(', ', $elements) . ']>';
-    }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		$elements = array();
+		foreach ( $this->_expected as $v ) {
+			$elements[] = (string) $v;
+		}
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        $values = array_values($actual);
-        foreach ($this->_expected as $exp) {
-            $match = false;
-            foreach ($values as $val) {
-                if ($exp === $val || $exp == $val) {
-                    $match = true;
-                    break;
-                }
-            }
+		return '<Contains[' . implode( ', ', $elements ) . ']>';
+	}
 
-            if ($match === false) {
-                return false;
-            }
-        }
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		$values = array_values( $actual );
+		foreach ( $this->_expected as $exp ) {
+			$match = false;
+			foreach ( $values as $val ) {
+				if ( $exp === $val || $exp == $val ) {
+					$match = true;
+					break;
+				}
+			}
 
-        return true;
-    }
+			if ( $match === false ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

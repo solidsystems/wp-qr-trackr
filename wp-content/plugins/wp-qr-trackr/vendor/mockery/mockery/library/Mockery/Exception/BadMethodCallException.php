@@ -10,30 +10,28 @@
 
 namespace Mockery\Exception;
 
-class BadMethodCallException extends \BadMethodCallException implements MockeryExceptionInterface
-{
-    /**
-     * @var bool
-     */
-    private $dismissed = false;
+class BadMethodCallException extends \BadMethodCallException implements MockeryExceptionInterface {
 
-    public function dismiss()
-    {
-        $this->dismissed = true;
-        // we sometimes stack them
-        $previous = $this->getPrevious();
-        if (! $previous instanceof self) {
-            return;
-        }
+	/**
+	 * @var bool
+	 */
+	private $dismissed = false;
 
-        $previous->dismiss();
-    }
+	public function dismiss() {
+		$this->dismissed = true;
+		// we sometimes stack them
+		$previous = $this->getPrevious();
+		if ( ! $previous instanceof self ) {
+			return;
+		}
 
-    /**
-     * @return bool
-     */
-    public function dismissed()
-    {
-        return $this->dismissed;
-    }
+		$previous->dismiss();
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function dismissed() {
+		return $this->dismissed;
+	}
 }

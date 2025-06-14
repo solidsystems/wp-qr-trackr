@@ -17,18 +17,17 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveCoverageElementProcessUncoveredFilesAttribute implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $node = $document->getElementsByTagName('coverage')->item(0);
+final class RemoveCoverageElementProcessUncoveredFilesAttribute implements Migration {
 
-        if (!$node instanceof DOMElement || $node->parentNode === null) {
-            return;
-        }
+	public function migrate( DOMDocument $document ): void {
+		$node = $document->getElementsByTagName( 'coverage' )->item( 0 );
 
-        if ($node->hasAttribute('processUncoveredFiles')) {
-            $node->removeAttribute('processUncoveredFiles');
-        }
-    }
+		if ( ! $node instanceof DOMElement || $node->parentNode === null ) {
+			return;
+		}
+
+		if ( $node->hasAttribute( 'processUncoveredFiles' ) ) {
+			$node->removeAttribute( 'processUncoveredFiles' );
+		}
+	}
 }

@@ -16,17 +16,15 @@ use PHPUnit\Framework\MockObject\Invocation;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ReturnReference implements Stub
-{
-    private mixed $reference;
+final class ReturnReference implements Stub {
 
-    public function __construct(mixed &$reference)
-    {
-        $this->reference = &$reference;
-    }
+	private mixed $reference;
 
-    public function invoke(Invocation $invocation): mixed
-    {
-        return $this->reference;
-    }
+	public function __construct( mixed &$reference ) {
+		$this->reference = &$reference;
+	}
+
+	public function invoke( Invocation $invocation ): mixed {
+		return $this->reference;
+	}
 }

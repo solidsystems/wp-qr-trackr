@@ -4,6 +4,14 @@
 - Debug logging is available upon request and should be implemented where appropriate.
 - UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices.
 
+# Modular Setup Considerations
+- Major plugin logic should be separated into modules (e.g., admin, AJAX, rewrite, debug, utility) under an `includes/` directory.
+- The main plugin file should only bootstrap and require these modules, not contain business logic.
+- Each module should register its own hooks and handle a single concern (separation of concerns).
+- When adding new features, create a new module and require it in the main file.
+- Modularization improves maintainability, scalability, testability, and aligns with WordPress best practices.
+- Document the purpose of each module in the README and keep module boundaries clear.
+
 # Contribution Workflow Standards
 - Every code change or new feature must be accompanied by updated documentation (e.g., README.md, inline comments).
 - All changes must be made on a feature branch and submitted via a pull request (PR) before merging to main.
@@ -16,4 +24,12 @@
 - Always run fix-pecl-xdebug.sh as part of the standard macOS (ARM and x86) setup to ensure Xdebug can be installed reliably with Homebrew PHP and PECL. This resolves symlink and permission issues common to both architectures.
 
 # PR Review Automation
-- Every pull request must include a summary comment detailing documentation and technical changes. If automated, use a one-line command with escaped newlines for the GitHub CLI (gh pr comment) to ensure proper formatting. 
+- Every pull request must include a summary comment detailing documentation and technical changes. If automated, use a one-line command with escaped newlines for the GitHub CLI (gh pr comment) to ensure proper formatting.
+
+# Cursor Project Rules
+
+# Linter Memory Limit
+linter_max_memory_mb = 1024  # Set linter max memory to 1GB (1024MB) instead of the default 512MB for this project.
+
+# WordPress PHP Indentation Rule
+All PHP files (except inline alignment in arrays/comments) must use tabs for indentation, not spaces. This is especially important for WordPress plugins. 

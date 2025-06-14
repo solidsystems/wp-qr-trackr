@@ -11,6 +11,6 @@ namespace SebastianBergmann\LinesOfCode;
 
 use LogicException;
 
-final class IllogicalValuesException extends LogicException implements Exception
-{
+final class IllogicalValuesException extends LogicException implements Exception {
+
 }

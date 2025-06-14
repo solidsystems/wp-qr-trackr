@@ -41,244 +41,238 @@ use Mockery\ExpectationInterface;
  * @method Expectation andReturnUsing(callable ...$args)
  * @method Expectation andThrow(\Throwable $throwable)
  */
-class Expectation
-{
+class Expectation {
 
-    const RETURNING_EXPECTATION_TYPES = [
-        ExpectationTarget::TYPE_FILTER_APPLIED,
-        ExpectationTarget::TYPE_FUNCTION
-    ];
 
-    const ADDING_TYPES = [
-        ExpectationTarget::TYPE_ACTION_ADDED,
-        ExpectationTarget::TYPE_FILTER_ADDED
-    ];
+	const RETURNING_EXPECTATION_TYPES = array(
+		ExpectationTarget::TYPE_FILTER_APPLIED,
+		ExpectationTarget::TYPE_FUNCTION,
+	);
 
-    const REMOVING_TYPES = [
-        ExpectationTarget::TYPE_ACTION_REMOVED,
-        ExpectationTarget::TYPE_FILTER_REMOVED
-    ];
+	const ADDING_TYPES = array(
+		ExpectationTarget::TYPE_ACTION_ADDED,
+		ExpectationTarget::TYPE_FILTER_ADDED,
+	);
 
-    const NO_ARGS_EXPECTATION_TYPES = [
-        ExpectationTarget::TYPE_ACTION_DONE,
-        ExpectationTarget::TYPE_FUNCTION
-    ];
+	const REMOVING_TYPES = array(
+		ExpectationTarget::TYPE_ACTION_REMOVED,
+		ExpectationTarget::TYPE_FILTER_REMOVED,
+	);
 
-    const NOT_ALLOWED_METHODS = [
-        'shouldReceive',
-        'andSet',
-        'set',
-        'shouldExpect',
-        'mock',
-        'getMock',
-    ];
+	const NO_ARGS_EXPECTATION_TYPES = array(
+		ExpectationTarget::TYPE_ACTION_DONE,
+		ExpectationTarget::TYPE_FUNCTION,
+	);
 
-    /**
-     * @var \Mockery\Expectation|\Mockery\ExpectationInterface
-     */
-    private $expectation;
+	const NOT_ALLOWED_METHODS = array(
+		'shouldReceive',
+		'andSet',
+		'set',
+		'shouldExpect',
+		'mock',
+		'getMock',
+	);
 
-    /**
-     * @var \Brain\Monkey\Expectation\ExpectationTarget
-     */
-    private $target;
+	/**
+	 * @var \Mockery\Expectation|\Mockery\ExpectationInterface
+	 */
+	private $expectation;
 
-    /**
-     * @var bool
-     */
-    private $default = true;
+	/**
+	 * @var \Brain\Monkey\Expectation\ExpectationTarget
+	 */
+	private $target;
 
-    /**
-     * @var \ArrayAccess
-     */
-    private $return_expectations;
+	/**
+	 * @var bool
+	 */
+	private $default = true;
 
-    /**
-     * @param \Mockery\ExpectationInterface               $expectation
-     * @param \Brain\Monkey\Expectation\ExpectationTarget $target
-     * @param \ArrayAccess|null                           $return_expectations
-     */
-    public function __construct(
-        ExpectationInterface $expectation,
-        ExpectationTarget $target,
-        $return_expectations = null
-    ) {
-        $this->expectation = $expectation;
-        $this->target = $target;
-        $this->return_expectations = ($return_expectations instanceof \ArrayAccess) ? $return_expectations : new \ArrayObject();
-    }
+	/**
+	 * @var \ArrayAccess
+	 */
+	private $return_expectations;
 
-    /**
-     * Ensure full cloning.
-     *
-     * @codeCoverageIgnore
-     */
-    public function __clone()
-    {
-        $this->expectation = clone $this->expectation;
-        $this->target = clone $this->target;
-    }
+	/**
+	 * @param \Mockery\ExpectationInterface               $expectation
+	 * @param \Brain\Monkey\Expectation\ExpectationTarget $target
+	 * @param \ArrayAccess|null                           $return_expectations
+	 */
+	public function __construct(
+		ExpectationInterface $expectation,
+		ExpectationTarget $target,
+		$return_expectations = null
+	) {
+		$this->expectation         = $expectation;
+		$this->target              = $target;
+		$this->return_expectations = ( $return_expectations instanceof \ArrayAccess ) ? $return_expectations : new \ArrayObject();
+	}
 
-    /**
-     * Delegate method to wrapped expectation, after some checks.
-     *
-     * @param string $name
-     * @param array  $arguments
-     * @return static
-     */
-    public function __call($name, array $arguments = [])
-    {
-        if (in_array($name, self::NOT_ALLOWED_METHODS, true)) {
-            throw Exception\NotAllowedMethod::forMethod($name);
-        }
+	/**
+	 * Ensure full cloning.
+	 *
+	 * @codeCoverageIgnore
+	 */
+	public function __clone() {
+		$this->expectation = clone $this->expectation;
+		$this->target      = clone $this->target;
+	}
 
-        $has_return = stristr($name, 'return');
-        $has_default = $name === 'byDefault';
+	/**
+	 * Delegate method to wrapped expectation, after some checks.
+	 *
+	 * @param string $name
+	 * @param array  $arguments
+	 * @return static
+	 */
+	public function __call( $name, array $arguments = array() ) {
+		if ( in_array( $name, self::NOT_ALLOWED_METHODS, true ) ) {
+			throw Exception\NotAllowedMethod::forMethod( $name );
+		}
 
-        if ($has_default && $this->target->type() !== ExpectationTarget::TYPE_FUNCTION) {
-            throw Exception\NotAllowedMethod::forByDefault();
-        }
+		$has_return  = stristr( $name, 'return' );
+		$has_default = $name === 'byDefault';
 
-        if (
-            $has_return
-            && ! in_array($this->target->type(), self::RETURNING_EXPECTATION_TYPES, true)
-        ) {
-            throw Exception\NotAllowedMethod::forReturningMethod($name);
-        }
+		if ( $has_default && $this->target->type() !== ExpectationTarget::TYPE_FUNCTION ) {
+			throw Exception\NotAllowedMethod::forByDefault();
+		}
 
-        if ($this->default) {
-            $this->default = false;
-            $this->andAlsoExpectIt();
-        }
+		if (
+			$has_return
+			&& ! in_array( $this->target->type(), self::RETURNING_EXPECTATION_TYPES, true )
+		) {
+			throw Exception\NotAllowedMethod::forReturningMethod( $name );
+		}
 
-        $callback = [$this->expectation, $name];
+		if ( $this->default ) {
+			$this->default = false;
+			$this->andAlsoExpectIt();
+		}
 
-        $this->expectation = $callback(...$arguments);
+		$callback = array( $this->expectation, $name );
 
-        if ($has_return) {
-            $id = $this->target->identifier();
-            $this->return_expectations->offsetExists($id) or $this->return_expectations[$id] = 1;
-        }
+		$this->expectation = $callback( ...$arguments );
 
-        return $this;
-    }
+		if ( $has_return ) {
+			$id = $this->target->identifier();
+			$this->return_expectations->offsetExists( $id ) or $this->return_expectations[ $id ] = 1;
+		}
 
-    /**
-     * @return \Mockery\Expectation|\Mockery\CompositeExpectation
-     */
-    public function mockeryExpectation()
-    {
-        return $this->expectation;
-    }
+		return $this;
+	}
 
-    /**
-     * Mockery expectation allow chaining different expectations with by chaining `getMock()`
-     * method.
-     * Since `getMock()` is disabled for Brain Monkey expectation this methods provides a way to
-     * chain expectations.
-     *
-     * @return static
-     */
-    public function andAlsoExpectIt()
-    {
-        $method = $this->target->mockMethodName();
-        /** @noinspection PhpMethodParametersCountMismatchInspection */
-        $this->expectation = $this->expectation->getMock()->shouldReceive($method);
+	/**
+	 * @return \Mockery\Expectation|\Mockery\CompositeExpectation
+	 */
+	public function mockeryExpectation() {
+		return $this->expectation;
+	}
 
-        return $this;
-    }
+	/**
+	 * Mockery expectation allow chaining different expectations with by chaining `getMock()`
+	 * method.
+	 * Since `getMock()` is disabled for Brain Monkey expectation this methods provides a way to
+	 * chain expectations.
+	 *
+	 * @return static
+	 */
+	public function andAlsoExpectIt() {
+		$method = $this->target->mockMethodName();
+		/** @noinspection PhpMethodParametersCountMismatchInspection */
+		$this->expectation = $this->expectation->getMock()->shouldReceive( $method );
 
-    /**
-     * WordPress action and filters addition and filters applying requires at least one argument,
-     * and setting an expectation of no arguments for those triggers an error in Brain Monkey.
-     *
-     * @return static
-     */
-    public function withNoArgs()
-    {
-        if ( ! in_array($this->target->type(), self::NO_ARGS_EXPECTATION_TYPES, true)) {
-            throw Exception\ExpectationArgsRequired::forExpectationType($this->target);
-        }
+		return $this;
+	}
 
-        $this->expectation = $this->expectation->withNoArgs();
+	/**
+	 * WordPress action and filters addition and filters applying requires at least one argument,
+	 * and setting an expectation of no arguments for those triggers an error in Brain Monkey.
+	 *
+	 * @return static
+	 */
+	public function withNoArgs() {
+		if ( ! in_array( $this->target->type(), self::NO_ARGS_EXPECTATION_TYPES, true ) ) {
+			throw Exception\ExpectationArgsRequired::forExpectationType( $this->target );
+		}
 
-        return $this;
-    }
+		$this->expectation = $this->expectation->withNoArgs();
 
-    /**
-     * @param mixed ...$args
-     * @return static
-     */
-    public function with(...$args)
-    {
-        $argsNum = count($args);
+		return $this;
+	}
 
-        if ( ! $argsNum &&
-            ! in_array($this->target->type(), self::NO_ARGS_EXPECTATION_TYPES, true)
-        ) {
-            throw Exception\ExpectationArgsRequired::forExpectationType($this->target);
-        }
+	/**
+	 * @param mixed ...$args
+	 * @return static
+	 */
+	public function with( ...$args ) {
+		$argsNum = count( $args );
 
-        if (in_array($this->target->type(), self::ADDING_TYPES, true) && $argsNum < 3) {
-            $argsNum < 2 and $args[] = 10;
-            $args[] = 1;
-        }
+		if ( ! $argsNum &&
+			! in_array( $this->target->type(), self::NO_ARGS_EXPECTATION_TYPES, true )
+		) {
+			throw Exception\ExpectationArgsRequired::forExpectationType( $this->target );
+		}
 
-        if (in_array($this->target->type(), self::REMOVING_TYPES, true) && $argsNum === 1) {
-            $args[] = 10;
-        }
+		if ( in_array( $this->target->type(), self::ADDING_TYPES, true ) && $argsNum < 3 ) {
+			$argsNum < 2 and $args[] = 10;
+			$args[]                  = 1;
+		}
 
-        $this->expectation = $this->expectation->with(...$args);
+		if ( in_array( $this->target->type(), self::REMOVING_TYPES, true ) && $argsNum === 1 ) {
+			$args[] = 10;
+		}
 
-        return $this;
-    }
+		$this->expectation = $this->expectation->with( ...$args );
 
-    /**
-     * Brain Monkey doesn't allow return expectation for actions (added/done) nor for added
-     * filters.
-     * However, it is desirable to do something when the expected callback is used, this is the
-     * reason to be of this method.
-     *
-     * ```
-     * Actions::expectDone('some_action')->once()->whenHappen(function($some_arg) {
-     *      echo "{$some_arg} was passed to " . current_filter();
-     * });
-     * ```
-     *
-     * Snippet above will not change the return of `do_action('some_action', $some_arg)`
-     * like a normal return expectation would do, but allows to catch expected events with a
-     * callback.
-     *
-     * For expectation types that allows return expectation (functions, applied filters) this method
-     * becomes just an alias for Mockery `andReturnUsing()`.
-     *
-     * @param callable $callback
-     * @return static
-     */
-    public function whenHappen(callable $callback)
-    {
-        if (in_array($this->target->type(), self::RETURNING_EXPECTATION_TYPES, true)) {
-            throw Exception\NotAllowedMethod::forWhenHappen($this->target);
-        }
+		return $this;
+	}
 
-        $this->expectation->andReturnUsing($callback);
+	/**
+	 * Brain Monkey doesn't allow return expectation for actions (added/done) nor for added
+	 * filters.
+	 * However, it is desirable to do something when the expected callback is used, this is the
+	 * reason to be of this method.
+	 *
+	 * ```
+	 * Actions::expectDone('some_action')->once()->whenHappen(function($some_arg) {
+	 *      echo "{$some_arg} was passed to " . current_filter();
+	 * });
+	 * ```
+	 *
+	 * Snippet above will not change the return of `do_action('some_action', $some_arg)`
+	 * like a normal return expectation would do, but allows to catch expected events with a
+	 * callback.
+	 *
+	 * For expectation types that allows return expectation (functions, applied filters) this method
+	 * becomes just an alias for Mockery `andReturnUsing()`.
+	 *
+	 * @param callable $callback
+	 * @return static
+	 */
+	public function whenHappen( callable $callback ) {
+		if ( in_array( $this->target->type(), self::RETURNING_EXPECTATION_TYPES, true ) ) {
+			throw Exception\NotAllowedMethod::forWhenHappen( $this->target );
+		}
 
-        return $this;
-    }
+		$this->expectation->andReturnUsing( $callback );
 
-    /**
-     * @return static
-     */
-    public function andReturnFirstArg()
-    {
-        if ( ! in_array($this->target->type(), self::RETURNING_EXPECTATION_TYPES, true)) {
-            throw Exception\NotAllowedMethod::forReturningMethod('andReturnFirstParam');
-        }
+		return $this;
+	}
 
-        $this->expectation->andReturnUsing(function ($arg = null) {
-            return $arg;
-        });
+	/**
+	 * @return static
+	 */
+	public function andReturnFirstArg() {
+		if ( ! in_array( $this->target->type(), self::RETURNING_EXPECTATION_TYPES, true ) ) {
+			throw Exception\NotAllowedMethod::forReturningMethod( 'andReturnFirstParam' );
+		}
 
-        return $this;
-    }
+		$this->expectation->andReturnUsing(
+			function ( $arg = null ) {
+				return $arg;
+			}
+		);
+
+		return $this;
+	}
 }

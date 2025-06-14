@@ -2,7 +2,7 @@
 namespace Hamcrest\Arrays;
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 use Hamcrest\Description;
 use Hamcrest\Matcher;
@@ -12,52 +12,46 @@ use Hamcrest\Util;
 /**
  * Matches if an array contains an item satisfying a nested matcher.
  */
-class IsArrayContaining extends TypeSafeMatcher
-{
+class IsArrayContaining extends TypeSafeMatcher {
 
-    private $_elementMatcher;
 
-    public function __construct(Matcher $elementMatcher)
-    {
-        parent::__construct(self::TYPE_ARRAY);
+	private $_elementMatcher;
 
-        $this->_elementMatcher = $elementMatcher;
-    }
+	public function __construct( Matcher $elementMatcher ) {
+		parent::__construct( self::TYPE_ARRAY );
 
-    protected function matchesSafely($array)
-    {
-        foreach ($array as $element) {
-            if ($this->_elementMatcher->matches($element)) {
-                return true;
-            }
-        }
+		$this->_elementMatcher = $elementMatcher;
+	}
 
-        return false;
-    }
+	protected function matchesSafely( $array ) {
+		foreach ( $array as $element ) {
+			if ( $this->_elementMatcher->matches( $element ) ) {
+				return true;
+			}
+		}
 
-    protected function describeMismatchSafely($array, Description $mismatchDescription)
-    {
-        $mismatchDescription->appendText('was ')->appendValue($array);
-    }
+		return false;
+	}
 
-    public function describeTo(Description $description)
-    {
-        $description
-                 ->appendText('an array containing ')
-                 ->appendDescriptionOf($this->_elementMatcher)
-        ;
-    }
+	protected function describeMismatchSafely( $array, Description $mismatchDescription ) {
+		$mismatchDescription->appendText( 'was ' )->appendValue( $array );
+	}
 
-    /**
-     * Evaluates to true if any item in an array satisfies the given matcher.
-     *
-     * @param mixed $item as a {@link Hamcrest\Matcher} or a value.
-     *
-     * @return \Hamcrest\Arrays\IsArrayContaining
-     * @factory hasValue
-     */
-    public static function hasItemInArray($item)
-    {
-        return new self(Util::wrapValueWithIsEqual($item));
-    }
+	public function describeTo( Description $description ) {
+		$description
+				->appendText( 'an array containing ' )
+				->appendDescriptionOf( $this->_elementMatcher );
+	}
+
+	/**
+	 * Evaluates to true if any item in an array satisfies the given matcher.
+	 *
+	 * @param mixed $item as a {@link Hamcrest\Matcher} or a value.
+	 *
+	 * @return \Hamcrest\Arrays\IsArrayContaining
+	 * @factory hasValue
+	 */
+	public static function hasItemInArray( $item ) {
+		return new self( Util::wrapValueWithIsEqual( $item ) );
+	}
 }

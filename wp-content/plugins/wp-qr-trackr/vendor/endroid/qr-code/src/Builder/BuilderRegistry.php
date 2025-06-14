@@ -4,22 +4,20 @@ declare(strict_types=1);
 
 namespace Endroid\QrCode\Builder;
 
-final class BuilderRegistry implements BuilderRegistryInterface
-{
-    /** @var array<BuilderInterface> */
-    private array $builders = [];
+final class BuilderRegistry implements BuilderRegistryInterface {
 
-    public function set(string $name, BuilderInterface $builder): void
-    {
-        $this->builders[$name] = $builder;
-    }
+	/** @var array<BuilderInterface> */
+	private array $builders = array();
 
-    public function get(string $name): BuilderInterface
-    {
-        if (!isset($this->builders[$name])) {
-            throw new \Exception(sprintf('Builder with name "%s" not available from registry', $name));
-        }
+	public function set( string $name, BuilderInterface $builder ): void {
+		$this->builders[ $name ] = $builder;
+	}
 
-        return $this->builders[$name];
-    }
+	public function get( string $name ): BuilderInterface {
+		if ( ! isset( $this->builders[ $name ] ) ) {
+			throw new \Exception( sprintf( 'Builder with name "%s" not available from registry', $name ) );
+		}
+
+		return $this->builders[ $name ];
+	}
 }

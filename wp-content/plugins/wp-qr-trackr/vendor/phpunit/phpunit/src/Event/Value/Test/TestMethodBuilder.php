@@ -29,71 +29,68 @@ use PHPUnit\Util\Reflection;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestMethodBuilder
-{
-    /**
-     * @throws MoreThanOneDataSetFromDataProviderException
-     */
-    public static function fromTestCase(TestCase $testCase): TestMethod
-    {
-        $methodName = $testCase->name();
+final class TestMethodBuilder {
 
-        assert(!empty($methodName));
+	/**
+	 * @throws MoreThanOneDataSetFromDataProviderException
+	 */
+	public static function fromTestCase( TestCase $testCase ): TestMethod {
+		$methodName = $testCase->name();
 
-        $location = Reflection::sourceLocationFor($testCase::class, $methodName);
+		assert( ! empty( $methodName ) );
 
-        return new TestMethod(
-            $testCase::class,
-            $methodName,
-            $location['file'],
-            $location['line'],
-            TestDoxBuilder::fromTestCase($testCase),
-            MetadataRegistry::parser()->forClassAndMethod($testCase::class, $methodName),
-            self::dataFor($testCase),
-        );
-    }
+		$location = Reflection::sourceLocationFor( $testCase::class, $methodName );
 
-    /**
-     * @throws NoTestCaseObjectOnCallStackException
-     */
-    public static function fromCallStack(): TestMethod
-    {
-        foreach (debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
-            if (isset($frame['object']) && $frame['object'] instanceof TestCase) {
-                return $frame['object']->valueObjectForEvents();
-            }
-        }
+		return new TestMethod(
+			$testCase::class,
+			$methodName,
+			$location['file'],
+			$location['line'],
+			TestDoxBuilder::fromTestCase( $testCase ),
+			MetadataRegistry::parser()->forClassAndMethod( $testCase::class, $methodName ),
+			self::dataFor( $testCase ),
+		);
+	}
 
-        throw new NoTestCaseObjectOnCallStackException;
-    }
+	/**
+	 * @throws NoTestCaseObjectOnCallStackException
+	 */
+	public static function fromCallStack(): TestMethod {
+		foreach ( debug_backtrace( DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS ) as $frame ) {
+			if ( isset( $frame['object'] ) && $frame['object'] instanceof TestCase ) {
+				return $frame['object']->valueObjectForEvents();
+			}
+		}
 
-    /**
-     * @throws MoreThanOneDataSetFromDataProviderException
-     */
-    private static function dataFor(TestCase $testCase): TestDataCollection
-    {
-        $testData = [];
+		throw new NoTestCaseObjectOnCallStackException();
+	}
 
-        if ($testCase->usesDataProvider()) {
-            $dataSetName = $testCase->dataName();
+	/**
+	 * @throws MoreThanOneDataSetFromDataProviderException
+	 */
+	private static function dataFor( TestCase $testCase ): TestDataCollection {
+		$testData = array();
 
-            if (is_numeric($dataSetName)) {
-                $dataSetName = (int) $dataSetName;
-            }
+		if ( $testCase->usesDataProvider() ) {
+			$dataSetName = $testCase->dataName();
 
-            $testData[] = DataFromDataProvider::from(
-                $dataSetName,
-                Exporter::export($testCase->providedData(), EventFacade::emitter()->exportsObjects()),
-                $testCase->dataSetAsStringWithData(),
-            );
-        }
+			if ( is_numeric( $dataSetName ) ) {
+				$dataSetName = (int) $dataSetName;
+			}
 
-        if ($testCase->hasDependencyInput()) {
-            $testData[] = DataFromTestDependency::from(
-                Exporter::export($testCase->dependencyInput(), EventFacade::emitter()->exportsObjects()),
-            );
-        }
+			$testData[] = DataFromDataProvider::from(
+				$dataSetName,
+				Exporter::export( $testCase->providedData(), EventFacade::emitter()->exportsObjects() ),
+				$testCase->dataSetAsStringWithData(),
+			);
+		}
 
-        return TestDataCollection::fromArray($testData);
-    }
+		if ( $testCase->hasDependencyInput() ) {
+			$testData[] = DataFromTestDependency::from(
+				Exporter::export( $testCase->dependencyInput(), EventFacade::emitter()->exportsObjects() ),
+			);
+		}
+
+		return TestDataCollection::fromArray( $testData );
+	}
 }

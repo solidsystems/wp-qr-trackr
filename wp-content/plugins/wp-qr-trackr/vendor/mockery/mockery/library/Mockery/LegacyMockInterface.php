@@ -13,246 +13,246 @@ namespace Mockery;
 use Closure;
 use Throwable;
 
-interface LegacyMockInterface
-{
-    /**
-     * In the event shouldReceive() accepting an array of methods/returns
-     * this method will switch them from normal expectations to default
-     * expectations
-     *
-     * @return self
-     */
-    public function byDefault();
+interface LegacyMockInterface {
 
-    /**
-     * Set mock to defer unexpected methods to its parent if possible
-     *
-     * @return self
-     */
-    public function makePartial();
+	/**
+	 * In the event shouldReceive() accepting an array of methods/returns
+	 * this method will switch them from normal expectations to default
+	 * expectations
+	 *
+	 * @return self
+	 */
+	public function byDefault();
 
-    /**
-     * Fetch the next available allocation order number
-     *
-     * @return int
-     */
-    public function mockery_allocateOrder();
+	/**
+	 * Set mock to defer unexpected methods to its parent if possible
+	 *
+	 * @return self
+	 */
+	public function makePartial();
 
-    /**
-     * Find an expectation matching the given method and arguments
-     *
-     * @template TMixed
-     *
-     * @param string        $method
-     * @param array<TMixed> $args
-     *
-     * @return null|Expectation
-     */
-    public function mockery_findExpectation($method, array $args);
+	/**
+	 * Fetch the next available allocation order number
+	 *
+	 * @return int
+	 */
+	public function mockery_allocateOrder();
 
-    /**
-     * Return the container for this mock
-     *
-     * @return Container
-     */
-    public function mockery_getContainer();
+	/**
+	 * Find an expectation matching the given method and arguments
+	 *
+	 * @template TMixed
+	 *
+	 * @param string        $method
+	 * @param array<TMixed> $args
+	 *
+	 * @return null|Expectation
+	 */
+	public function mockery_findExpectation( $method, array $args );
 
-    /**
-     * Get current ordered number
-     *
-     * @return int
-     */
-    public function mockery_getCurrentOrder();
+	/**
+	 * Return the container for this mock
+	 *
+	 * @return Container
+	 */
+	public function mockery_getContainer();
 
-    /**
-     * Gets the count of expectations for this mock
-     *
-     * @return int
-     */
-    public function mockery_getExpectationCount();
+	/**
+	 * Get current ordered number
+	 *
+	 * @return int
+	 */
+	public function mockery_getCurrentOrder();
 
-    /**
-     * Return the expectations director for the given method
-     *
-     * @param string $method
-     *
-     * @return null|ExpectationDirector
-     */
-    public function mockery_getExpectationsFor($method);
+	/**
+	 * Gets the count of expectations for this mock
+	 *
+	 * @return int
+	 */
+	public function mockery_getExpectationCount();
 
-    /**
-     * Fetch array of ordered groups
-     *
-     * @return array<string,int>
-     */
-    public function mockery_getGroups();
+	/**
+	 * Return the expectations director for the given method
+	 *
+	 * @param string $method
+	 *
+	 * @return null|ExpectationDirector
+	 */
+	public function mockery_getExpectationsFor( $method );
 
-    /**
-     * @return string[]
-     */
-    public function mockery_getMockableMethods();
+	/**
+	 * Fetch array of ordered groups
+	 *
+	 * @return array<string,int>
+	 */
+	public function mockery_getGroups();
 
-    /**
-     * @return array
-     */
-    public function mockery_getMockableProperties();
+	/**
+	 * @return string[]
+	 */
+	public function mockery_getMockableMethods();
 
-    /**
-     * Return the name for this mock
-     *
-     * @return string
-     */
-    public function mockery_getName();
+	/**
+	 * @return array
+	 */
+	public function mockery_getMockableProperties();
 
-    /**
-     * Alternative setup method to constructor
-     *
-     * @param object $partialObject
-     *
-     * @return void
-     */
-    public function mockery_init(?Container $container = null, $partialObject = null);
+	/**
+	 * Return the name for this mock
+	 *
+	 * @return string
+	 */
+	public function mockery_getName();
 
-    /**
-     * @return bool
-     */
-    public function mockery_isAnonymous();
+	/**
+	 * Alternative setup method to constructor
+	 *
+	 * @param object $partialObject
+	 *
+	 * @return void
+	 */
+	public function mockery_init( ?Container $container = null, $partialObject = null );
 
-    /**
-     * Set current ordered number
-     *
-     * @param int $order
-     *
-     * @return int
-     */
-    public function mockery_setCurrentOrder($order);
+	/**
+	 * @return bool
+	 */
+	public function mockery_isAnonymous();
 
-    /**
-     * Return the expectations director for the given method
-     *
-     * @param string $method
-     *
-     * @return null|ExpectationDirector
-     */
-    public function mockery_setExpectationsFor($method, ExpectationDirector $director);
+	/**
+	 * Set current ordered number
+	 *
+	 * @param int $order
+	 *
+	 * @return int
+	 */
+	public function mockery_setCurrentOrder( $order );
 
-    /**
-     * Set ordering for a group
-     *
-     * @param string $group
-     * @param int    $order
-     *
-     * @return void
-     */
-    public function mockery_setGroup($group, $order);
+	/**
+	 * Return the expectations director for the given method
+	 *
+	 * @param string $method
+	 *
+	 * @return null|ExpectationDirector
+	 */
+	public function mockery_setExpectationsFor( $method, ExpectationDirector $director );
 
-    /**
-     * Tear down tasks for this mock
-     *
-     * @return void
-     */
-    public function mockery_teardown();
+	/**
+	 * Set ordering for a group
+	 *
+	 * @param string $group
+	 * @param int    $order
+	 *
+	 * @return void
+	 */
+	public function mockery_setGroup( $group, $order );
 
-    /**
-     * Validate the current mock's ordering
-     *
-     * @param string $method
-     * @param int    $order
-     *
-     * @throws Exception
-     *
-     * @return void
-     */
-    public function mockery_validateOrder($method, $order);
+	/**
+	 * Tear down tasks for this mock
+	 *
+	 * @return void
+	 */
+	public function mockery_teardown();
 
-    /**
-     * Iterate across all expectation directors and validate each
-     *
-     * @throws Throwable
-     *
-     * @return void
-     */
-    public function mockery_verify();
+	/**
+	 * Validate the current mock's ordering
+	 *
+	 * @param string $method
+	 * @param int    $order
+	 *
+	 * @throws Exception
+	 *
+	 * @return void
+	 */
+	public function mockery_validateOrder( $method, $order );
 
-    /**
-     * Allows additional methods to be mocked that do not explicitly exist on mocked class
-     *
-     * @param  string $method the method name to be mocked
-     * @return self
-     */
-    public function shouldAllowMockingMethod($method);
+	/**
+	 * Iterate across all expectation directors and validate each
+	 *
+	 * @throws Throwable
+	 *
+	 * @return void
+	 */
+	public function mockery_verify();
 
-    /**
-     * @return self
-     */
-    public function shouldAllowMockingProtectedMethods();
+	/**
+	 * Allows additional methods to be mocked that do not explicitly exist on mocked class
+	 *
+	 * @param  string $method the method name to be mocked
+	 * @return self
+	 */
+	public function shouldAllowMockingMethod( $method );
 
-    /**
-     * Set mock to defer unexpected methods to its parent if possible
-     *
-     * @deprecated since 1.4.0. Please use makePartial() instead.
-     *
-     * @return self
-     */
-    public function shouldDeferMissing();
+	/**
+	 * @return self
+	 */
+	public function shouldAllowMockingProtectedMethods();
 
-    /**
-     * @return self
-     */
-    public function shouldHaveBeenCalled();
+	/**
+	 * Set mock to defer unexpected methods to its parent if possible
+	 *
+	 * @deprecated since 1.4.0. Please use makePartial() instead.
+	 *
+	 * @return self
+	 */
+	public function shouldDeferMissing();
 
-    /**
-     * @template TMixed
-     * @param string                     $method
-     * @param null|array<TMixed>|Closure $args
-     *
-     * @return self
-     */
-    public function shouldHaveReceived($method, $args = null);
+	/**
+	 * @return self
+	 */
+	public function shouldHaveBeenCalled();
 
-    /**
-     * Set mock to ignore unexpected methods and return Undefined class
-     *
-     * @template TReturnValue
-     *
-     * @param null|TReturnValue $returnValue the default return value for calls to missing functions on this mock
-     *
-     * @return self
-     */
-    public function shouldIgnoreMissing($returnValue = null);
+	/**
+	 * @template TMixed
+	 * @param string                     $method
+	 * @param null|array<TMixed>|Closure $args
+	 *
+	 * @return self
+	 */
+	public function shouldHaveReceived( $method, $args = null );
 
-    /**
-     * @template TMixed
-     * @param null|array<TMixed> $args (optional)
-     *
-     * @return self
-     */
-    public function shouldNotHaveBeenCalled(?array $args = null);
+	/**
+	 * Set mock to ignore unexpected methods and return Undefined class
+	 *
+	 * @template TReturnValue
+	 *
+	 * @param null|TReturnValue $returnValue the default return value for calls to missing functions on this mock
+	 *
+	 * @return self
+	 */
+	public function shouldIgnoreMissing( $returnValue = null );
 
-    /**
-     * @template TMixed
-     * @param string                     $method
-     * @param null|array<TMixed>|Closure $args
-     *
-     * @return self
-     */
-    public function shouldNotHaveReceived($method, $args = null);
+	/**
+	 * @template TMixed
+	 * @param null|array<TMixed> $args (optional)
+	 *
+	 * @return self
+	 */
+	public function shouldNotHaveBeenCalled( ?array $args = null );
 
-    /**
-     * Shortcut method for setting an expectation that a method should not be called.
-     *
-     * @param string ...$methodNames one or many methods that are expected not to be called in this mock
-     *
-     * @return Expectation|ExpectationInterface|HigherOrderMessage
-     */
-    public function shouldNotReceive(...$methodNames);
+	/**
+	 * @template TMixed
+	 * @param string                     $method
+	 * @param null|array<TMixed>|Closure $args
+	 *
+	 * @return self
+	 */
+	public function shouldNotHaveReceived( $method, $args = null );
 
-    /**
-     * Set expected method calls
-     *
-     * @param string ...$methodNames one or many methods that are expected to be called in this mock
-     *
-     * @return Expectation|ExpectationInterface|HigherOrderMessage
-     */
-    public function shouldReceive(...$methodNames);
+	/**
+	 * Shortcut method for setting an expectation that a method should not be called.
+	 *
+	 * @param string ...$methodNames one or many methods that are expected not to be called in this mock
+	 *
+	 * @return Expectation|ExpectationInterface|HigherOrderMessage
+	 */
+	public function shouldNotReceive( ...$methodNames );
+
+	/**
+	 * Set expected method calls
+	 *
+	 * @param string ...$methodNames one or many methods that are expected to be called in this mock
+	 *
+	 * @return Expectation|ExpectationInterface|HigherOrderMessage
+	 */
+	public function shouldReceive( ...$methodNames );
 }

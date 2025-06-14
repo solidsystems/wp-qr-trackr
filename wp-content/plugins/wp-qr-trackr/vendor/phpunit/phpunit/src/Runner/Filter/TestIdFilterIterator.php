@@ -24,40 +24,38 @@ use RecursiveIterator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestIdFilterIterator extends RecursiveFilterIterator
-{
-    /**
-     * @psalm-var non-empty-list<non-empty-string>
-     */
-    private readonly array $testIds;
+final class TestIdFilterIterator extends RecursiveFilterIterator {
 
-    /**
-     * @psalm-param RecursiveIterator<int, Test> $iterator
-     * @psalm-param non-empty-list<non-empty-string> $testIds
-     */
-    public function __construct(RecursiveIterator $iterator, array $testIds)
-    {
-        parent::__construct($iterator);
+	/**
+	 * @psalm-var non-empty-list<non-empty-string>
+	 */
+	private readonly array $testIds;
 
-        $this->testIds = $testIds;
-    }
+	/**
+	 * @psalm-param RecursiveIterator<int, Test> $iterator
+	 * @psalm-param non-empty-list<non-empty-string> $testIds
+	 */
+	public function __construct( RecursiveIterator $iterator, array $testIds ) {
+		parent::__construct( $iterator );
 
-    public function accept(): bool
-    {
-        $test = $this->getInnerIterator()->current();
+		$this->testIds = $testIds;
+	}
 
-        if ($test instanceof TestSuite) {
-            return true;
-        }
+	public function accept(): bool {
+		$test = $this->getInnerIterator()->current();
 
-        if (!$test instanceof TestCase && !$test instanceof PhptTestCase) {
-            return false;
-        }
+		if ( $test instanceof TestSuite ) {
+			return true;
+		}
 
-        try {
-            return in_array($test->valueObjectForEvents()->id(), $this->testIds, true);
-        } catch (MoreThanOneDataSetFromDataProviderException|NoDataSetFromDataProviderException) {
-            return false;
-        }
-    }
+		if ( ! $test instanceof TestCase && ! $test instanceof PhptTestCase ) {
+			return false;
+		}
+
+		try {
+			return in_array( $test->valueObjectForEvents()->id(), $this->testIds, true );
+		} catch ( MoreThanOneDataSetFromDataProviderException | NoDataSetFromDataProviderException ) {
+			return false;
+		}
+	}
 }

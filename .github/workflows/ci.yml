@@ -25,7 +25,11 @@ jobs:
       - name: PHP_CodeSniffer (WordPress)
         run: |
           composer global require "squizlabs/php_codesniffer=*"
-          phpcs --standard=WordPress --ignore=vendor .
+          phpcs --standard=phpcs.xml --report=full wp-content/plugins/wp-qr-trackr
+      - name: PHP_CodeSniffer (Tests Only)
+        run: |
+          composer global require "squizlabs/php_codesniffer=*"
+          phpcs --standard=phpcs.xml --report=full wp-content/plugins/wp-qr-trackr/tests
 
   lint-js:
     name: JS Lint
@@ -38,8 +42,10 @@ jobs:
           node-version: 20
       - name: Install JS dependencies
         run: yarn install
+        working-directory: wp-content/plugins/wp-qr-trackr
       - name: Run ESLint
         run: yarn lint
+        working-directory: wp-content/plugins/wp-qr-trackr
 
   lint-css:
     name: CSS Lint
@@ -52,8 +58,10 @@ jobs:
           node-version: 20
       - name: Install JS dependencies
         run: yarn install
+        working-directory: wp-content/plugins/wp-qr-trackr
       - name: Run Stylelint
         run: yarn stylelint
+        working-directory: wp-content/plugins/wp-qr-trackr
 
   test-phpunit:
     name: PHPUnit Tests
@@ -93,6 +101,7 @@ jobs:
           node-version: 20
       - name: Install JS dependencies
         run: yarn install
+        working-directory: wp-content/plugins/wp-qr-trackr
       - name: Yarn Audit
         run: yarn audit --groups dependencies --level moderate || true
 

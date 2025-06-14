@@ -19,94 +19,92 @@ use function preg_split;
 /**
  * Unified diff parser.
  */
-final class Parser
-{
-    /**
-     * @return Diff[]
-     */
-    public function parse(string $string): array
-    {
-        $lines = preg_split('(\r\n|\r|\n)', $string);
+final class Parser {
 
-        if (!empty($lines) && $lines[count($lines) - 1] === '') {
-            array_pop($lines);
-        }
+	/**
+	 * @return Diff[]
+	 */
+	public function parse( string $string ): array {
+		$lines = preg_split( '(\r\n|\r|\n)', $string );
 
-        $lineCount = count($lines);
-        $diffs     = [];
-        $diff      = null;
-        $collected = [];
+		if ( ! empty( $lines ) && $lines[ count( $lines ) - 1 ] === '' ) {
+			array_pop( $lines );
+		}
 
-        for ($i = 0; $i < $lineCount; $i++) {
-            if (preg_match('#^---\h+"?(?P<file>[^\\v\\t"]+)#', $lines[$i], $fromMatch) &&
-                preg_match('#^\\+\\+\\+\\h+"?(?P<file>[^\\v\\t"]+)#', $lines[$i + 1], $toMatch)) {
-                if ($diff !== null) {
-                    $this->parseFileDiff($diff, $collected);
+		$lineCount = count( $lines );
+		$diffs     = array();
+		$diff      = null;
+		$collected = array();
 
-                    $diffs[]   = $diff;
-                    $collected = [];
-                }
+		for ( $i = 0; $i < $lineCount; $i++ ) {
+			if ( preg_match( '#^---\h+"?(?P<file>[^\\v\\t"]+)#', $lines[ $i ], $fromMatch ) &&
+				preg_match( '#^\\+\\+\\+\\h+"?(?P<file>[^\\v\\t"]+)#', $lines[ $i + 1 ], $toMatch ) ) {
+				if ( $diff !== null ) {
+					$this->parseFileDiff( $diff, $collected );
 
-                assert(!empty($fromMatch['file']));
-                assert(!empty($toMatch['file']));
+					$diffs[]   = $diff;
+					$collected = array();
+				}
 
-                $diff = new Diff($fromMatch['file'], $toMatch['file']);
+				assert( ! empty( $fromMatch['file'] ) );
+				assert( ! empty( $toMatch['file'] ) );
 
-                $i++;
-            } else {
-                if (preg_match('/^(?:diff --git |index [\da-f.]+|[+-]{3} [ab])/', $lines[$i])) {
-                    continue;
-                }
+				$diff = new Diff( $fromMatch['file'], $toMatch['file'] );
 
-                $collected[] = $lines[$i];
-            }
-        }
+				++$i;
+			} else {
+				if ( preg_match( '/^(?:diff --git |index [\da-f.]+|[+-]{3} [ab])/', $lines[ $i ] ) ) {
+					continue;
+				}
 
-        if ($diff !== null && count($collected)) {
-            $this->parseFileDiff($diff, $collected);
+				$collected[] = $lines[ $i ];
+			}
+		}
 
-            $diffs[] = $diff;
-        }
+		if ( $diff !== null && count( $collected ) ) {
+			$this->parseFileDiff( $diff, $collected );
 
-        return $diffs;
-    }
+			$diffs[] = $diff;
+		}
 
-    private function parseFileDiff(Diff $diff, array $lines): void
-    {
-        $chunks    = [];
-        $chunk     = null;
-        $diffLines = [];
+		return $diffs;
+	}
 
-        foreach ($lines as $line) {
-            if (preg_match('/^@@\s+-(?P<start>\d+)(?:,\s*(?P<startrange>\d+))?\s+\+(?P<end>\d+)(?:,\s*(?P<endrange>\d+))?\s+@@/', $line, $match, PREG_UNMATCHED_AS_NULL)) {
-                $chunk = new Chunk(
-                    (int) $match['start'],
-                    isset($match['startrange']) ? max(0, (int) $match['startrange']) : 1,
-                    (int) $match['end'],
-                    isset($match['endrange']) ? max(0, (int) $match['endrange']) : 1,
-                );
+	private function parseFileDiff( Diff $diff, array $lines ): void {
+		$chunks    = array();
+		$chunk     = null;
+		$diffLines = array();
 
-                $chunks[]  = $chunk;
-                $diffLines = [];
+		foreach ( $lines as $line ) {
+			if ( preg_match( '/^@@\s+-(?P<start>\d+)(?:,\s*(?P<startrange>\d+))?\s+\+(?P<end>\d+)(?:,\s*(?P<endrange>\d+))?\s+@@/', $line, $match, PREG_UNMATCHED_AS_NULL ) ) {
+				$chunk = new Chunk(
+					(int) $match['start'],
+					isset( $match['startrange'] ) ? max( 0, (int) $match['startrange'] ) : 1,
+					(int) $match['end'],
+					isset( $match['endrange'] ) ? max( 0, (int) $match['endrange'] ) : 1,
+				);
 
-                continue;
-            }
+				$chunks[]  = $chunk;
+				$diffLines = array();
 
-            if (preg_match('/^(?P<type>[+ -])?(?P<line>.*)/', $line, $match)) {
-                $type = Line::UNCHANGED;
+				continue;
+			}
 
-                if ($match['type'] === '+') {
-                    $type = Line::ADDED;
-                } elseif ($match['type'] === '-') {
-                    $type = Line::REMOVED;
-                }
+			if ( preg_match( '/^(?P<type>[+ -])?(?P<line>.*)/', $line, $match ) ) {
+				$type = Line::UNCHANGED;
 
-                $diffLines[] = new Line($type, $match['line']);
+				if ( $match['type'] === '+' ) {
+					$type = Line::ADDED;
+				} elseif ( $match['type'] === '-' ) {
+					$type = Line::REMOVED;
+				}
 
-                $chunk?->setLines($diffLines);
-            }
-        }
+				$diffLines[] = new Line( $type, $match['line'] );
 
-        $diff->setChunks($chunks);
-    }
+				$chunk?->setLines( $diffLines );
+			}
+		}
+
+		$diff->setChunks( $chunks );
+	}
 }

@@ -18,23 +18,22 @@ use ReflectionMethod;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Test
-{
-    public static function isTestMethod(ReflectionMethod $method): bool
-    {
-        if (!$method->isPublic()) {
-            return false;
-        }
+final class Test {
 
-        if (str_starts_with($method->getName(), 'test')) {
-            return true;
-        }
+	public static function isTestMethod( ReflectionMethod $method ): bool {
+		if ( ! $method->isPublic() ) {
+			return false;
+		}
 
-        $metadata = Registry::parser()->forMethod(
-            $method->getDeclaringClass()->getName(),
-            $method->getName(),
-        );
+		if ( str_starts_with( $method->getName(), 'test' ) ) {
+			return true;
+		}
 
-        return $metadata->isTest()->isNotEmpty();
-    }
+		$metadata = Registry::parser()->forMethod(
+			$method->getDeclaringClass()->getName(),
+			$method->getName(),
+		);
+
+		return $metadata->isTest()->isNotEmpty();
+	}
 }

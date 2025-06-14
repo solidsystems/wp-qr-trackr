@@ -14,7 +14,7 @@ namespace PHPUnit\Event\Telemetry;
  *
  * @internal This interface is not covered by the backward compatibility promise for PHPUnit
  */
-interface StopWatch
-{
-    public function current(): HRTime;
+interface StopWatch {
+
+	public function current(): HRTime;
 }

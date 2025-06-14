@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -15,99 +15,94 @@ namespace Brain\Monkey;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-final class Container
-{
+final class Container {
 
-    /**
-     * @var Container|null
-     */
-    private static $instance;
 
-    /**
-     * @var array
-     */
-    private $services = [];
+	/**
+	 * @var Container|null
+	 */
+	private static $instance;
 
-    /**
-     * Static instance lookup.
-     *
-     * @return Container
-     */
-    public static function instance()
-    {
-        if ( ! self::$instance) {
-            require_once dirname(__DIR__).'/inc/patchwork-loader.php';
-            self::$instance = new static();
-        }
+	/**
+	 * @var array
+	 */
+	private $services = array();
 
-        return self::$instance;
-    }
+	/**
+	 * Static instance lookup.
+	 *
+	 * @return Container
+	 */
+	public static function instance() {
+		if ( ! self::$instance ) {
+			require_once dirname( __DIR__ ) . '/inc/patchwork-loader.php';
+			self::$instance = new self();
+		}
 
-    /**
-     * @return \Brain\Monkey\Expectation\ExpectationFactory
-     */
-    public function expectationFactory()
-    {
-        return $this->service(__FUNCTION__, new Expectation\ExpectationFactory());
-    }
+		return self::$instance;
+	}
 
-    /**
-     * @return \Brain\Monkey\Hook\HookRunningStack
-     */
-    public function hookRunningStack()
-    {
-        return $this->service(__FUNCTION__, new Hook\HookRunningStack());
-    }
+	/**
+	 * @return \Brain\Monkey\Expectation\ExpectationFactory
+	 */
+	public function expectationFactory() {
+		return $this->service( __FUNCTION__, new Expectation\ExpectationFactory() );
+	}
 
-    /**
-     * @return \Brain\Monkey\Hook\HookStorage
-     */
-    public function hookStorage()
-    {
-        return $this->service(__FUNCTION__, new Hook\HookStorage());
-    }
+	/**
+	 * @return \Brain\Monkey\Hook\HookRunningStack
+	 */
+	public function hookRunningStack() {
+		return $this->service( __FUNCTION__, new Hook\HookRunningStack() );
+	}
 
-    /**
-     * @return \Brain\Monkey\Hook\HookExpectationExecutor
-     */
-    public function hookExpectationExecutor()
-    {
-        return $this->service(__FUNCTION__, new Hook\HookExpectationExecutor(
-            $this->hookRunningStack(),
-            $this->expectationFactory()
-        ));
-    }
+	/**
+	 * @return \Brain\Monkey\Hook\HookStorage
+	 */
+	public function hookStorage() {
+		return $this->service( __FUNCTION__, new Hook\HookStorage() );
+	}
 
-    /**
-     * @return \Brain\Monkey\Expectation\FunctionStubFactory
-     */
-    public function functionStubFactory()
-    {
-        return $this->service(__FUNCTION__, new Expectation\FunctionStubFactory());
-    }
+	/**
+	 * @return \Brain\Monkey\Hook\HookExpectationExecutor
+	 */
+	public function hookExpectationExecutor() {
+		return $this->service(
+			__FUNCTION__,
+			new Hook\HookExpectationExecutor(
+				$this->hookRunningStack(),
+				$this->expectationFactory()
+			)
+		);
+	}
 
-    /**
-     * @return void
-     */
-    public function reset()
-    {
-        $this->expectationFactory()->reset();
-        $this->hookRunningStack()->reset();
-        $this->hookStorage()->reset();
-        $this->functionStubFactory()->reset();
-    }
+	/**
+	 * @return \Brain\Monkey\Expectation\FunctionStubFactory
+	 */
+	public function functionStubFactory() {
+		return $this->service( __FUNCTION__, new Expectation\FunctionStubFactory() );
+	}
 
-    /**
-     * @param string $id
-     * @param mixed  $service
-     * @return mixed
-     */
-    private function service($id, $service)
-    {
-        if ( ! array_key_exists($id, $this->services)) {
-            $this->services[$id] = $service;
-        }
+	/**
+	 * @return void
+	 */
+	public function reset() {
+		$this->expectationFactory()->reset();
+		$this->hookRunningStack()->reset();
+		$this->hookStorage()->reset();
+		$this->functionStubFactory()->reset();
+	}
 
-        return $this->services[$id];
-    }
+	/**
+	 * @param string $id
+	 * @param mixed  $service
+	 * @return mixed
+	 */
+	private function service( $id, $service ) {
+		if ( ! array_key_exists( $id, $this->services ) ) {
+			$this->services[ $id ] = $service;
+		}
+
+		return $this->services[ $id ];
+	}
 }

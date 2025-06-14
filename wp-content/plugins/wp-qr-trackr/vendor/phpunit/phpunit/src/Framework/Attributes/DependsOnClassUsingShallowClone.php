@@ -16,27 +16,25 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final class DependsOnClassUsingShallowClone
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+#[Attribute( Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
+final class DependsOnClassUsingShallowClone {
 
-    /**
-     * @psalm-param class-string $className
-     */
-    public function __construct(string $className)
-    {
-        $this->className = $className;
-    }
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 */
+	public function __construct( string $className ) {
+		$this->className = $className;
+	}
+
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
 }

@@ -18,82 +18,81 @@ use SplObjectStorage;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class SourceMapper
-{
-    /**
-     * @psalm-var SplObjectStorage<Source, array<non-empty-string, true>>
-     */
-    private static ?SplObjectStorage $files = null;
+final class SourceMapper {
 
-    /**
-     * @psalm-return array<non-empty-string, true>
-     */
-    public function map(Source $source): array
-    {
-        if (self::$files === null) {
-            self::$files = new SplObjectStorage;
-        }
+	/**
+	 * @psalm-var SplObjectStorage<Source, array<non-empty-string, true>>
+	 */
+	private static ?SplObjectStorage $files = null;
 
-        if (isset(self::$files[$source])) {
-            return self::$files[$source];
-        }
+	/**
+	 * @psalm-return array<non-empty-string, true>
+	 */
+	public function map( Source $source ): array {
+		if ( self::$files === null ) {
+			self::$files = new SplObjectStorage();
+		}
 
-        $files = [];
+		if ( isset( self::$files[ $source ] ) ) {
+			return self::$files[ $source ];
+		}
 
-        foreach ($source->includeDirectories() as $directory) {
-            foreach ((new FileIteratorFacade)->getFilesAsArray($directory->path(), $directory->suffix(), $directory->prefix()) as $file) {
-                $file = realpath($file);
+		$files = array();
 
-                if (!$file) {
-                    continue;
-                }
+		foreach ( $source->includeDirectories() as $directory ) {
+			foreach ( ( new FileIteratorFacade() )->getFilesAsArray( $directory->path(), $directory->suffix(), $directory->prefix() ) as $file ) {
+				$file = realpath( $file );
 
-                $files[$file] = true;
-            }
-        }
+				if ( ! $file ) {
+					continue;
+				}
 
-        foreach ($source->includeFiles() as $file) {
-            $file = realpath($file->path());
+				$files[ $file ] = true;
+			}
+		}
 
-            if (!$file) {
-                continue;
-            }
+		foreach ( $source->includeFiles() as $file ) {
+			$file = realpath( $file->path() );
 
-            $files[$file] = true;
-        }
+			if ( ! $file ) {
+				continue;
+			}
 
-        foreach ($source->excludeDirectories() as $directory) {
-            foreach ((new FileIteratorFacade)->getFilesAsArray($directory->path(), $directory->suffix(), $directory->prefix()) as $file) {
-                $file = realpath($file);
+			$files[ $file ] = true;
+		}
 
-                if (!$file) {
-                    continue;
-                }
+		foreach ( $source->excludeDirectories() as $directory ) {
+			foreach ( ( new FileIteratorFacade() )->getFilesAsArray( $directory->path(), $directory->suffix(), $directory->prefix() ) as $file ) {
+				$file = realpath( $file );
 
-                if (!isset($files[$file])) {
-                    continue;
-                }
+				if ( ! $file ) {
+					continue;
+				}
 
-                unset($files[$file]);
-            }
-        }
+				if ( ! isset( $files[ $file ] ) ) {
+					continue;
+				}
 
-        foreach ($source->excludeFiles() as $file) {
-            $file = realpath($file->path());
+				unset( $files[ $file ] );
+			}
+		}
 
-            if (!$file) {
-                continue;
-            }
+		foreach ( $source->excludeFiles() as $file ) {
+			$file = realpath( $file->path() );
 
-            if (!isset($files[$file])) {
-                continue;
-            }
+			if ( ! $file ) {
+				continue;
+			}
 
-            unset($files[$file]);
-        }
+			if ( ! isset( $files[ $file ] ) ) {
+				continue;
+			}
 
-        self::$files[$source] = $files;
+			unset( $files[ $file ] );
+		}
 
-        return $files;
-    }
+		self::$files[ $source ] = $files;
+
+		return $files;
+	}
 }

@@ -15,19 +15,16 @@ const EVAL_ARGUMENT_WRAPPER = '\Patchwork\CodeManipulation\transformForEval';
 
 const STREAM_WRAPPER_REINSTATEMENT_CODE = '\Patchwork\CodeManipulation\Stream::reinstateWrapper();';
 
-function propagateThroughEval()
-{
-    return Generic\wrapUnaryConstructArguments(T_EVAL, EVAL_ARGUMENT_WRAPPER);
+function propagateThroughEval() {
+	return Generic\wrapUnaryConstructArguments( T_EVAL, EVAL_ARGUMENT_WRAPPER );
 }
 
-function injectStreamWrapperReinstatementCode()
-{
-    return Generic\injectCodeAtEnd(STREAM_WRAPPER_REINSTATEMENT_CODE);
+function injectStreamWrapperReinstatementCode() {
+	return Generic\injectCodeAtEnd( STREAM_WRAPPER_REINSTATEMENT_CODE );
 }
 
-function flush()
-{
-    return function(Source $s) {
-        $s->flush();
-    };
+function flush() {
+	return function ( Source $s ) {
+		$s->flush();
+	};
 }

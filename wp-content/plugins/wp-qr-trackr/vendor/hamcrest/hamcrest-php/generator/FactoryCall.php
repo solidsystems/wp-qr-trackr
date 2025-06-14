@@ -1,41 +1,38 @@
 <?php
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 
-class FactoryCall
-{
-    /**
-     * Hamcrest standard is two spaces for each level of indentation.
-     *
-     * @var string
-     */
-    const INDENT = '    ';
+class FactoryCall {
 
-    /**
-     * @var FactoryMethod
-     */
-    private $method;
+	/**
+	 * Hamcrest standard is two spaces for each level of indentation.
+	 *
+	 * @var string
+	 */
+	const INDENT = '    ';
 
-    /**
-     * @var string
-     */
-    private $name;
+	/**
+	 * @var FactoryMethod
+	 */
+	private $method;
 
-    public function __construct(FactoryMethod $method, $name)
-    {
-        $this->method = $method;
-        $this->name = $name;
-    }
+	/**
+	 * @var string
+	 */
+	private $name;
 
-    public function getMethod()
-    {
-        return $this->method;
-    }
+	public function __construct( FactoryMethod $method, $name ) {
+		$this->method = $method;
+		$this->name   = $name;
+	}
 
-    public function getName()
-    {
-        return $this->name;
-    }
+	public function getMethod() {
+		return $this->method;
+	}
+
+	public function getName() {
+		return $this->name;
+	}
 }

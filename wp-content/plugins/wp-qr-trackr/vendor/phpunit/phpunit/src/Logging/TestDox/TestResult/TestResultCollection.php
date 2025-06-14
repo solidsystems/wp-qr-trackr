@@ -20,36 +20,32 @@ use IteratorAggregate;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestResultCollection implements IteratorAggregate
-{
-    /**
-     * @psalm-var list<TestResult>
-     */
-    private readonly array $testResults;
+final class TestResultCollection implements IteratorAggregate {
 
-    /**
-     * @psalm-param list<TestResult> $testResults
-     */
-    public static function fromArray(array $testResults): self
-    {
-        return new self(...$testResults);
-    }
+	/**
+	 * @psalm-var list<TestResult>
+	 */
+	private readonly array $testResults;
 
-    private function __construct(TestResult ...$testResults)
-    {
-        $this->testResults = $testResults;
-    }
+	/**
+	 * @psalm-param list<TestResult> $testResults
+	 */
+	public static function fromArray( array $testResults ): self {
+		return new self( ...$testResults );
+	}
 
-    /**
-     * @psalm-return list<TestResult>
-     */
-    public function asArray(): array
-    {
-        return $this->testResults;
-    }
+	private function __construct( TestResult ...$testResults ) {
+		$this->testResults = $testResults;
+	}
 
-    public function getIterator(): TestResultCollectionIterator
-    {
-        return new TestResultCollectionIterator($this);
-    }
+	/**
+	 * @psalm-return list<TestResult>
+	 */
+	public function asArray(): array {
+		return $this->testResults;
+	}
+
+	public function getIterator(): TestResultCollectionIterator {
+		return new TestResultCollectionIterator( $this );
+	}
 }

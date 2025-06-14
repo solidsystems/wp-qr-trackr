@@ -14,45 +14,39 @@ use DOMElement;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class Method
-{
-    private readonly DOMElement $contextNode;
+final class Method {
 
-    public function __construct(DOMElement $context, string $name)
-    {
-        $this->contextNode = $context;
+	private readonly DOMElement $contextNode;
 
-        $this->setName($name);
-    }
+	public function __construct( DOMElement $context, string $name ) {
+		$this->contextNode = $context;
 
-    public function setSignature(string $signature): void
-    {
-        $this->contextNode->setAttribute('signature', $signature);
-    }
+		$this->setName( $name );
+	}
 
-    public function setLines(string $start, ?string $end = null): void
-    {
-        $this->contextNode->setAttribute('start', $start);
+	public function setSignature( string $signature ): void {
+		$this->contextNode->setAttribute( 'signature', $signature );
+	}
 
-        if ($end !== null) {
-            $this->contextNode->setAttribute('end', $end);
-        }
-    }
+	public function setLines( string $start, ?string $end = null ): void {
+		$this->contextNode->setAttribute( 'start', $start );
 
-    public function setTotals(string $executable, string $executed, string $coverage): void
-    {
-        $this->contextNode->setAttribute('executable', $executable);
-        $this->contextNode->setAttribute('executed', $executed);
-        $this->contextNode->setAttribute('coverage', $coverage);
-    }
+		if ( $end !== null ) {
+			$this->contextNode->setAttribute( 'end', $end );
+		}
+	}
 
-    public function setCrap(string $crap): void
-    {
-        $this->contextNode->setAttribute('crap', $crap);
-    }
+	public function setTotals( string $executable, string $executed, string $coverage ): void {
+		$this->contextNode->setAttribute( 'executable', $executable );
+		$this->contextNode->setAttribute( 'executed', $executed );
+		$this->contextNode->setAttribute( 'coverage', $coverage );
+	}
 
-    private function setName(string $name): void
-    {
-        $this->contextNode->setAttribute('name', $name);
-    }
+	public function setCrap( string $crap ): void {
+		$this->contextNode->setAttribute( 'crap', $crap );
+	}
+
+	private function setName( string $name ): void {
+		$this->contextNode->setAttribute( 'name', $name );
+	}
 }

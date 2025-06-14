@@ -16,23 +16,20 @@ namespace PHPUnit\Framework\TestStatus;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Warning extends Known
-{
-    /**
-     * @psalm-assert-if-true Warning $this
-     */
-    public function isWarning(): bool
-    {
-        return true;
-    }
+final class Warning extends Known {
 
-    public function asInt(): int
-    {
-        return 6;
-    }
+	/**
+	 * @psalm-assert-if-true Warning $this
+	 */
+	public function isWarning(): bool {
+		return true;
+	}
 
-    public function asString(): string
-    {
-        return 'warning';
-    }
+	public function asInt(): int {
+		return 6;
+	}
+
+	public function asString(): string {
+		return 'warning';
+	}
 }

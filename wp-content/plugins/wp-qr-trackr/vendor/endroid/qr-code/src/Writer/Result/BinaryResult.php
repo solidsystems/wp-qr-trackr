@@ -6,30 +6,27 @@ namespace Endroid\QrCode\Writer\Result;
 
 use Endroid\QrCode\Matrix\MatrixInterface;
 
-final class BinaryResult extends AbstractResult
-{
-    public function __construct(MatrixInterface $matrix)
-    {
-        parent::__construct($matrix);
-    }
+final class BinaryResult extends AbstractResult {
 
-    public function getString(): string
-    {
-        $matrix = $this->getMatrix();
+	public function __construct( MatrixInterface $matrix ) {
+		parent::__construct( $matrix );
+	}
 
-        $binaryString = '';
-        for ($rowIndex = 0; $rowIndex < $matrix->getBlockCount(); ++$rowIndex) {
-            for ($columnIndex = 0; $columnIndex < $matrix->getBlockCount(); ++$columnIndex) {
-                $binaryString .= $matrix->getBlockValue($rowIndex, $columnIndex);
-            }
-            $binaryString .= "\n";
-        }
+	public function getString(): string {
+		$matrix = $this->getMatrix();
 
-        return $binaryString;
-    }
+		$binaryString = '';
+		for ( $rowIndex = 0; $rowIndex < $matrix->getBlockCount(); ++$rowIndex ) {
+			for ( $columnIndex = 0; $columnIndex < $matrix->getBlockCount(); ++$columnIndex ) {
+				$binaryString .= $matrix->getBlockValue( $rowIndex, $columnIndex );
+			}
+			$binaryString .= "\n";
+		}
 
-    public function getMimeType(): string
-    {
-        return 'text/plain';
-    }
+		return $binaryString;
+	}
+
+	public function getMimeType(): string {
+		return 'text/plain';
+	}
 }

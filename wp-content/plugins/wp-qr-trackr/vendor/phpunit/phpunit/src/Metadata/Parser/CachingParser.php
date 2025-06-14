@@ -19,70 +19,66 @@ use PHPUnit\Metadata\MetadataCollection;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CachingParser implements Parser
-{
-    private readonly Parser $reader;
-    private array $classCache          = [];
-    private array $methodCache         = [];
-    private array $classAndMethodCache = [];
+final class CachingParser implements Parser {
 
-    public function __construct(Parser $reader)
-    {
-        $this->reader = $reader;
-    }
+	private readonly Parser $reader;
+	private array $classCache          = array();
+	private array $methodCache         = array();
+	private array $classAndMethodCache = array();
 
-    /**
-     * @psalm-param class-string $className
-     */
-    public function forClass(string $className): MetadataCollection
-    {
-        assert(class_exists($className));
+	public function __construct( Parser $reader ) {
+		$this->reader = $reader;
+	}
 
-        if (isset($this->classCache[$className])) {
-            return $this->classCache[$className];
-        }
+	/**
+	 * @psalm-param class-string $className
+	 */
+	public function forClass( string $className ): MetadataCollection {
+		assert( class_exists( $className ) );
 
-        $this->classCache[$className] = $this->reader->forClass($className);
+		if ( isset( $this->classCache[ $className ] ) ) {
+			return $this->classCache[ $className ];
+		}
 
-        return $this->classCache[$className];
-    }
+		$this->classCache[ $className ] = $this->reader->forClass( $className );
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    public function forMethod(string $className, string $methodName): MetadataCollection
-    {
-        assert(class_exists($className));
-        assert(method_exists($className, $methodName));
+		return $this->classCache[ $className ];
+	}
 
-        $key = $className . '::' . $methodName;
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	public function forMethod( string $className, string $methodName ): MetadataCollection {
+		assert( class_exists( $className ) );
+		assert( method_exists( $className, $methodName ) );
 
-        if (isset($this->methodCache[$key])) {
-            return $this->methodCache[$key];
-        }
+		$key = $className . '::' . $methodName;
 
-        $this->methodCache[$key] = $this->reader->forMethod($className, $methodName);
+		if ( isset( $this->methodCache[ $key ] ) ) {
+			return $this->methodCache[ $key ];
+		}
 
-        return $this->methodCache[$key];
-    }
+		$this->methodCache[ $key ] = $this->reader->forMethod( $className, $methodName );
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    public function forClassAndMethod(string $className, string $methodName): MetadataCollection
-    {
-        $key = $className . '::' . $methodName;
+		return $this->methodCache[ $key ];
+	}
 
-        if (isset($this->classAndMethodCache[$key])) {
-            return $this->classAndMethodCache[$key];
-        }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	public function forClassAndMethod( string $className, string $methodName ): MetadataCollection {
+		$key = $className . '::' . $methodName;
 
-        $this->classAndMethodCache[$key] = $this->forClass($className)->mergeWith(
-            $this->forMethod($className, $methodName),
-        );
+		if ( isset( $this->classAndMethodCache[ $key ] ) ) {
+			return $this->classAndMethodCache[ $key ];
+		}
 
-        return $this->classAndMethodCache[$key];
-    }
+		$this->classAndMethodCache[ $key ] = $this->forClass( $className )->mergeWith(
+			$this->forMethod( $className, $methodName ),
+		);
+
+		return $this->classAndMethodCache[ $key ];
+	}
 }

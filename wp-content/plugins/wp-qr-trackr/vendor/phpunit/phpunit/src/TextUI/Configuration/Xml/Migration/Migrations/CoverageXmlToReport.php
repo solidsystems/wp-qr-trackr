@@ -16,18 +16,16 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CoverageXmlToReport extends LogToReportMigration
-{
-    protected function forType(): string
-    {
-        return 'coverage-xml';
-    }
+final class CoverageXmlToReport extends LogToReportMigration {
 
-    protected function toReportFormat(DOMElement $logNode): DOMElement
-    {
-        $xml = $logNode->ownerDocument->createElement('xml');
-        $xml->setAttribute('outputDirectory', $logNode->getAttribute('target'));
+	protected function forType(): string {
+		return 'coverage-xml';
+	}
 
-        return $xml;
-    }
+	protected function toReportFormat( DOMElement $logNode ): DOMElement {
+		$xml = $logNode->ownerDocument->createElement( 'xml' );
+		$xml->setAttribute( 'outputDirectory', $logNode->getAttribute( 'target' ) );
+
+		return $xml;
+	}
 }

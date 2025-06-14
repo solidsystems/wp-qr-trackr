@@ -23,110 +23,104 @@ use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
-final class ComplexityCalculatingVisitor extends NodeVisitorAbstract
-{
-    /**
-     * @psalm-var list<Complexity>
-     */
-    private array $result = [];
-    private bool $shortCircuitTraversal;
+final class ComplexityCalculatingVisitor extends NodeVisitorAbstract {
 
-    public function __construct(bool $shortCircuitTraversal)
-    {
-        $this->shortCircuitTraversal = $shortCircuitTraversal;
-    }
+	/**
+	 * @psalm-var list<Complexity>
+	 */
+	private array $result = array();
+	private bool $shortCircuitTraversal;
 
-    public function enterNode(Node $node): ?int
-    {
-        if (!$node instanceof ClassMethod && !$node instanceof Function_) {
-            return null;
-        }
+	public function __construct( bool $shortCircuitTraversal ) {
+		$this->shortCircuitTraversal = $shortCircuitTraversal;
+	}
 
-        if ($node instanceof ClassMethod) {
-            if ($node->getAttribute('parent') instanceof Interface_) {
-                return null;
-            }
+	public function enterNode( Node $node ): ?int {
+		if ( ! $node instanceof ClassMethod && ! $node instanceof Function_ ) {
+			return null;
+		}
 
-            if ($node->isAbstract()) {
-                return null;
-            }
+		if ( $node instanceof ClassMethod ) {
+			if ( $node->getAttribute( 'parent' ) instanceof Interface_ ) {
+				return null;
+			}
 
-            $name = $this->classMethodName($node);
-        } else {
-            $name = $this->functionName($node);
-        }
+			if ( $node->isAbstract() ) {
+				return null;
+			}
 
-        $statements = $node->getStmts();
+			$name = $this->classMethodName( $node );
+		} else {
+			$name = $this->functionName( $node );
+		}
 
-        assert(is_array($statements));
+		$statements = $node->getStmts();
 
-        $this->result[] = new Complexity(
-            $name,
-            $this->cyclomaticComplexity($statements),
-        );
+		assert( is_array( $statements ) );
 
-        if ($this->shortCircuitTraversal) {
-            return NodeTraverser::DONT_TRAVERSE_CHILDREN;
-        }
+		$this->result[] = new Complexity(
+			$name,
+			$this->cyclomaticComplexity( $statements ),
+		);
 
-        return null;
-    }
+		if ( $this->shortCircuitTraversal ) {
+			return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+		}
 
-    public function result(): ComplexityCollection
-    {
-        return ComplexityCollection::fromList(...$this->result);
-    }
+		return null;
+	}
 
-    /**
-     * @param Stmt[] $statements
-     *
-     * @psalm-return positive-int
-     */
-    private function cyclomaticComplexity(array $statements): int
-    {
-        $traverser = new NodeTraverser;
+	public function result(): ComplexityCollection {
+		return ComplexityCollection::fromList( ...$this->result );
+	}
 
-        $cyclomaticComplexityCalculatingVisitor = new CyclomaticComplexityCalculatingVisitor;
+	/**
+	 * @param Stmt[] $statements
+	 *
+	 * @psalm-return positive-int
+	 */
+	private function cyclomaticComplexity( array $statements ): int {
+		$traverser = new NodeTraverser();
 
-        $traverser->addVisitor($cyclomaticComplexityCalculatingVisitor);
+		$cyclomaticComplexityCalculatingVisitor = new CyclomaticComplexityCalculatingVisitor();
 
-        /* @noinspection UnusedFunctionResultInspection */
-        $traverser->traverse($statements);
+		$traverser->addVisitor( $cyclomaticComplexityCalculatingVisitor );
 
-        return $cyclomaticComplexityCalculatingVisitor->cyclomaticComplexity();
-    }
+		/* @noinspection UnusedFunctionResultInspection */
+		$traverser->traverse( $statements );
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    private function classMethodName(ClassMethod $node): string
-    {
-        $parent = $node->getAttribute('parent');
+		return $cyclomaticComplexityCalculatingVisitor->cyclomaticComplexity();
+	}
 
-        assert($parent instanceof Class_ || $parent instanceof Trait_);
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	private function classMethodName( ClassMethod $node ): string {
+		$parent = $node->getAttribute( 'parent' );
 
-        if ($parent->getAttribute('parent') instanceof New_) {
-            return 'anonymous class';
-        }
+		assert( $parent instanceof Class_ || $parent instanceof Trait_ );
 
-        assert(isset($parent->namespacedName));
-        assert($parent->namespacedName instanceof Name);
+		if ( $parent->getAttribute( 'parent' ) instanceof New_ ) {
+			return 'anonymous class';
+		}
 
-        return $parent->namespacedName->toString() . '::' . $node->name->toString();
-    }
+		assert( isset( $parent->namespacedName ) );
+		assert( $parent->namespacedName instanceof Name );
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    private function functionName(Function_ $node): string
-    {
-        assert(isset($node->namespacedName));
-        assert($node->namespacedName instanceof Name);
+		return $parent->namespacedName->toString() . '::' . $node->name->toString();
+	}
 
-        $functionName = $node->namespacedName->toString();
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	private function functionName( Function_ $node ): string {
+		assert( isset( $node->namespacedName ) );
+		assert( $node->namespacedName instanceof Name );
 
-        assert($functionName !== '');
+		$functionName = $node->namespacedName->toString();
 
-        return $functionName;
-    }
+		assert( $functionName !== '' );
+
+		return $functionName;
+	}
 }

@@ -9,126 +9,116 @@ use Traversable;
 /**
  * Byte matrix.
  */
-final class ByteMatrix
-{
-    /**
-     * Bytes in the matrix, represented as array.
-     *
-     * @var SplFixedArray<SplFixedArray<int>>
-     */
-    private SplFixedArray $bytes;
+final class ByteMatrix {
 
-    public function __construct(private readonly int $width, private readonly int $height)
-    {
-        $this->bytes = new SplFixedArray($height);
+	/**
+	 * Bytes in the matrix, represented as array.
+	 *
+	 * @var SplFixedArray<SplFixedArray<int>>
+	 */
+	private SplFixedArray $bytes;
 
-        for ($y = 0; $y < $height; ++$y) {
-            $this->bytes[$y] = SplFixedArray::fromArray(array_fill(0, $width, 0));
-        }
-    }
+	public function __construct( private readonly int $width, private readonly int $height ) {
+		$this->bytes = new SplFixedArray( $height );
 
-    /**
-     * Gets the width of the matrix.
-     */
-    public function getWidth() : int
-    {
-        return $this->width;
-    }
+		for ( $y = 0; $y < $height; ++$y ) {
+			$this->bytes[ $y ] = SplFixedArray::fromArray( array_fill( 0, $width, 0 ) );
+		}
+	}
 
-    /**
-     * Gets the height of the matrix.
-     */
-    public function getHeight() : int
-    {
-        return $this->height;
-    }
+	/**
+	 * Gets the width of the matrix.
+	 */
+	public function getWidth(): int {
+		return $this->width;
+	}
 
-    /**
-     * Gets the internal representation of the matrix.
-     *
-     * @return SplFixedArray<SplFixedArray<int>>
-     */
-    public function getArray() : SplFixedArray
-    {
-        return $this->bytes;
-    }
+	/**
+	 * Gets the height of the matrix.
+	 */
+	public function getHeight(): int {
+		return $this->height;
+	}
 
-    /**
-     * @return Traversable<int>
-     */
-    public function getBytes() : Traversable
-    {
-        foreach ($this->bytes as $row) {
-            foreach ($row as $byte) {
-                yield $byte;
-            }
-        }
-    }
+	/**
+	 * Gets the internal representation of the matrix.
+	 *
+	 * @return SplFixedArray<SplFixedArray<int>>
+	 */
+	public function getArray(): SplFixedArray {
+		return $this->bytes;
+	}
 
-    /**
-     * Gets the byte for a specific position.
-     */
-    public function get(int $x, int $y) : int
-    {
-        return $this->bytes[$y][$x];
-    }
+	/**
+	 * @return Traversable<int>
+	 */
+	public function getBytes(): Traversable {
+		foreach ( $this->bytes as $row ) {
+			foreach ( $row as $byte ) {
+				yield $byte;
+			}
+		}
+	}
 
-    /**
-     * Sets the byte for a specific position.
-     */
-    public function set(int $x, int $y, int $value) : void
-    {
-        $this->bytes[$y][$x] = $value;
-    }
+	/**
+	 * Gets the byte for a specific position.
+	 */
+	public function get( int $x, int $y ): int {
+		return $this->bytes[ $y ][ $x ];
+	}
 
-    /**
-     * Clears the matrix with a specific value.
-     */
-    public function clear(int $value) : void
-    {
-        for ($y = 0; $y < $this->height; ++$y) {
-            for ($x = 0; $x < $this->width; ++$x) {
-                $this->bytes[$y][$x] = $value;
-            }
-        }
-    }
+	/**
+	 * Sets the byte for a specific position.
+	 */
+	public function set( int $x, int $y, int $value ): void {
+		$this->bytes[ $y ][ $x ] = $value;
+	}
 
-    public function __clone()
-    {
-        $this->bytes = clone $this->bytes;
+	/**
+	 * Clears the matrix with a specific value.
+	 */
+	public function clear( int $value ): void {
+		for ( $y = 0; $y < $this->height; ++$y ) {
+			for ( $x = 0; $x < $this->width; ++$x ) {
+				$this->bytes[ $y ][ $x ] = $value;
+			}
+		}
+	}
 
-        foreach ($this->bytes as $index => $row) {
-            $this->bytes[$index] = clone $row;
-        }
-    }
+	public function __clone() {
+		$this->bytes = clone $this->bytes;
 
-    /**
-     * Returns a string representation of the matrix.
-     */
-    public function __toString() : string
-    {
-        $result = '';
+		foreach ( $this->bytes as $index => $row ) {
+			$this->bytes[ $index ] = clone $row;
+		}
+	}
 
-        for ($y = 0; $y < $this->height; $y++) {
-            for ($x = 0; $x < $this->width; $x++) {
-                switch ($this->bytes[$y][$x]) {
-                    case 0:
-                        $result .= ' 0';
-                        break;
+	/**
+	 * Returns a string representation of the matrix.
+	 */
+	public function __toString(): string {
+		$result = '';
 
-                    case 1:
-                        $result .= ' 1';
-                        break;
+		for ( $y = 0; $y < $this->height; $y++ ) {
+			for ( $x = 0; $x < $this->width; $x++ ) {
+				switch ( $this->bytes[ $y ][ $x ] ) {
+					case 0:
+						$result .= ' 0';
+						break;
 
-                    default:
-                        $result .= '  ';
-                        break;
-                }
-            }
+					case 1:
+						$result .= ' 1';
+						break;
 
-            $result .= "\n";
-        }
+					default:
+						$result .= '  ';
+						break;
+				}
+			}
 
-        return $result;
-    }
+			$result .= "\n";
+		}
+
+		return $result;
+	}
 }

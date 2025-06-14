@@ -25,56 +25,53 @@ use function unlink;
 
 use const DIRECTORY_SEPARATOR;
 
-class RequireLoader implements Loader
-{
-    /**
-     * @var string
-     */
-    protected $lastPath = '';
+class RequireLoader implements Loader {
 
-    /**
-     * @var string
-     */
-    protected $path;
+	/**
+	 * @var string
+	 */
+	protected $lastPath = '';
 
-    /**
-     * @param string|null $path
-     */
-    public function __construct($path = null)
-    {
-        if ($path === null) {
-            $path = sys_get_temp_dir();
-        }
+	/**
+	 * @var string
+	 */
+	protected $path;
 
-        $this->path = realpath($path);
-    }
+	/**
+	 * @param string|null $path
+	 */
+	public function __construct( $path = null ) {
+		if ( $path === null ) {
+			$path = sys_get_temp_dir();
+		}
 
-    public function __destruct()
-    {
-        $files = array_diff(glob($this->path . DIRECTORY_SEPARATOR . 'Mockery_*.php') ?: [], [$this->lastPath]);
+		$this->path = realpath( $path );
+	}
 
-        foreach ($files as $file) {
-            @unlink($file);
-        }
-    }
+	public function __destruct() {
+		$files = array_diff( glob( $this->path . DIRECTORY_SEPARATOR . 'Mockery_*.php' ) ?: array(), array( $this->lastPath ) );
 
-    /**
-     * Load the given mock definition
-     *
-     * @return void
-     */
-    public function load(MockDefinition $definition)
-    {
-        if (class_exists($definition->getClassName(), false)) {
-            return;
-        }
+		foreach ( $files as $file ) {
+			@unlink( $file );
+		}
+	}
 
-        $this->lastPath = sprintf('%s%s%s.php', $this->path, DIRECTORY_SEPARATOR, uniqid('Mockery_', false));
+	/**
+	 * Load the given mock definition
+	 *
+	 * @return void
+	 */
+	public function load( MockDefinition $definition ) {
+		if ( class_exists( $definition->getClassName(), false ) ) {
+			return;
+		}
 
-        file_put_contents($this->lastPath, $definition->getCode());
+		$this->lastPath = sprintf( '%s%s%s.php', $this->path, DIRECTORY_SEPARATOR, uniqid( 'Mockery_', false ) );
 
-        if (file_exists($this->lastPath)) {
-            require $this->lastPath;
-        }
-    }
+		file_put_contents( $this->lastPath, $definition->getCode() );
+
+		if ( file_exists( $this->lastPath ) ) {
+			require $this->lastPath;
+		}
+	}
 }

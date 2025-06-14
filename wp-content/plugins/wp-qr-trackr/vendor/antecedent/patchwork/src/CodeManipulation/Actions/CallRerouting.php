@@ -62,27 +62,26 @@ const CALL_INTERCEPTION_CODE_NEVER_TYPED = '
 
 const QUEUE_DEPLOYMENT_CODE = '\Patchwork\CallRerouting\deployQueue()';
 
-function markPreprocessedFiles()
-{
-    return Generic\markPreprocessedFiles(CallRerouting\State::$preprocessedFiles);
+function markPreprocessedFiles() {
+	return Generic\markPreprocessedFiles( CallRerouting\State::$preprocessedFiles );
 }
 
-function injectCallInterceptionCode()
-{
-    return Generic\prependCodeToFunctions(
-        Utils\condense(CALL_INTERCEPTION_CODE),
-        array(
-            'void' => Utils\condense(CALL_INTERCEPTION_CODE_VOID_TYPED),
-            'never' => Utils\condense(CALL_INTERCEPTION_CODE_NEVER_TYPED),
-        ),
-        true
-    );
+function injectCallInterceptionCode() {
+	return Generic\prependCodeToFunctions(
+		Utils\condense( CALL_INTERCEPTION_CODE ),
+		array(
+			'void'  => Utils\condense( CALL_INTERCEPTION_CODE_VOID_TYPED ),
+			'never' => Utils\condense( CALL_INTERCEPTION_CODE_NEVER_TYPED ),
+		),
+		true
+	);
 }
 
-function injectQueueDeploymentCode()
-{
-    return Generic\chain(array(
-        Generic\injectFalseExpressionAtBeginnings(QUEUE_DEPLOYMENT_CODE),
-        Generic\injectCodeAfterClassDefinitions(QUEUE_DEPLOYMENT_CODE . ';'),
-    ));
+function injectQueueDeploymentCode() {
+	return Generic\chain(
+		array(
+			Generic\injectFalseExpressionAtBeginnings( QUEUE_DEPLOYMENT_CODE ),
+			Generic\injectCodeAfterClassDefinitions( QUEUE_DEPLOYMENT_CODE . ';' ),
+		)
+	);
 }

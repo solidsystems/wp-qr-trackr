@@ -14,39 +14,37 @@ use function implode;
 use function is_object;
 use function method_exists;
 
-class Ducktype extends MatcherAbstract
-{
-    /**
-     * Return a string representation of this Matcher
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return '<Ducktype[' . implode(', ', $this->_expected) . ']>';
-    }
+class Ducktype extends MatcherAbstract {
 
-    /**
-     * Check if the actual value matches the expected.
-     *
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        if (! is_object($actual)) {
-            return false;
-        }
+	/**
+	 * Return a string representation of this Matcher
+	 *
+	 * @return string
+	 */
+	public function __toString() {
+		return '<Ducktype[' . implode( ', ', $this->_expected ) . ']>';
+	}
 
-        foreach ($this->_expected as $method) {
-            if (! method_exists($actual, $method)) {
-                return false;
-            }
-        }
+	/**
+	 * Check if the actual value matches the expected.
+	 *
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		if ( ! is_object( $actual ) ) {
+			return false;
+		}
 
-        return true;
-    }
+		foreach ( $this->_expected as $method ) {
+			if ( ! method_exists( $actual, $method ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

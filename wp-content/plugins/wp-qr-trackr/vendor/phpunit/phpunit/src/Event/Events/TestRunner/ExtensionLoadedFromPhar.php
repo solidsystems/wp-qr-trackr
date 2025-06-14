@@ -18,47 +18,41 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ExtensionLoadedFromPhar implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
-    private readonly string $filename;
-    private readonly string $name;
-    private readonly string $version;
+final class ExtensionLoadedFromPhar implements Event {
 
-    public function __construct(Telemetry\Info $telemetryInfo, string $filename, string $name, string $version)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->filename      = $filename;
-        $this->name          = $name;
-        $this->version       = $version;
-    }
+	private readonly Telemetry\Info $telemetryInfo;
+	private readonly string $filename;
+	private readonly string $name;
+	private readonly string $version;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	public function __construct( Telemetry\Info $telemetryInfo, string $filename, string $name, string $version ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->filename      = $filename;
+		$this->name          = $name;
+		$this->version       = $version;
+	}
 
-    public function filename(): string
-    {
-        return $this->filename;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function name(): string
-    {
-        return $this->name;
-    }
+	public function filename(): string {
+		return $this->filename;
+	}
 
-    public function version(): string
-    {
-        return $this->version;
-    }
+	public function name(): string {
+		return $this->name;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            'Extension Loaded from PHAR (%s %s)',
-            $this->name,
-            $this->version,
-        );
-    }
+	public function version(): string {
+		return $this->version;
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'Extension Loaded from PHAR (%s %s)',
+			$this->name,
+			$this->version,
+		);
+	}
 }

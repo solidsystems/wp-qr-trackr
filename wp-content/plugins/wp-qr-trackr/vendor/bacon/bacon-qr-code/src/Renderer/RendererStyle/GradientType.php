@@ -12,11 +12,11 @@ use DASPRiD\Enum\AbstractEnum;
  * @method static self INVERSE_DIAGONAL()
  * @method static self RADIAL()
  */
-final class GradientType extends AbstractEnum
-{
-    protected const VERTICAL = null;
-    protected const HORIZONTAL = null;
-    protected const DIAGONAL = null;
-    protected const INVERSE_DIAGONAL = null;
-    protected const RADIAL = null;
+final class GradientType extends AbstractEnum {
+
+	protected const VERTICAL         = null;
+	protected const HORIZONTAL       = null;
+	protected const DIAGONAL         = null;
+	protected const INVERSE_DIAGONAL = null;
+	protected const RADIAL           = null;
 }

@@ -27,256 +27,248 @@ use ReflectionClass;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestBuilder
-{
-    /**
-     * @psalm-param non-empty-string $methodName
-     *
-     * @throws InvalidDataProviderException
-     */
-    public function build(ReflectionClass $theClass, string $methodName): Test
-    {
-        $className = $theClass->getName();
+final class TestBuilder {
 
-        $data = null;
+	/**
+	 * @psalm-param non-empty-string $methodName
+	 *
+	 * @throws InvalidDataProviderException
+	 */
+	public function build( ReflectionClass $theClass, string $methodName ): Test {
+		$className = $theClass->getName();
 
-        if ($this->requirementsSatisfied($className, $methodName)) {
-            $data = (new DataProvider)->providedData($className, $methodName);
-        }
+		$data = null;
 
-        if ($data !== null) {
-            return $this->buildDataProviderTestSuite(
-                $methodName,
-                $className,
-                $data,
-                $this->shouldTestMethodBeRunInSeparateProcess($className, $methodName),
-                $this->shouldGlobalStateBePreserved($className, $methodName),
-                $this->shouldAllTestMethodsOfTestClassBeRunInSingleSeparateProcess($className),
-                $this->backupSettings($className, $methodName),
-            );
-        }
+		if ( $this->requirementsSatisfied( $className, $methodName ) ) {
+			$data = ( new DataProvider() )->providedData( $className, $methodName );
+		}
 
-        $test = new $className($methodName);
+		if ( $data !== null ) {
+			return $this->buildDataProviderTestSuite(
+				$methodName,
+				$className,
+				$data,
+				$this->shouldTestMethodBeRunInSeparateProcess( $className, $methodName ),
+				$this->shouldGlobalStateBePreserved( $className, $methodName ),
+				$this->shouldAllTestMethodsOfTestClassBeRunInSingleSeparateProcess( $className ),
+				$this->backupSettings( $className, $methodName ),
+			);
+		}
 
-        assert($test instanceof TestCase);
+		$test = new $className( $methodName );
 
-        $this->configureTestCase(
-            $test,
-            $this->shouldTestMethodBeRunInSeparateProcess($className, $methodName),
-            $this->shouldGlobalStateBePreserved($className, $methodName),
-            $this->shouldAllTestMethodsOfTestClassBeRunInSingleSeparateProcess($className),
-            $this->backupSettings($className, $methodName),
-        );
+		assert( $test instanceof TestCase );
 
-        return $test;
-    }
+		$this->configureTestCase(
+			$test,
+			$this->shouldTestMethodBeRunInSeparateProcess( $className, $methodName ),
+			$this->shouldGlobalStateBePreserved( $className, $methodName ),
+			$this->shouldAllTestMethodsOfTestClassBeRunInSingleSeparateProcess( $className ),
+			$this->backupSettings( $className, $methodName ),
+		);
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     * @psalm-param array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>} $backupSettings
-     */
-    private function buildDataProviderTestSuite(string $methodName, string $className, array $data, bool $runTestInSeparateProcess, ?bool $preserveGlobalState, bool $runClassInSeparateProcess, array $backupSettings): DataProviderTestSuite
-    {
-        $dataProviderTestSuite = DataProviderTestSuite::empty(
-            $className . '::' . $methodName,
-        );
+		return $test;
+	}
 
-        $groups = (new Groups)->groups($className, $methodName);
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 * @psalm-param array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>} $backupSettings
+	 */
+	private function buildDataProviderTestSuite( string $methodName, string $className, array $data, bool $runTestInSeparateProcess, ?bool $preserveGlobalState, bool $runClassInSeparateProcess, array $backupSettings ): DataProviderTestSuite {
+		$dataProviderTestSuite = DataProviderTestSuite::empty(
+			$className . '::' . $methodName,
+		);
 
-        foreach ($data as $_dataName => $_data) {
-            $_test = new $className($methodName);
+		$groups = ( new Groups() )->groups( $className, $methodName );
 
-            assert($_test instanceof TestCase);
+		foreach ( $data as $_dataName => $_data ) {
+			$_test = new $className( $methodName );
 
-            $_test->setData($_dataName, $_data);
+			assert( $_test instanceof TestCase );
 
-            $this->configureTestCase(
-                $_test,
-                $runTestInSeparateProcess,
-                $preserveGlobalState,
-                $runClassInSeparateProcess,
-                $backupSettings,
-            );
+			$_test->setData( $_dataName, $_data );
 
-            $dataProviderTestSuite->addTest($_test, $groups);
-        }
+			$this->configureTestCase(
+				$_test,
+				$runTestInSeparateProcess,
+				$preserveGlobalState,
+				$runClassInSeparateProcess,
+				$backupSettings,
+			);
 
-        return $dataProviderTestSuite;
-    }
+			$dataProviderTestSuite->addTest( $_test, $groups );
+		}
 
-    /**
-     * @psalm-param array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>} $backupSettings
-     */
-    private function configureTestCase(TestCase $test, bool $runTestInSeparateProcess, ?bool $preserveGlobalState, bool $runClassInSeparateProcess, array $backupSettings): void
-    {
-        if ($runTestInSeparateProcess) {
-            $test->setRunTestInSeparateProcess(true);
-        }
+		return $dataProviderTestSuite;
+	}
 
-        if ($runClassInSeparateProcess) {
-            $test->setRunClassInSeparateProcess(true);
-        }
+	/**
+	 * @psalm-param array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>} $backupSettings
+	 */
+	private function configureTestCase( TestCase $test, bool $runTestInSeparateProcess, ?bool $preserveGlobalState, bool $runClassInSeparateProcess, array $backupSettings ): void {
+		if ( $runTestInSeparateProcess ) {
+			$test->setRunTestInSeparateProcess( true );
+		}
 
-        if ($preserveGlobalState !== null) {
-            $test->setPreserveGlobalState($preserveGlobalState);
-        }
+		if ( $runClassInSeparateProcess ) {
+			$test->setRunClassInSeparateProcess( true );
+		}
 
-        if ($backupSettings['backupGlobals'] !== null) {
-            $test->setBackupGlobals($backupSettings['backupGlobals']);
-        } else {
-            $test->setBackupGlobals(ConfigurationRegistry::get()->backupGlobals());
-        }
+		if ( $preserveGlobalState !== null ) {
+			$test->setPreserveGlobalState( $preserveGlobalState );
+		}
 
-        $test->setBackupGlobalsExcludeList($backupSettings['backupGlobalsExcludeList']);
+		if ( $backupSettings['backupGlobals'] !== null ) {
+			$test->setBackupGlobals( $backupSettings['backupGlobals'] );
+		} else {
+			$test->setBackupGlobals( ConfigurationRegistry::get()->backupGlobals() );
+		}
 
-        if ($backupSettings['backupStaticProperties'] !== null) {
-            $test->setBackupStaticProperties($backupSettings['backupStaticProperties']);
-        } else {
-            $test->setBackupStaticProperties(ConfigurationRegistry::get()->backupStaticProperties());
-        }
+		$test->setBackupGlobalsExcludeList( $backupSettings['backupGlobalsExcludeList'] );
 
-        $test->setBackupStaticPropertiesExcludeList($backupSettings['backupStaticPropertiesExcludeList']);
-    }
+		if ( $backupSettings['backupStaticProperties'] !== null ) {
+			$test->setBackupStaticProperties( $backupSettings['backupStaticProperties'] );
+		} else {
+			$test->setBackupStaticProperties( ConfigurationRegistry::get()->backupStaticProperties() );
+		}
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     *
-     * @psalm-return array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>}
-     */
-    private function backupSettings(string $className, string $methodName): array
-    {
-        $metadataForClass          = MetadataRegistry::parser()->forClass($className);
-        $metadataForMethod         = MetadataRegistry::parser()->forMethod($className, $methodName);
-        $metadataForClassAndMethod = MetadataRegistry::parser()->forClassAndMethod($className, $methodName);
+		$test->setBackupStaticPropertiesExcludeList( $backupSettings['backupStaticPropertiesExcludeList'] );
+	}
 
-        $backupGlobals            = null;
-        $backupGlobalsExcludeList = [];
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 *
+	 * @psalm-return array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>}
+	 */
+	private function backupSettings( string $className, string $methodName ): array {
+		$metadataForClass          = MetadataRegistry::parser()->forClass( $className );
+		$metadataForMethod         = MetadataRegistry::parser()->forMethod( $className, $methodName );
+		$metadataForClassAndMethod = MetadataRegistry::parser()->forClassAndMethod( $className, $methodName );
 
-        if ($metadataForMethod->isBackupGlobals()->isNotEmpty()) {
-            $metadata = $metadataForMethod->isBackupGlobals()->asArray()[0];
+		$backupGlobals            = null;
+		$backupGlobalsExcludeList = array();
 
-            assert($metadata instanceof BackupGlobals);
+		if ( $metadataForMethod->isBackupGlobals()->isNotEmpty() ) {
+			$metadata = $metadataForMethod->isBackupGlobals()->asArray()[0];
 
-            if ($metadata->enabled()) {
-                $backupGlobals = true;
-            }
-        } elseif ($metadataForClass->isBackupGlobals()->isNotEmpty()) {
-            $metadata = $metadataForClass->isBackupGlobals()->asArray()[0];
+			assert( $metadata instanceof BackupGlobals );
 
-            assert($metadata instanceof BackupGlobals);
+			if ( $metadata->enabled() ) {
+				$backupGlobals = true;
+			}
+		} elseif ( $metadataForClass->isBackupGlobals()->isNotEmpty() ) {
+			$metadata = $metadataForClass->isBackupGlobals()->asArray()[0];
 
-            if ($metadata->enabled()) {
-                $backupGlobals = true;
-            }
-        }
+			assert( $metadata instanceof BackupGlobals );
 
-        foreach ($metadataForClassAndMethod->isExcludeGlobalVariableFromBackup() as $metadata) {
-            assert($metadata instanceof ExcludeGlobalVariableFromBackup);
+			if ( $metadata->enabled() ) {
+				$backupGlobals = true;
+			}
+		}
 
-            $backupGlobalsExcludeList[] = $metadata->globalVariableName();
-        }
+		foreach ( $metadataForClassAndMethod->isExcludeGlobalVariableFromBackup() as $metadata ) {
+			assert( $metadata instanceof ExcludeGlobalVariableFromBackup );
 
-        $backupStaticProperties            = null;
-        $backupStaticPropertiesExcludeList = [];
+			$backupGlobalsExcludeList[] = $metadata->globalVariableName();
+		}
 
-        if ($metadataForMethod->isBackupStaticProperties()->isNotEmpty()) {
-            $metadata = $metadataForMethod->isBackupStaticProperties()->asArray()[0];
+		$backupStaticProperties            = null;
+		$backupStaticPropertiesExcludeList = array();
 
-            assert($metadata instanceof BackupStaticProperties);
+		if ( $metadataForMethod->isBackupStaticProperties()->isNotEmpty() ) {
+			$metadata = $metadataForMethod->isBackupStaticProperties()->asArray()[0];
 
-            if ($metadata->enabled()) {
-                $backupStaticProperties = true;
-            }
-        } elseif ($metadataForClass->isBackupStaticProperties()->isNotEmpty()) {
-            $metadata = $metadataForClass->isBackupStaticProperties()->asArray()[0];
+			assert( $metadata instanceof BackupStaticProperties );
 
-            assert($metadata instanceof BackupStaticProperties);
+			if ( $metadata->enabled() ) {
+				$backupStaticProperties = true;
+			}
+		} elseif ( $metadataForClass->isBackupStaticProperties()->isNotEmpty() ) {
+			$metadata = $metadataForClass->isBackupStaticProperties()->asArray()[0];
 
-            if ($metadata->enabled()) {
-                $backupStaticProperties = true;
-            }
-        }
+			assert( $metadata instanceof BackupStaticProperties );
 
-        foreach ($metadataForClassAndMethod->isExcludeStaticPropertyFromBackup() as $metadata) {
-            assert($metadata instanceof ExcludeStaticPropertyFromBackup);
+			if ( $metadata->enabled() ) {
+				$backupStaticProperties = true;
+			}
+		}
 
-            if (!isset($backupStaticPropertiesExcludeList[$metadata->className()])) {
-                $backupStaticPropertiesExcludeList[$metadata->className()] = [];
-            }
+		foreach ( $metadataForClassAndMethod->isExcludeStaticPropertyFromBackup() as $metadata ) {
+			assert( $metadata instanceof ExcludeStaticPropertyFromBackup );
 
-            $backupStaticPropertiesExcludeList[$metadata->className()][] = $metadata->propertyName();
-        }
+			if ( ! isset( $backupStaticPropertiesExcludeList[ $metadata->className() ] ) ) {
+				$backupStaticPropertiesExcludeList[ $metadata->className() ] = array();
+			}
 
-        return [
-            'backupGlobals'                     => $backupGlobals,
-            'backupGlobalsExcludeList'          => $backupGlobalsExcludeList,
-            'backupStaticProperties'            => $backupStaticProperties,
-            'backupStaticPropertiesExcludeList' => $backupStaticPropertiesExcludeList,
-        ];
-    }
+			$backupStaticPropertiesExcludeList[ $metadata->className() ][] = $metadata->propertyName();
+		}
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    private function shouldGlobalStateBePreserved(string $className, string $methodName): ?bool
-    {
-        $metadataForMethod = MetadataRegistry::parser()->forMethod($className, $methodName);
+		return array(
+			'backupGlobals'                     => $backupGlobals,
+			'backupGlobalsExcludeList'          => $backupGlobalsExcludeList,
+			'backupStaticProperties'            => $backupStaticProperties,
+			'backupStaticPropertiesExcludeList' => $backupStaticPropertiesExcludeList,
+		);
+	}
 
-        if ($metadataForMethod->isPreserveGlobalState()->isNotEmpty()) {
-            $metadata = $metadataForMethod->isPreserveGlobalState()->asArray()[0];
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	private function shouldGlobalStateBePreserved( string $className, string $methodName ): ?bool {
+		$metadataForMethod = MetadataRegistry::parser()->forMethod( $className, $methodName );
 
-            assert($metadata instanceof PreserveGlobalState);
+		if ( $metadataForMethod->isPreserveGlobalState()->isNotEmpty() ) {
+			$metadata = $metadataForMethod->isPreserveGlobalState()->asArray()[0];
 
-            return $metadata->enabled();
-        }
+			assert( $metadata instanceof PreserveGlobalState );
 
-        $metadataForClass = MetadataRegistry::parser()->forClass($className);
+			return $metadata->enabled();
+		}
 
-        if ($metadataForClass->isPreserveGlobalState()->isNotEmpty()) {
-            $metadata = $metadataForClass->isPreserveGlobalState()->asArray()[0];
+		$metadataForClass = MetadataRegistry::parser()->forClass( $className );
 
-            assert($metadata instanceof PreserveGlobalState);
+		if ( $metadataForClass->isPreserveGlobalState()->isNotEmpty() ) {
+			$metadata = $metadataForClass->isPreserveGlobalState()->asArray()[0];
 
-            return $metadata->enabled();
-        }
+			assert( $metadata instanceof PreserveGlobalState );
 
-        return null;
-    }
+			return $metadata->enabled();
+		}
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    private function shouldTestMethodBeRunInSeparateProcess(string $className, string $methodName): bool
-    {
-        if (MetadataRegistry::parser()->forClass($className)->isRunTestsInSeparateProcesses()->isNotEmpty()) {
-            return true;
-        }
+		return null;
+	}
 
-        if (MetadataRegistry::parser()->forMethod($className, $methodName)->isRunInSeparateProcess()->isNotEmpty()) {
-            return true;
-        }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	private function shouldTestMethodBeRunInSeparateProcess( string $className, string $methodName ): bool {
+		if ( MetadataRegistry::parser()->forClass( $className )->isRunTestsInSeparateProcesses()->isNotEmpty() ) {
+			return true;
+		}
 
-        return false;
-    }
+		if ( MetadataRegistry::parser()->forMethod( $className, $methodName )->isRunInSeparateProcess()->isNotEmpty() ) {
+			return true;
+		}
 
-    /**
-     * @psalm-param class-string $className
-     */
-    private function shouldAllTestMethodsOfTestClassBeRunInSingleSeparateProcess(string $className): bool
-    {
-        return MetadataRegistry::parser()->forClass($className)->isRunClassInSeparateProcess()->isNotEmpty();
-    }
+		return false;
+	}
 
-    /**
-     * @psalm-param class-string     $className
-     * @psalm-param non-empty-string $methodName
-     */
-    private function requirementsSatisfied(string $className, string $methodName): bool
-    {
-        return (new Requirements)->requirementsNotSatisfiedFor($className, $methodName) === [];
-    }
+	/**
+	 * @psalm-param class-string $className
+	 */
+	private function shouldAllTestMethodsOfTestClassBeRunInSingleSeparateProcess( string $className ): bool {
+		return MetadataRegistry::parser()->forClass( $className )->isRunClassInSeparateProcess()->isNotEmpty();
+	}
+
+	/**
+	 * @psalm-param class-string     $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	private function requirementsSatisfied( string $className, string $methodName ): bool {
+		return ( new Requirements() )->requirementsNotSatisfiedFor( $className, $methodName ) === array();
+	}
 }

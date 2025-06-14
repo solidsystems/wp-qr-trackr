@@ -10,29 +10,27 @@
 
 namespace Mockery;
 
-class ReceivedMethodCalls
-{
-    private $methodCalls = [];
+class ReceivedMethodCalls {
 
-    public function push(MethodCall $methodCall)
-    {
-        $this->methodCalls[] = $methodCall;
-    }
+	private $methodCalls = array();
 
-    public function verify(Expectation $expectation)
-    {
-        foreach ($this->methodCalls as $methodCall) {
-            if ($methodCall->getMethod() !== $expectation->getName()) {
-                continue;
-            }
+	public function push( MethodCall $methodCall ) {
+		$this->methodCalls[] = $methodCall;
+	}
 
-            if (! $expectation->matchArgs($methodCall->getArgs())) {
-                continue;
-            }
+	public function verify( Expectation $expectation ) {
+		foreach ( $this->methodCalls as $methodCall ) {
+			if ( $methodCall->getMethod() !== $expectation->getName() ) {
+				continue;
+			}
 
-            $expectation->verifyCall($methodCall->getArgs());
-        }
+			if ( ! $expectation->matchArgs( $methodCall->getArgs() ) ) {
+				continue;
+			}
 
-        $expectation->verify();
-    }
+			$expectation->verifyCall( $methodCall->getArgs() );
+		}
+
+		$expectation->verify();
+	}
 }

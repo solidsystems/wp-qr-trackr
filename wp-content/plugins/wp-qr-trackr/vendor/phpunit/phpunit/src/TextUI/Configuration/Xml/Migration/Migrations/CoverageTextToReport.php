@@ -16,20 +16,18 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CoverageTextToReport extends LogToReportMigration
-{
-    protected function forType(): string
-    {
-        return 'coverage-text';
-    }
+final class CoverageTextToReport extends LogToReportMigration {
 
-    protected function toReportFormat(DOMElement $logNode): DOMElement
-    {
-        $text = $logNode->ownerDocument->createElement('text');
-        $text->setAttribute('outputFile', $logNode->getAttribute('target'));
+	protected function forType(): string {
+		return 'coverage-text';
+	}
 
-        $this->migrateAttributes($logNode, $text, ['showUncoveredFiles', 'showOnlySummary']);
+	protected function toReportFormat( DOMElement $logNode ): DOMElement {
+		$text = $logNode->ownerDocument->createElement( 'text' );
+		$text->setAttribute( 'outputFile', $logNode->getAttribute( 'target' ) );
 
-        return $text;
-    }
+		$this->migrateAttributes( $logNode, $text, array( 'showUncoveredFiles', 'showOnlySummary' ) );
+
+		return $text;
+	}
 }

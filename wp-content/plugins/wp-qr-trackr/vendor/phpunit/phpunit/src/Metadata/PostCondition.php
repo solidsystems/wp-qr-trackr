@@ -14,13 +14,12 @@ namespace PHPUnit\Metadata;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PostCondition extends Metadata
-{
-    /**
-     * @psalm-assert-if-true PostCondition $this
-     */
-    public function isPostCondition(): bool
-    {
-        return true;
-    }
+final class PostCondition extends Metadata {
+
+	/**
+	 * @psalm-assert-if-true PostCondition $this
+	 */
+	public function isPostCondition(): bool {
+		return true;
+	}
 }

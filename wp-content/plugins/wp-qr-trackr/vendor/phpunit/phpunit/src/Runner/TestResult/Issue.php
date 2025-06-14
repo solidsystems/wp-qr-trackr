@@ -16,100 +16,93 @@ use PHPUnit\Event\Code\Test;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Issue
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $file;
+final class Issue {
 
-    /**
-     * @psalm-var positive-int
-     */
-    private readonly int $line;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $file;
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $description;
+	/**
+	 * @psalm-var positive-int
+	 */
+	private readonly int $line;
 
-    /**
-     * @psalm-var non-empty-array<non-empty-string, array{test: Test, count: int}>
-     */
-    private array $triggeringTests;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $description;
 
-    /**
-     * @psalm-param non-empty-string $file
-     * @psalm-param positive-int $line
-     * @psalm-param non-empty-string $description
-     */
-    public static function from(string $file, int $line, string $description, Test $triggeringTest): self
-    {
-        return new self($file, $line, $description, $triggeringTest);
-    }
+	/**
+	 * @psalm-var non-empty-array<non-empty-string, array{test: Test, count: int}>
+	 */
+	private array $triggeringTests;
 
-    /**
-     * @psalm-param non-empty-string $file
-     * @psalm-param positive-int $line
-     * @psalm-param non-empty-string $description
-     */
-    private function __construct(string $file, int $line, string $description, Test $triggeringTest)
-    {
-        $this->file        = $file;
-        $this->line        = $line;
-        $this->description = $description;
+	/**
+	 * @psalm-param non-empty-string $file
+	 * @psalm-param positive-int $line
+	 * @psalm-param non-empty-string $description
+	 */
+	public static function from( string $file, int $line, string $description, Test $triggeringTest ): self {
+		return new self( $file, $line, $description, $triggeringTest );
+	}
 
-        $this->triggeringTests = [
-            $triggeringTest->id() => [
-                'test'  => $triggeringTest,
-                'count' => 1,
-            ],
-        ];
-    }
+	/**
+	 * @psalm-param non-empty-string $file
+	 * @psalm-param positive-int $line
+	 * @psalm-param non-empty-string $description
+	 */
+	private function __construct( string $file, int $line, string $description, Test $triggeringTest ) {
+		$this->file        = $file;
+		$this->line        = $line;
+		$this->description = $description;
 
-    public function triggeredBy(Test $test): void
-    {
-        if (isset($this->triggeringTests[$test->id()])) {
-            $this->triggeringTests[$test->id()]['count']++;
+		$this->triggeringTests = array(
+			$triggeringTest->id() => array(
+				'test'  => $triggeringTest,
+				'count' => 1,
+			),
+		);
+	}
 
-            return;
-        }
+	public function triggeredBy( Test $test ): void {
+		if ( isset( $this->triggeringTests[ $test->id() ] ) ) {
+			++$this->triggeringTests[ $test->id() ]['count'];
 
-        $this->triggeringTests[$test->id()] = [
-            'test'  => $test,
-            'count' => 1,
-        ];
-    }
+			return;
+		}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function file(): string
-    {
-        return $this->file;
-    }
+		$this->triggeringTests[ $test->id() ] = array(
+			'test'  => $test,
+			'count' => 1,
+		);
+	}
 
-    /**
-     * @psalm-return positive-int
-     */
-    public function line(): int
-    {
-        return $this->line;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function file(): string {
+		return $this->file;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function description(): string
-    {
-        return $this->description;
-    }
+	/**
+	 * @psalm-return positive-int
+	 */
+	public function line(): int {
+		return $this->line;
+	}
 
-    /**
-     * @psalm-return non-empty-array<non-empty-string, array{test: Test, count: int}>
-     */
-    public function triggeringTests(): array
-    {
-        return $this->triggeringTests;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function description(): string {
+		return $this->description;
+	}
+
+	/**
+	 * @psalm-return non-empty-array<non-empty-string, array{test: Test, count: int}>
+	 */
+	public function triggeringTests(): array {
+		return $this->triggeringTests;
+	}
 }

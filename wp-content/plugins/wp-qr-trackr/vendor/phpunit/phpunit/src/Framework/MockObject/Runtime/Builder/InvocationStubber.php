@@ -15,26 +15,26 @@ use Throwable;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface InvocationStubber
-{
-    public function will(Stub $stub): Identity;
+interface InvocationStubber {
 
-    public function willReturn(mixed $value, mixed ...$nextValues): self;
+	public function will( Stub $stub ): Identity;
 
-    public function willReturnReference(mixed &$reference): self;
+	public function willReturn( mixed $value, mixed ...$nextValues ): self;
 
-    /**
-     * @psalm-param array<int, array<int, mixed>> $valueMap
-     */
-    public function willReturnMap(array $valueMap): self;
+	public function willReturnReference( mixed &$reference ): self;
 
-    public function willReturnArgument(int $argumentIndex): self;
+	/**
+	 * @psalm-param array<int, array<int, mixed>> $valueMap
+	 */
+	public function willReturnMap( array $valueMap ): self;
 
-    public function willReturnCallback(callable $callback): self;
+	public function willReturnArgument( int $argumentIndex ): self;
 
-    public function willReturnSelf(): self;
+	public function willReturnCallback( callable $callback ): self;
 
-    public function willReturnOnConsecutiveCalls(mixed ...$values): self;
+	public function willReturnSelf(): self;
 
-    public function willThrowException(Throwable $exception): self;
+	public function willReturnOnConsecutiveCalls( mixed ...$values ): self;
+
+	public function willThrowException( Throwable $exception ): self;
 }

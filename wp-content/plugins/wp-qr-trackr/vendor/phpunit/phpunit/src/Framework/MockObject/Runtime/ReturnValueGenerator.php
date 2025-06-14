@@ -29,222 +29,215 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ReturnValueGenerator
-{
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     * @psalm-param class-string $stubClassName
-     *
-     * @throws Exception
-     */
-    public function generate(string $className, string $methodName, string $stubClassName, string $returnType): mixed
-    {
-        $intersection = false;
-        $union        = false;
+final class ReturnValueGenerator {
 
-        if (str_contains($returnType, '|')) {
-            $types = explode('|', $returnType);
-            $union = true;
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 * @psalm-param class-string $stubClassName
+	 *
+	 * @throws Exception
+	 */
+	public function generate( string $className, string $methodName, string $stubClassName, string $returnType ): mixed {
+		$intersection = false;
+		$union        = false;
 
-            foreach (array_keys($types) as $key) {
-                if (str_starts_with($types[$key], '(') && str_ends_with($types[$key], ')')) {
-                    $types[$key] = substr($types[$key], 1, -1);
-                }
-            }
-        } elseif (str_contains($returnType, '&')) {
-            $types        = explode('&', $returnType);
-            $intersection = true;
-        } else {
-            $types = [$returnType];
-        }
+		if ( str_contains( $returnType, '|' ) ) {
+			$types = explode( '|', $returnType );
+			$union = true;
 
-        if (!$intersection) {
-            $lowerTypes = array_map('strtolower', $types);
+			foreach ( array_keys( $types ) as $key ) {
+				if ( str_starts_with( $types[ $key ], '(' ) && str_ends_with( $types[ $key ], ')' ) ) {
+					$types[ $key ] = substr( $types[ $key ], 1, -1 );
+				}
+			}
+		} elseif ( str_contains( $returnType, '&' ) ) {
+			$types        = explode( '&', $returnType );
+			$intersection = true;
+		} else {
+			$types = array( $returnType );
+		}
 
-            if (in_array('', $lowerTypes, true) ||
-                in_array('null', $lowerTypes, true) ||
-                in_array('mixed', $lowerTypes, true) ||
-                in_array('void', $lowerTypes, true)) {
-                return null;
-            }
+		if ( ! $intersection ) {
+			$lowerTypes = array_map( 'strtolower', $types );
 
-            if (in_array('true', $lowerTypes, true)) {
-                return true;
-            }
+			if ( in_array( '', $lowerTypes, true ) ||
+				in_array( 'null', $lowerTypes, true ) ||
+				in_array( 'mixed', $lowerTypes, true ) ||
+				in_array( 'void', $lowerTypes, true ) ) {
+				return null;
+			}
 
-            if (in_array('false', $lowerTypes, true) ||
-                in_array('bool', $lowerTypes, true)) {
-                return false;
-            }
+			if ( in_array( 'true', $lowerTypes, true ) ) {
+				return true;
+			}
 
-            if (in_array('float', $lowerTypes, true)) {
-                return 0.0;
-            }
+			if ( in_array( 'false', $lowerTypes, true ) ||
+				in_array( 'bool', $lowerTypes, true ) ) {
+				return false;
+			}
 
-            if (in_array('int', $lowerTypes, true)) {
-                return 0;
-            }
+			if ( in_array( 'float', $lowerTypes, true ) ) {
+				return 0.0;
+			}
 
-            if (in_array('string', $lowerTypes, true)) {
-                return '';
-            }
+			if ( in_array( 'int', $lowerTypes, true ) ) {
+				return 0;
+			}
 
-            if (in_array('array', $lowerTypes, true)) {
-                return [];
-            }
+			if ( in_array( 'string', $lowerTypes, true ) ) {
+				return '';
+			}
 
-            if (in_array('static', $lowerTypes, true)) {
-                return $this->newInstanceOf($stubClassName, $className, $methodName);
-            }
+			if ( in_array( 'array', $lowerTypes, true ) ) {
+				return array();
+			}
 
-            if (in_array('object', $lowerTypes, true)) {
-                return new stdClass;
-            }
+			if ( in_array( 'static', $lowerTypes, true ) ) {
+				return $this->newInstanceOf( $stubClassName, $className, $methodName );
+			}
 
-            if (in_array('callable', $lowerTypes, true) ||
-                in_array('closure', $lowerTypes, true)) {
-                return static function (): void
-                {
-                };
-            }
+			if ( in_array( 'object', $lowerTypes, true ) ) {
+				return new stdClass();
+			}
 
-            if (in_array('traversable', $lowerTypes, true) ||
-                in_array('generator', $lowerTypes, true) ||
-                in_array('iterable', $lowerTypes, true)) {
-                $generator = static function (): \Generator
-                {
-                    yield from [];
-                };
+			if ( in_array( 'callable', $lowerTypes, true ) ||
+				in_array( 'closure', $lowerTypes, true ) ) {
+				return static function (): void {
+				};
+			}
 
-                return $generator();
-            }
+			if ( in_array( 'traversable', $lowerTypes, true ) ||
+				in_array( 'generator', $lowerTypes, true ) ||
+				in_array( 'iterable', $lowerTypes, true ) ) {
+				$generator = static function (): \Generator {
+					yield from array();
+				};
 
-            if (!$union) {
-                return $this->testDoubleFor($returnType, $className, $methodName);
-            }
-        }
+				return $generator();
+			}
 
-        if ($union) {
-            foreach ($types as $type) {
-                if (str_contains($type, '&')) {
-                    $_types = explode('&', $type);
+			if ( ! $union ) {
+				return $this->testDoubleFor( $returnType, $className, $methodName );
+			}
+		}
 
-                    if ($this->onlyInterfaces($_types)) {
-                        return $this->testDoubleForIntersectionOfInterfaces($_types, $className, $methodName);
-                    }
-                }
-            }
-        }
+		if ( $union ) {
+			foreach ( $types as $type ) {
+				if ( str_contains( $type, '&' ) ) {
+					$_types = explode( '&', $type );
 
-        if ($intersection && $this->onlyInterfaces($types)) {
-            return $this->testDoubleForIntersectionOfInterfaces($types, $className, $methodName);
-        }
+					if ( $this->onlyInterfaces( $_types ) ) {
+						return $this->testDoubleForIntersectionOfInterfaces( $_types, $className, $methodName );
+					}
+				}
+			}
+		}
 
-        $reason = '';
+		if ( $intersection && $this->onlyInterfaces( $types ) ) {
+			return $this->testDoubleForIntersectionOfInterfaces( $types, $className, $methodName );
+		}
 
-        if ($union) {
-            $reason = ' because the declared return type is a union';
-        } elseif ($intersection) {
-            $reason = ' because the declared return type is an intersection';
-        }
+		$reason = '';
 
-        throw new RuntimeException(
-            sprintf(
-                'Return value for %s::%s() cannot be generated%s, please configure a return value for this method',
-                $className,
-                $methodName,
-                $reason,
-            ),
-        );
-    }
+		if ( $union ) {
+			$reason = ' because the declared return type is a union';
+		} elseif ( $intersection ) {
+			$reason = ' because the declared return type is an intersection';
+		}
 
-    /**
-     * @psalm-param non-empty-list<string> $types
-     */
-    private function onlyInterfaces(array $types): bool
-    {
-        foreach ($types as $type) {
-            if (!interface_exists($type)) {
-                return false;
-            }
-        }
+		throw new RuntimeException(
+			sprintf(
+				'Return value for %s::%s() cannot be generated%s, please configure a return value for this method',
+				$className,
+				$methodName,
+				$reason,
+			),
+		);
+	}
 
-        return true;
-    }
+	/**
+	 * @psalm-param non-empty-list<string> $types
+	 */
+	private function onlyInterfaces( array $types ): bool {
+		foreach ( $types as $type ) {
+			if ( ! interface_exists( $type ) ) {
+				return false;
+			}
+		}
 
-    /**
-     * @psalm-param class-string $stubClassName
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     *
-     * @throws RuntimeException
-     */
-    private function newInstanceOf(string $stubClassName, string $className, string $methodName): Stub
-    {
-        try {
-            return (new ReflectionClass($stubClassName))->newInstanceWithoutConstructor();
-            // @codeCoverageIgnoreStart
-        } catch (Throwable $t) {
-            throw new RuntimeException(
-                sprintf(
-                    'Return value for %s::%s() cannot be generated: %s',
-                    $className,
-                    $methodName,
-                    $t->getMessage(),
-                ),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-    }
+		return true;
+	}
 
-    /**
-     * @psalm-param class-string $type
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     *
-     * @throws RuntimeException
-     */
-    private function testDoubleFor(string $type, string $className, string $methodName): Stub
-    {
-        try {
-            return (new Generator)->testDouble($type, false, [], [], '', false);
-            // @codeCoverageIgnoreStart
-        } catch (Throwable $t) {
-            throw new RuntimeException(
-                sprintf(
-                    'Return value for %s::%s() cannot be generated: %s',
-                    $className,
-                    $methodName,
-                    $t->getMessage(),
-                ),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-    }
+	/**
+	 * @psalm-param class-string $stubClassName
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 *
+	 * @throws RuntimeException
+	 */
+	private function newInstanceOf( string $stubClassName, string $className, string $methodName ): Stub {
+		try {
+			return ( new ReflectionClass( $stubClassName ) )->newInstanceWithoutConstructor();
+			// @codeCoverageIgnoreStart
+		} catch ( Throwable $t ) {
+			throw new RuntimeException(
+				sprintf(
+					'Return value for %s::%s() cannot be generated: %s',
+					$className,
+					$methodName,
+					$t->getMessage(),
+				),
+			);
+			// @codeCoverageIgnoreEnd
+		}
+	}
 
-    /**
-     * @psalm-param non-empty-list<string> $types
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     *
-     * @throws RuntimeException
-     */
-    private function testDoubleForIntersectionOfInterfaces(array $types, string $className, string $methodName): Stub
-    {
-        try {
-            return (new Generator)->testDoubleForInterfaceIntersection($types, false);
-            // @codeCoverageIgnoreStart
-        } catch (Throwable $t) {
-            throw new RuntimeException(
-                sprintf(
-                    'Return value for %s::%s() cannot be generated: %s',
-                    $className,
-                    $methodName,
-                    $t->getMessage(),
-                ),
-            );
-            // @codeCoverageIgnoreEnd
-        }
-    }
+	/**
+	 * @psalm-param class-string $type
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 *
+	 * @throws RuntimeException
+	 */
+	private function testDoubleFor( string $type, string $className, string $methodName ): Stub {
+		try {
+			return ( new Generator() )->testDouble( $type, false, array(), array(), '', false );
+			// @codeCoverageIgnoreStart
+		} catch ( Throwable $t ) {
+			throw new RuntimeException(
+				sprintf(
+					'Return value for %s::%s() cannot be generated: %s',
+					$className,
+					$methodName,
+					$t->getMessage(),
+				),
+			);
+			// @codeCoverageIgnoreEnd
+		}
+	}
+
+	/**
+	 * @psalm-param non-empty-list<string> $types
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 *
+	 * @throws RuntimeException
+	 */
+	private function testDoubleForIntersectionOfInterfaces( array $types, string $className, string $methodName ): Stub {
+		try {
+			return ( new Generator() )->testDoubleForInterfaceIntersection( $types, false );
+			// @codeCoverageIgnoreStart
+		} catch ( Throwable $t ) {
+			throw new RuntimeException(
+				sprintf(
+					'Return value for %s::%s() cannot be generated: %s',
+					$className,
+					$methodName,
+					$t->getMessage(),
+				),
+			);
+			// @codeCoverageIgnoreEnd
+		}
+	}
 }

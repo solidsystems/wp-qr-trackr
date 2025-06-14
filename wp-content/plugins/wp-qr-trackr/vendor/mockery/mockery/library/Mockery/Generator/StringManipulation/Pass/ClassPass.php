@@ -16,34 +16,33 @@ use function class_exists;
 use function ltrim;
 use function str_replace;
 
-class ClassPass implements Pass
-{
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        $target = $config->getTargetClass();
+class ClassPass implements Pass {
 
-        if (! $target) {
-            return $code;
-        }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		$target = $config->getTargetClass();
 
-        if ($target->isFinal()) {
-            return $code;
-        }
+		if ( ! $target ) {
+			return $code;
+		}
 
-        $className = ltrim($target->getName(), '\\');
+		if ( $target->isFinal() ) {
+			return $code;
+		}
 
-        if (! class_exists($className)) {
-            Mockery::declareClass($className);
-        }
+		$className = ltrim( $target->getName(), '\\' );
 
-        return str_replace(
-            'implements MockInterface',
-            'extends \\' . $className . ' implements MockInterface',
-            $code
-        );
-    }
+		if ( ! class_exists( $className ) ) {
+			Mockery::declareClass( $className );
+		}
+
+		return str_replace(
+			'implements MockInterface',
+			'extends \\' . $className . ' implements MockInterface',
+			$code
+		);
+	}
 }

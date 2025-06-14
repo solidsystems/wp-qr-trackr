@@ -20,46 +20,40 @@ use IteratorAggregate;
  *
  * @template-implements IteratorAggregate<int, File>
  */
-final class FileCollection implements Countable, IteratorAggregate
-{
-    /**
-     * @psalm-var list<File>
-     */
-    private readonly array $files;
+final class FileCollection implements Countable, IteratorAggregate {
 
-    /**
-     * @psalm-param list<File> $files
-     */
-    public static function fromArray(array $files): self
-    {
-        return new self(...$files);
-    }
+	/**
+	 * @psalm-var list<File>
+	 */
+	private readonly array $files;
 
-    private function __construct(File ...$files)
-    {
-        $this->files = $files;
-    }
+	/**
+	 * @psalm-param list<File> $files
+	 */
+	public static function fromArray( array $files ): self {
+		return new self( ...$files );
+	}
 
-    /**
-     * @psalm-return list<File>
-     */
-    public function asArray(): array
-    {
-        return $this->files;
-    }
+	private function __construct( File ...$files ) {
+		$this->files = $files;
+	}
 
-    public function count(): int
-    {
-        return count($this->files);
-    }
+	/**
+	 * @psalm-return list<File>
+	 */
+	public function asArray(): array {
+		return $this->files;
+	}
 
-    public function notEmpty(): bool
-    {
-        return !empty($this->files);
-    }
+	public function count(): int {
+		return count( $this->files );
+	}
 
-    public function getIterator(): FileCollectionIterator
-    {
-        return new FileCollectionIterator($this);
-    }
+	public function notEmpty(): bool {
+		return ! empty( $this->files );
+	}
+
+	public function getIterator(): FileCollectionIterator {
+		return new FileCollectionIterator( $this );
+	}
 }

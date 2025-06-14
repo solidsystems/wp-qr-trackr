@@ -18,42 +18,39 @@ use Attribute;
  *
  * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5513
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-final class IgnoreMethodForCodeCoverage
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE )]
+final class IgnoreMethodForCodeCoverage {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $methodName;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    public function __construct(string $className, string $methodName)
-    {
-        $this->className  = $className;
-        $this->methodName = $methodName;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $methodName;
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	public function __construct( string $className, string $methodName ) {
+		$this->className  = $className;
+		$this->methodName = $methodName;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function methodName(): string
-    {
-        return $this->methodName;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function methodName(): string {
+		return $this->methodName;
+	}
 }

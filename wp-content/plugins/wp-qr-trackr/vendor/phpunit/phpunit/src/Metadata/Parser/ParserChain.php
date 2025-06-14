@@ -19,59 +19,55 @@ use PHPUnit\Metadata\MetadataCollection;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ParserChain implements Parser
-{
-    private readonly Parser $attributeReader;
-    private readonly Parser $annotationReader;
+final class ParserChain implements Parser {
 
-    public function __construct(Parser $attributeReader, Parser $annotationReader)
-    {
-        $this->attributeReader  = $attributeReader;
-        $this->annotationReader = $annotationReader;
-    }
+	private readonly Parser $attributeReader;
+	private readonly Parser $annotationReader;
 
-    /**
-     * @psalm-param class-string $className
-     */
-    public function forClass(string $className): MetadataCollection
-    {
-        assert(class_exists($className));
+	public function __construct( Parser $attributeReader, Parser $annotationReader ) {
+		$this->attributeReader  = $attributeReader;
+		$this->annotationReader = $annotationReader;
+	}
 
-        $metadata = $this->attributeReader->forClass($className);
+	/**
+	 * @psalm-param class-string $className
+	 */
+	public function forClass( string $className ): MetadataCollection {
+		assert( class_exists( $className ) );
 
-        if (!$metadata->isEmpty()) {
-            return $metadata;
-        }
+		$metadata = $this->attributeReader->forClass( $className );
 
-        return $this->annotationReader->forClass($className);
-    }
+		if ( ! $metadata->isEmpty() ) {
+			return $metadata;
+		}
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    public function forMethod(string $className, string $methodName): MetadataCollection
-    {
-        assert(class_exists($className));
-        assert(method_exists($className, $methodName));
+		return $this->annotationReader->forClass( $className );
+	}
 
-        $metadata = $this->attributeReader->forMethod($className, $methodName);
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	public function forMethod( string $className, string $methodName ): MetadataCollection {
+		assert( class_exists( $className ) );
+		assert( method_exists( $className, $methodName ) );
 
-        if (!$metadata->isEmpty()) {
-            return $metadata;
-        }
+		$metadata = $this->attributeReader->forMethod( $className, $methodName );
 
-        return $this->annotationReader->forMethod($className, $methodName);
-    }
+		if ( ! $metadata->isEmpty() ) {
+			return $metadata;
+		}
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    public function forClassAndMethod(string $className, string $methodName): MetadataCollection
-    {
-        return $this->forClass($className)->mergeWith(
-            $this->forMethod($className, $methodName),
-        );
-    }
+		return $this->annotationReader->forMethod( $className, $methodName );
+	}
+
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	public function forClassAndMethod( string $className, string $methodName ): MetadataCollection {
+		return $this->forClass( $className )->mergeWith(
+			$this->forMethod( $className, $methodName ),
+		);
+	}
 }

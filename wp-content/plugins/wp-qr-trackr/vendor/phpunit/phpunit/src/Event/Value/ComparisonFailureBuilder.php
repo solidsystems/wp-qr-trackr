@@ -20,51 +20,49 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ComparisonFailureBuilder
-{
-    public static function from(Throwable $t): ?ComparisonFailure
-    {
-        if (!$t instanceof ExpectationFailedException) {
-            return null;
-        }
+final class ComparisonFailureBuilder {
 
-        if (!$t->getComparisonFailure()) {
-            return null;
-        }
+	public static function from( Throwable $t ): ?ComparisonFailure {
+		if ( ! $t instanceof ExpectationFailedException ) {
+			return null;
+		}
 
-        $expectedAsString = $t->getComparisonFailure()->getExpectedAsString();
+		if ( ! $t->getComparisonFailure() ) {
+			return null;
+		}
 
-        if (empty($expectedAsString)) {
-            $expectedAsString = self::mapScalarValueToString($t->getComparisonFailure()->getExpected());
-        }
+		$expectedAsString = $t->getComparisonFailure()->getExpectedAsString();
 
-        $actualAsString = $t->getComparisonFailure()->getActualAsString();
+		if ( empty( $expectedAsString ) ) {
+			$expectedAsString = self::mapScalarValueToString( $t->getComparisonFailure()->getExpected() );
+		}
 
-        if (empty($actualAsString)) {
-            $actualAsString = self::mapScalarValueToString($t->getComparisonFailure()->getActual());
-        }
+		$actualAsString = $t->getComparisonFailure()->getActualAsString();
 
-        return new ComparisonFailure(
-            $expectedAsString,
-            $actualAsString,
-            $t->getComparisonFailure()->getDiff(),
-        );
-    }
+		if ( empty( $actualAsString ) ) {
+			$actualAsString = self::mapScalarValueToString( $t->getComparisonFailure()->getActual() );
+		}
 
-    private static function mapScalarValueToString(mixed $value): string
-    {
-        if ($value === null) {
-            return 'null';
-        }
+		return new ComparisonFailure(
+			$expectedAsString,
+			$actualAsString,
+			$t->getComparisonFailure()->getDiff(),
+		);
+	}
 
-        if (is_bool($value)) {
-            return $value ? 'true' : 'false';
-        }
+	private static function mapScalarValueToString( mixed $value ): string {
+		if ( $value === null ) {
+			return 'null';
+		}
 
-        if (is_scalar($value)) {
-            return print_r($value, true);
-        }
+		if ( is_bool( $value ) ) {
+			return $value ? 'true' : 'false';
+		}
 
-        return '';
-    }
+		if ( is_scalar( $value ) ) {
+			return print_r( $value, true );
+		}
+
+		return '';
+	}
 }

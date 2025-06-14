@@ -18,7 +18,7 @@ use Attribute;
  *
  * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5236
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
-final class CodeCoverageIgnore
-{
+#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD )]
+final class CodeCoverageIgnore {
+
 }

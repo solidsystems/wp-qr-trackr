@@ -11,14 +11,14 @@
 namespace PharIo\Manifest;
 
 class PhpExtensionRequirement implements Requirement {
-    /** @var string */
-    private $extension;
+	/** @var string */
+	private $extension;
 
-    public function __construct(string $extension) {
-        $this->extension = $extension;
-    }
+	public function __construct( string $extension ) {
+		$this->extension = $extension;
+	}
 
-    public function asString(): string {
-        return $this->extension;
-    }
+	public function asString(): string {
+		return $this->extension;
+	}
 }

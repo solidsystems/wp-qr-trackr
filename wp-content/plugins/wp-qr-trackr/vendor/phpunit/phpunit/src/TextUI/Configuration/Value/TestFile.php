@@ -16,31 +16,27 @@ use PHPUnit\Util\VersionComparisonOperator;
  *
  * @psalm-immutable
  */
-final class TestFile
-{
-    private readonly string $path;
-    private readonly string $phpVersion;
-    private readonly VersionComparisonOperator $phpVersionOperator;
+final class TestFile {
 
-    public function __construct(string $path, string $phpVersion, VersionComparisonOperator $phpVersionOperator)
-    {
-        $this->path               = $path;
-        $this->phpVersion         = $phpVersion;
-        $this->phpVersionOperator = $phpVersionOperator;
-    }
+	private readonly string $path;
+	private readonly string $phpVersion;
+	private readonly VersionComparisonOperator $phpVersionOperator;
 
-    public function path(): string
-    {
-        return $this->path;
-    }
+	public function __construct( string $path, string $phpVersion, VersionComparisonOperator $phpVersionOperator ) {
+		$this->path               = $path;
+		$this->phpVersion         = $phpVersion;
+		$this->phpVersionOperator = $phpVersionOperator;
+	}
 
-    public function phpVersion(): string
-    {
-        return $this->phpVersion;
-    }
+	public function path(): string {
+		return $this->path;
+	}
 
-    public function phpVersionOperator(): VersionComparisonOperator
-    {
-        return $this->phpVersionOperator;
-    }
+	public function phpVersion(): string {
+		return $this->phpVersion;
+	}
+
+	public function phpVersionOperator(): VersionComparisonOperator {
+		return $this->phpVersionOperator;
+	}
 }

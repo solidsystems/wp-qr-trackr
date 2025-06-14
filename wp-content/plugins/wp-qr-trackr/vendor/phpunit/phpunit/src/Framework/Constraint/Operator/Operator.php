@@ -12,44 +12,42 @@ namespace PHPUnit\Framework\Constraint;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract class Operator extends Constraint
-{
-    /**
-     * Returns the name of this operator.
-     */
-    abstract public function operator(): string;
+abstract class Operator extends Constraint {
 
-    /**
-     * Returns this operator's precedence.
-     *
-     * @see https://www.php.net/manual/en/language.operators.precedence.php
-     */
-    abstract public function precedence(): int;
+	/**
+	 * Returns the name of this operator.
+	 */
+	abstract public function operator(): string;
 
-    /**
-     * Returns the number of operands.
-     */
-    abstract public function arity(): int;
+	/**
+	 * Returns this operator's precedence.
+	 *
+	 * @see https://www.php.net/manual/en/language.operators.precedence.php
+	 */
+	abstract public function precedence(): int;
 
-    /**
-     * Validates $constraint argument.
-     */
-    protected function checkConstraint(mixed $constraint): Constraint
-    {
-        if (!$constraint instanceof Constraint) {
-            return new IsEqual($constraint);
-        }
+	/**
+	 * Returns the number of operands.
+	 */
+	abstract public function arity(): int;
 
-        return $constraint;
-    }
+	/**
+	 * Validates $constraint argument.
+	 */
+	protected function checkConstraint( mixed $constraint ): Constraint {
+		if ( ! $constraint instanceof Constraint ) {
+			return new IsEqual( $constraint );
+		}
 
-    /**
-     * Returns true if the $constraint needs to be wrapped with braces.
-     */
-    protected function constraintNeedsParentheses(Constraint $constraint): bool
-    {
-        return $constraint instanceof self &&
-               $constraint->arity() > 1 &&
-               $this->precedence() <= $constraint->precedence();
-    }
+		return $constraint;
+	}
+
+	/**
+	 * Returns true if the $constraint needs to be wrapped with braces.
+	 */
+	protected function constraintNeedsParentheses( Constraint $constraint ): bool {
+		return $constraint instanceof self &&
+				$constraint->arity() > 1 &&
+				$this->precedence() <= $constraint->precedence();
+	}
 }

@@ -16,73 +16,70 @@ use function sprintf;
 use function substr_replace;
 use SebastianBergmann\Exporter\Exporter;
 
-class ObjectComparator extends ArrayComparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        return is_object($expected) && is_object($actual);
-    }
+class ObjectComparator extends ArrayComparator {
 
-    /**
-     * @throws ComparisonFailure
-     */
-    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = []): void
-    {
-        assert(is_object($expected));
-        assert(is_object($actual));
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		return is_object( $expected ) && is_object( $actual );
+	}
 
-        if ($actual::class !== $expected::class) {
-            $exporter = new Exporter;
+	/**
+	 * @throws ComparisonFailure
+	 */
+	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = array() ): void {
+		assert( is_object( $expected ) );
+		assert( is_object( $actual ) );
 
-            throw new ComparisonFailure(
-                $expected,
-                $actual,
-                $exporter->export($expected),
-                $exporter->export($actual),
-                sprintf(
-                    '%s is not instance of expected class "%s".',
-                    $exporter->export($actual),
-                    $expected::class,
-                ),
-            );
-        }
+		if ( $actual::class !== $expected::class ) {
+			$exporter = new Exporter();
 
-        // don't compare twice to allow for cyclic dependencies
-        if (in_array([$actual, $expected], $processed, true) ||
-            in_array([$expected, $actual], $processed, true)) {
-            return;
-        }
+			throw new ComparisonFailure(
+				$expected,
+				$actual,
+				$exporter->export( $expected ),
+				$exporter->export( $actual ),
+				sprintf(
+					'%s is not instance of expected class "%s".',
+					$exporter->export( $actual ),
+					$expected::class,
+				),
+			);
+		}
 
-        $processed[] = [$actual, $expected];
+		// don't compare twice to allow for cyclic dependencies
+		if ( in_array( array( $actual, $expected ), $processed, true ) ||
+			in_array( array( $expected, $actual ), $processed, true ) ) {
+			return;
+		}
 
-        // don't compare objects if they are identical
-        // this helps to avoid the error "maximum function nesting level reached"
-        // CAUTION: this conditional clause is not tested
-        if ($actual !== $expected) {
-            try {
-                parent::assertEquals(
-                    $this->toArray($expected),
-                    $this->toArray($actual),
-                    $delta,
-                    $canonicalize,
-                    $ignoreCase,
-                    $processed,
-                );
-            } catch (ComparisonFailure $e) {
-                throw new ComparisonFailure(
-                    $expected,
-                    $actual,
-                    // replace "Array" with "MyClass object"
-                    substr_replace($e->getExpectedAsString(), $expected::class . ' Object', 0, 5),
-                    substr_replace($e->getActualAsString(), $actual::class . ' Object', 0, 5),
-                    'Failed asserting that two objects are equal.',
-                );
-            }
-        }
-    }
+		$processed[] = array( $actual, $expected );
 
-    protected function toArray(object $object): array
-    {
-        return (new Exporter)->toArray($object);
-    }
+		// don't compare objects if they are identical
+		// this helps to avoid the error "maximum function nesting level reached"
+		// CAUTION: this conditional clause is not tested
+		if ( $actual !== $expected ) {
+			try {
+				parent::assertEquals(
+					$this->toArray( $expected ),
+					$this->toArray( $actual ),
+					$delta,
+					$canonicalize,
+					$ignoreCase,
+					$processed,
+				);
+			} catch ( ComparisonFailure $e ) {
+				throw new ComparisonFailure(
+					$expected,
+					$actual,
+					// replace "Array" with "MyClass object"
+					substr_replace( $e->getExpectedAsString(), $expected::class . ' Object', 0, 5 ),
+					substr_replace( $e->getActualAsString(), $actual::class . ' Object', 0, 5 ),
+					'Failed asserting that two objects are equal.',
+				);
+			}
+		}
+	}
+
+	protected function toArray( object $object ): array {
+		return ( new Exporter() )->toArray( $object );
+	}
 }

@@ -25,78 +25,75 @@ use function ksort;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Json
-{
-    /**
-     * @throws InvalidJsonException
-     */
-    public static function prettify(string $json): string
-    {
-        $decodedJson = json_decode($json, false);
+final class Json {
 
-        if (json_last_error()) {
-            throw new InvalidJsonException;
-        }
+	/**
+	 * @throws InvalidJsonException
+	 */
+	public static function prettify( string $json ): string {
+		$decodedJson = json_decode( $json, false );
 
-        return json_encode($decodedJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    }
+		if ( json_last_error() ) {
+			throw new InvalidJsonException();
+		}
 
-    /**
-     * To allow comparison of JSON strings, first process them into a consistent
-     * format so that they can be compared as strings.
-     *
-     * @return array ($error, $canonicalized_json)  The $error parameter is used
-     *               to indicate an error decoding the json. This is used to avoid ambiguity
-     *               with JSON strings consisting entirely of 'null' or 'false'.
-     */
-    public static function canonicalize(string $json): array
-    {
-        $decodedJson = json_decode($json);
+		return json_encode( $decodedJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+	}
 
-        if (json_last_error()) {
-            return [true, null];
-        }
+	/**
+	 * To allow comparison of JSON strings, first process them into a consistent
+	 * format so that they can be compared as strings.
+	 *
+	 * @return array ($error, $canonicalized_json)  The $error parameter is used
+	 *               to indicate an error decoding the json. This is used to avoid ambiguity
+	 *               with JSON strings consisting entirely of 'null' or 'false'.
+	 */
+	public static function canonicalize( string $json ): array {
+		$decodedJson = json_decode( $json );
 
-        self::recursiveSort($decodedJson);
+		if ( json_last_error() ) {
+			return array( true, null );
+		}
 
-        $reencodedJson = json_encode($decodedJson);
+		self::recursiveSort( $decodedJson );
 
-        return [false, $reencodedJson];
-    }
+		$reencodedJson = json_encode( $decodedJson );
 
-    /**
-     * JSON object keys are unordered while PHP array keys are ordered.
-     *
-     * Sort all array keys to ensure both the expected and actual values have
-     * their keys in the same order.
-     */
-    private static function recursiveSort(mixed &$json): void
-    {
-        // Nulls, empty arrays, and scalars need no further handling.
-        if (!$json || is_scalar($json)) {
-            return;
-        }
+		return array( false, $reencodedJson );
+	}
 
-        $isObject = is_object($json);
+	/**
+	 * JSON object keys are unordered while PHP array keys are ordered.
+	 *
+	 * Sort all array keys to ensure both the expected and actual values have
+	 * their keys in the same order.
+	 */
+	private static function recursiveSort( mixed &$json ): void {
+		// Nulls, empty arrays, and scalars need no further handling.
+		if ( ! $json || is_scalar( $json ) ) {
+			return;
+		}
 
-        if ($isObject) {
-            // Objects need to be sorted during canonicalization to ensure
-            // correct comparsion since JSON objects are unordered. It must be
-            // kept as an object so that the value correctly stays as a JSON
-            // object instead of potentially being converted to an array. This
-            // approach ensures that numeric string JSON keys are preserved and
-            // don't risk being flattened due to PHP's array semantics.
-            // See #2919, #4584, #4674
-            $json = (array) $json;
-            ksort($json, SORT_STRING);
-        }
+		$isObject = is_object( $json );
 
-        foreach ($json as &$value) {
-            self::recursiveSort($value);
-        }
+		if ( $isObject ) {
+			// Objects need to be sorted during canonicalization to ensure
+			// correct comparsion since JSON objects are unordered. It must be
+			// kept as an object so that the value correctly stays as a JSON
+			// object instead of potentially being converted to an array. This
+			// approach ensures that numeric string JSON keys are preserved and
+			// don't risk being flattened due to PHP's array semantics.
+			// See #2919, #4584, #4674
+			$json = (array) $json;
+			ksort( $json, SORT_STRING );
+		}
 
-        if ($isObject) {
-            $json = (object) $json;
-        }
-    }
+		foreach ( $json as &$value ) {
+			self::recursiveSort( $value );
+		}
+
+		if ( $isObject ) {
+			$json = (object) $json;
+		}
+	}
 }

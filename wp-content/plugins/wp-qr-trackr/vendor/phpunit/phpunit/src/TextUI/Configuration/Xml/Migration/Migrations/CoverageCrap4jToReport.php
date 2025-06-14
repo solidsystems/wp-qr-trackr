@@ -16,20 +16,18 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CoverageCrap4jToReport extends LogToReportMigration
-{
-    protected function forType(): string
-    {
-        return 'coverage-crap4j';
-    }
+final class CoverageCrap4jToReport extends LogToReportMigration {
 
-    protected function toReportFormat(DOMElement $logNode): DOMElement
-    {
-        $crap4j = $logNode->ownerDocument->createElement('crap4j');
-        $crap4j->setAttribute('outputFile', $logNode->getAttribute('target'));
+	protected function forType(): string {
+		return 'coverage-crap4j';
+	}
 
-        $this->migrateAttributes($logNode, $crap4j, ['threshold']);
+	protected function toReportFormat( DOMElement $logNode ): DOMElement {
+		$crap4j = $logNode->ownerDocument->createElement( 'crap4j' );
+		$crap4j->setAttribute( 'outputFile', $logNode->getAttribute( 'target' ) );
 
-        return $crap4j;
-    }
+		$this->migrateAttributes( $logNode, $crap4j, array( 'threshold' ) );
+
+		return $crap4j;
+	}
 }

@@ -20,37 +20,36 @@ use function preg_replace;
  * mocked. This pass removes the builtin methods where they are final on the
  * target
  */
-class RemoveBuiltinMethodsThatAreFinalPass implements Pass
-{
-    protected $methods = [
-        '__wakeup' => '/public function __wakeup\(\)\s+\{.*?\}/sm',
-        '__toString' => '/public function __toString\(\)\s+(:\s+string)?\s*\{.*?\}/sm',
-    ];
+class RemoveBuiltinMethodsThatAreFinalPass implements Pass {
 
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        $target = $config->getTargetClass();
+	protected $methods = array(
+		'__wakeup'   => '/public function __wakeup\(\)\s+\{.*?\}/sm',
+		'__toString' => '/public function __toString\(\)\s+(:\s+string)?\s*\{.*?\}/sm',
+	);
 
-        if (! $target instanceof TargetClassInterface) {
-            return $code;
-        }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		$target = $config->getTargetClass();
 
-        foreach ($target->getMethods() as $method) {
-            if (! $method->isFinal()) {
-                continue;
-            }
+		if ( ! $target instanceof TargetClassInterface ) {
+			return $code;
+		}
 
-            if (! isset($this->methods[$method->getName()])) {
-                continue;
-            }
+		foreach ( $target->getMethods() as $method ) {
+			if ( ! $method->isFinal() ) {
+				continue;
+			}
 
-            $code = preg_replace($this->methods[$method->getName()], '', $code);
-        }
+			if ( ! isset( $this->methods[ $method->getName() ] ) ) {
+				continue;
+			}
 
-        return $code;
-    }
+			$code = preg_replace( $this->methods[ $method->getName() ], '', $code );
+		}
+
+		return $code;
+	}
 }

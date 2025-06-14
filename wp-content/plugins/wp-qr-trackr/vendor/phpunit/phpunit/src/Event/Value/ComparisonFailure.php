@@ -14,31 +14,27 @@ namespace PHPUnit\Event\Code;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ComparisonFailure
-{
-    private readonly string $expected;
-    private readonly string $actual;
-    private readonly string $diff;
+final class ComparisonFailure {
 
-    public function __construct(string $expected, string $actual, string $diff)
-    {
-        $this->expected = $expected;
-        $this->actual   = $actual;
-        $this->diff     = $diff;
-    }
+	private readonly string $expected;
+	private readonly string $actual;
+	private readonly string $diff;
 
-    public function expected(): string
-    {
-        return $this->expected;
-    }
+	public function __construct( string $expected, string $actual, string $diff ) {
+		$this->expected = $expected;
+		$this->actual   = $actual;
+		$this->diff     = $diff;
+	}
 
-    public function actual(): string
-    {
-        return $this->actual;
-    }
+	public function expected(): string {
+		return $this->expected;
+	}
 
-    public function diff(): string
-    {
-        return $this->diff;
-    }
+	public function actual(): string {
+		return $this->actual;
+	}
+
+	public function diff(): string {
+		return $this->diff;
+	}
 }

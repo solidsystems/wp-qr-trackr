@@ -16,27 +16,25 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-final class CoversFunction
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $functionName;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE )]
+final class CoversFunction {
 
-    /**
-     * @psalm-param non-empty-string $functionName
-     */
-    public function __construct(string $functionName)
-    {
-        $this->functionName = $functionName;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $functionName;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function functionName(): string
-    {
-        return $this->functionName;
-    }
+	/**
+	 * @psalm-param non-empty-string $functionName
+	 */
+	public function __construct( string $functionName ) {
+		$this->functionName = $functionName;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function functionName(): string {
+		return $this->functionName;
+	}
 }

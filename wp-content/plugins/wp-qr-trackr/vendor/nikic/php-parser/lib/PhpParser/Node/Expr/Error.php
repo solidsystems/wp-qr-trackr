@@ -11,20 +11,20 @@ use PhpParser\Node\Expr;
  * Error nodes will not be present if the parser is run in throwOnError mode (the default).
  */
 class Error extends Expr {
-    /**
-     * Constructs an error node.
-     *
-     * @param array<string, mixed> $attributes Additional attributes
-     */
-    public function __construct(array $attributes = []) {
-        $this->attributes = $attributes;
-    }
+	/**
+	 * Constructs an error node.
+	 *
+	 * @param array<string, mixed> $attributes Additional attributes
+	 */
+	public function __construct( array $attributes = array() ) {
+		$this->attributes = $attributes;
+	}
 
-    public function getSubNodeNames(): array {
-        return [];
-    }
+	public function getSubNodeNames(): array {
+		return array();
+	}
 
-    public function getType(): string {
-        return 'Expr_Error';
-    }
+	public function getType(): string {
+		return 'Expr_Error';
+	}
 }

@@ -14,38 +14,35 @@ use PHPUnit\Framework\ExpectationFailedException;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsAnything extends Constraint
-{
-    /**
-     * Evaluates the constraint for parameter $other.
-     *
-     * If $returnResult is set to false (the default), an exception is thrown
-     * in case of a failure. null is returned otherwise.
-     *
-     * If $returnResult is true, the result of the evaluation is returned as
-     * a boolean value instead: true in case of success, false in case of a
-     * failure.
-     *
-     * @throws ExpectationFailedException
-     */
-    public function evaluate(mixed $other, string $description = '', bool $returnResult = false): ?bool
-    {
-        return $returnResult ? true : null;
-    }
+final class IsAnything extends Constraint {
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        return 'is anything';
-    }
+	/**
+	 * Evaluates the constraint for parameter $other.
+	 *
+	 * If $returnResult is set to false (the default), an exception is thrown
+	 * in case of a failure. null is returned otherwise.
+	 *
+	 * If $returnResult is true, the result of the evaluation is returned as
+	 * a boolean value instead: true in case of success, false in case of a
+	 * failure.
+	 *
+	 * @throws ExpectationFailedException
+	 */
+	public function evaluate( mixed $other, string $description = '', bool $returnResult = false ): ?bool {
+		return $returnResult ? true : null;
+	}
 
-    /**
-     * Counts the number of constraint elements.
-     */
-    public function count(): int
-    {
-        return 0;
-    }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		return 'is anything';
+	}
+
+	/**
+	 * Counts the number of constraint elements.
+	 */
+	public function count(): int {
+		return 0;
+	}
 }

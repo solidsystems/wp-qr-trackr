@@ -25,226 +25,204 @@ use SebastianBergmann\CodeCoverage\Util\Percentage;
  * @psalm-import-type ProcessedClassType from \SebastianBergmann\CodeCoverage\Node\File
  * @psalm-import-type ProcessedTraitType from \SebastianBergmann\CodeCoverage\Node\File
  */
-abstract class AbstractNode implements Countable
-{
-    private readonly string $name;
-    private string $pathAsString;
-    private array $pathAsArray;
-    private readonly ?AbstractNode $parent;
-    private string $id;
+abstract class AbstractNode implements Countable {
 
-    public function __construct(string $name, ?self $parent = null)
-    {
-        if (str_ends_with($name, DIRECTORY_SEPARATOR)) {
-            $name = substr($name, 0, -1);
-        }
+	private readonly string $name;
+	private string $pathAsString;
+	private array $pathAsArray;
+	private readonly ?AbstractNode $parent;
+	private string $id;
 
-        $this->name   = $name;
-        $this->parent = $parent;
+	public function __construct( string $name, ?self $parent = null ) {
+		if ( str_ends_with( $name, DIRECTORY_SEPARATOR ) ) {
+			$name = substr( $name, 0, -1 );
+		}
 
-        $this->processId();
-        $this->processPath();
-    }
+		$this->name   = $name;
+		$this->parent = $parent;
 
-    public function name(): string
-    {
-        return $this->name;
-    }
+		$this->processId();
+		$this->processPath();
+	}
 
-    public function id(): string
-    {
-        return $this->id;
-    }
+	public function name(): string {
+		return $this->name;
+	}
 
-    public function pathAsString(): string
-    {
-        return $this->pathAsString;
-    }
+	public function id(): string {
+		return $this->id;
+	}
 
-    public function pathAsArray(): array
-    {
-        return $this->pathAsArray;
-    }
+	public function pathAsString(): string {
+		return $this->pathAsString;
+	}
 
-    public function parent(): ?self
-    {
-        return $this->parent;
-    }
+	public function pathAsArray(): array {
+		return $this->pathAsArray;
+	}
 
-    public function percentageOfTestedClasses(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfTestedClasses(),
-            $this->numberOfClasses(),
-        );
-    }
+	public function parent(): ?self {
+		return $this->parent;
+	}
 
-    public function percentageOfTestedTraits(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfTestedTraits(),
-            $this->numberOfTraits(),
-        );
-    }
+	public function percentageOfTestedClasses(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfTestedClasses(),
+			$this->numberOfClasses(),
+		);
+	}
 
-    public function percentageOfTestedClassesAndTraits(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfTestedClassesAndTraits(),
-            $this->numberOfClassesAndTraits(),
-        );
-    }
+	public function percentageOfTestedTraits(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfTestedTraits(),
+			$this->numberOfTraits(),
+		);
+	}
 
-    public function percentageOfTestedFunctions(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfTestedFunctions(),
-            $this->numberOfFunctions(),
-        );
-    }
+	public function percentageOfTestedClassesAndTraits(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfTestedClassesAndTraits(),
+			$this->numberOfClassesAndTraits(),
+		);
+	}
 
-    public function percentageOfTestedMethods(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfTestedMethods(),
-            $this->numberOfMethods(),
-        );
-    }
+	public function percentageOfTestedFunctions(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfTestedFunctions(),
+			$this->numberOfFunctions(),
+		);
+	}
 
-    public function percentageOfTestedFunctionsAndMethods(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfTestedFunctionsAndMethods(),
-            $this->numberOfFunctionsAndMethods(),
-        );
-    }
+	public function percentageOfTestedMethods(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfTestedMethods(),
+			$this->numberOfMethods(),
+		);
+	}
 
-    public function percentageOfExecutedLines(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfExecutedLines(),
-            $this->numberOfExecutableLines(),
-        );
-    }
+	public function percentageOfTestedFunctionsAndMethods(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfTestedFunctionsAndMethods(),
+			$this->numberOfFunctionsAndMethods(),
+		);
+	}
 
-    public function percentageOfExecutedBranches(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfExecutedBranches(),
-            $this->numberOfExecutableBranches(),
-        );
-    }
+	public function percentageOfExecutedLines(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfExecutedLines(),
+			$this->numberOfExecutableLines(),
+		);
+	}
 
-    public function percentageOfExecutedPaths(): Percentage
-    {
-        return Percentage::fromFractionAndTotal(
-            $this->numberOfExecutedPaths(),
-            $this->numberOfExecutablePaths(),
-        );
-    }
+	public function percentageOfExecutedBranches(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfExecutedBranches(),
+			$this->numberOfExecutableBranches(),
+		);
+	}
 
-    public function numberOfClassesAndTraits(): int
-    {
-        return $this->numberOfClasses() + $this->numberOfTraits();
-    }
+	public function percentageOfExecutedPaths(): Percentage {
+		return Percentage::fromFractionAndTotal(
+			$this->numberOfExecutedPaths(),
+			$this->numberOfExecutablePaths(),
+		);
+	}
 
-    public function numberOfTestedClassesAndTraits(): int
-    {
-        return $this->numberOfTestedClasses() + $this->numberOfTestedTraits();
-    }
+	public function numberOfClassesAndTraits(): int {
+		return $this->numberOfClasses() + $this->numberOfTraits();
+	}
 
-    public function classesAndTraits(): array
-    {
-        return array_merge($this->classes(), $this->traits());
-    }
+	public function numberOfTestedClassesAndTraits(): int {
+		return $this->numberOfTestedClasses() + $this->numberOfTestedTraits();
+	}
 
-    public function numberOfFunctionsAndMethods(): int
-    {
-        return $this->numberOfFunctions() + $this->numberOfMethods();
-    }
+	public function classesAndTraits(): array {
+		return array_merge( $this->classes(), $this->traits() );
+	}
 
-    public function numberOfTestedFunctionsAndMethods(): int
-    {
-        return $this->numberOfTestedFunctions() + $this->numberOfTestedMethods();
-    }
+	public function numberOfFunctionsAndMethods(): int {
+		return $this->numberOfFunctions() + $this->numberOfMethods();
+	}
 
-    /**
-     * @psalm-return array<string, ProcessedClassType>
-     */
-    abstract public function classes(): array;
+	public function numberOfTestedFunctionsAndMethods(): int {
+		return $this->numberOfTestedFunctions() + $this->numberOfTestedMethods();
+	}
 
-    /**
-     * @psalm-return array<string, ProcessedTraitType>
-     */
-    abstract public function traits(): array;
+	/**
+	 * @psalm-return array<string, ProcessedClassType>
+	 */
+	abstract public function classes(): array;
 
-    /**
-     * @psalm-return array<string, ProcessedFunctionType>
-     */
-    abstract public function functions(): array;
+	/**
+	 * @psalm-return array<string, ProcessedTraitType>
+	 */
+	abstract public function traits(): array;
 
-    /**
-     * @psalm-return LinesOfCodeType
-     */
-    abstract public function linesOfCode(): array;
+	/**
+	 * @psalm-return array<string, ProcessedFunctionType>
+	 */
+	abstract public function functions(): array;
 
-    abstract public function numberOfExecutableLines(): int;
+	/**
+	 * @psalm-return LinesOfCodeType
+	 */
+	abstract public function linesOfCode(): array;
 
-    abstract public function numberOfExecutedLines(): int;
+	abstract public function numberOfExecutableLines(): int;
 
-    abstract public function numberOfExecutableBranches(): int;
+	abstract public function numberOfExecutedLines(): int;
 
-    abstract public function numberOfExecutedBranches(): int;
+	abstract public function numberOfExecutableBranches(): int;
 
-    abstract public function numberOfExecutablePaths(): int;
+	abstract public function numberOfExecutedBranches(): int;
 
-    abstract public function numberOfExecutedPaths(): int;
+	abstract public function numberOfExecutablePaths(): int;
 
-    abstract public function numberOfClasses(): int;
+	abstract public function numberOfExecutedPaths(): int;
 
-    abstract public function numberOfTestedClasses(): int;
+	abstract public function numberOfClasses(): int;
 
-    abstract public function numberOfTraits(): int;
+	abstract public function numberOfTestedClasses(): int;
 
-    abstract public function numberOfTestedTraits(): int;
+	abstract public function numberOfTraits(): int;
 
-    abstract public function numberOfMethods(): int;
+	abstract public function numberOfTestedTraits(): int;
 
-    abstract public function numberOfTestedMethods(): int;
+	abstract public function numberOfMethods(): int;
 
-    abstract public function numberOfFunctions(): int;
+	abstract public function numberOfTestedMethods(): int;
 
-    abstract public function numberOfTestedFunctions(): int;
+	abstract public function numberOfFunctions(): int;
 
-    private function processId(): void
-    {
-        if ($this->parent === null) {
-            $this->id = 'index';
+	abstract public function numberOfTestedFunctions(): int;
 
-            return;
-        }
+	private function processId(): void {
+		if ( $this->parent === null ) {
+			$this->id = 'index';
 
-        $parentId = $this->parent->id();
+			return;
+		}
 
-        if ($parentId === 'index') {
-            $this->id = str_replace(':', '_', $this->name);
-        } else {
-            $this->id = $parentId . '/' . $this->name;
-        }
-    }
+		$parentId = $this->parent->id();
 
-    private function processPath(): void
-    {
-        if ($this->parent === null) {
-            $this->pathAsArray  = [$this];
-            $this->pathAsString = $this->name;
+		if ( $parentId === 'index' ) {
+			$this->id = str_replace( ':', '_', $this->name );
+		} else {
+			$this->id = $parentId . '/' . $this->name;
+		}
+	}
 
-            return;
-        }
+	private function processPath(): void {
+		if ( $this->parent === null ) {
+			$this->pathAsArray  = array( $this );
+			$this->pathAsString = $this->name;
 
-        $this->pathAsArray  = $this->parent->pathAsArray();
-        $this->pathAsString = $this->parent->pathAsString() . DIRECTORY_SEPARATOR . $this->name;
+			return;
+		}
 
-        $this->pathAsArray[] = $this;
-    }
+		$this->pathAsArray  = $this->parent->pathAsArray();
+		$this->pathAsString = $this->parent->pathAsString() . DIRECTORY_SEPARATOR . $this->name;
+
+		$this->pathAsArray[] = $this;
+	}
 }

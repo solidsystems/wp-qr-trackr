@@ -17,10 +17,9 @@ use PHPUnit\Event\Test\AfterLastTestMethodErroredSubscriber;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class AfterTestClassMethodErroredSubscriber extends Subscriber implements AfterLastTestMethodErroredSubscriber
-{
-    public function notify(AfterLastTestMethodErrored $event): void
-    {
-        $this->collector()->afterTestClassMethodErrored($event);
-    }
+final class AfterTestClassMethodErroredSubscriber extends Subscriber implements AfterLastTestMethodErroredSubscriber {
+
+	public function notify( AfterLastTestMethodErrored $event ): void {
+		$this->collector()->afterTestClassMethodErrored( $event );
+	}
 }

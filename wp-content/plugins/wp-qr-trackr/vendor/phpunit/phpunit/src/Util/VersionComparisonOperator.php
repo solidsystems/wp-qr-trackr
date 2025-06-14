@@ -16,42 +16,39 @@ use function in_array;
  *
  * @psalm-immutable
  */
-final class VersionComparisonOperator
-{
-    /**
-     * @psalm-var '<'|'lt'|'<='|'le'|'>'|'gt'|'>='|'ge'|'=='|'='|'eq'|'!='|'<>'|'ne'
-     */
-    private readonly string $operator;
+final class VersionComparisonOperator {
 
-    /**
-     * @psalm-param '<'|'lt'|'<='|'le'|'>'|'gt'|'>='|'ge'|'=='|'='|'eq'|'!='|'<>'|'ne' $operator
-     *
-     * @throws InvalidVersionOperatorException
-     */
-    public function __construct(string $operator)
-    {
-        $this->ensureOperatorIsValid($operator);
+	/**
+	 * @psalm-var '<'|'lt'|'<='|'le'|'>'|'gt'|'>='|'ge'|'=='|'='|'eq'|'!='|'<>'|'ne'
+	 */
+	private readonly string $operator;
 
-        $this->operator = $operator;
-    }
+	/**
+	 * @psalm-param '<'|'lt'|'<='|'le'|'>'|'gt'|'>='|'ge'|'=='|'='|'eq'|'!='|'<>'|'ne' $operator
+	 *
+	 * @throws InvalidVersionOperatorException
+	 */
+	public function __construct( string $operator ) {
+		$this->ensureOperatorIsValid( $operator );
 
-    /**
-     * @psalm-return '<'|'lt'|'<='|'le'|'>'|'gt'|'>='|'ge'|'=='|'='|'eq'|'!='|'<>'|'ne'
-     */
-    public function asString(): string
-    {
-        return $this->operator;
-    }
+		$this->operator = $operator;
+	}
 
-    /**
-     * @psalm-param '<'|'lt'|'<='|'le'|'>'|'gt'|'>='|'ge'|'=='|'='|'eq'|'!='|'<>'|'ne' $operator
-     *
-     * @throws InvalidVersionOperatorException
-     */
-    private function ensureOperatorIsValid(string $operator): void
-    {
-        if (!in_array($operator, ['<', 'lt', '<=', 'le', '>', 'gt', '>=', 'ge', '==', '=', 'eq', '!=', '<>', 'ne'], true)) {
-            throw new InvalidVersionOperatorException($operator);
-        }
-    }
+	/**
+	 * @psalm-return '<'|'lt'|'<='|'le'|'>'|'gt'|'>='|'ge'|'=='|'='|'eq'|'!='|'<>'|'ne'
+	 */
+	public function asString(): string {
+		return $this->operator;
+	}
+
+	/**
+	 * @psalm-param '<'|'lt'|'<='|'le'|'>'|'gt'|'>='|'ge'|'=='|'='|'eq'|'!='|'<>'|'ne' $operator
+	 *
+	 * @throws InvalidVersionOperatorException
+	 */
+	private function ensureOperatorIsValid( string $operator ): void {
+		if ( ! in_array( $operator, array( '<', 'lt', '<=', 'le', '>', 'gt', '>=', 'ge', '==', '=', 'eq', '!=', '<>', 'ne' ), true ) ) {
+			throw new InvalidVersionOperatorException( $operator );
+		}
+	}
 }

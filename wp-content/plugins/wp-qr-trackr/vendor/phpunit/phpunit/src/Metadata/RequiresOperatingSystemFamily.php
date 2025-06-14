@@ -14,37 +14,34 @@ namespace PHPUnit\Metadata;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class RequiresOperatingSystemFamily extends Metadata
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $operatingSystemFamily;
+final class RequiresOperatingSystemFamily extends Metadata {
 
-    /**
-     * @psalm-param 0|1 $level
-     * @psalm-param non-empty-string $operatingSystemFamily
-     */
-    protected function __construct(int $level, string $operatingSystemFamily)
-    {
-        parent::__construct($level);
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $operatingSystemFamily;
 
-        $this->operatingSystemFamily = $operatingSystemFamily;
-    }
+	/**
+	 * @psalm-param 0|1 $level
+	 * @psalm-param non-empty-string $operatingSystemFamily
+	 */
+	protected function __construct( int $level, string $operatingSystemFamily ) {
+		parent::__construct( $level );
 
-    /**
-     * @psalm-assert-if-true RequiresOperatingSystemFamily $this
-     */
-    public function isRequiresOperatingSystemFamily(): bool
-    {
-        return true;
-    }
+		$this->operatingSystemFamily = $operatingSystemFamily;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function operatingSystemFamily(): string
-    {
-        return $this->operatingSystemFamily;
-    }
+	/**
+	 * @psalm-assert-if-true RequiresOperatingSystemFamily $this
+	 */
+	public function isRequiresOperatingSystemFamily(): bool {
+		return true;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function operatingSystemFamily(): string {
+		return $this->operatingSystemFamily;
+	}
 }

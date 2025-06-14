@@ -14,6 +14,6 @@ namespace PHPUnit\TextUI\Configuration;
  *
  * @internal This interface is not covered by the backward compatibility promise for PHPUnit
  */
-interface Exception extends \PHPUnit\TextUI\Exception
-{
+interface Exception extends \PHPUnit\TextUI\Exception {
+
 }

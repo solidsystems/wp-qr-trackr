@@ -21,58 +21,54 @@ use SebastianBergmann\CodeCoverage\Filter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class CodeCoverageFilterRegistry
-{
-    private static ?self $instance = null;
-    private ?Filter $filter        = null;
-    private bool $configured       = false;
+final class CodeCoverageFilterRegistry {
 
-    public static function instance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self;
-        }
+	private static ?self $instance = null;
+	private ?Filter $filter        = null;
+	private bool $configured       = false;
 
-        return self::$instance;
-    }
+	public static function instance(): self {
+		if ( self::$instance === null ) {
+			self::$instance = new self();
+		}
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public function get(): Filter
-    {
-        assert($this->filter !== null);
+		return self::$instance;
+	}
 
-        return $this->filter;
-    }
+	/**
+	 * @codeCoverageIgnore
+	 */
+	public function get(): Filter {
+		assert( $this->filter !== null );
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public function init(Configuration $configuration, bool $force = false): void
-    {
-        if (!$configuration->hasCoverageReport() && !$force) {
-            return;
-        }
+		return $this->filter;
+	}
 
-        if ($this->configured && !$force) {
-            return;
-        }
+	/**
+	 * @codeCoverageIgnore
+	 */
+	public function init( Configuration $configuration, bool $force = false ): void {
+		if ( ! $configuration->hasCoverageReport() && ! $force ) {
+			return;
+		}
 
-        $this->filter = new Filter;
+		if ( $this->configured && ! $force ) {
+			return;
+		}
 
-        if ($configuration->source()->notEmpty()) {
-            $this->filter->includeFiles(array_keys((new SourceMapper)->map($configuration->source())));
+		$this->filter = new Filter();
 
-            $this->configured = true;
-        }
-    }
+		if ( $configuration->source()->notEmpty() ) {
+			$this->filter->includeFiles( array_keys( ( new SourceMapper() )->map( $configuration->source() ) ) );
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public function configured(): bool
-    {
-        return $this->configured;
-    }
+			$this->configured = true;
+		}
+	}
+
+	/**
+	 * @codeCoverageIgnore
+	 */
+	public function configured(): bool {
+		return $this->configured;
+	}
 }

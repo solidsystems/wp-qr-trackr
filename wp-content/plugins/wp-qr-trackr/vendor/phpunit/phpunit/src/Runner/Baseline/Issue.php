@@ -21,127 +21,119 @@ use PHPUnit\Runner\FileDoesNotExistException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Issue
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $file;
+final class Issue {
 
-    /**
-     * @psalm-var positive-int
-     */
-    private readonly int $line;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $file;
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $hash;
+	/**
+	 * @psalm-var positive-int
+	 */
+	private readonly int $line;
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $description;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $hash;
 
-    /**
-     * @psalm-param non-empty-string $file
-     * @psalm-param positive-int $line
-     * @psalm-param ?non-empty-string $hash
-     * @psalm-param non-empty-string $description
-     *
-     * @throws FileDoesNotExistException
-     * @throws FileDoesNotHaveLineException
-     */
-    public static function from(string $file, int $line, ?string $hash, string $description): self
-    {
-        if ($hash === null) {
-            $hash = self::calculateHash($file, $line);
-        }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $description;
 
-        return new self($file, $line, $hash, $description);
-    }
+	/**
+	 * @psalm-param non-empty-string $file
+	 * @psalm-param positive-int $line
+	 * @psalm-param ?non-empty-string $hash
+	 * @psalm-param non-empty-string $description
+	 *
+	 * @throws FileDoesNotExistException
+	 * @throws FileDoesNotHaveLineException
+	 */
+	public static function from( string $file, int $line, ?string $hash, string $description ): self {
+		if ( $hash === null ) {
+			$hash = self::calculateHash( $file, $line );
+		}
 
-    /**
-     * @psalm-param non-empty-string $file
-     * @psalm-param positive-int $line
-     * @psalm-param non-empty-string $hash
-     * @psalm-param non-empty-string $description
-     */
-    private function __construct(string $file, int $line, string $hash, string $description)
-    {
-        $this->file        = $file;
-        $this->line        = $line;
-        $this->hash        = $hash;
-        $this->description = $description;
-    }
+		return new self( $file, $line, $hash, $description );
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function file(): string
-    {
-        return $this->file;
-    }
+	/**
+	 * @psalm-param non-empty-string $file
+	 * @psalm-param positive-int $line
+	 * @psalm-param non-empty-string $hash
+	 * @psalm-param non-empty-string $description
+	 */
+	private function __construct( string $file, int $line, string $hash, string $description ) {
+		$this->file        = $file;
+		$this->line        = $line;
+		$this->hash        = $hash;
+		$this->description = $description;
+	}
 
-    /**
-     * @psalm-return positive-int
-     */
-    public function line(): int
-    {
-        return $this->line;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function file(): string {
+		return $this->file;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function hash(): string
-    {
-        return $this->hash;
-    }
+	/**
+	 * @psalm-return positive-int
+	 */
+	public function line(): int {
+		return $this->line;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function description(): string
-    {
-        return $this->description;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function hash(): string {
+		return $this->hash;
+	}
 
-    public function equals(self $other): bool
-    {
-        return $this->file() === $other->file() &&
-               $this->line() === $other->line() &&
-               $this->hash() === $other->hash() &&
-               $this->description() === $other->description();
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function description(): string {
+		return $this->description;
+	}
 
-    /**
-     * @psalm-param non-empty-string $file
-     * @psalm-param positive-int $line
-     *
-     * @psalm-return non-empty-string
-     *
-     * @throws FileDoesNotExistException
-     * @throws FileDoesNotHaveLineException
-     */
-    private static function calculateHash(string $file, int $line): string
-    {
-        $lines = @file($file, FILE_IGNORE_NEW_LINES);
+	public function equals( self $other ): bool {
+		return $this->file() === $other->file() &&
+				$this->line() === $other->line() &&
+				$this->hash() === $other->hash() &&
+				$this->description() === $other->description();
+	}
 
-        if ($lines === false && !is_file($file)) {
-            throw new FileDoesNotExistException($file);
-        }
+	/**
+	 * @psalm-param non-empty-string $file
+	 * @psalm-param positive-int $line
+	 *
+	 * @psalm-return non-empty-string
+	 *
+	 * @throws FileDoesNotExistException
+	 * @throws FileDoesNotHaveLineException
+	 */
+	private static function calculateHash( string $file, int $line ): string {
+		$lines = @file( $file, FILE_IGNORE_NEW_LINES );
 
-        $key = $line - 1;
+		if ( $lines === false && ! is_file( $file ) ) {
+			throw new FileDoesNotExistException( $file );
+		}
 
-        if (!isset($lines[$key])) {
-            throw new FileDoesNotHaveLineException($file, $line);
-        }
+		$key = $line - 1;
 
-        $hash = sha1($lines[$key]);
+		if ( ! isset( $lines[ $key ] ) ) {
+			throw new FileDoesNotHaveLineException( $file, $line );
+		}
 
-        assert($hash !== '');
+		$hash = sha1( $lines[ $key ] );
 
-        return $hash;
-    }
+		assert( $hash !== '' );
+
+		return $hash;
+	}
 }

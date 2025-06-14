@@ -19,28 +19,26 @@ use PHPUnit\Event\InvalidArgumentException;
  *
  * @codeCoverageIgnore
  */
-final class SystemStopWatchWithOffset implements StopWatch
-{
-    private ?HRTime $offset;
+final class SystemStopWatchWithOffset implements StopWatch {
 
-    public function __construct(HRTime $offset)
-    {
-        $this->offset = $offset;
-    }
+	private ?HRTime $offset;
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function current(): HRTime
-    {
-        if ($this->offset !== null) {
-            $offset = $this->offset;
+	public function __construct( HRTime $offset ) {
+		$this->offset = $offset;
+	}
 
-            $this->offset = null;
+	/**
+	 * @throws InvalidArgumentException
+	 */
+	public function current(): HRTime {
+		if ( $this->offset !== null ) {
+			$offset = $this->offset;
 
-            return $offset;
-        }
+			$this->offset = null;
 
-        return HRTime::fromSecondsAndNanoseconds(...hrtime());
-    }
+			return $offset;
+		}
+
+		return HRTime::fromSecondsAndNanoseconds( ...hrtime() );
+	}
 }

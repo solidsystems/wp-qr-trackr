@@ -18,113 +18,105 @@ use function class_exists;
 /**
  * @mixin ReflectionParameter
  */
-class Parameter
-{
-    /**
-     * @var int
-     */
-    private static $parameterCounter = 0;
+class Parameter {
 
-    /**
-     * @var ReflectionParameter
-     */
-    private $rfp;
+	/**
+	 * @var int
+	 */
+	private static $parameterCounter = 0;
 
-    public function __construct(ReflectionParameter $rfp)
-    {
-        $this->rfp = $rfp;
-    }
+	/**
+	 * @var ReflectionParameter
+	 */
+	private $rfp;
 
-    /**
-     * Proxy all method calls to the reflection parameter.
-     *
-     * @template TMixed
-     * @template TResult
-     *
-     * @param string        $method
-     * @param array<TMixed> $args
-     *
-     * @return TResult
-     */
-    public function __call($method, array $args)
-    {
-        /** @var TResult */
-        return $this->rfp->{$method}(...$args);
-    }
+	public function __construct( ReflectionParameter $rfp ) {
+		$this->rfp = $rfp;
+	}
 
-    /**
-     * Get the reflection class for the parameter type, if it exists.
-     *
-     * This will be null if there was no type, or it was a scalar or a union.
-     *
-     * @return null|ReflectionClass
-     *
-     * @deprecated since 1.3.3 and will be removed in 2.0.
-     */
-    public function getClass()
-    {
-        $typeHint = Reflector::getTypeHint($this->rfp, true);
+	/**
+	 * Proxy all method calls to the reflection parameter.
+	 *
+	 * @template TMixed
+	 * @template TResult
+	 *
+	 * @param string        $method
+	 * @param array<TMixed> $args
+	 *
+	 * @return TResult
+	 */
+	public function __call( $method, array $args ) {
+		/** @var TResult */
+		return $this->rfp->{$method}( ...$args );
+	}
 
-        return class_exists($typeHint) ? DefinedTargetClass::factory($typeHint, false) : null;
-    }
+	/**
+	 * Get the reflection class for the parameter type, if it exists.
+	 *
+	 * This will be null if there was no type, or it was a scalar or a union.
+	 *
+	 * @return null|ReflectionClass
+	 *
+	 * @deprecated since 1.3.3 and will be removed in 2.0.
+	 */
+	public function getClass() {
+		$typeHint = Reflector::getTypeHint( $this->rfp, true );
 
-    /**
-     * Get the name of the parameter.
-     *
-     * Some internal classes have funny looking definitions!
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        $name = $this->rfp->getName();
+		return class_exists( $typeHint ) ? DefinedTargetClass::factory( $typeHint, false ) : null;
+	}
 
-        if (! $name || $name === '...') {
-            return 'arg' . self::$parameterCounter++;
-        }
+	/**
+	 * Get the name of the parameter.
+	 *
+	 * Some internal classes have funny looking definitions!
+	 *
+	 * @return string
+	 */
+	public function getName() {
+		$name = $this->rfp->getName();
 
-        return $name;
-    }
+		if ( ! $name || $name === '...' ) {
+			return 'arg' . self::$parameterCounter++;
+		}
 
-    /**
-     * Get the string representation for the paramater type.
-     *
-     * @return null|string
-     */
-    public function getTypeHint()
-    {
-        return Reflector::getTypeHint($this->rfp);
-    }
+		return $name;
+	}
 
-    /**
-     * Get the string representation for the paramater type.
-     *
-     * @return string
-     *
-     * @deprecated since 1.3.2 and will be removed in 2.0. Use getTypeHint() instead.
-     */
-    public function getTypeHintAsString()
-    {
-        return (string) Reflector::getTypeHint($this->rfp, true);
-    }
+	/**
+	 * Get the string representation for the paramater type.
+	 *
+	 * @return null|string
+	 */
+	public function getTypeHint() {
+		return Reflector::getTypeHint( $this->rfp );
+	}
 
-    /**
-     * Determine if the parameter is an array.
-     *
-     * @return bool
-     */
-    public function isArray()
-    {
-        return Reflector::isArray($this->rfp);
-    }
+	/**
+	 * Get the string representation for the paramater type.
+	 *
+	 * @return string
+	 *
+	 * @deprecated since 1.3.2 and will be removed in 2.0. Use getTypeHint() instead.
+	 */
+	public function getTypeHintAsString() {
+		return (string) Reflector::getTypeHint( $this->rfp, true );
+	}
 
-    /**
-     * Determine if the parameter is variadic.
-     *
-     * @return bool
-     */
-    public function isVariadic()
-    {
-        return $this->rfp->isVariadic();
-    }
+	/**
+	 * Determine if the parameter is an array.
+	 *
+	 * @return bool
+	 */
+	public function isArray() {
+		return Reflector::isArray( $this->rfp );
+	}
+
+	/**
+	 * Determine if the parameter is variadic.
+	 *
+	 * @return bool
+	 */
+	public function isVariadic() {
+		return $this->rfp->isVariadic();
+	}
 }

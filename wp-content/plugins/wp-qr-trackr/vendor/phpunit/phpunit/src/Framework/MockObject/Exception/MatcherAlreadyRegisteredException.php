@@ -16,15 +16,14 @@ use function sprintf;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MatcherAlreadyRegisteredException extends \PHPUnit\Framework\Exception implements Exception
-{
-    public function __construct(string $id)
-    {
-        parent::__construct(
-            sprintf(
-                'Matcher with id <%s> is already registered',
-                $id,
-            ),
-        );
-    }
+final class MatcherAlreadyRegisteredException extends \PHPUnit\Framework\Exception implements Exception {
+
+	public function __construct( string $id ) {
+		parent::__construct(
+			sprintf(
+				'Matcher with id <%s> is already registered',
+				$id,
+			),
+		);
+	}
 }

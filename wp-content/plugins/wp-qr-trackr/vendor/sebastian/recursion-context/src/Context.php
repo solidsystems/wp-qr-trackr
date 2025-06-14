@@ -20,122 +20,115 @@ use function random_int;
 use function spl_object_hash;
 use SplObjectStorage;
 
-final class Context
-{
-    private array $arrays = [];
-    private SplObjectStorage $objects;
+final class Context {
 
-    public function __construct()
-    {
-        $this->objects = new SplObjectStorage;
-    }
+	private array $arrays = array();
+	private SplObjectStorage $objects;
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public function __destruct()
-    {
-        foreach ($this->arrays as &$array) {
-            if (is_array($array)) {
-                array_pop($array);
-                array_pop($array);
-            }
-        }
-    }
+	public function __construct() {
+		$this->objects = new SplObjectStorage();
+	}
 
-    /**
-     * @psalm-template T
-     *
-     * @psalm-param T $value
-     *
-     * @param-out T $value
-     */
-    public function add(object|array &$value): int|string|false
-    {
-        if (is_array($value)) {
-            return $this->addArray($value);
-        }
+	/**
+	 * @codeCoverageIgnore
+	 */
+	public function __destruct() {
+		foreach ( $this->arrays as &$array ) {
+			if ( is_array( $array ) ) {
+				array_pop( $array );
+				array_pop( $array );
+			}
+		}
+	}
 
-        return $this->addObject($value);
-    }
+	/**
+	 * @psalm-template T
+	 *
+	 * @psalm-param T $value
+	 *
+	 * @param-out T $value
+	 */
+	public function add( object|array &$value ): int|string|false {
+		if ( is_array( $value ) ) {
+			return $this->addArray( $value );
+		}
 
-    /**
-     * @psalm-template T
-     *
-     * @psalm-param T $value
-     *
-     * @param-out T $value
-     */
-    public function contains(object|array &$value): int|string|false
-    {
-        if (is_array($value)) {
-            return $this->containsArray($value);
-        }
+		return $this->addObject( $value );
+	}
 
-        return $this->containsObject($value);
-    }
+	/**
+	 * @psalm-template T
+	 *
+	 * @psalm-param T $value
+	 *
+	 * @param-out T $value
+	 */
+	public function contains( object|array &$value ): int|string|false {
+		if ( is_array( $value ) ) {
+			return $this->containsArray( $value );
+		}
 
-    private function addArray(array &$array): int
-    {
-        $key = $this->containsArray($array);
+		return $this->containsObject( $value );
+	}
 
-        if ($key !== false) {
-            return $key;
-        }
+	private function addArray( array &$array ): int {
+		$key = $this->containsArray( $array );
 
-        $key            = count($this->arrays);
-        $this->arrays[] = &$array;
+		if ( $key !== false ) {
+			return $key;
+		}
 
-        if (!array_key_exists(PHP_INT_MAX, $array) && !array_key_exists(PHP_INT_MAX - 1, $array)) {
-            $array[] = $key;
-            $array[] = $this->objects;
-        } else {
-            /* Cover the improbable case, too.
-             *
-             * Note that array_slice() (used in containsArray()) will return the
-             * last two values added, *not necessarily* the highest integer keys
-             * in the array. Therefore, the order of these writes to $array is
-             * important, but the actual keys used is not. */
-            do {
-                /** @noinspection PhpUnhandledExceptionInspection */
-                $key = random_int(PHP_INT_MIN, PHP_INT_MAX);
-            } while (array_key_exists($key, $array));
+		$key            = count( $this->arrays );
+		$this->arrays[] = &$array;
 
-            $array[$key] = $key;
+		if ( ! array_key_exists( PHP_INT_MAX, $array ) && ! array_key_exists( PHP_INT_MAX - 1, $array ) ) {
+			$array[] = $key;
+			$array[] = $this->objects;
+		} else {
+			/*
+			Cover the improbable case, too.
+			 *
+			 * Note that array_slice() (used in containsArray()) will return the
+			 * last two values added, *not necessarily* the highest integer keys
+			 * in the array. Therefore, the order of these writes to $array is
+			 * important, but the actual keys used is not. */
+			do {
+				/** @noinspection PhpUnhandledExceptionInspection */
+				$key = random_int( PHP_INT_MIN, PHP_INT_MAX );
+			} while ( array_key_exists( $key, $array ) );
 
-            do {
-                /** @noinspection PhpUnhandledExceptionInspection */
-                $key = random_int(PHP_INT_MIN, PHP_INT_MAX);
-            } while (array_key_exists($key, $array));
+			$array[ $key ] = $key;
 
-            $array[$key] = $this->objects;
-        }
+			do {
+				/** @noinspection PhpUnhandledExceptionInspection */
+				$key = random_int( PHP_INT_MIN, PHP_INT_MAX );
+			} while ( array_key_exists( $key, $array ) );
 
-        return $key;
-    }
+			$array[ $key ] = $this->objects;
+		}
 
-    private function addObject(object $object): string
-    {
-        if (!$this->objects->contains($object)) {
-            $this->objects->attach($object);
-        }
+		return $key;
+	}
 
-        return spl_object_hash($object);
-    }
+	private function addObject( object $object ): string {
+		if ( ! $this->objects->contains( $object ) ) {
+			$this->objects->attach( $object );
+		}
 
-    private function containsArray(array $array): int|false
-    {
-        $end = array_slice($array, -2);
+		return spl_object_hash( $object );
+	}
 
-        return isset($end[1]) && $end[1] === $this->objects ? $end[0] : false;
-    }
+	private function containsArray( array $array ): int|false {
+		$end = array_slice( $array, -2 );
 
-    private function containsObject(object $value): string|false
-    {
-        if ($this->objects->contains($value)) {
-            return spl_object_hash($value);
-        }
+		return isset( $end[1] ) && $end[1] === $this->objects ? $end[0] : false;
+	}
 
-        return false;
-    }
+	private function containsObject( object $value ): string|false {
+		if ( $this->objects->contains( $value ) ) {
+			return spl_object_hash( $value );
+		}
+
+		return false;
+	}
 }

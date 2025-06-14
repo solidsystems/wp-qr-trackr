@@ -24,234 +24,234 @@ use SebastianBergmann\Diff\Differ;
 /**
  * Builds a diff string representation in unified diff format in chunks.
  */
-final class UnifiedDiffOutputBuilder extends AbstractChunkOutputBuilder
-{
-    private bool $collapseRanges     = true;
-    private int $commonLineThreshold = 6;
+final class UnifiedDiffOutputBuilder extends AbstractChunkOutputBuilder {
 
-    /**
-     * @psalm-var positive-int
-     */
-    private int $contextLines = 3;
-    private string $header;
-    private bool $addLineNumbers;
+	private bool $collapseRanges     = true;
+	private int $commonLineThreshold = 6;
 
-    public function __construct(string $header = "--- Original\n+++ New\n", bool $addLineNumbers = false)
-    {
-        $this->header         = $header;
-        $this->addLineNumbers = $addLineNumbers;
-    }
+	/**
+	 * @psalm-var positive-int
+	 */
+	private int $contextLines = 3;
+	private string $header;
+	private bool $addLineNumbers;
 
-    public function getDiff(array $diff): string
-    {
-        $buffer = fopen('php://memory', 'r+b');
+	public function __construct( string $header = "--- Original\n+++ New\n", bool $addLineNumbers = false ) {
+		$this->header         = $header;
+		$this->addLineNumbers = $addLineNumbers;
+	}
 
-        if ('' !== $this->header) {
-            fwrite($buffer, $this->header);
+	public function getDiff( array $diff ): string {
+		$buffer = fopen( 'php://memory', 'r+b' );
 
-            if (!str_ends_with($this->header, "\n")) {
-                fwrite($buffer, "\n");
-            }
-        }
+		if ( '' !== $this->header ) {
+			fwrite( $buffer, $this->header );
 
-        if (0 !== count($diff)) {
-            $this->writeDiffHunks($buffer, $diff);
-        }
+			if ( ! str_ends_with( $this->header, "\n" ) ) {
+				fwrite( $buffer, "\n" );
+			}
+		}
 
-        $diff = stream_get_contents($buffer, -1, 0);
+		if ( 0 !== count( $diff ) ) {
+			$this->writeDiffHunks( $buffer, $diff );
+		}
 
-        fclose($buffer);
+		$diff = stream_get_contents( $buffer, -1, 0 );
 
-        // If the diff is non-empty and last char is not a linebreak: add it.
-        // This might happen when both the `from` and `to` do not have a trailing linebreak
-        $last = substr($diff, -1);
+		fclose( $buffer );
 
-        return '' !== $diff && "\n" !== $last && "\r" !== $last
-            ? $diff . "\n"
-            : $diff;
-    }
+		// If the diff is non-empty and last char is not a linebreak: add it.
+		// This might happen when both the `from` and `to` do not have a trailing linebreak
+		$last = substr( $diff, -1 );
 
-    private function writeDiffHunks($output, array $diff): void
-    {
-        // detect "No newline at end of file" and insert into `$diff` if needed
+		return '' !== $diff && "\n" !== $last && "\r" !== $last
+			? $diff . "\n"
+			: $diff;
+	}
 
-        $upperLimit = count($diff);
+	private function writeDiffHunks( $output, array $diff ): void {
+		// detect "No newline at end of file" and insert into `$diff` if needed
 
-        if (0 === $diff[$upperLimit - 1][1]) {
-            $lc = substr($diff[$upperLimit - 1][0], -1);
+		$upperLimit = count( $diff );
 
-            if ("\n" !== $lc) {
-                array_splice($diff, $upperLimit, 0, [["\n\\ No newline at end of file\n", Differ::NO_LINE_END_EOF_WARNING]]);
-            }
-        } else {
-            // search back for the last `+` and `-` line,
-            // check if it has trailing linebreak, else add a warning under it
-            $toFind = [1 => true, 2 => true];
+		if ( 0 === $diff[ $upperLimit - 1 ][1] ) {
+			$lc = substr( $diff[ $upperLimit - 1 ][0], -1 );
 
-            for ($i = $upperLimit - 1; $i >= 0; $i--) {
-                if (isset($toFind[$diff[$i][1]])) {
-                    unset($toFind[$diff[$i][1]]);
-                    $lc = substr($diff[$i][0], -1);
+			if ( "\n" !== $lc ) {
+				array_splice( $diff, $upperLimit, 0, array( array( "\n\\ No newline at end of file\n", Differ::NO_LINE_END_EOF_WARNING ) ) );
+			}
+		} else {
+			// search back for the last `+` and `-` line,
+			// check if it has trailing linebreak, else add a warning under it
+			$toFind = array(
+				1 => true,
+				2 => true,
+			);
 
-                    if ("\n" !== $lc) {
-                        array_splice($diff, $i + 1, 0, [["\n\\ No newline at end of file\n", Differ::NO_LINE_END_EOF_WARNING]]);
-                    }
+			for ( $i = $upperLimit - 1; $i >= 0; $i-- ) {
+				if ( isset( $toFind[ $diff[ $i ][1] ] ) ) {
+					unset( $toFind[ $diff[ $i ][1] ] );
+					$lc = substr( $diff[ $i ][0], -1 );
 
-                    if (!count($toFind)) {
-                        break;
-                    }
-                }
-            }
-        }
+					if ( "\n" !== $lc ) {
+						array_splice( $diff, $i + 1, 0, array( array( "\n\\ No newline at end of file\n", Differ::NO_LINE_END_EOF_WARNING ) ) );
+					}
 
-        // write hunks to output buffer
+					if ( ! count( $toFind ) ) {
+						break;
+					}
+				}
+			}
+		}
 
-        $cutOff      = max($this->commonLineThreshold, $this->contextLines);
-        $hunkCapture = false;
-        $sameCount   = $toRange = $fromRange = 0;
-        $toStart     = $fromStart = 1;
-        $i           = 0;
+		// write hunks to output buffer
 
-        /** @var int $i */
-        foreach ($diff as $i => $entry) {
-            if (0 === $entry[1]) { // same
-                if (false === $hunkCapture) {
-                    $fromStart++;
-                    $toStart++;
+		$cutOff      = max( $this->commonLineThreshold, $this->contextLines );
+		$hunkCapture = false;
+		$sameCount   = $toRange = $fromRange = 0;
+		$toStart     = $fromStart = 1;
+		$i           = 0;
 
-                    continue;
-                }
+		/** @var int $i */
+		foreach ( $diff as $i => $entry ) {
+			if ( 0 === $entry[1] ) { // same
+				if ( false === $hunkCapture ) {
+					++$fromStart;
+					++$toStart;
 
-                $sameCount++;
-                $toRange++;
-                $fromRange++;
+					continue;
+				}
 
-                if ($sameCount === $cutOff) {
-                    $contextStartOffset = ($hunkCapture - $this->contextLines) < 0
-                        ? $hunkCapture
-                        : $this->contextLines;
+				++$sameCount;
+				++$toRange;
+				++$fromRange;
 
-                    // note: $contextEndOffset = $this->contextLines;
-                    //
-                    // because we never go beyond the end of the diff.
-                    // with the cutoff/contextlines here the follow is never true;
-                    //
-                    // if ($i - $cutOff + $this->contextLines + 1 > \count($diff)) {
-                    //    $contextEndOffset = count($diff) - 1;
-                    // }
-                    //
-                    // ; that would be true for a trailing incomplete hunk case which is dealt with after this loop
+				if ( $sameCount === $cutOff ) {
+					$contextStartOffset = ( $hunkCapture - $this->contextLines ) < 0
+						? $hunkCapture
+						: $this->contextLines;
 
-                    $this->writeHunk(
-                        $diff,
-                        $hunkCapture - $contextStartOffset,
-                        $i - $cutOff + $this->contextLines + 1,
-                        $fromStart - $contextStartOffset,
-                        $fromRange - $cutOff + $contextStartOffset + $this->contextLines,
-                        $toStart - $contextStartOffset,
-                        $toRange - $cutOff + $contextStartOffset + $this->contextLines,
-                        $output,
-                    );
+					// note: $contextEndOffset = $this->contextLines;
+					//
+					// because we never go beyond the end of the diff.
+					// with the cutoff/contextlines here the follow is never true;
+					//
+					// if ($i - $cutOff + $this->contextLines + 1 > \count($diff)) {
+					// $contextEndOffset = count($diff) - 1;
+					// }
+					//
+					// ; that would be true for a trailing incomplete hunk case which is dealt with after this loop
 
-                    $fromStart += $fromRange;
-                    $toStart   += $toRange;
+					$this->writeHunk(
+						$diff,
+						$hunkCapture - $contextStartOffset,
+						$i - $cutOff + $this->contextLines + 1,
+						$fromStart - $contextStartOffset,
+						$fromRange - $cutOff + $contextStartOffset + $this->contextLines,
+						$toStart - $contextStartOffset,
+						$toRange - $cutOff + $contextStartOffset + $this->contextLines,
+						$output,
+					);
 
-                    $hunkCapture = false;
-                    $sameCount   = $toRange = $fromRange = 0;
-                }
+					$fromStart += $fromRange;
+					$toStart   += $toRange;
 
-                continue;
-            }
+					$hunkCapture = false;
+					$sameCount   = $toRange = $fromRange = 0;
+				}
 
-            $sameCount = 0;
+				continue;
+			}
 
-            if ($entry[1] === Differ::NO_LINE_END_EOF_WARNING) {
-                continue;
-            }
+			$sameCount = 0;
 
-            if (false === $hunkCapture) {
-                $hunkCapture = $i;
-            }
+			if ( $entry[1] === Differ::NO_LINE_END_EOF_WARNING ) {
+				continue;
+			}
 
-            if (Differ::ADDED === $entry[1]) {
-                $toRange++;
-            }
+			if ( false === $hunkCapture ) {
+				$hunkCapture = $i;
+			}
 
-            if (Differ::REMOVED === $entry[1]) {
-                $fromRange++;
-            }
-        }
+			if ( Differ::ADDED === $entry[1] ) {
+				++$toRange;
+			}
 
-        if (false === $hunkCapture) {
-            return;
-        }
+			if ( Differ::REMOVED === $entry[1] ) {
+				++$fromRange;
+			}
+		}
 
-        // we end here when cutoff (commonLineThreshold) was not reached, but we were capturing a hunk,
-        // do not render hunk till end automatically because the number of context lines might be less than the commonLineThreshold
+		if ( false === $hunkCapture ) {
+			return;
+		}
 
-        $contextStartOffset = $hunkCapture - $this->contextLines < 0
-            ? $hunkCapture
-            : $this->contextLines;
+		// we end here when cutoff (commonLineThreshold) was not reached, but we were capturing a hunk,
+		// do not render hunk till end automatically because the number of context lines might be less than the commonLineThreshold
 
-        // prevent trying to write out more common lines than there are in the diff _and_
-        // do not write more than configured through the context lines
-        $contextEndOffset = min($sameCount, $this->contextLines);
+		$contextStartOffset = $hunkCapture - $this->contextLines < 0
+			? $hunkCapture
+			: $this->contextLines;
 
-        $fromRange -= $sameCount;
-        $toRange   -= $sameCount;
+		// prevent trying to write out more common lines than there are in the diff _and_
+		// do not write more than configured through the context lines
+		$contextEndOffset = min( $sameCount, $this->contextLines );
 
-        $this->writeHunk(
-            $diff,
-            $hunkCapture - $contextStartOffset,
-            $i - $sameCount + $contextEndOffset + 1,
-            $fromStart - $contextStartOffset,
-            $fromRange + $contextStartOffset + $contextEndOffset,
-            $toStart - $contextStartOffset,
-            $toRange + $contextStartOffset + $contextEndOffset,
-            $output,
-        );
-    }
+		$fromRange -= $sameCount;
+		$toRange   -= $sameCount;
 
-    private function writeHunk(
-        array $diff,
-        int $diffStartIndex,
-        int $diffEndIndex,
-        int $fromStart,
-        int $fromRange,
-        int $toStart,
-        int $toRange,
-        $output
-    ): void {
-        if ($this->addLineNumbers) {
-            fwrite($output, '@@ -' . $fromStart);
+		$this->writeHunk(
+			$diff,
+			$hunkCapture - $contextStartOffset,
+			$i - $sameCount + $contextEndOffset + 1,
+			$fromStart - $contextStartOffset,
+			$fromRange + $contextStartOffset + $contextEndOffset,
+			$toStart - $contextStartOffset,
+			$toRange + $contextStartOffset + $contextEndOffset,
+			$output,
+		);
+	}
 
-            if (!$this->collapseRanges || 1 !== $fromRange) {
-                fwrite($output, ',' . $fromRange);
-            }
+	private function writeHunk(
+		array $diff,
+		int $diffStartIndex,
+		int $diffEndIndex,
+		int $fromStart,
+		int $fromRange,
+		int $toStart,
+		int $toRange,
+		$output
+	): void {
+		if ( $this->addLineNumbers ) {
+			fwrite( $output, '@@ -' . $fromStart );
 
-            fwrite($output, ' +' . $toStart);
+			if ( ! $this->collapseRanges || 1 !== $fromRange ) {
+				fwrite( $output, ',' . $fromRange );
+			}
 
-            if (!$this->collapseRanges || 1 !== $toRange) {
-                fwrite($output, ',' . $toRange);
-            }
+			fwrite( $output, ' +' . $toStart );
 
-            fwrite($output, " @@\n");
-        } else {
-            fwrite($output, "@@ @@\n");
-        }
+			if ( ! $this->collapseRanges || 1 !== $toRange ) {
+				fwrite( $output, ',' . $toRange );
+			}
 
-        for ($i = $diffStartIndex; $i < $diffEndIndex; $i++) {
-            if ($diff[$i][1] === Differ::ADDED) {
-                fwrite($output, '+' . $diff[$i][0]);
-            } elseif ($diff[$i][1] === Differ::REMOVED) {
-                fwrite($output, '-' . $diff[$i][0]);
-            } elseif ($diff[$i][1] === Differ::OLD) {
-                fwrite($output, ' ' . $diff[$i][0]);
-            } elseif ($diff[$i][1] === Differ::NO_LINE_END_EOF_WARNING) {
-                fwrite($output, "\n"); // $diff[$i][0]
-            } else { /* Not changed (old) Differ::OLD or Warning Differ::DIFF_LINE_END_WARNING */
-                fwrite($output, ' ' . $diff[$i][0]);
-            }
-        }
-    }
+			fwrite( $output, " @@\n" );
+		} else {
+			fwrite( $output, "@@ @@\n" );
+		}
+
+		for ( $i = $diffStartIndex; $i < $diffEndIndex; $i++ ) {
+			if ( $diff[ $i ][1] === Differ::ADDED ) {
+				fwrite( $output, '+' . $diff[ $i ][0] );
+			} elseif ( $diff[ $i ][1] === Differ::REMOVED ) {
+				fwrite( $output, '-' . $diff[ $i ][0] );
+			} elseif ( $diff[ $i ][1] === Differ::OLD ) {
+				fwrite( $output, ' ' . $diff[ $i ][0] );
+			} elseif ( $diff[ $i ][1] === Differ::NO_LINE_END_EOF_WARNING ) {
+				fwrite( $output, "\n" ); // $diff[$i][0]
+			} else { /* Not changed (old) Differ::OLD or Warning Differ::DIFF_LINE_END_WARNING */
+				fwrite( $output, ' ' . $diff[ $i ][0] );
+			}
+		}
+	}
 }

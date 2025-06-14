@@ -13,39 +13,37 @@ namespace Mockery\Generator;
 use function implode;
 use function str_replace;
 
-class MockNameBuilder
-{
-    /**
-     * @var int
-     */
-    protected static $mockCounter = 0;
+class MockNameBuilder {
 
-    /**
-     * @var list<string>
-     */
-    protected $parts = [];
+	/**
+	 * @var int
+	 */
+	protected static $mockCounter = 0;
 
-    /**
-     * @param string $part
-     */
-    public function addPart($part)
-    {
-        $this->parts[] = $part;
+	/**
+	 * @var list<string>
+	 */
+	protected $parts = array();
 
-        return $this;
-    }
+	/**
+	 * @param string $part
+	 */
+	public function addPart( $part ) {
+		$this->parts[] = $part;
 
-    /**
-     * @return string
-     */
-    public function build()
-    {
-        $parts = ['Mockery', static::$mockCounter++];
+		return $this;
+	}
 
-        foreach ($this->parts as $part) {
-            $parts[] = str_replace('\\', '_', $part);
-        }
+	/**
+	 * @return string
+	 */
+	public function build() {
+		$parts = array( 'Mockery', static::$mockCounter++ );
 
-        return implode('_', $parts);
-    }
+		foreach ( $this->parts as $part ) {
+			$parts[] = str_replace( '\\', '_', $part );
+		}
+
+		return implode( '_', $parts );
+	}
 }

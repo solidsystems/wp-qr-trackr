@@ -20,56 +20,51 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PhpunitDeprecationTriggered implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
-    private readonly Test $test;
+final class PhpunitDeprecationTriggered implements Event {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $message;
+	private readonly Telemetry\Info $telemetryInfo;
+	private readonly Test $test;
 
-    /**
-     * @psalm-param non-empty-string $message
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, Test $test, string $message)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->test          = $test;
-        $this->message       = $message;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $message;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param non-empty-string $message
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, Test $test, string $message ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->test          = $test;
+		$this->message       = $message;
+	}
 
-    public function test(): Test
-    {
-        return $this->test;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function message(): string
-    {
-        return $this->message;
-    }
+	public function test(): Test {
+		return $this->test;
+	}
 
-    public function asString(): string
-    {
-        $message = $this->message;
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function message(): string {
+		return $this->message;
+	}
 
-        if (!empty($message)) {
-            $message = PHP_EOL . $message;
-        }
+	public function asString(): string {
+		$message = $this->message;
 
-        return sprintf(
-            'Test Triggered PHPUnit Deprecation (%s)%s',
-            $this->test->id(),
-            $message,
-        );
-    }
+		if ( ! empty( $message ) ) {
+			$message = PHP_EOL . $message;
+		}
+
+		return sprintf(
+			'Test Triggered PHPUnit Deprecation (%s)%s',
+			$this->test->id(),
+			$message,
+		);
+	}
 }

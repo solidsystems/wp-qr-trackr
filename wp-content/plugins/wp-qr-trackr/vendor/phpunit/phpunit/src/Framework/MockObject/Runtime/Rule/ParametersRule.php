@@ -15,12 +15,12 @@ use PHPUnit\Framework\MockObject\Invocation as BaseInvocation;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface ParametersRule
-{
-    /**
-     * @throws ExpectationFailedException if the invocation violates the rule
-     */
-    public function apply(BaseInvocation $invocation): void;
+interface ParametersRule {
 
-    public function verify(): void;
+	/**
+	 * @throws ExpectationFailedException if the invocation violates the rule
+	 */
+	public function apply( BaseInvocation $invocation ): void;
+
+	public function verify(): void;
 }

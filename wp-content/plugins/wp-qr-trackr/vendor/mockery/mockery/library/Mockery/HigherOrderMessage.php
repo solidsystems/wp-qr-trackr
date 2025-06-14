@@ -15,38 +15,36 @@ use Closure;
 /**
  * @method Expectation withArgs(array|Closure $args)
  */
-class HigherOrderMessage
-{
-    /**
-     * @var string
-     */
-    private $method;
+class HigherOrderMessage {
 
-    /**
-     * @var LegacyMockInterface|MockInterface
-     */
-    private $mock;
+	/**
+	 * @var string
+	 */
+	private $method;
 
-    public function __construct(MockInterface $mock, $method)
-    {
-        $this->mock = $mock;
-        $this->method = $method;
-    }
+	/**
+	 * @var LegacyMockInterface|MockInterface
+	 */
+	private $mock;
 
-    /**
-     * @param string $method
-     * @param array  $args
-     *
-     * @return Expectation|ExpectationInterface|HigherOrderMessage
-     */
-    public function __call($method, $args)
-    {
-        if ($this->method === 'shouldNotHaveReceived') {
-            return $this->mock->{$this->method}($method, $args);
-        }
+	public function __construct( MockInterface $mock, $method ) {
+		$this->mock   = $mock;
+		$this->method = $method;
+	}
 
-        $expectation = $this->mock->{$this->method}($method);
+	/**
+	 * @param string $method
+	 * @param array  $args
+	 *
+	 * @return Expectation|ExpectationInterface|HigherOrderMessage
+	 */
+	public function __call( $method, $args ) {
+		if ( $this->method === 'shouldNotHaveReceived' ) {
+			return $this->mock->{$this->method}( $method, $args );
+		}
 
-        return $expectation->withArgs($args);
-    }
+		$expectation = $this->mock->{$this->method}( $method );
+
+		return $expectation->withArgs( $args );
+	}
 }

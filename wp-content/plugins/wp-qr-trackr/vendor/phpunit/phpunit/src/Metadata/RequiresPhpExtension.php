@@ -16,59 +16,54 @@ use PHPUnit\Metadata\Version\Requirement;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class RequiresPhpExtension extends Metadata
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $extension;
-    private readonly ?Requirement $versionRequirement;
+final class RequiresPhpExtension extends Metadata {
 
-    /**
-     * @psalm-param 0|1 $level
-     * @psalm-param non-empty-string $extension
-     */
-    protected function __construct(int $level, string $extension, ?Requirement $versionRequirement)
-    {
-        parent::__construct($level);
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $extension;
+	private readonly ?Requirement $versionRequirement;
 
-        $this->extension          = $extension;
-        $this->versionRequirement = $versionRequirement;
-    }
+	/**
+	 * @psalm-param 0|1 $level
+	 * @psalm-param non-empty-string $extension
+	 */
+	protected function __construct( int $level, string $extension, ?Requirement $versionRequirement ) {
+		parent::__construct( $level );
 
-    /**
-     * @psalm-assert-if-true RequiresPhpExtension $this
-     */
-    public function isRequiresPhpExtension(): bool
-    {
-        return true;
-    }
+		$this->extension          = $extension;
+		$this->versionRequirement = $versionRequirement;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function extension(): string
-    {
-        return $this->extension;
-    }
+	/**
+	 * @psalm-assert-if-true RequiresPhpExtension $this
+	 */
+	public function isRequiresPhpExtension(): bool {
+		return true;
+	}
 
-    /**
-     * @psalm-assert-if-true !null $this->versionRequirement
-     */
-    public function hasVersionRequirement(): bool
-    {
-        return $this->versionRequirement !== null;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function extension(): string {
+		return $this->extension;
+	}
 
-    /**
-     * @throws NoVersionRequirementException
-     */
-    public function versionRequirement(): Requirement
-    {
-        if ($this->versionRequirement === null) {
-            throw new NoVersionRequirementException;
-        }
+	/**
+	 * @psalm-assert-if-true !null $this->versionRequirement
+	 */
+	public function hasVersionRequirement(): bool {
+		return $this->versionRequirement !== null;
+	}
 
-        return $this->versionRequirement;
-    }
+	/**
+	 * @throws NoVersionRequirementException
+	 */
+	public function versionRequirement(): Requirement {
+		if ( $this->versionRequirement === null ) {
+			throw new NoVersionRequirementException();
+		}
+
+		return $this->versionRequirement;
+	}
 }

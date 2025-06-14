@@ -14,9 +14,9 @@ use Mockery\Generator\MockConfiguration;
 use function strrpos;
 use function substr;
 
-class InstanceMockPass implements Pass
-{
-    public const INSTANCE_MOCK_CODE = <<<MOCK
+class InstanceMockPass implements Pass {
+
+	public const INSTANCE_MOCK_CODE = <<<MOCK
 
     protected \$_mockery_ignoreVerification = true;
 
@@ -57,22 +57,20 @@ class InstanceMockPass implements Pass
     }
 MOCK;
 
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        if ($config->isInstanceMock()) {
-            return $this->appendToClass($code, static::INSTANCE_MOCK_CODE);
-        }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		if ( $config->isInstanceMock() ) {
+			return $this->appendToClass( $code, static::INSTANCE_MOCK_CODE );
+		}
 
-        return $code;
-    }
+		return $code;
+	}
 
-    protected function appendToClass($class, $code)
-    {
-        $lastBrace = strrpos($class, '}');
-        return substr($class, 0, $lastBrace) . $code . "\n    }\n";
-    }
+	protected function appendToClass( $class, $code ) {
+		$lastBrace = strrpos( $class, '}' );
+		return substr( $class, 0, $lastBrace ) . $code . "\n    }\n";
+	}
 }

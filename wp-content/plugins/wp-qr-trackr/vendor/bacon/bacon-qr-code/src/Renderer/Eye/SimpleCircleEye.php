@@ -8,44 +8,38 @@ use BaconQrCode\Renderer\Path\Path;
 /**
  * Renders the inner eye as a circle.
  */
-final class SimpleCircleEye implements EyeInterface
-{
-    private static ?SimpleCircleEye $instance = null;
+final class SimpleCircleEye implements EyeInterface {
 
-    private function __construct()
-    {
-    }
+	private static ?SimpleCircleEye $instance = null;
 
-    public static function instance() : self
-    {
-        return self::$instance ?: self::$instance = new self();
-    }
+	private function __construct() {
+	}
 
-    public function getExternalPath() : Path
-    {
-        return (new Path())
-            ->move(-3.5, -3.5)
-            ->line(3.5, -3.5)
-            ->line(3.5, 3.5)
-            ->line(-3.5, 3.5)
-            ->close()
-            ->move(-2.5, -2.5)
-            ->line(-2.5, 2.5)
-            ->line(2.5, 2.5)
-            ->line(2.5, -2.5)
-            ->close()
-        ;
-    }
+	public static function instance(): self {
+		return self::$instance ?: self::$instance = new self();
+	}
 
-    public function getInternalPath() : Path
-    {
-        return (new Path())
-            ->move(1.5, 0)
-            ->ellipticArc(1.5, 1.5, 0., false, true, 0., 1.5)
-            ->ellipticArc(1.5, 1.5, 0., false, true, -1.5, 0.)
-            ->ellipticArc(1.5, 1.5, 0., false, true, 0., -1.5)
-            ->ellipticArc(1.5, 1.5, 0., false, true, 1.5, 0.)
-            ->close()
-        ;
-    }
+	public function getExternalPath(): Path {
+		return ( new Path() )
+			->move( -3.5, -3.5 )
+			->line( 3.5, -3.5 )
+			->line( 3.5, 3.5 )
+			->line( -3.5, 3.5 )
+			->close()
+			->move( -2.5, -2.5 )
+			->line( -2.5, 2.5 )
+			->line( 2.5, 2.5 )
+			->line( 2.5, -2.5 )
+			->close();
+	}
+
+	public function getInternalPath(): Path {
+		return ( new Path() )
+			->move( 1.5, 0 )
+			->ellipticArc( 1.5, 1.5, 0., false, true, 0., 1.5 )
+			->ellipticArc( 1.5, 1.5, 0., false, true, -1.5, 0. )
+			->ellipticArc( 1.5, 1.5, 0., false, true, 0., -1.5 )
+			->ellipticArc( 1.5, 1.5, 0., false, true, 1.5, 0. )
+			->close();
+	}
 }

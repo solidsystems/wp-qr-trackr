@@ -27,94 +27,89 @@ use PHPUnit\TextUI\Configuration\SourceFilter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Generator
-{
-    private Baseline $baseline;
-    private readonly Source $source;
+final class Generator {
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
-    public function __construct(Facade $facade, Source $source)
-    {
-        $facade->registerSubscribers(
-            new TestTriggeredDeprecationSubscriber($this),
-            new TestTriggeredNoticeSubscriber($this),
-            new TestTriggeredPhpDeprecationSubscriber($this),
-            new TestTriggeredPhpNoticeSubscriber($this),
-            new TestTriggeredPhpWarningSubscriber($this),
-            new TestTriggeredWarningSubscriber($this),
-        );
+	private Baseline $baseline;
+	private readonly Source $source;
 
-        $this->baseline = new Baseline;
-        $this->source   = $source;
-    }
+	/**
+	 * @throws EventFacadeIsSealedException
+	 * @throws UnknownSubscriberTypeException
+	 */
+	public function __construct( Facade $facade, Source $source ) {
+		$facade->registerSubscribers(
+			new TestTriggeredDeprecationSubscriber( $this ),
+			new TestTriggeredNoticeSubscriber( $this ),
+			new TestTriggeredPhpDeprecationSubscriber( $this ),
+			new TestTriggeredPhpNoticeSubscriber( $this ),
+			new TestTriggeredPhpWarningSubscriber( $this ),
+			new TestTriggeredWarningSubscriber( $this ),
+		);
 
-    public function baseline(): Baseline
-    {
-        return $this->baseline;
-    }
+		$this->baseline = new Baseline();
+		$this->source   = $source;
+	}
 
-    /**
-     * @throws FileDoesNotExistException
-     * @throws FileDoesNotHaveLineException
-     */
-    public function testTriggeredIssue(DeprecationTriggered|NoticeTriggered|PhpDeprecationTriggered|PhpNoticeTriggered|PhpWarningTriggered|WarningTriggered $event): void
-    {
-        if ($event->wasSuppressed() && !$this->isSuppressionIgnored($event)) {
-            return;
-        }
+	public function baseline(): Baseline {
+		return $this->baseline;
+	}
 
-        if ($this->restrict($event) && !SourceFilter::instance()->includes($event->file())) {
-            return;
-        }
+	/**
+	 * @throws FileDoesNotExistException
+	 * @throws FileDoesNotHaveLineException
+	 */
+	public function testTriggeredIssue( DeprecationTriggered|NoticeTriggered|PhpDeprecationTriggered|PhpNoticeTriggered|PhpWarningTriggered|WarningTriggered $event ): void {
+		if ( $event->wasSuppressed() && ! $this->isSuppressionIgnored( $event ) ) {
+			return;
+		}
 
-        $this->baseline->add(
-            Issue::from(
-                $event->file(),
-                $event->line(),
-                null,
-                $event->message(),
-            ),
-        );
-    }
+		if ( $this->restrict( $event ) && ! SourceFilter::instance()->includes( $event->file() ) ) {
+			return;
+		}
 
-    private function restrict(DeprecationTriggered|NoticeTriggered|PhpDeprecationTriggered|PhpNoticeTriggered|PhpWarningTriggered|WarningTriggered $event): bool
-    {
-        if ($event instanceof WarningTriggered || $event instanceof PhpWarningTriggered) {
-            return $this->source->restrictWarnings();
-        }
+		$this->baseline->add(
+			Issue::from(
+				$event->file(),
+				$event->line(),
+				null,
+				$event->message(),
+			),
+		);
+	}
 
-        if ($event instanceof NoticeTriggered || $event instanceof PhpNoticeTriggered) {
-            return $this->source->restrictNotices();
-        }
+	private function restrict( DeprecationTriggered|NoticeTriggered|PhpDeprecationTriggered|PhpNoticeTriggered|PhpWarningTriggered|WarningTriggered $event ): bool {
+		if ( $event instanceof WarningTriggered || $event instanceof PhpWarningTriggered ) {
+			return $this->source->restrictWarnings();
+		}
 
-        return $this->source->restrictDeprecations();
-    }
+		if ( $event instanceof NoticeTriggered || $event instanceof PhpNoticeTriggered ) {
+			return $this->source->restrictNotices();
+		}
 
-    private function isSuppressionIgnored(DeprecationTriggered|NoticeTriggered|PhpDeprecationTriggered|PhpNoticeTriggered|PhpWarningTriggered|WarningTriggered $event): bool
-    {
-        if ($event instanceof WarningTriggered) {
-            return $this->source->ignoreSuppressionOfWarnings();
-        }
+		return $this->source->restrictDeprecations();
+	}
 
-        if ($event instanceof PhpWarningTriggered) {
-            return $this->source->ignoreSuppressionOfPhpWarnings();
-        }
+	private function isSuppressionIgnored( DeprecationTriggered|NoticeTriggered|PhpDeprecationTriggered|PhpNoticeTriggered|PhpWarningTriggered|WarningTriggered $event ): bool {
+		if ( $event instanceof WarningTriggered ) {
+			return $this->source->ignoreSuppressionOfWarnings();
+		}
 
-        if ($event instanceof PhpNoticeTriggered) {
-            return $this->source->ignoreSuppressionOfPhpNotices();
-        }
+		if ( $event instanceof PhpWarningTriggered ) {
+			return $this->source->ignoreSuppressionOfPhpWarnings();
+		}
 
-        if ($event instanceof NoticeTriggered) {
-            return $this->source->ignoreSuppressionOfNotices();
-        }
+		if ( $event instanceof PhpNoticeTriggered ) {
+			return $this->source->ignoreSuppressionOfPhpNotices();
+		}
 
-        if ($event instanceof PhpDeprecationTriggered) {
-            return $this->source->ignoreSuppressionOfPhpDeprecations();
-        }
+		if ( $event instanceof NoticeTriggered ) {
+			return $this->source->ignoreSuppressionOfNotices();
+		}
 
-        return $this->source->ignoreSuppressionOfDeprecations();
-    }
+		if ( $event instanceof PhpDeprecationTriggered ) {
+			return $this->source->ignoreSuppressionOfPhpDeprecations();
+		}
+
+		return $this->source->ignoreSuppressionOfDeprecations();
+	}
 }

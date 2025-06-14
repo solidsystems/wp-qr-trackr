@@ -19,224 +19,214 @@ use function end;
 
 use const PHP_EOL;
 
-class ExpectationDirector
-{
-    /**
-     * Stores an array of all default expectations for this mock
-     *
-     * @var list<ExpectationInterface>
-     */
-    protected $_defaults = [];
+class ExpectationDirector {
 
-    /**
-     * Stores an array of all expectations for this mock
-     *
-     * @var list<ExpectationInterface>
-     */
-    protected $_expectations = [];
+	/**
+	 * Stores an array of all default expectations for this mock
+	 *
+	 * @var list<ExpectationInterface>
+	 */
+	protected $_defaults = array();
 
-    /**
-     * The expected order of next call
-     *
-     * @var int
-     */
-    protected $_expectedOrder = null;
+	/**
+	 * Stores an array of all expectations for this mock
+	 *
+	 * @var list<ExpectationInterface>
+	 */
+	protected $_expectations = array();
 
-    /**
-     * Mock object the director is attached to
-     *
-     * @var LegacyMockInterface|MockInterface
-     */
-    protected $_mock = null;
+	/**
+	 * The expected order of next call
+	 *
+	 * @var int
+	 */
+	protected $_expectedOrder = null;
 
-    /**
-     * Method name the director is directing
-     *
-     * @var string
-     */
-    protected $_name = null;
+	/**
+	 * Mock object the director is attached to
+	 *
+	 * @var LegacyMockInterface|MockInterface
+	 */
+	protected $_mock = null;
 
-    /**
-     * Constructor
-     *
-     * @param string $name
-     */
-    public function __construct($name, LegacyMockInterface $mock)
-    {
-        $this->_name = $name;
-        $this->_mock = $mock;
-    }
+	/**
+	 * Method name the director is directing
+	 *
+	 * @var string
+	 */
+	protected $_name = null;
 
-    /**
-     * Add a new expectation to the director
-     */
-    public function addExpectation(Expectation $expectation)
-    {
-        $this->_expectations[] = $expectation;
-    }
+	/**
+	 * Constructor
+	 *
+	 * @param string $name
+	 */
+	public function __construct( $name, LegacyMockInterface $mock ) {
+		$this->_name = $name;
+		$this->_mock = $mock;
+	}
 
-    /**
-     * Handle a method call being directed by this instance
-     *
-     * @return mixed
-     */
-    public function call(array $args)
-    {
-        $expectation = $this->findExpectation($args);
-        if ($expectation !== null) {
-            return $expectation->verifyCall($args);
-        }
+	/**
+	 * Add a new expectation to the director
+	 */
+	public function addExpectation( Expectation $expectation ) {
+		$this->_expectations[] = $expectation;
+	}
 
-        $exception = new NoMatchingExpectationException(
-            'No matching handler found for '
-            . $this->_mock->mockery_getName() . '::'
-            . Mockery::formatArgs($this->_name, $args)
-            . '. Either the method was unexpected or its arguments matched'
-            . ' no expected argument list for this method'
-            . PHP_EOL . PHP_EOL
-            . Mockery::formatObjects($args)
-        );
+	/**
+	 * Handle a method call being directed by this instance
+	 *
+	 * @return mixed
+	 */
+	public function call( array $args ) {
+		$expectation = $this->findExpectation( $args );
+		if ( $expectation !== null ) {
+			return $expectation->verifyCall( $args );
+		}
 
-        $exception->setMock($this->_mock)
-            ->setMethodName($this->_name)
-            ->setActualArguments($args);
+		$exception = new NoMatchingExpectationException(
+			'No matching handler found for '
+			. $this->_mock->mockery_getName() . '::'
+			. Mockery::formatArgs( $this->_name, $args )
+			. '. Either the method was unexpected or its arguments matched'
+			. ' no expected argument list for this method'
+			. PHP_EOL . PHP_EOL
+			. Mockery::formatObjects( $args )
+		);
 
-        throw $exception;
-    }
+		$exception->setMock( $this->_mock )
+			->setMethodName( $this->_name )
+			->setActualArguments( $args );
 
-    /**
-     * Attempt to locate an expectation matching the provided args
-     *
-     * @return mixed
-     */
-    public function findExpectation(array $args)
-    {
-        $expectation = null;
+		throw $exception;
+	}
 
-        if ($this->_expectations !== []) {
-            $expectation = $this->_findExpectationIn($this->_expectations, $args);
-        }
+	/**
+	 * Attempt to locate an expectation matching the provided args
+	 *
+	 * @return mixed
+	 */
+	public function findExpectation( array $args ) {
+		$expectation = null;
 
-        if ($expectation === null && $this->_defaults !== []) {
-            return $this->_findExpectationIn($this->_defaults, $args);
-        }
+		if ( $this->_expectations !== array() ) {
+			$expectation = $this->_findExpectationIn( $this->_expectations, $args );
+		}
 
-        return $expectation;
-    }
+		if ( $expectation === null && $this->_defaults !== array() ) {
+			return $this->_findExpectationIn( $this->_defaults, $args );
+		}
 
-    /**
-     * Return all expectations assigned to this director
-     *
-     * @return array<ExpectationInterface>
-     */
-    public function getDefaultExpectations()
-    {
-        return $this->_defaults;
-    }
+		return $expectation;
+	}
 
-    /**
-     * Return the number of expectations assigned to this director.
-     *
-     * @return int
-     */
-    public function getExpectationCount()
-    {
-        $count = 0;
+	/**
+	 * Return all expectations assigned to this director
+	 *
+	 * @return array<ExpectationInterface>
+	 */
+	public function getDefaultExpectations() {
+		return $this->_defaults;
+	}
 
-        $expectations = $this->getExpectations();
+	/**
+	 * Return the number of expectations assigned to this director.
+	 *
+	 * @return int
+	 */
+	public function getExpectationCount() {
+		$count = 0;
 
-        if ($expectations === []) {
-            $expectations = $this->getDefaultExpectations();
-        }
+		$expectations = $this->getExpectations();
 
-        foreach ($expectations as $expectation) {
-            if ($expectation->isCallCountConstrained()) {
-                ++$count;
-            }
-        }
+		if ( $expectations === array() ) {
+			$expectations = $this->getDefaultExpectations();
+		}
 
-        return $count;
-    }
+		foreach ( $expectations as $expectation ) {
+			if ( $expectation->isCallCountConstrained() ) {
+				++$count;
+			}
+		}
 
-    /**
-     * Return all expectations assigned to this director
-     *
-     * @return array<ExpectationInterface>
-     */
-    public function getExpectations()
-    {
-        return $this->_expectations;
-    }
+		return $count;
+	}
 
-    /**
-     * Make the given expectation a default for all others assuming it was correctly created last
-     *
-     * @throws Exception
-     *
-     * @return void
-     */
-    public function makeExpectationDefault(Expectation $expectation)
-    {
-        if (end($this->_expectations) === $expectation) {
-            array_pop($this->_expectations);
+	/**
+	 * Return all expectations assigned to this director
+	 *
+	 * @return array<ExpectationInterface>
+	 */
+	public function getExpectations() {
+		return $this->_expectations;
+	}
 
-            array_unshift($this->_defaults, $expectation);
+	/**
+	 * Make the given expectation a default for all others assuming it was correctly created last
+	 *
+	 * @throws Exception
+	 *
+	 * @return void
+	 */
+	public function makeExpectationDefault( Expectation $expectation ) {
+		if ( end( $this->_expectations ) === $expectation ) {
+			array_pop( $this->_expectations );
 
-            return;
-        }
+			array_unshift( $this->_defaults, $expectation );
 
-        throw new Exception('Cannot turn a previously defined expectation into a default');
-    }
+			return;
+		}
 
-    /**
-     * Verify all expectations of the director
-     *
-     * @throws Exception
-     *
-     * @return void
-     */
-    public function verify()
-    {
-        if ($this->_expectations !== []) {
-            foreach ($this->_expectations as $expectation) {
-                $expectation->verify();
-            }
+		throw new Exception( 'Cannot turn a previously defined expectation into a default' );
+	}
 
-            return;
-        }
+	/**
+	 * Verify all expectations of the director
+	 *
+	 * @throws Exception
+	 *
+	 * @return void
+	 */
+	public function verify() {
+		if ( $this->_expectations !== array() ) {
+			foreach ( $this->_expectations as $expectation ) {
+				$expectation->verify();
+			}
 
-        foreach ($this->_defaults as $expectation) {
-            $expectation->verify();
-        }
-    }
+			return;
+		}
 
-    /**
-     * Search current array of expectations for a match
-     *
-     * @param array<ExpectationInterface> $expectations
-     *
-     * @return null|ExpectationInterface
-     */
-    protected function _findExpectationIn(array $expectations, array $args)
-    {
-        foreach ($expectations as $expectation) {
-            if (! $expectation->isEligible()) {
-                continue;
-            }
+		foreach ( $this->_defaults as $expectation ) {
+			$expectation->verify();
+		}
+	}
 
-            if (! $expectation->matchArgs($args)) {
-                continue;
-            }
+	/**
+	 * Search current array of expectations for a match
+	 *
+	 * @param array<ExpectationInterface> $expectations
+	 *
+	 * @return null|ExpectationInterface
+	 */
+	protected function _findExpectationIn( array $expectations, array $args ) {
+		foreach ( $expectations as $expectation ) {
+			if ( ! $expectation->isEligible() ) {
+				continue;
+			}
 
-            return $expectation;
-        }
+			if ( ! $expectation->matchArgs( $args ) ) {
+				continue;
+			}
 
-        foreach ($expectations as $expectation) {
-            if ($expectation->matchArgs($args)) {
-                return $expectation;
-            }
-        }
+			return $expectation;
+		}
 
-        return null;
-    }
+		foreach ( $expectations as $expectation ) {
+			if ( $expectation->matchArgs( $args ) ) {
+				return $expectation;
+			}
+		}
+
+		return null;
+	}
 }

@@ -14,51 +14,46 @@ namespace PHPUnit\Metadata;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DependsOnClass extends Metadata
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
-    private readonly bool $deepClone;
-    private readonly bool $shallowClone;
+final class DependsOnClass extends Metadata {
 
-    /**
-     * @psalm-param 0|1 $level
-     * @psalm-param class-string $className
-     */
-    protected function __construct(int $level, string $className, bool $deepClone, bool $shallowClone)
-    {
-        parent::__construct($level);
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
+	private readonly bool $deepClone;
+	private readonly bool $shallowClone;
 
-        $this->className    = $className;
-        $this->deepClone    = $deepClone;
-        $this->shallowClone = $shallowClone;
-    }
+	/**
+	 * @psalm-param 0|1 $level
+	 * @psalm-param class-string $className
+	 */
+	protected function __construct( int $level, string $className, bool $deepClone, bool $shallowClone ) {
+		parent::__construct( $level );
 
-    /**
-     * @psalm-assert-if-true DependsOnClass $this
-     */
-    public function isDependsOnClass(): bool
-    {
-        return true;
-    }
+		$this->className    = $className;
+		$this->deepClone    = $deepClone;
+		$this->shallowClone = $shallowClone;
+	}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-assert-if-true DependsOnClass $this
+	 */
+	public function isDependsOnClass(): bool {
+		return true;
+	}
 
-    public function deepClone(): bool
-    {
-        return $this->deepClone;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
 
-    public function shallowClone(): bool
-    {
-        return $this->shallowClone;
-    }
+	public function deepClone(): bool {
+		return $this->deepClone;
+	}
+
+	public function shallowClone(): bool {
+		return $this->shallowClone;
+	}
 }

@@ -10,19 +10,19 @@
 
 namespace Mockery;
 
-interface MockInterface extends LegacyMockInterface
-{
-    /**
-     * @param mixed $something String method name or map of method => return
-     *
-     * @return Expectation|ExpectationInterface|HigherOrderMessage|self
-     */
-    public function allows($something = []);
+interface MockInterface extends LegacyMockInterface {
 
-    /**
-     * @param mixed $something String method name (optional)
-     *
-     * @return Expectation|ExpectationInterface|ExpectsHigherOrderMessage
-     */
-    public function expects($something = null);
+	/**
+	 * @param mixed $something String method name or map of method => return
+	 *
+	 * @return Expectation|ExpectationInterface|HigherOrderMessage|self
+	 */
+	public function allows( $something = array() );
+
+	/**
+	 * @param mixed $something String method name (optional)
+	 *
+	 * @return Expectation|ExpectationInterface|ExpectsHigherOrderMessage
+	 */
+	public function expects( $something = null );
 }

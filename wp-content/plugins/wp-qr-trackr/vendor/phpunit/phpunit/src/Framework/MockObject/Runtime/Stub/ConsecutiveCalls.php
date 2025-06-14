@@ -19,35 +19,33 @@ use PHPUnit\Framework\MockObject\NoMoreReturnValuesConfiguredException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ConsecutiveCalls implements Stub
-{
-    private array $stack;
-    private int $numberOfConfiguredReturnValues;
+final class ConsecutiveCalls implements Stub {
 
-    public function __construct(array $stack)
-    {
-        $this->stack                          = $stack;
-        $this->numberOfConfiguredReturnValues = count($stack);
-    }
+	private array $stack;
+	private int $numberOfConfiguredReturnValues;
 
-    /**
-     * @throws NoMoreReturnValuesConfiguredException
-     */
-    public function invoke(Invocation $invocation): mixed
-    {
-        if (empty($this->stack)) {
-            throw new NoMoreReturnValuesConfiguredException(
-                $invocation,
-                $this->numberOfConfiguredReturnValues,
-            );
-        }
+	public function __construct( array $stack ) {
+		$this->stack                          = $stack;
+		$this->numberOfConfiguredReturnValues = count( $stack );
+	}
 
-        $value = array_shift($this->stack);
+	/**
+	 * @throws NoMoreReturnValuesConfiguredException
+	 */
+	public function invoke( Invocation $invocation ): mixed {
+		if ( empty( $this->stack ) ) {
+			throw new NoMoreReturnValuesConfiguredException(
+				$invocation,
+				$this->numberOfConfiguredReturnValues,
+			);
+		}
 
-        if ($value instanceof Stub) {
-            $value = $value->invoke($invocation);
-        }
+		$value = array_shift( $this->stack );
 
-        return $value;
-    }
+		if ( $value instanceof Stub ) {
+			$value = $value->invoke( $invocation );
+		}
+
+		return $value;
+	}
 }

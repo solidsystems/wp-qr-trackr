@@ -17,38 +17,37 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MoveWhitelistIncludesToCoverage implements Migration
-{
-    /**
-     * @throws MigrationException
-     */
-    public function migrate(DOMDocument $document): void
-    {
-        $whitelist = $document->getElementsByTagName('whitelist')->item(0);
+final class MoveWhitelistIncludesToCoverage implements Migration {
 
-        if ($whitelist === null) {
-            return;
-        }
+	/**
+	 * @throws MigrationException
+	 */
+	public function migrate( DOMDocument $document ): void {
+		$whitelist = $document->getElementsByTagName( 'whitelist' )->item( 0 );
 
-        $coverage = $document->getElementsByTagName('coverage')->item(0);
+		if ( $whitelist === null ) {
+			return;
+		}
 
-        if (!$coverage instanceof DOMElement) {
-            throw new MigrationException('Unexpected state - No coverage element');
-        }
+		$coverage = $document->getElementsByTagName( 'coverage' )->item( 0 );
 
-        $include = $document->createElement('include');
-        $coverage->appendChild($include);
+		if ( ! $coverage instanceof DOMElement ) {
+			throw new MigrationException( 'Unexpected state - No coverage element' );
+		}
 
-        foreach (SnapshotNodeList::fromNodeList($whitelist->childNodes) as $child) {
-            if (!$child instanceof DOMElement) {
-                continue;
-            }
+		$include = $document->createElement( 'include' );
+		$coverage->appendChild( $include );
 
-            if (!($child->nodeName === 'directory' || $child->nodeName === 'file')) {
-                continue;
-            }
+		foreach ( SnapshotNodeList::fromNodeList( $whitelist->childNodes ) as $child ) {
+			if ( ! $child instanceof DOMElement ) {
+				continue;
+			}
 
-            $include->appendChild($child);
-        }
-    }
+			if ( ! ( $child->nodeName === 'directory' || $child->nodeName === 'file' ) ) {
+				continue;
+			}
+
+			$include->appendChild( $child );
+		}
+	}
 }

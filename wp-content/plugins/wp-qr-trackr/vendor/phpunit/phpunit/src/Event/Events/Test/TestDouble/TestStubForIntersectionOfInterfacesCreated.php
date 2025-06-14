@@ -19,42 +19,38 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestStubForIntersectionOfInterfacesCreated implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
+final class TestStubForIntersectionOfInterfacesCreated implements Event {
 
-    /**
-     * @psalm-var list<class-string>
-     */
-    private readonly array $interfaces;
+	private readonly Telemetry\Info $telemetryInfo;
 
-    /**
-     * @psalm-param list<class-string> $interfaces
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, array $interfaces)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->interfaces    = $interfaces;
-    }
+	/**
+	 * @psalm-var list<class-string>
+	 */
+	private readonly array $interfaces;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param list<class-string> $interfaces
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, array $interfaces ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->interfaces    = $interfaces;
+	}
 
-    /**
-     * @return list<class-string>
-     */
-    public function interfaces(): array
-    {
-        return $this->interfaces;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            'Test Stub Created (%s)',
-            implode('&', $this->interfaces),
-        );
-    }
+	/**
+	 * @return list<class-string>
+	 */
+	public function interfaces(): array {
+		return $this->interfaces;
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'Test Stub Created (%s)',
+			implode( '&', $this->interfaces ),
+		);
+	}
 }

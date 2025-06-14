@@ -18,77 +18,71 @@ use PHPUnit\Framework\MockObject\Invocation as BaseInvocation;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class InvokedCount extends InvocationOrder
-{
-    private readonly int $expectedCount;
+final class InvokedCount extends InvocationOrder {
 
-    public function __construct(int $expectedCount)
-    {
-        $this->expectedCount = $expectedCount;
-    }
+	private readonly int $expectedCount;
 
-    public function isNever(): bool
-    {
-        return $this->expectedCount === 0;
-    }
+	public function __construct( int $expectedCount ) {
+		$this->expectedCount = $expectedCount;
+	}
 
-    public function toString(): string
-    {
-        return sprintf(
-            'invoked %d time%s',
-            $this->expectedCount,
-            $this->expectedCount !== 1 ? 's' : '',
-        );
-    }
+	public function isNever(): bool {
+		return $this->expectedCount === 0;
+	}
 
-    public function matches(BaseInvocation $invocation): bool
-    {
-        return true;
-    }
+	public function toString(): string {
+		return sprintf(
+			'invoked %d time%s',
+			$this->expectedCount,
+			$this->expectedCount !== 1 ? 's' : '',
+		);
+	}
 
-    /**
-     * Verifies that the current expectation is valid. If everything is OK the
-     * code should just return, if not it must throw an exception.
-     *
-     * @throws ExpectationFailedException
-     */
-    public function verify(): void
-    {
-        $actualCount = $this->numberOfInvocations();
+	public function matches( BaseInvocation $invocation ): bool {
+		return true;
+	}
 
-        if ($actualCount !== $this->expectedCount) {
-            throw new ExpectationFailedException(
-                sprintf(
-                    'Method was expected to be called %d time%s, actually called %d time%s.',
-                    $this->expectedCount,
-                    $this->expectedCount !== 1 ? 's' : '',
-                    $actualCount,
-                    $actualCount !== 1 ? 's' : '',
-                ),
-            );
-        }
-    }
+	/**
+	 * Verifies that the current expectation is valid. If everything is OK the
+	 * code should just return, if not it must throw an exception.
+	 *
+	 * @throws ExpectationFailedException
+	 */
+	public function verify(): void {
+		$actualCount = $this->numberOfInvocations();
 
-    /**
-     * @throws ExpectationFailedException
-     */
-    protected function invokedDo(BaseInvocation $invocation): void
-    {
-        $count = $this->numberOfInvocations();
+		if ( $actualCount !== $this->expectedCount ) {
+			throw new ExpectationFailedException(
+				sprintf(
+					'Method was expected to be called %d time%s, actually called %d time%s.',
+					$this->expectedCount,
+					$this->expectedCount !== 1 ? 's' : '',
+					$actualCount,
+					$actualCount !== 1 ? 's' : '',
+				),
+			);
+		}
+	}
 
-        if ($count > $this->expectedCount) {
-            $message = $invocation->toString() . ' ';
+	/**
+	 * @throws ExpectationFailedException
+	 */
+	protected function invokedDo( BaseInvocation $invocation ): void {
+		$count = $this->numberOfInvocations();
 
-            $message .= match ($this->expectedCount) {
-                0       => 'was not expected to be called.',
-                1       => 'was not expected to be called more than once.',
-                default => sprintf(
-                    'was not expected to be called more than %d times.',
-                    $this->expectedCount,
-                ),
-            };
+		if ( $count > $this->expectedCount ) {
+			$message = $invocation->toString() . ' ';
 
-            throw new ExpectationFailedException($message);
-        }
-    }
+			$message .= match ( $this->expectedCount ) {
+				0       => 'was not expected to be called.',
+				1       => 'was not expected to be called more than once.',
+				default => sprintf(
+					'was not expected to be called more than %d times.',
+					$this->expectedCount,
+				),
+			};
+
+			throw new ExpectationFailedException( $message );
+		}
+	}
 }

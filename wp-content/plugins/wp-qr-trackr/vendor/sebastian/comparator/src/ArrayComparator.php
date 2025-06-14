@@ -23,105 +23,102 @@ use SebastianBergmann\Exporter\Exporter;
  * The order of the keys does not matter.
  * The types of key-value pairs do not matter.
  */
-class ArrayComparator extends Comparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        return is_array($expected) && is_array($actual);
-    }
+class ArrayComparator extends Comparator {
 
-    /**
-     * @throws ComparisonFailure
-     */
-    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = []): void
-    {
-        assert(is_array($expected));
-        assert(is_array($actual));
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		return is_array( $expected ) && is_array( $actual );
+	}
 
-        if ($canonicalize) {
-            sort($expected);
-            sort($actual);
-        }
+	/**
+	 * @throws ComparisonFailure
+	 */
+	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false, array &$processed = array() ): void {
+		assert( is_array( $expected ) );
+		assert( is_array( $actual ) );
 
-        $remaining        = $actual;
-        $actualAsString   = "Array (\n";
-        $expectedAsString = "Array (\n";
-        $equal            = true;
-        $exporter         = new Exporter;
+		if ( $canonicalize ) {
+			sort( $expected );
+			sort( $actual );
+		}
 
-        foreach ($expected as $key => $value) {
-            unset($remaining[$key]);
+		$remaining        = $actual;
+		$actualAsString   = "Array (\n";
+		$expectedAsString = "Array (\n";
+		$equal            = true;
+		$exporter         = new Exporter();
 
-            if (!array_key_exists($key, $actual)) {
-                $expectedAsString .= sprintf(
-                    "    %s => %s\n",
-                    $exporter->export($key),
-                    $exporter->shortenedExport($value),
-                );
+		foreach ( $expected as $key => $value ) {
+			unset( $remaining[ $key ] );
 
-                $equal = false;
+			if ( ! array_key_exists( $key, $actual ) ) {
+				$expectedAsString .= sprintf(
+					"    %s => %s\n",
+					$exporter->export( $key ),
+					$exporter->shortenedExport( $value ),
+				);
 
-                continue;
-            }
+				$equal = false;
 
-            try {
-                $comparator = $this->factory()->getComparatorFor($value, $actual[$key]);
-                $comparator->assertEquals($value, $actual[$key], $delta, $canonicalize, $ignoreCase, $processed);
+				continue;
+			}
 
-                $expectedAsString .= sprintf(
-                    "    %s => %s\n",
-                    $exporter->export($key),
-                    $exporter->shortenedExport($value),
-                );
+			try {
+				$comparator = $this->factory()->getComparatorFor( $value, $actual[ $key ] );
+				$comparator->assertEquals( $value, $actual[ $key ], $delta, $canonicalize, $ignoreCase, $processed );
 
-                $actualAsString .= sprintf(
-                    "    %s => %s\n",
-                    $exporter->export($key),
-                    $exporter->shortenedExport($actual[$key]),
-                );
-            } catch (ComparisonFailure $e) {
-                $expectedAsString .= sprintf(
-                    "    %s => %s\n",
-                    $exporter->export($key),
-                    $e->getExpectedAsString() ? $this->indent($e->getExpectedAsString()) : $exporter->shortenedExport($e->getExpected()),
-                );
+				$expectedAsString .= sprintf(
+					"    %s => %s\n",
+					$exporter->export( $key ),
+					$exporter->shortenedExport( $value ),
+				);
 
-                $actualAsString .= sprintf(
-                    "    %s => %s\n",
-                    $exporter->export($key),
-                    $e->getActualAsString() ? $this->indent($e->getActualAsString()) : $exporter->shortenedExport($e->getActual()),
-                );
+				$actualAsString .= sprintf(
+					"    %s => %s\n",
+					$exporter->export( $key ),
+					$exporter->shortenedExport( $actual[ $key ] ),
+				);
+			} catch ( ComparisonFailure $e ) {
+				$expectedAsString .= sprintf(
+					"    %s => %s\n",
+					$exporter->export( $key ),
+					$e->getExpectedAsString() ? $this->indent( $e->getExpectedAsString() ) : $exporter->shortenedExport( $e->getExpected() ),
+				);
 
-                $equal = false;
-            }
-        }
+				$actualAsString .= sprintf(
+					"    %s => %s\n",
+					$exporter->export( $key ),
+					$e->getActualAsString() ? $this->indent( $e->getActualAsString() ) : $exporter->shortenedExport( $e->getActual() ),
+				);
 
-        foreach ($remaining as $key => $value) {
-            $actualAsString .= sprintf(
-                "    %s => %s\n",
-                $exporter->export($key),
-                $exporter->shortenedExport($value),
-            );
+				$equal = false;
+			}
+		}
 
-            $equal = false;
-        }
+		foreach ( $remaining as $key => $value ) {
+			$actualAsString .= sprintf(
+				"    %s => %s\n",
+				$exporter->export( $key ),
+				$exporter->shortenedExport( $value ),
+			);
 
-        $expectedAsString .= ')';
-        $actualAsString .= ')';
+			$equal = false;
+		}
 
-        if (!$equal) {
-            throw new ComparisonFailure(
-                $expected,
-                $actual,
-                $expectedAsString,
-                $actualAsString,
-                'Failed asserting that two arrays are equal.',
-            );
-        }
-    }
+		$expectedAsString .= ')';
+		$actualAsString   .= ')';
 
-    private function indent(string $lines): string
-    {
-        return trim(str_replace("\n", "\n    ", $lines));
-    }
+		if ( ! $equal ) {
+			throw new ComparisonFailure(
+				$expected,
+				$actual,
+				$expectedAsString,
+				$actualAsString,
+				'Failed asserting that two arrays are equal.',
+			);
+		}
+	}
+
+	private function indent( string $lines ): string {
+		return trim( str_replace( "\n", "\n    ", $lines ) );
+	}
 }

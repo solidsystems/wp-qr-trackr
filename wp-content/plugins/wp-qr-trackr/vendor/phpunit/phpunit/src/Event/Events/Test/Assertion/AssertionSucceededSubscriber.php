@@ -16,7 +16,7 @@ use PHPUnit\Event\Subscriber;
  *
  * @deprecated
  */
-interface AssertionSucceededSubscriber extends Subscriber
-{
-    public function notify(AssertionSucceeded $event): void;
+interface AssertionSucceededSubscriber extends Subscriber {
+
+	public function notify( AssertionSucceeded $event ): void;
 }

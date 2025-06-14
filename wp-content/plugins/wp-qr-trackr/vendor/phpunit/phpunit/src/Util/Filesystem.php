@@ -22,30 +22,28 @@ use function str_starts_with;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Filesystem
-{
-    public static function createDirectory(string $directory): bool
-    {
-        return !(!is_dir($directory) && !@mkdir($directory, 0o777, true) && !is_dir($directory));
-    }
+final class Filesystem {
 
-    /**
-     * @psalm-param non-empty-string $path
-     *
-     * @return false|non-empty-string
-     */
-    public static function resolveStreamOrFile(string $path): false|string
-    {
-        if (str_starts_with($path, 'php://') || str_starts_with($path, 'socket://')) {
-            return $path;
-        }
+	public static function createDirectory( string $directory ): bool {
+		return ! ( ! is_dir( $directory ) && ! @mkdir( $directory, 0o777, true ) && ! is_dir( $directory ) );
+	}
 
-        $directory = dirname($path);
+	/**
+	 * @psalm-param non-empty-string $path
+	 *
+	 * @return false|non-empty-string
+	 */
+	public static function resolveStreamOrFile( string $path ): false|string {
+		if ( str_starts_with( $path, 'php://' ) || str_starts_with( $path, 'socket://' ) ) {
+			return $path;
+		}
 
-        if (is_dir($directory)) {
-            return realpath($directory) . DIRECTORY_SEPARATOR . basename($path);
-        }
+		$directory = dirname( $path );
 
-        return false;
-    }
+		if ( is_dir( $directory ) ) {
+			return realpath( $directory ) . DIRECTORY_SEPARATOR . basename( $path );
+		}
+
+		return false;
+	}
 }

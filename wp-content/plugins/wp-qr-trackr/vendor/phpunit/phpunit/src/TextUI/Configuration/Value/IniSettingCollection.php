@@ -20,41 +20,36 @@ use IteratorAggregate;
  *
  * @template-implements IteratorAggregate<int, IniSetting>
  */
-final class IniSettingCollection implements Countable, IteratorAggregate
-{
-    /**
-     * @psalm-var list<IniSetting>
-     */
-    private readonly array $iniSettings;
+final class IniSettingCollection implements Countable, IteratorAggregate {
 
-    /**
-     * @psalm-param list<IniSetting> $iniSettings
-     */
-    public static function fromArray(array $iniSettings): self
-    {
-        return new self(...$iniSettings);
-    }
+	/**
+	 * @psalm-var list<IniSetting>
+	 */
+	private readonly array $iniSettings;
 
-    private function __construct(IniSetting ...$iniSettings)
-    {
-        $this->iniSettings = $iniSettings;
-    }
+	/**
+	 * @psalm-param list<IniSetting> $iniSettings
+	 */
+	public static function fromArray( array $iniSettings ): self {
+		return new self( ...$iniSettings );
+	}
 
-    /**
-     * @psalm-return list<IniSetting>
-     */
-    public function asArray(): array
-    {
-        return $this->iniSettings;
-    }
+	private function __construct( IniSetting ...$iniSettings ) {
+		$this->iniSettings = $iniSettings;
+	}
 
-    public function count(): int
-    {
-        return count($this->iniSettings);
-    }
+	/**
+	 * @psalm-return list<IniSetting>
+	 */
+	public function asArray(): array {
+		return $this->iniSettings;
+	}
 
-    public function getIterator(): IniSettingCollectionIterator
-    {
-        return new IniSettingCollectionIterator($this);
-    }
+	public function count(): int {
+		return count( $this->iniSettings );
+	}
+
+	public function getIterator(): IniSettingCollectionIterator {
+		return new IniSettingCollectionIterator( $this );
+	}
 }

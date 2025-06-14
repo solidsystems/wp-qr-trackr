@@ -19,56 +19,49 @@ use IteratorAggregate;
  *
  * @psalm-immutable
  */
-final class CodeUnitCollection implements Countable, IteratorAggregate
-{
-    /**
-     * @psalm-var list<CodeUnit>
-     */
-    private readonly array $codeUnits;
+final class CodeUnitCollection implements Countable, IteratorAggregate {
 
-    public static function fromList(CodeUnit ...$codeUnits): self
-    {
-        return new self($codeUnits);
-    }
+	/**
+	 * @psalm-var list<CodeUnit>
+	 */
+	private readonly array $codeUnits;
 
-    /**
-     * @psalm-param list<CodeUnit> $codeUnits
-     */
-    private function __construct(array $codeUnits)
-    {
-        $this->codeUnits = $codeUnits;
-    }
+	public static function fromList( CodeUnit ...$codeUnits ): self {
+		return new self( $codeUnits );
+	}
 
-    /**
-     * @psalm-return list<CodeUnit>
-     */
-    public function asArray(): array
-    {
-        return $this->codeUnits;
-    }
+	/**
+	 * @psalm-param list<CodeUnit> $codeUnits
+	 */
+	private function __construct( array $codeUnits ) {
+		$this->codeUnits = $codeUnits;
+	}
 
-    public function getIterator(): CodeUnitCollectionIterator
-    {
-        return new CodeUnitCollectionIterator($this);
-    }
+	/**
+	 * @psalm-return list<CodeUnit>
+	 */
+	public function asArray(): array {
+		return $this->codeUnits;
+	}
 
-    public function count(): int
-    {
-        return count($this->codeUnits);
-    }
+	public function getIterator(): CodeUnitCollectionIterator {
+		return new CodeUnitCollectionIterator( $this );
+	}
 
-    public function isEmpty(): bool
-    {
-        return empty($this->codeUnits);
-    }
+	public function count(): int {
+		return count( $this->codeUnits );
+	}
 
-    public function mergeWith(self $other): self
-    {
-        return new self(
-            array_merge(
-                $this->asArray(),
-                $other->asArray()
-            )
-        );
-    }
+	public function isEmpty(): bool {
+		return empty( $this->codeUnits );
+	}
+
+	public function mergeWith( self $other ): self {
+		return new self(
+			array_merge(
+				$this->asArray(),
+				$other->asArray()
+			)
+		);
+	}
 }

@@ -2,39 +2,35 @@
 namespace Hamcrest\Text;
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 
 /**
  * Tests if the argument is a string that ends with a substring.
  */
-class StringEndsWith extends SubstringMatcher
-{
+class StringEndsWith extends SubstringMatcher {
 
-    public function __construct($substring)
-    {
-        parent::__construct($substring);
-    }
 
-    /**
-     * Matches if value is a string that ends with $substring.
-     *
-     * @factory
-     */
-    public static function endsWith($substring)
-    {
-        return new self($substring);
-    }
+	public function __construct( $substring ) {
+		parent::__construct( $substring );
+	}
 
-    // -- Protected Methods
+	/**
+	 * Matches if value is a string that ends with $substring.
+	 *
+	 * @factory
+	 */
+	public static function endsWith( $substring ) {
+		return new self( $substring );
+	}
 
-    protected function evalSubstringOf($string)
-    {
-        return (substr($string, (-1 * strlen($this->_substring))) === $this->_substring);
-    }
+	// -- Protected Methods
 
-    protected function relationship()
-    {
-        return 'ending with';
-    }
+	protected function evalSubstringOf( $string ) {
+		return ( substr( $string, ( -1 * strlen( $this->_substring ) ) ) === $this->_substring );
+	}
+
+	protected function relationship() {
+		return 'ending with';
+	}
 }

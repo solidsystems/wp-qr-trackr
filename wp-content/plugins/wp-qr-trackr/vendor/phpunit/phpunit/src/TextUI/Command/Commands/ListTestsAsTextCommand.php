@@ -23,65 +23,62 @@ use RecursiveIteratorIterator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ListTestsAsTextCommand implements Command
-{
-    private readonly TestSuite $suite;
+final class ListTestsAsTextCommand implements Command {
 
-    public function __construct(TestSuite $suite)
-    {
-        $this->suite = $suite;
-    }
+	private readonly TestSuite $suite;
 
-    public function execute(): Result
-    {
-        $buffer = $this->warnAboutConflictingOptions();
+	public function __construct( TestSuite $suite ) {
+		$this->suite = $suite;
+	}
 
-        $buffer .= 'Available test(s):' . PHP_EOL;
+	public function execute(): Result {
+		$buffer = $this->warnAboutConflictingOptions();
 
-        foreach (new RecursiveIteratorIterator($this->suite) as $test) {
-            if ($test instanceof TestCase) {
-                $name = sprintf(
-                    '%s::%s',
-                    $test::class,
-                    str_replace(' with data set ', '', $test->nameWithDataSet()),
-                );
-            } elseif ($test instanceof PhptTestCase) {
-                $name = $test->getName();
-            } else {
-                continue;
-            }
+		$buffer .= 'Available test(s):' . PHP_EOL;
 
-            $buffer .= sprintf(
-                ' - %s' . PHP_EOL,
-                $name,
-            );
-        }
+		foreach ( new RecursiveIteratorIterator( $this->suite ) as $test ) {
+			if ( $test instanceof TestCase ) {
+				$name = sprintf(
+					'%s::%s',
+					$test::class,
+					str_replace( ' with data set ', '', $test->nameWithDataSet() ),
+				);
+			} elseif ( $test instanceof PhptTestCase ) {
+				$name = $test->getName();
+			} else {
+				continue;
+			}
 
-        return Result::from($buffer);
-    }
+			$buffer .= sprintf(
+				' - %s' . PHP_EOL,
+				$name,
+			);
+		}
 
-    private function warnAboutConflictingOptions(): string
-    {
-        $buffer = '';
+		return Result::from( $buffer );
+	}
 
-        $configuration = Registry::get();
+	private function warnAboutConflictingOptions(): string {
+		$buffer = '';
 
-        if ($configuration->hasFilter()) {
-            $buffer .= 'The --filter and --list-tests options cannot be combined, --filter is ignored' . PHP_EOL;
-        }
+		$configuration = Registry::get();
 
-        if ($configuration->hasGroups()) {
-            $buffer .= 'The --group and --list-tests options cannot be combined, --group is ignored' . PHP_EOL;
-        }
+		if ( $configuration->hasFilter() ) {
+			$buffer .= 'The --filter and --list-tests options cannot be combined, --filter is ignored' . PHP_EOL;
+		}
 
-        if ($configuration->hasExcludeGroups()) {
-            $buffer .= 'The --exclude-group and --list-tests options cannot be combined, --exclude-group is ignored' . PHP_EOL;
-        }
+		if ( $configuration->hasGroups() ) {
+			$buffer .= 'The --group and --list-tests options cannot be combined, --group is ignored' . PHP_EOL;
+		}
 
-        if (!empty($buffer)) {
-            $buffer .= PHP_EOL;
-        }
+		if ( $configuration->hasExcludeGroups() ) {
+			$buffer .= 'The --exclude-group and --list-tests options cannot be combined, --exclude-group is ignored' . PHP_EOL;
+		}
 
-        return $buffer;
-    }
+		if ( ! empty( $buffer ) ) {
+			$buffer .= PHP_EOL;
+		}
+
+		return $buffer;
+	}
 }

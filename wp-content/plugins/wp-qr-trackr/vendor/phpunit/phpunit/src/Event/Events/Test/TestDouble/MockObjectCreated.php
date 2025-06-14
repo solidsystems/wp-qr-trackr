@@ -18,42 +18,38 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class MockObjectCreated implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
+final class MockObjectCreated implements Event {
 
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+	private readonly Telemetry\Info $telemetryInfo;
 
-    /**
-     * @psalm-param class-string $className
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, string $className)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->className     = $className;
-    }
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, string $className ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->className     = $className;
+	}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            'Mock Object Created (%s)',
-            $this->className,
-        );
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'Mock Object Created (%s)',
+			$this->className,
+		);
+	}
 }

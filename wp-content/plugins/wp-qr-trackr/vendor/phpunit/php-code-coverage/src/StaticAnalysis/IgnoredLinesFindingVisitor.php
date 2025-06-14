@@ -24,98 +24,94 @@ use PhpParser\NodeVisitorAbstract;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class IgnoredLinesFindingVisitor extends NodeVisitorAbstract
-{
-    /**
-     * @psalm-var array<int>
-     */
-    private array $ignoredLines = [];
-    private readonly bool $useAnnotationsForIgnoringCode;
-    private readonly bool $ignoreDeprecated;
+final class IgnoredLinesFindingVisitor extends NodeVisitorAbstract {
 
-    public function __construct(bool $useAnnotationsForIgnoringCode, bool $ignoreDeprecated)
-    {
-        $this->useAnnotationsForIgnoringCode = $useAnnotationsForIgnoringCode;
-        $this->ignoreDeprecated              = $ignoreDeprecated;
-    }
+	/**
+	 * @psalm-var array<int>
+	 */
+	private array $ignoredLines = array();
+	private readonly bool $useAnnotationsForIgnoringCode;
+	private readonly bool $ignoreDeprecated;
 
-    public function enterNode(Node $node): void
-    {
-        if (!$node instanceof Class_ &&
-            !$node instanceof Trait_ &&
-            !$node instanceof Interface_ &&
-            !$node instanceof Enum_ &&
-            !$node instanceof ClassMethod &&
-            !$node instanceof Function_ &&
-            !$node instanceof Attribute) {
-            return;
-        }
+	public function __construct( bool $useAnnotationsForIgnoringCode, bool $ignoreDeprecated ) {
+		$this->useAnnotationsForIgnoringCode = $useAnnotationsForIgnoringCode;
+		$this->ignoreDeprecated              = $ignoreDeprecated;
+	}
 
-        if ($node instanceof Class_ && $node->isAnonymous()) {
-            return;
-        }
+	public function enterNode( Node $node ): void {
+		if ( ! $node instanceof Class_ &&
+			! $node instanceof Trait_ &&
+			! $node instanceof Interface_ &&
+			! $node instanceof Enum_ &&
+			! $node instanceof ClassMethod &&
+			! $node instanceof Function_ &&
+			! $node instanceof Attribute ) {
+			return;
+		}
 
-        if ($node instanceof Class_ ||
-            $node instanceof Trait_ ||
-            $node instanceof Interface_ ||
-            $node instanceof Attribute) {
-            $this->ignoredLines[] = $node->getStartLine();
+		if ( $node instanceof Class_ && $node->isAnonymous() ) {
+			return;
+		}
 
-            assert($node->name !== null);
+		if ( $node instanceof Class_ ||
+			$node instanceof Trait_ ||
+			$node instanceof Interface_ ||
+			$node instanceof Attribute ) {
+			$this->ignoredLines[] = $node->getStartLine();
 
-            // Workaround for https://github.com/nikic/PHP-Parser/issues/886
-            $this->ignoredLines[] = $node->name->getStartLine();
-        }
+			assert( $node->name !== null );
 
-        if (!$this->useAnnotationsForIgnoringCode) {
-            return;
-        }
+			// Workaround for https://github.com/nikic/PHP-Parser/issues/886
+			$this->ignoredLines[] = $node->name->getStartLine();
+		}
 
-        if ($node instanceof Interface_) {
-            return;
-        }
+		if ( ! $this->useAnnotationsForIgnoringCode ) {
+			return;
+		}
 
-        if ($node instanceof Attribute &&
-            $node->name->toString() === 'PHPUnit\Framework\Attributes\CodeCoverageIgnore') {
-            $attributeGroup = $node->getAttribute('parent');
-            $attributedNode = $attributeGroup->getAttribute('parent');
+		if ( $node instanceof Interface_ ) {
+			return;
+		}
 
-            for ($line = $attributedNode->getStartLine(); $line <= $attributedNode->getEndLine(); $line++) {
-                $this->ignoredLines[] = $line;
-            }
+		if ( $node instanceof Attribute &&
+			$node->name->toString() === 'PHPUnit\Framework\Attributes\CodeCoverageIgnore' ) {
+			$attributeGroup = $node->getAttribute( 'parent' );
+			$attributedNode = $attributeGroup->getAttribute( 'parent' );
 
-            return;
-        }
+			for ( $line = $attributedNode->getStartLine(); $line <= $attributedNode->getEndLine(); $line++ ) {
+				$this->ignoredLines[] = $line;
+			}
 
-        $this->processDocComment($node);
-    }
+			return;
+		}
 
-    /**
-     * @psalm-return array<int>
-     */
-    public function ignoredLines(): array
-    {
-        return $this->ignoredLines;
-    }
+		$this->processDocComment( $node );
+	}
 
-    private function processDocComment(Node $node): void
-    {
-        $docComment = $node->getDocComment();
+	/**
+	 * @psalm-return array<int>
+	 */
+	public function ignoredLines(): array {
+		return $this->ignoredLines;
+	}
 
-        if ($docComment === null) {
-            return;
-        }
+	private function processDocComment( Node $node ): void {
+		$docComment = $node->getDocComment();
 
-        if (str_contains($docComment->getText(), '@codeCoverageIgnore')) {
-            for ($line = $node->getStartLine(); $line <= $node->getEndLine(); $line++) {
-                $this->ignoredLines[] = $line;
-            }
-        }
+		if ( $docComment === null ) {
+			return;
+		}
 
-        if ($this->ignoreDeprecated && str_contains($docComment->getText(), '@deprecated')) {
-            for ($line = $node->getStartLine(); $line <= $node->getEndLine(); $line++) {
-                $this->ignoredLines[] = $line;
-            }
-        }
-    }
+		if ( str_contains( $docComment->getText(), '@codeCoverageIgnore' ) ) {
+			for ( $line = $node->getStartLine(); $line <= $node->getEndLine(); $line++ ) {
+				$this->ignoredLines[] = $line;
+			}
+		}
+
+		if ( $this->ignoreDeprecated && str_contains( $docComment->getText(), '@deprecated' ) ) {
+			for ( $line = $node->getStartLine(); $line <= $node->getEndLine(); $line++ ) {
+				$this->ignoredLines[] = $line;
+			}
+		}
+	}
 }

@@ -16,6 +16,6 @@ use PHPUnit\Framework\MockObject\Exception as BaseException;
  *
  * @internal This interface is not covered by the backward compatibility promise for PHPUnit
  */
-interface Exception extends BaseException
-{
+interface Exception extends BaseException {
+
 }

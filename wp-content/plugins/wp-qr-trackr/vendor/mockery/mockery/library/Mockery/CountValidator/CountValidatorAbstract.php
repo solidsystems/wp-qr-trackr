@@ -12,51 +12,49 @@ namespace Mockery\CountValidator;
 
 use Mockery\Expectation;
 
-abstract class CountValidatorAbstract implements CountValidatorInterface
-{
-    /**
-     * Expectation for which this validator is assigned
-     *
-     * @var Expectation
-     */
-    protected $_expectation = null;
+abstract class CountValidatorAbstract implements CountValidatorInterface {
 
-    /**
-     * Call count limit
-     *
-     * @var int
-     */
-    protected $_limit = null;
+	/**
+	 * Expectation for which this validator is assigned
+	 *
+	 * @var Expectation
+	 */
+	protected $_expectation = null;
 
-    /**
-     * Set Expectation object and upper call limit
-     *
-     * @param int $limit
-     */
-    public function __construct(Expectation $expectation, $limit)
-    {
-        $this->_expectation = $expectation;
-        $this->_limit = $limit;
-    }
+	/**
+	 * Call count limit
+	 *
+	 * @var int
+	 */
+	protected $_limit = null;
 
-    /**
-     * Checks if the validator can accept an additional nth call
-     *
-     * @param int $n
-     *
-     * @return bool
-     */
-    public function isEligible($n)
-    {
-        return $n < $this->_limit;
-    }
+	/**
+	 * Set Expectation object and upper call limit
+	 *
+	 * @param int $limit
+	 */
+	public function __construct( Expectation $expectation, $limit ) {
+		$this->_expectation = $expectation;
+		$this->_limit       = $limit;
+	}
 
-    /**
-     * Validate the call count against this validator
-     *
-     * @param int $n
-     *
-     * @return bool
-     */
-    abstract public function validate($n);
+	/**
+	 * Checks if the validator can accept an additional nth call
+	 *
+	 * @param int $n
+	 *
+	 * @return bool
+	 */
+	public function isEligible( $n ) {
+		return $n < $this->_limit;
+	}
+
+	/**
+	 * Validate the call count against this validator
+	 *
+	 * @param int $n
+	 *
+	 * @return bool
+	 */
+	abstract public function validate( $n );
 }

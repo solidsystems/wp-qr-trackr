@@ -16,42 +16,39 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final class RequiresPhpExtension
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $extension;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
+final class RequiresPhpExtension {
 
-    /**
-     * @psalm-var null|non-empty-string
-     */
-    private readonly ?string $versionRequirement;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $extension;
 
-    /**
-     * @psalm-param non-empty-string $extension
-     * @psalm-param null|non-empty-string $versionRequirement
-     */
-    public function __construct(string $extension, ?string $versionRequirement = null)
-    {
-        $this->extension          = $extension;
-        $this->versionRequirement = $versionRequirement;
-    }
+	/**
+	 * @psalm-var null|non-empty-string
+	 */
+	private readonly ?string $versionRequirement;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function extension(): string
-    {
-        return $this->extension;
-    }
+	/**
+	 * @psalm-param non-empty-string $extension
+	 * @psalm-param null|non-empty-string $versionRequirement
+	 */
+	public function __construct( string $extension, ?string $versionRequirement = null ) {
+		$this->extension          = $extension;
+		$this->versionRequirement = $versionRequirement;
+	}
 
-    /**
-     * @psalm-return null|non-empty-string
-     */
-    public function versionRequirement(): ?string
-    {
-        return $this->versionRequirement;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function extension(): string {
+		return $this->extension;
+	}
+
+	/**
+	 * @psalm-return null|non-empty-string
+	 */
+	public function versionRequirement(): ?string {
+		return $this->versionRequirement;
+	}
 }

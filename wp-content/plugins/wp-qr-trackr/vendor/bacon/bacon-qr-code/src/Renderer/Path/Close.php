@@ -3,32 +3,28 @@ declare(strict_types = 1);
 
 namespace BaconQrCode\Renderer\Path;
 
-final class Close implements OperationInterface
-{
-    private static ?Close $instance = null;
+final class Close implements OperationInterface {
 
-    private function __construct()
-    {
-    }
+	private static ?Close $instance = null;
 
-    public static function instance() : self
-    {
-        return self::$instance ?: self::$instance = new self();
-    }
+	private function __construct() {
+	}
 
-    /**
-     * @return self
-     */
-    public function translate(float $x, float $y) : OperationInterface
-    {
-        return $this;
-    }
+	public static function instance(): self {
+		return self::$instance ?: self::$instance = new self();
+	}
 
-    /**
-     * @return self
-     */
-    public function rotate(int $degrees) : OperationInterface
-    {
-        return $this;
-    }
+	/**
+	 * @return self
+	 */
+	public function translate( float $x, float $y ): OperationInterface {
+		return $this;
+	}
+
+	/**
+	 * @return self
+	 */
+	public function rotate( int $degrees ): OperationInterface {
+		return $this;
+	}
 }

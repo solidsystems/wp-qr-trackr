@@ -18,33 +18,31 @@ use function class_exists;
  *
  * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5243
  */
-final class MockTrait implements MockType
-{
-    private readonly string $classCode;
+final class MockTrait implements MockType {
 
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $mockName;
+	private readonly string $classCode;
 
-    /**
-     * @psalm-param class-string $mockName
-     */
-    public function __construct(string $classCode, string $mockName)
-    {
-        $this->classCode = $classCode;
-        $this->mockName  = $mockName;
-    }
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $mockName;
 
-    /**
-     * @psalm-return class-string
-     */
-    public function generate(): string
-    {
-        if (!class_exists($this->mockName, false)) {
-            eval($this->classCode);
-        }
+	/**
+	 * @psalm-param class-string $mockName
+	 */
+	public function __construct( string $classCode, string $mockName ) {
+		$this->classCode = $classCode;
+		$this->mockName  = $mockName;
+	}
 
-        return $this->mockName;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function generate(): string {
+		if ( ! class_exists( $this->mockName, false ) ) {
+			eval( $this->classCode );
+		}
+
+		return $this->mockName;
+	}
 }

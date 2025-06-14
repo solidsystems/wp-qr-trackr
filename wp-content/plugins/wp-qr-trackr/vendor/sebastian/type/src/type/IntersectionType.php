@@ -15,112 +15,102 @@ use function implode;
 use function in_array;
 use function sort;
 
-final class IntersectionType extends Type
-{
-    /**
-     * @psalm-var non-empty-list<Type>
-     */
-    private array $types;
+final class IntersectionType extends Type {
 
-    /**
-     * @throws RuntimeException
-     */
-    public function __construct(Type ...$types)
-    {
-        $this->ensureMinimumOfTwoTypes(...$types);
-        $this->ensureOnlyValidTypes(...$types);
-        $this->ensureNoDuplicateTypes(...$types);
+	/**
+	 * @psalm-var non-empty-list<Type>
+	 */
+	private array $types;
 
-        $this->types = $types;
-    }
+	/**
+	 * @throws RuntimeException
+	 */
+	public function __construct( Type ...$types ) {
+		$this->ensureMinimumOfTwoTypes( ...$types );
+		$this->ensureOnlyValidTypes( ...$types );
+		$this->ensureNoDuplicateTypes( ...$types );
 
-    public function isAssignable(Type $other): bool
-    {
-        return $other->isObject();
-    }
+		$this->types = $types;
+	}
 
-    public function asString(): string
-    {
-        return $this->name();
-    }
+	public function isAssignable( Type $other ): bool {
+		return $other->isObject();
+	}
 
-    public function name(): string
-    {
-        $types = [];
+	public function asString(): string {
+		return $this->name();
+	}
 
-        foreach ($this->types as $type) {
-            $types[] = $type->name();
-        }
+	public function name(): string {
+		$types = array();
 
-        sort($types);
+		foreach ( $this->types as $type ) {
+			$types[] = $type->name();
+		}
 
-        return implode('&', $types);
-    }
+		sort( $types );
 
-    public function allowsNull(): bool
-    {
-        return false;
-    }
+		return implode( '&', $types );
+	}
 
-    /**
-     * @psalm-assert-if-true IntersectionType $this
-     */
-    public function isIntersection(): bool
-    {
-        return true;
-    }
+	public function allowsNull(): bool {
+		return false;
+	}
 
-    /**
-     * @psalm-return non-empty-list<Type>
-     */
-    public function types(): array
-    {
-        return $this->types;
-    }
+	/**
+	 * @psalm-assert-if-true IntersectionType $this
+	 */
+	public function isIntersection(): bool {
+		return true;
+	}
 
-    /**
-     * @throws RuntimeException
-     */
-    private function ensureMinimumOfTwoTypes(Type ...$types): void
-    {
-        if (count($types) < 2) {
-            throw new RuntimeException(
-                'An intersection type must be composed of at least two types'
-            );
-        }
-    }
+	/**
+	 * @psalm-return non-empty-list<Type>
+	 */
+	public function types(): array {
+		return $this->types;
+	}
 
-    /**
-     * @throws RuntimeException
-     */
-    private function ensureOnlyValidTypes(Type ...$types): void
-    {
-        foreach ($types as $type) {
-            if (!$type->isObject()) {
-                throw new RuntimeException(
-                    'An intersection type can only be composed of interfaces and classes'
-                );
-            }
-        }
-    }
+	/**
+	 * @throws RuntimeException
+	 */
+	private function ensureMinimumOfTwoTypes( Type ...$types ): void {
+		if ( count( $types ) < 2 ) {
+			throw new RuntimeException(
+				'An intersection type must be composed of at least two types'
+			);
+		}
+	}
 
-    /**
-     * @throws RuntimeException
-     */
-    private function ensureNoDuplicateTypes(Type ...$types): void
-    {
-        $names = [];
+	/**
+	 * @throws RuntimeException
+	 */
+	private function ensureOnlyValidTypes( Type ...$types ): void {
+		foreach ( $types as $type ) {
+			if ( ! $type->isObject() ) {
+				throw new RuntimeException(
+					'An intersection type can only be composed of interfaces and classes'
+				);
+			}
+		}
+	}
 
-        foreach ($types as $type) {
-            assert($type instanceof ObjectType);
+	/**
+	 * @throws RuntimeException
+	 */
+	private function ensureNoDuplicateTypes( Type ...$types ): void {
+		$names = array();
 
-            $classQualifiedName = $type->className()->qualifiedName();
+		foreach ( $types as $type ) {
+			assert( $type instanceof ObjectType );
 
-            if (in_array($classQualifiedName, $names, true)) {
-                throw new RuntimeException('An intersection type must not contain duplicate types');
-            }
+			$classQualifiedName = $type->className()->qualifiedName();
 
-            $names[] = $classQualifiedName;
-        }
-    }
+			if ( in_array( $classQualifiedName, $names, true ) ) {
+				throw new RuntimeException( 'An intersection type must not contain duplicate types' );
+			}
+
+			$names[] = $classQualifiedName;
+		}
+	}
 }

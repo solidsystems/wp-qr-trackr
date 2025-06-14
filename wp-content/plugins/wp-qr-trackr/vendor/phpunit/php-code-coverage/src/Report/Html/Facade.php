@@ -22,132 +22,127 @@ use SebastianBergmann\CodeCoverage\Util\Filesystem;
 use SebastianBergmann\Template\Exception;
 use SebastianBergmann\Template\Template;
 
-final class Facade
-{
-    private readonly string $templatePath;
-    private readonly string $generator;
-    private readonly Colors $colors;
-    private readonly Thresholds $thresholds;
-    private readonly CustomCssFile $customCssFile;
+final class Facade {
 
-    public function __construct(string $generator = '', ?Colors $colors = null, ?Thresholds $thresholds = null, ?CustomCssFile $customCssFile = null)
-    {
-        $this->generator     = $generator;
-        $this->colors        = $colors ?? Colors::default();
-        $this->thresholds    = $thresholds ?? Thresholds::default();
-        $this->customCssFile = $customCssFile ?? CustomCssFile::default();
-        $this->templatePath  = __DIR__ . '/Renderer/Template/';
-    }
+	private readonly string $templatePath;
+	private readonly string $generator;
+	private readonly Colors $colors;
+	private readonly Thresholds $thresholds;
+	private readonly CustomCssFile $customCssFile;
 
-    public function process(CodeCoverage $coverage, string $target): void
-    {
-        $target = $this->directory($target);
-        $report = $coverage->getReport();
-        $date   = date('D M j G:i:s T Y');
+	public function __construct( string $generator = '', ?Colors $colors = null, ?Thresholds $thresholds = null, ?CustomCssFile $customCssFile = null ) {
+		$this->generator     = $generator;
+		$this->colors        = $colors ?? Colors::default();
+		$this->thresholds    = $thresholds ?? Thresholds::default();
+		$this->customCssFile = $customCssFile ?? CustomCssFile::default();
+		$this->templatePath  = __DIR__ . '/Renderer/Template/';
+	}
 
-        $dashboard = new Dashboard(
-            $this->templatePath,
-            $this->generator,
-            $date,
-            $this->thresholds,
-            $coverage->collectsBranchAndPathCoverage(),
-        );
+	public function process( CodeCoverage $coverage, string $target ): void {
+		$target = $this->directory( $target );
+		$report = $coverage->getReport();
+		$date   = date( 'D M j G:i:s T Y' );
 
-        $directory = new Directory(
-            $this->templatePath,
-            $this->generator,
-            $date,
-            $this->thresholds,
-            $coverage->collectsBranchAndPathCoverage(),
-        );
+		$dashboard = new Dashboard(
+			$this->templatePath,
+			$this->generator,
+			$date,
+			$this->thresholds,
+			$coverage->collectsBranchAndPathCoverage(),
+		);
 
-        $file = new File(
-            $this->templatePath,
-            $this->generator,
-            $date,
-            $this->thresholds,
-            $coverage->collectsBranchAndPathCoverage(),
-        );
+		$directory = new Directory(
+			$this->templatePath,
+			$this->generator,
+			$date,
+			$this->thresholds,
+			$coverage->collectsBranchAndPathCoverage(),
+		);
 
-        $directory->render($report, $target . 'index.html');
-        $dashboard->render($report, $target . 'dashboard.html');
+		$file = new File(
+			$this->templatePath,
+			$this->generator,
+			$date,
+			$this->thresholds,
+			$coverage->collectsBranchAndPathCoverage(),
+		);
 
-        foreach ($report as $node) {
-            $id = $node->id();
+		$directory->render( $report, $target . 'index.html' );
+		$dashboard->render( $report, $target . 'dashboard.html' );
 
-            if ($node instanceof DirectoryNode) {
-                Filesystem::createDirectory($target . $id);
+		foreach ( $report as $node ) {
+			$id = $node->id();
 
-                $directory->render($node, $target . $id . '/index.html');
-                $dashboard->render($node, $target . $id . '/dashboard.html');
-            } else {
-                $dir = dirname($target . $id);
+			if ( $node instanceof DirectoryNode ) {
+				Filesystem::createDirectory( $target . $id );
 
-                Filesystem::createDirectory($dir);
+				$directory->render( $node, $target . $id . '/index.html' );
+				$dashboard->render( $node, $target . $id . '/dashboard.html' );
+			} else {
+				$dir = dirname( $target . $id );
 
-                $file->render($node, $target . $id);
-            }
-        }
+				Filesystem::createDirectory( $dir );
 
-        $this->copyFiles($target);
-        $this->renderCss($target);
-    }
+				$file->render( $node, $target . $id );
+			}
+		}
 
-    private function copyFiles(string $target): void
-    {
-        $dir = $this->directory($target . '_css');
+		$this->copyFiles( $target );
+		$this->renderCss( $target );
+	}
 
-        copy($this->templatePath . 'css/bootstrap.min.css', $dir . 'bootstrap.min.css');
-        copy($this->templatePath . 'css/nv.d3.min.css', $dir . 'nv.d3.min.css');
-        copy($this->customCssFile->path(), $dir . 'custom.css');
-        copy($this->templatePath . 'css/octicons.css', $dir . 'octicons.css');
+	private function copyFiles( string $target ): void {
+		$dir = $this->directory( $target . '_css' );
 
-        $dir = $this->directory($target . '_icons');
-        copy($this->templatePath . 'icons/file-code.svg', $dir . 'file-code.svg');
-        copy($this->templatePath . 'icons/file-directory.svg', $dir . 'file-directory.svg');
+		copy( $this->templatePath . 'css/bootstrap.min.css', $dir . 'bootstrap.min.css' );
+		copy( $this->templatePath . 'css/nv.d3.min.css', $dir . 'nv.d3.min.css' );
+		copy( $this->customCssFile->path(), $dir . 'custom.css' );
+		copy( $this->templatePath . 'css/octicons.css', $dir . 'octicons.css' );
 
-        $dir = $this->directory($target . '_js');
-        copy($this->templatePath . 'js/bootstrap.min.js', $dir . 'bootstrap.min.js');
-        copy($this->templatePath . 'js/popper.min.js', $dir . 'popper.min.js');
-        copy($this->templatePath . 'js/d3.min.js', $dir . 'd3.min.js');
-        copy($this->templatePath . 'js/jquery.min.js', $dir . 'jquery.min.js');
-        copy($this->templatePath . 'js/nv.d3.min.js', $dir . 'nv.d3.min.js');
-        copy($this->templatePath . 'js/file.js', $dir . 'file.js');
-    }
+		$dir = $this->directory( $target . '_icons' );
+		copy( $this->templatePath . 'icons/file-code.svg', $dir . 'file-code.svg' );
+		copy( $this->templatePath . 'icons/file-directory.svg', $dir . 'file-directory.svg' );
 
-    private function renderCss(string $target): void
-    {
-        $template = new Template($this->templatePath . 'css/style.css', '{{', '}}');
+		$dir = $this->directory( $target . '_js' );
+		copy( $this->templatePath . 'js/bootstrap.min.js', $dir . 'bootstrap.min.js' );
+		copy( $this->templatePath . 'js/popper.min.js', $dir . 'popper.min.js' );
+		copy( $this->templatePath . 'js/d3.min.js', $dir . 'd3.min.js' );
+		copy( $this->templatePath . 'js/jquery.min.js', $dir . 'jquery.min.js' );
+		copy( $this->templatePath . 'js/nv.d3.min.js', $dir . 'nv.d3.min.js' );
+		copy( $this->templatePath . 'js/file.js', $dir . 'file.js' );
+	}
 
-        $template->setVar(
-            [
-                'success-low'    => $this->colors->successLow(),
-                'success-medium' => $this->colors->successMedium(),
-                'success-high'   => $this->colors->successHigh(),
-                'warning'        => $this->colors->warning(),
-                'danger'         => $this->colors->danger(),
-            ],
-        );
+	private function renderCss( string $target ): void {
+		$template = new Template( $this->templatePath . 'css/style.css', '{{', '}}' );
 
-        try {
-            $template->renderTo($this->directory($target . '_css') . 'style.css');
-        } catch (Exception $e) {
-            throw new FileCouldNotBeWrittenException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e,
-            );
-        }
-    }
+		$template->setVar(
+			array(
+				'success-low'    => $this->colors->successLow(),
+				'success-medium' => $this->colors->successMedium(),
+				'success-high'   => $this->colors->successHigh(),
+				'warning'        => $this->colors->warning(),
+				'danger'         => $this->colors->danger(),
+			),
+		);
 
-    private function directory(string $directory): string
-    {
-        if (!str_ends_with($directory, DIRECTORY_SEPARATOR)) {
-            $directory .= DIRECTORY_SEPARATOR;
-        }
+		try {
+			$template->renderTo( $this->directory( $target . '_css' ) . 'style.css' );
+		} catch ( Exception $e ) {
+			throw new FileCouldNotBeWrittenException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e,
+			);
+		}
+	}
 
-        Filesystem::createDirectory($directory);
+	private function directory( string $directory ): string {
+		if ( ! str_ends_with( $directory, DIRECTORY_SEPARATOR ) ) {
+			$directory .= DIRECTORY_SEPARATOR;
+		}
 
-        return $directory;
-    }
+		Filesystem::createDirectory( $directory );
+
+		return $directory;
+	}
 }

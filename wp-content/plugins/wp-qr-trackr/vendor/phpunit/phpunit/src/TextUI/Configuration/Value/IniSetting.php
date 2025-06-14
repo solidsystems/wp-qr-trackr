@@ -14,24 +14,21 @@ namespace PHPUnit\TextUI\Configuration;
  *
  * @psalm-immutable
  */
-final class IniSetting
-{
-    private readonly string $name;
-    private readonly string $value;
+final class IniSetting {
 
-    public function __construct(string $name, string $value)
-    {
-        $this->name  = $name;
-        $this->value = $value;
-    }
+	private readonly string $name;
+	private readonly string $value;
 
-    public function name(): string
-    {
-        return $this->name;
-    }
+	public function __construct( string $name, string $value ) {
+		$this->name  = $name;
+		$this->value = $value;
+	}
 
-    public function value(): string
-    {
-        return $this->value;
-    }
+	public function name(): string {
+		return $this->name;
+	}
+
+	public function value(): string {
+		return $this->value;
+	}
 }

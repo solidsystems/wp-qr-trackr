@@ -18,23 +18,22 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RenameBeStrictAboutCoversAnnotationAttribute implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $root = $document->documentElement;
+final class RenameBeStrictAboutCoversAnnotationAttribute implements Migration {
 
-        assert($root instanceof DOMElement);
+	public function migrate( DOMDocument $document ): void {
+		$root = $document->documentElement;
 
-        if ($root->hasAttribute('beStrictAboutCoverageMetadata')) {
-            return;
-        }
+		assert( $root instanceof DOMElement );
 
-        if (!$root->hasAttribute('beStrictAboutCoversAnnotation')) {
-            return;
-        }
+		if ( $root->hasAttribute( 'beStrictAboutCoverageMetadata' ) ) {
+			return;
+		}
 
-        $root->setAttribute('beStrictAboutCoverageMetadata', $root->getAttribute('beStrictAboutCoversAnnotation'));
-        $root->removeAttribute('beStrictAboutCoversAnnotation');
-    }
+		if ( ! $root->hasAttribute( 'beStrictAboutCoversAnnotation' ) ) {
+			return;
+		}
+
+		$root->setAttribute( 'beStrictAboutCoverageMetadata', $root->getAttribute( 'beStrictAboutCoversAnnotation' ) );
+		$root->removeAttribute( 'beStrictAboutCoversAnnotation' );
+	}
 }

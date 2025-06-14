@@ -11,7 +11,7 @@
 namespace PharIo\Manifest;
 
 class Application extends Type {
-    public function isApplication(): bool {
-        return true;
-    }
+	public function isApplication(): bool {
+		return true;
+	}
 }

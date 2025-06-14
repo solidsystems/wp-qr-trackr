@@ -19,79 +19,75 @@ use SebastianBergmann\Comparator\ComparisonFailure;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class JsonMatches extends Constraint
-{
-    private readonly string $value;
+final class JsonMatches extends Constraint {
 
-    public function __construct(string $value)
-    {
-        $this->value = $value;
-    }
+	private readonly string $value;
 
-    /**
-     * Returns a string representation of the object.
-     */
-    public function toString(): string
-    {
-        return sprintf(
-            'matches JSON string "%s"',
-            $this->value,
-        );
-    }
+	public function __construct( string $value ) {
+		$this->value = $value;
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     *
-     * This method can be overridden to implement the evaluation algorithm.
-     */
-    protected function matches(mixed $other): bool
-    {
-        [$error, $recodedOther] = Json::canonicalize($other);
+	/**
+	 * Returns a string representation of the object.
+	 */
+	public function toString(): string {
+		return sprintf(
+			'matches JSON string "%s"',
+			$this->value,
+		);
+	}
 
-        if ($error) {
-            return false;
-        }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 *
+	 * This method can be overridden to implement the evaluation algorithm.
+	 */
+	protected function matches( mixed $other ): bool {
+		[$error, $recodedOther] = Json::canonicalize( $other );
 
-        [$error, $recodedValue] = Json::canonicalize($this->value);
+		if ( $error ) {
+			return false;
+		}
 
-        if ($error) {
-            return false;
-        }
+		[$error, $recodedValue] = Json::canonicalize( $this->value );
 
-        return $recodedOther == $recodedValue;
-    }
+		if ( $error ) {
+			return false;
+		}
 
-    /**
-     * Throws an exception for the given compared value and test description.
-     *
-     * @throws ExpectationFailedException
-     * @throws InvalidJsonException
-     */
-    protected function fail(mixed $other, string $description, ?ComparisonFailure $comparisonFailure = null): never
-    {
-        if ($comparisonFailure === null) {
-            [$error, $recodedOther] = Json::canonicalize($other);
+		return $recodedOther == $recodedValue;
+	}
 
-            if ($error) {
-                parent::fail($other, $description);
-            }
+	/**
+	 * Throws an exception for the given compared value and test description.
+	 *
+	 * @throws ExpectationFailedException
+	 * @throws InvalidJsonException
+	 */
+	protected function fail( mixed $other, string $description, ?ComparisonFailure $comparisonFailure = null ): never {
+		if ( $comparisonFailure === null ) {
+			[$error, $recodedOther] = Json::canonicalize( $other );
 
-            [$error, $recodedValue] = Json::canonicalize($this->value);
+			if ( $error ) {
+				parent::fail( $other, $description );
+			}
 
-            if ($error) {
-                parent::fail($other, $description);
-            }
+			[$error, $recodedValue] = Json::canonicalize( $this->value );
 
-            $comparisonFailure = new ComparisonFailure(
-                json_decode($this->value),
-                json_decode($other),
-                Json::prettify($recodedValue),
-                Json::prettify($recodedOther),
-                'Failed asserting that two json values are equal.',
-            );
-        }
+			if ( $error ) {
+				parent::fail( $other, $description );
+			}
 
-        parent::fail($other, $description, $comparisonFailure);
-    }
+			$comparisonFailure = new ComparisonFailure(
+				json_decode( $this->value ),
+				json_decode( $other ),
+				Json::prettify( $recodedValue ),
+				Json::prettify( $recodedOther ),
+				'Failed asserting that two json values are equal.',
+			);
+		}
+
+		parent::fail( $other, $description, $comparisonFailure );
+	}
 }

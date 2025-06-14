@@ -36,254 +36,246 @@ use Closure;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class GlobalState
-{
-    /**
-     * @psalm-var list<string>
-     */
-    private const SUPER_GLOBAL_ARRAYS = [
-        '_ENV',
-        '_POST',
-        '_GET',
-        '_COOKIE',
-        '_SERVER',
-        '_FILES',
-        '_REQUEST',
-    ];
+final class GlobalState {
 
-    /**
-     * @psalm-var array<string, array<string, true>>
-     */
-    private const DEPRECATED_INI_SETTINGS = [
-        '7.3' => [
-            'iconv.input_encoding'       => true,
-            'iconv.output_encoding'      => true,
-            'iconv.internal_encoding'    => true,
-            'mbstring.func_overload'     => true,
-            'mbstring.http_input'        => true,
-            'mbstring.http_output'       => true,
-            'mbstring.internal_encoding' => true,
-            'string.strip_tags'          => true,
-        ],
+	/**
+	 * @psalm-var list<string>
+	 */
+	private const SUPER_GLOBAL_ARRAYS = array(
+		'_ENV',
+		'_POST',
+		'_GET',
+		'_COOKIE',
+		'_SERVER',
+		'_FILES',
+		'_REQUEST',
+	);
 
-        '7.4' => [
-            'iconv.input_encoding'       => true,
-            'iconv.output_encoding'      => true,
-            'iconv.internal_encoding'    => true,
-            'mbstring.func_overload'     => true,
-            'mbstring.http_input'        => true,
-            'mbstring.http_output'       => true,
-            'mbstring.internal_encoding' => true,
-            'pdo_odbc.db2_instance_name' => true,
-            'string.strip_tags'          => true,
-        ],
+	/**
+	 * @psalm-var array<string, array<string, true>>
+	 */
+	private const DEPRECATED_INI_SETTINGS = array(
+		'7.3' => array(
+			'iconv.input_encoding'       => true,
+			'iconv.output_encoding'      => true,
+			'iconv.internal_encoding'    => true,
+			'mbstring.func_overload'     => true,
+			'mbstring.http_input'        => true,
+			'mbstring.http_output'       => true,
+			'mbstring.internal_encoding' => true,
+			'string.strip_tags'          => true,
+		),
 
-        '8.0' => [
-            'iconv.input_encoding'       => true,
-            'iconv.output_encoding'      => true,
-            'iconv.internal_encoding'    => true,
-            'mbstring.http_input'        => true,
-            'mbstring.http_output'       => true,
-            'mbstring.internal_encoding' => true,
-        ],
+		'7.4' => array(
+			'iconv.input_encoding'       => true,
+			'iconv.output_encoding'      => true,
+			'iconv.internal_encoding'    => true,
+			'mbstring.func_overload'     => true,
+			'mbstring.http_input'        => true,
+			'mbstring.http_output'       => true,
+			'mbstring.internal_encoding' => true,
+			'pdo_odbc.db2_instance_name' => true,
+			'string.strip_tags'          => true,
+		),
 
-        '8.1' => [
-            'auto_detect_line_endings'     => true,
-            'filter.default'               => true,
-            'iconv.input_encoding'         => true,
-            'iconv.output_encoding'        => true,
-            'iconv.internal_encoding'      => true,
-            'mbstring.http_input'          => true,
-            'mbstring.http_output'         => true,
-            'mbstring.internal_encoding'   => true,
-            'oci8.old_oci_close_semantics' => true,
-        ],
+		'8.0' => array(
+			'iconv.input_encoding'       => true,
+			'iconv.output_encoding'      => true,
+			'iconv.internal_encoding'    => true,
+			'mbstring.http_input'        => true,
+			'mbstring.http_output'       => true,
+			'mbstring.internal_encoding' => true,
+		),
 
-        '8.2' => [
-            'auto_detect_line_endings'     => true,
-            'filter.default'               => true,
-            'iconv.input_encoding'         => true,
-            'iconv.output_encoding'        => true,
-            'iconv.internal_encoding'      => true,
-            'mbstring.http_input'          => true,
-            'mbstring.http_output'         => true,
-            'mbstring.internal_encoding'   => true,
-            'oci8.old_oci_close_semantics' => true,
-        ],
+		'8.1' => array(
+			'auto_detect_line_endings'     => true,
+			'filter.default'               => true,
+			'iconv.input_encoding'         => true,
+			'iconv.output_encoding'        => true,
+			'iconv.internal_encoding'      => true,
+			'mbstring.http_input'          => true,
+			'mbstring.http_output'         => true,
+			'mbstring.internal_encoding'   => true,
+			'oci8.old_oci_close_semantics' => true,
+		),
 
-        '8.3' => [
-            'auto_detect_line_endings'     => true,
-            'filter.default'               => true,
-            'iconv.input_encoding'         => true,
-            'iconv.output_encoding'        => true,
-            'iconv.internal_encoding'      => true,
-            'mbstring.http_input'          => true,
-            'mbstring.http_output'         => true,
-            'mbstring.internal_encoding'   => true,
-            'oci8.old_oci_close_semantics' => true,
-        ],
-    ];
+		'8.2' => array(
+			'auto_detect_line_endings'     => true,
+			'filter.default'               => true,
+			'iconv.input_encoding'         => true,
+			'iconv.output_encoding'        => true,
+			'iconv.internal_encoding'      => true,
+			'mbstring.http_input'          => true,
+			'mbstring.http_output'         => true,
+			'mbstring.internal_encoding'   => true,
+			'oci8.old_oci_close_semantics' => true,
+		),
 
-    /**
-     * @throws Exception
-     */
-    public static function getIncludedFilesAsString(): string
-    {
-        return self::processIncludedFilesAsString(get_included_files());
-    }
+		'8.3' => array(
+			'auto_detect_line_endings'     => true,
+			'filter.default'               => true,
+			'iconv.input_encoding'         => true,
+			'iconv.output_encoding'        => true,
+			'iconv.internal_encoding'      => true,
+			'mbstring.http_input'          => true,
+			'mbstring.http_output'         => true,
+			'mbstring.internal_encoding'   => true,
+			'oci8.old_oci_close_semantics' => true,
+		),
+	);
 
-    /**
-     * @psalm-param list<string> $files
-     *
-     * @throws Exception
-     */
-    public static function processIncludedFilesAsString(array $files): string
-    {
-        $excludeList = new ExcludeList;
-        $prefix      = false;
-        $result      = '';
+	/**
+	 * @throws Exception
+	 */
+	public static function getIncludedFilesAsString(): string {
+		return self::processIncludedFilesAsString( get_included_files() );
+	}
 
-        if (defined('__PHPUNIT_PHAR__')) {
-            $prefix = 'phar://' . __PHPUNIT_PHAR__ . '/';
-        }
+	/**
+	 * @psalm-param list<string> $files
+	 *
+	 * @throws Exception
+	 */
+	public static function processIncludedFilesAsString( array $files ): string {
+		$excludeList = new ExcludeList();
+		$prefix      = false;
+		$result      = '';
 
-        // Do not process bootstrap script
-        array_shift($files);
+		if ( defined( '__PHPUNIT_PHAR__' ) ) {
+			$prefix = 'phar://' . __PHPUNIT_PHAR__ . '/';
+		}
 
-        // If bootstrap script was a Composer bin proxy, skip the second entry as well
-        if (str_ends_with(strtr($files[0], '\\', '/'), '/phpunit/phpunit/phpunit')) {
-            array_shift($files);
-        }
+		// Do not process bootstrap script
+		array_shift( $files );
 
-        foreach (array_reverse($files) as $file) {
-            if (!empty($GLOBALS['__PHPUNIT_ISOLATION_EXCLUDE_LIST']) &&
-                in_array($file, $GLOBALS['__PHPUNIT_ISOLATION_EXCLUDE_LIST'], true)) {
-                continue;
-            }
+		// If bootstrap script was a Composer bin proxy, skip the second entry as well
+		if ( str_ends_with( strtr( $files[0], '\\', '/' ), '/phpunit/phpunit/phpunit' ) ) {
+			array_shift( $files );
+		}
 
-            if ($prefix !== false && str_starts_with($file, $prefix)) {
-                continue;
-            }
+		foreach ( array_reverse( $files ) as $file ) {
+			if ( ! empty( $GLOBALS['__PHPUNIT_ISOLATION_EXCLUDE_LIST'] ) &&
+				in_array( $file, $GLOBALS['__PHPUNIT_ISOLATION_EXCLUDE_LIST'], true ) ) {
+				continue;
+			}
 
-            // Skip virtual file system protocols
-            if (preg_match('/^(vfs|phpvfs[a-z0-9]+):/', $file)) {
-                continue;
-            }
+			if ( $prefix !== false && str_starts_with( $file, $prefix ) ) {
+				continue;
+			}
 
-            if (!$excludeList->isExcluded($file) && is_file($file)) {
-                $result = 'require_once \'' . $file . "';\n" . $result;
-            }
-        }
+			// Skip virtual file system protocols
+			if ( preg_match( '/^(vfs|phpvfs[a-z0-9]+):/', $file ) ) {
+				continue;
+			}
 
-        return $result;
-    }
+			if ( ! $excludeList->isExcluded( $file ) && is_file( $file ) ) {
+				$result = 'require_once \'' . $file . "';\n" . $result;
+			}
+		}
 
-    public static function getIniSettingsAsString(): string
-    {
-        $result = '';
+		return $result;
+	}
 
-        foreach (ini_get_all(null, false) as $key => $value) {
-            if (self::isIniSettingDeprecated($key)) {
-                continue;
-            }
+	public static function getIniSettingsAsString(): string {
+		$result = '';
 
-            $result .= sprintf(
-                '@ini_set(%s, %s);' . "\n",
-                self::exportVariable($key),
-                self::exportVariable((string) $value),
-            );
-        }
+		foreach ( ini_get_all( null, false ) as $key => $value ) {
+			if ( self::isIniSettingDeprecated( $key ) ) {
+				continue;
+			}
 
-        return $result;
-    }
+			$result .= sprintf(
+				'@ini_set(%s, %s);' . "\n",
+				self::exportVariable( $key ),
+				self::exportVariable( (string) $value ),
+			);
+		}
 
-    public static function getConstantsAsString(): string
-    {
-        $constants = get_defined_constants(true);
-        $result    = '';
+		return $result;
+	}
 
-        if (isset($constants['user'])) {
-            foreach ($constants['user'] as $name => $value) {
-                $result .= sprintf(
-                    'if (!defined(\'%s\')) define(\'%s\', %s);' . "\n",
-                    $name,
-                    $name,
-                    self::exportVariable($value),
-                );
-            }
-        }
+	public static function getConstantsAsString(): string {
+		$constants = get_defined_constants( true );
+		$result    = '';
 
-        return $result;
-    }
+		if ( isset( $constants['user'] ) ) {
+			foreach ( $constants['user'] as $name => $value ) {
+				$result .= sprintf(
+					'if (!defined(\'%s\')) define(\'%s\', %s);' . "\n",
+					$name,
+					$name,
+					self::exportVariable( $value ),
+				);
+			}
+		}
 
-    public static function getGlobalsAsString(): string
-    {
-        $result = '';
+		return $result;
+	}
 
-        foreach (self::SUPER_GLOBAL_ARRAYS as $superGlobalArray) {
-            if (isset($GLOBALS[$superGlobalArray]) && is_array($GLOBALS[$superGlobalArray])) {
-                foreach (array_keys($GLOBALS[$superGlobalArray]) as $key) {
-                    if ($GLOBALS[$superGlobalArray][$key] instanceof Closure) {
-                        continue;
-                    }
+	public static function getGlobalsAsString(): string {
+		$result = '';
 
-                    $result .= sprintf(
-                        '$GLOBALS[\'%s\'][\'%s\'] = %s;' . "\n",
-                        $superGlobalArray,
-                        $key,
-                        self::exportVariable($GLOBALS[$superGlobalArray][$key]),
-                    );
-                }
-            }
-        }
+		foreach ( self::SUPER_GLOBAL_ARRAYS as $superGlobalArray ) {
+			if ( isset( $GLOBALS[ $superGlobalArray ] ) && is_array( $GLOBALS[ $superGlobalArray ] ) ) {
+				foreach ( array_keys( $GLOBALS[ $superGlobalArray ] ) as $key ) {
+					if ( $GLOBALS[ $superGlobalArray ][ $key ] instanceof Closure ) {
+						continue;
+					}
 
-        $excludeList   = self::SUPER_GLOBAL_ARRAYS;
-        $excludeList[] = 'GLOBALS';
+					$result .= sprintf(
+						'$GLOBALS[\'%s\'][\'%s\'] = %s;' . "\n",
+						$superGlobalArray,
+						$key,
+						self::exportVariable( $GLOBALS[ $superGlobalArray ][ $key ] ),
+					);
+				}
+			}
+		}
 
-        foreach (array_keys($GLOBALS) as $key) {
-            if (!$GLOBALS[$key] instanceof Closure && !in_array($key, $excludeList, true)) {
-                $result .= sprintf(
-                    '$GLOBALS[\'%s\'] = %s;' . "\n",
-                    $key,
-                    self::exportVariable($GLOBALS[$key]),
-                );
-            }
-        }
+		$excludeList   = self::SUPER_GLOBAL_ARRAYS;
+		$excludeList[] = 'GLOBALS';
 
-        return $result;
-    }
+		foreach ( array_keys( $GLOBALS ) as $key ) {
+			if ( ! $GLOBALS[ $key ] instanceof Closure && ! in_array( $key, $excludeList, true ) ) {
+				$result .= sprintf(
+					'$GLOBALS[\'%s\'] = %s;' . "\n",
+					$key,
+					self::exportVariable( $GLOBALS[ $key ] ),
+				);
+			}
+		}
 
-    private static function exportVariable(mixed $variable): string
-    {
-        if (is_scalar($variable) || $variable === null ||
-            (is_array($variable) && self::arrayOnlyContainsScalars($variable))) {
-            return var_export($variable, true);
-        }
+		return $result;
+	}
 
-        return 'unserialize(' . var_export(serialize($variable), true) . ')';
-    }
+	private static function exportVariable( mixed $variable ): string {
+		if ( is_scalar( $variable ) || $variable === null ||
+			( is_array( $variable ) && self::arrayOnlyContainsScalars( $variable ) ) ) {
+			return var_export( $variable, true );
+		}
 
-    private static function arrayOnlyContainsScalars(array $array): bool
-    {
-        $result = true;
+		return 'unserialize(' . var_export( serialize( $variable ), true ) . ')';
+	}
 
-        foreach ($array as $element) {
-            if (is_array($element)) {
-                $result = self::arrayOnlyContainsScalars($element);
-            } elseif (!is_scalar($element) && $element !== null) {
-                $result = false;
-            }
+	private static function arrayOnlyContainsScalars( array $array ): bool {
+		$result = true;
 
-            if (!$result) {
-                break;
-            }
-        }
+		foreach ( $array as $element ) {
+			if ( is_array( $element ) ) {
+				$result = self::arrayOnlyContainsScalars( $element );
+			} elseif ( ! is_scalar( $element ) && $element !== null ) {
+				$result = false;
+			}
 
-        return $result;
-    }
+			if ( ! $result ) {
+				break;
+			}
+		}
 
-    private static function isIniSettingDeprecated(string $iniSetting): bool
-    {
-        return isset(self::DEPRECATED_INI_SETTINGS[PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION][$iniSetting]);
-    }
+		return $result;
+	}
+
+	private static function isIniSettingDeprecated( string $iniSetting ): bool {
+		return isset( self::DEPRECATED_INI_SETTINGS[ PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ][ $iniSetting ] );
+	}
 }

@@ -9,10 +9,10 @@
  */
 namespace SebastianBergmann\Diff;
 
-interface LongestCommonSubsequenceCalculator
-{
-    /**
-     * Calculates the longest common subsequence of two arrays.
-     */
-    public function calculate(array $from, array $to): array;
+interface LongestCommonSubsequenceCalculator {
+
+	/**
+	 * Calculates the longest common subsequence of two arrays.
+	 */
+	public function calculate( array $from, array $to ): array;
 }

@@ -21,298 +21,308 @@ use Imagick;
 use ImagickDraw;
 use ImagickPixel;
 
-final class ImagickImageBackEnd implements ImageBackEndInterface
-{
-    private string $imageFormat;
+final class ImagickImageBackEnd implements ImageBackEndInterface {
 
-    private int $compressionQuality;
+	private string $imageFormat;
 
-    private ?Imagick $image;
+	private int $compressionQuality;
 
-    private ?ImagickDraw $draw;
+	private ?Imagick $image;
 
-    private ?int $gradientCount;
+	private ?ImagickDraw $draw;
 
-    /**
-     * @var TransformationMatrix[]|null
-     */
-    private ?array $matrices;
+	private ?int $gradientCount;
 
-    private ?int $matrixIndex;
+	/**
+	 * @var TransformationMatrix[]|null
+	 */
+	private ?array $matrices;
 
-    public function __construct(string $imageFormat = 'png', int $compressionQuality = 100)
-    {
-        if (! class_exists(Imagick::class)) {
-            throw new RuntimeException('You need to install the imagick extension to use this back end');
-        }
+	private ?int $matrixIndex;
 
-        $this->imageFormat = $imageFormat;
-        $this->compressionQuality = $compressionQuality;
-    }
+	public function __construct( string $imageFormat = 'png', int $compressionQuality = 100 ) {
+		if ( ! class_exists( Imagick::class ) ) {
+			throw new RuntimeException( 'You need to install the imagick extension to use this back end' );
+		}
 
-    public function new(int $size, ColorInterface $backgroundColor) : void
-    {
-        $this->image = new Imagick();
-        $this->image->newImage($size, $size, $this->getColorPixel($backgroundColor));
-        $this->image->setImageFormat($this->imageFormat);
-        $this->image->setCompressionQuality($this->compressionQuality);
-        $this->draw = new ImagickDraw();
-        $this->gradientCount = 0;
-        $this->matrices = [new TransformationMatrix()];
-        $this->matrixIndex = 0;
-    }
+		$this->imageFormat        = $imageFormat;
+		$this->compressionQuality = $compressionQuality;
+	}
 
-    public function scale(float $size) : void
-    {
-        if (null === $this->draw) {
-            throw new RuntimeException('No image has been started');
-        }
+	public function new( int $size, ColorInterface $backgroundColor ): void {
+		$this->image = new Imagick();
+		$this->image->newImage( $size, $size, $this->getColorPixel( $backgroundColor ) );
+		$this->image->setImageFormat( $this->imageFormat );
+		$this->image->setCompressionQuality( $this->compressionQuality );
+		$this->draw          = new ImagickDraw();
+		$this->gradientCount = 0;
+		$this->matrices      = array( new TransformationMatrix() );
+		$this->matrixIndex   = 0;
+	}
 
-        $this->draw->scale($size, $size);
-        $this->matrices[$this->matrixIndex] = $this->matrices[$this->matrixIndex]
-            ->multiply(TransformationMatrix::scale($size));
-    }
+	public function scale( float $size ): void {
+		if ( null === $this->draw ) {
+			throw new RuntimeException( 'No image has been started' );
+		}
 
-    public function translate(float $x, float $y) : void
-    {
-        if (null === $this->draw) {
-            throw new RuntimeException('No image has been started');
-        }
+		$this->draw->scale( $size, $size );
+		$this->matrices[ $this->matrixIndex ] = $this->matrices[ $this->matrixIndex ]
+			->multiply( TransformationMatrix::scale( $size ) );
+	}
 
-        $this->draw->translate($x, $y);
-        $this->matrices[$this->matrixIndex] = $this->matrices[$this->matrixIndex]
-            ->multiply(TransformationMatrix::translate($x, $y));
-    }
+	public function translate( float $x, float $y ): void {
+		if ( null === $this->draw ) {
+			throw new RuntimeException( 'No image has been started' );
+		}
 
-    public function rotate(int $degrees) : void
-    {
-        if (null === $this->draw) {
-            throw new RuntimeException('No image has been started');
-        }
+		$this->draw->translate( $x, $y );
+		$this->matrices[ $this->matrixIndex ] = $this->matrices[ $this->matrixIndex ]
+			->multiply( TransformationMatrix::translate( $x, $y ) );
+	}
 
-        $this->draw->rotate($degrees);
-        $this->matrices[$this->matrixIndex] = $this->matrices[$this->matrixIndex]
-            ->multiply(TransformationMatrix::rotate($degrees));
-    }
+	public function rotate( int $degrees ): void {
+		if ( null === $this->draw ) {
+			throw new RuntimeException( 'No image has been started' );
+		}
 
-    public function push() : void
-    {
-        if (null === $this->draw) {
-            throw new RuntimeException('No image has been started');
-        }
+		$this->draw->rotate( $degrees );
+		$this->matrices[ $this->matrixIndex ] = $this->matrices[ $this->matrixIndex ]
+			->multiply( TransformationMatrix::rotate( $degrees ) );
+	}
 
-        $this->draw->push();
-        $this->matrices[++$this->matrixIndex] = $this->matrices[$this->matrixIndex - 1];
-    }
+	public function push(): void {
+		if ( null === $this->draw ) {
+			throw new RuntimeException( 'No image has been started' );
+		}
 
-    public function pop() : void
-    {
-        if (null === $this->draw) {
-            throw new RuntimeException('No image has been started');
-        }
+		$this->draw->push();
+		$this->matrices[ ++$this->matrixIndex ] = $this->matrices[ $this->matrixIndex - 1 ];
+	}
 
-        $this->draw->pop();
-        unset($this->matrices[$this->matrixIndex--]);
-    }
+	public function pop(): void {
+		if ( null === $this->draw ) {
+			throw new RuntimeException( 'No image has been started' );
+		}
 
-    public function drawPathWithColor(Path $path, ColorInterface $color) : void
-    {
-        if (null === $this->draw) {
-            throw new RuntimeException('No image has been started');
-        }
+		$this->draw->pop();
+		unset( $this->matrices[ $this->matrixIndex-- ] );
+	}
 
-        $this->draw->setFillColor($this->getColorPixel($color));
-        $this->drawPath($path);
-    }
+	public function drawPathWithColor( Path $path, ColorInterface $color ): void {
+		if ( null === $this->draw ) {
+			throw new RuntimeException( 'No image has been started' );
+		}
 
-    public function drawPathWithGradient(
-        Path $path,
-        Gradient $gradient,
-        float $x,
-        float $y,
-        float $width,
-        float $height
-    ) : void {
-        if (null === $this->draw) {
-            throw new RuntimeException('No image has been started');
-        }
+		$this->draw->setFillColor( $this->getColorPixel( $color ) );
+		$this->drawPath( $path );
+	}
 
-        $this->draw->setFillPatternURL('#' . $this->createGradientFill($gradient, $x, $y, $width, $height));
-        $this->drawPath($path);
-    }
+	public function drawPathWithGradient(
+		Path $path,
+		Gradient $gradient,
+		float $x,
+		float $y,
+		float $width,
+		float $height
+	): void {
+		if ( null === $this->draw ) {
+			throw new RuntimeException( 'No image has been started' );
+		}
 
-    public function done() : string
-    {
-        if (null === $this->draw) {
-            throw new RuntimeException('No image has been started');
-        }
+		$this->draw->setFillPatternURL( '#' . $this->createGradientFill( $gradient, $x, $y, $width, $height ) );
+		$this->drawPath( $path );
+	}
 
-        $this->image->drawImage($this->draw);
-        $blob = $this->image->getImageBlob();
-        $this->draw->clear();
-        $this->image->clear();
-        $this->draw = null;
-        $this->image = null;
-        $this->gradientCount = null;
+	public function done(): string {
+		if ( null === $this->draw ) {
+			throw new RuntimeException( 'No image has been started' );
+		}
 
-        return $blob;
-    }
+		$this->image->drawImage( $this->draw );
+		$blob = $this->image->getImageBlob();
+		$this->draw->clear();
+		$this->image->clear();
+		$this->draw          = null;
+		$this->image         = null;
+		$this->gradientCount = null;
 
-    private function drawPath(Path $path) : void
-    {
-        $this->draw->pathStart();
+		return $blob;
+	}
 
-        foreach ($path as $op) {
-            switch (true) {
-                case $op instanceof Move:
-                    $this->draw->pathMoveToAbsolute($op->getX(), $op->getY());
-                    break;
+	private function drawPath( Path $path ): void {
+		$this->draw->pathStart();
 
-                case $op instanceof Line:
-                    $this->draw->pathLineToAbsolute($op->getX(), $op->getY());
-                    break;
+		foreach ( $path as $op ) {
+			switch ( true ) {
+				case $op instanceof Move:
+					$this->draw->pathMoveToAbsolute( $op->getX(), $op->getY() );
+					break;
 
-                case $op instanceof EllipticArc:
-                    $this->draw->pathEllipticArcAbsolute(
-                        $op->getXRadius(),
-                        $op->getYRadius(),
-                        $op->getXAxisAngle(),
-                        $op->isLargeArc(),
-                        $op->isSweep(),
-                        $op->getX(),
-                        $op->getY()
-                    );
-                    break;
+				case $op instanceof Line:
+					$this->draw->pathLineToAbsolute( $op->getX(), $op->getY() );
+					break;
 
-                case $op instanceof Curve:
-                    $this->draw->pathCurveToAbsolute(
-                        $op->getX1(),
-                        $op->getY1(),
-                        $op->getX2(),
-                        $op->getY2(),
-                        $op->getX3(),
-                        $op->getY3()
-                    );
-                    break;
+				case $op instanceof EllipticArc:
+					$this->draw->pathEllipticArcAbsolute(
+						$op->getXRadius(),
+						$op->getYRadius(),
+						$op->getXAxisAngle(),
+						$op->isLargeArc(),
+						$op->isSweep(),
+						$op->getX(),
+						$op->getY()
+					);
+					break;
 
-                case $op instanceof Close:
-                    $this->draw->pathClose();
-                    break;
+				case $op instanceof Curve:
+					$this->draw->pathCurveToAbsolute(
+						$op->getX1(),
+						$op->getY1(),
+						$op->getX2(),
+						$op->getY2(),
+						$op->getX3(),
+						$op->getY3()
+					);
+					break;
 
-                default:
-                    throw new RuntimeException('Unexpected draw operation: ' . get_class($op));
-            }
-        }
+				case $op instanceof Close:
+					$this->draw->pathClose();
+					break;
 
-        $this->draw->pathFinish();
-    }
+				default:
+					throw new RuntimeException( 'Unexpected draw operation: ' . get_class( $op ) );
+			}
+		}
 
-    private function createGradientFill(Gradient $gradient, float $x, float $y, float $width, float $height) : string
-    {
-        list($width, $height) = $this->matrices[$this->matrixIndex]->apply($width, $height);
+		$this->draw->pathFinish();
+	}
 
-        $startColor = $this->getColorPixel($gradient->getStartColor())->getColorAsString();
-        $endColor = $this->getColorPixel($gradient->getEndColor())->getColorAsString();
-        $gradientImage = new Imagick();
+	private function createGradientFill( Gradient $gradient, float $x, float $y, float $width, float $height ): string {
+		list($width, $height) = $this->matrices[ $this->matrixIndex ]->apply( $width, $height );
 
-        switch ($gradient->getType()) {
-            case GradientType::HORIZONTAL():
-                $gradientImage->newPseudoImage((int) $height, (int) $width, sprintf(
-                    'gradient:%s-%s',
-                    $startColor,
-                    $endColor
-                ));
-                $gradientImage->rotateImage('transparent', -90);
-                break;
+		$startColor    = $this->getColorPixel( $gradient->getStartColor() )->getColorAsString();
+		$endColor      = $this->getColorPixel( $gradient->getEndColor() )->getColorAsString();
+		$gradientImage = new Imagick();
 
-            case GradientType::VERTICAL():
-                $gradientImage->newPseudoImage((int) $width, (int) $height, sprintf(
-                    'gradient:%s-%s',
-                    $startColor,
-                    $endColor
-                ));
-                break;
+		switch ( $gradient->getType() ) {
+			case GradientType::HORIZONTAL():
+				$gradientImage->newPseudoImage(
+					(int) $height,
+					(int) $width,
+					sprintf(
+						'gradient:%s-%s',
+						$startColor,
+						$endColor
+					)
+				);
+				$gradientImage->rotateImage( 'transparent', -90 );
+				break;
 
-            case GradientType::DIAGONAL():
-            case GradientType::INVERSE_DIAGONAL():
-                $gradientImage->newPseudoImage((int) ($width * sqrt(2)), (int) ($height * sqrt(2)), sprintf(
-                    'gradient:%s-%s',
-                    $startColor,
-                    $endColor
-                ));
+			case GradientType::VERTICAL():
+				$gradientImage->newPseudoImage(
+					(int) $width,
+					(int) $height,
+					sprintf(
+						'gradient:%s-%s',
+						$startColor,
+						$endColor
+					)
+				);
+				break;
 
-                if (GradientType::DIAGONAL() === $gradient->getType()) {
-                    $gradientImage->rotateImage('transparent', -45);
-                } else {
-                    $gradientImage->rotateImage('transparent', -135);
-                }
+			case GradientType::DIAGONAL():
+			case GradientType::INVERSE_DIAGONAL():
+				$gradientImage->newPseudoImage(
+					(int) ( $width * sqrt( 2 ) ),
+					(int) ( $height * sqrt( 2 ) ),
+					sprintf(
+						'gradient:%s-%s',
+						$startColor,
+						$endColor
+					)
+				);
 
-                $rotatedWidth = $gradientImage->getImageWidth();
-                $rotatedHeight = $gradientImage->getImageHeight();
+				if ( GradientType::DIAGONAL() === $gradient->getType() ) {
+					$gradientImage->rotateImage( 'transparent', -45 );
+				} else {
+					$gradientImage->rotateImage( 'transparent', -135 );
+				}
 
-                $gradientImage->setImagePage($rotatedWidth, $rotatedHeight, 0, 0);
-                $gradientImage->cropImage(
-                    intdiv($rotatedWidth, 2) - 2,
-                    intdiv($rotatedHeight, 2) - 2,
-                    intdiv($rotatedWidth, 4) + 1,
-                    intdiv($rotatedWidth, 4) + 1
-                );
-                break;
+				$rotatedWidth  = $gradientImage->getImageWidth();
+				$rotatedHeight = $gradientImage->getImageHeight();
 
-            case GradientType::RADIAL():
-                $gradientImage->newPseudoImage((int) $width, (int) $height, sprintf(
-                    'radial-gradient:%s-%s',
-                    $startColor,
-                    $endColor
-                ));
-                break;
-        }
+				$gradientImage->setImagePage( $rotatedWidth, $rotatedHeight, 0, 0 );
+				$gradientImage->cropImage(
+					intdiv( $rotatedWidth, 2 ) - 2,
+					intdiv( $rotatedHeight, 2 ) - 2,
+					intdiv( $rotatedWidth, 4 ) + 1,
+					intdiv( $rotatedWidth, 4 ) + 1
+				);
+				break;
 
-        $id = sprintf('g%d', ++$this->gradientCount);
-        $this->draw->pushPattern($id, 0, 0, $width, $height);
-        $this->draw->composite(Imagick::COMPOSITE_COPY, 0, 0, $width, $height, $gradientImage);
-        $this->draw->popPattern();
-        return $id;
-    }
+			case GradientType::RADIAL():
+				$gradientImage->newPseudoImage(
+					(int) $width,
+					(int) $height,
+					sprintf(
+						'radial-gradient:%s-%s',
+						$startColor,
+						$endColor
+					)
+				);
+				break;
+		}
 
-    private function getColorPixel(ColorInterface $color) : ImagickPixel
-    {
-        $alpha = 100;
+		$id = sprintf( 'g%d', ++$this->gradientCount );
+		$this->draw->pushPattern( $id, 0, 0, $width, $height );
+		$this->draw->composite( Imagick::COMPOSITE_COPY, 0, 0, $width, $height, $gradientImage );
+		$this->draw->popPattern();
+		return $id;
+	}
 
-        if ($color instanceof Alpha) {
-            $alpha = $color->getAlpha();
-            $color = $color->getBaseColor();
-        }
+	private function getColorPixel( ColorInterface $color ): ImagickPixel {
+		$alpha = 100;
 
-        if ($color instanceof Rgb) {
-            return new ImagickPixel(sprintf(
-                'rgba(%d, %d, %d, %F)',
-                $color->getRed(),
-                $color->getGreen(),
-                $color->getBlue(),
-                $alpha / 100
-            ));
-        }
+		if ( $color instanceof Alpha ) {
+			$alpha = $color->getAlpha();
+			$color = $color->getBaseColor();
+		}
 
-        if ($color instanceof Cmyk) {
-            return new ImagickPixel(sprintf(
-                'cmyka(%d, %d, %d, %d, %F)',
-                $color->getCyan(),
-                $color->getMagenta(),
-                $color->getYellow(),
-                $color->getBlack(),
-                $alpha / 100
-            ));
-        }
+		if ( $color instanceof Rgb ) {
+			return new ImagickPixel(
+				sprintf(
+					'rgba(%d, %d, %d, %F)',
+					$color->getRed(),
+					$color->getGreen(),
+					$color->getBlue(),
+					$alpha / 100
+				)
+			);
+		}
 
-        if ($color instanceof Gray) {
-            return new ImagickPixel(sprintf(
-                'graya(%d%%, %F)',
-                $color->getGray(),
-                $alpha / 100
-            ));
-        }
+		if ( $color instanceof Cmyk ) {
+			return new ImagickPixel(
+				sprintf(
+					'cmyka(%d, %d, %d, %d, %F)',
+					$color->getCyan(),
+					$color->getMagenta(),
+					$color->getYellow(),
+					$color->getBlack(),
+					$alpha / 100
+				)
+			);
+		}
 
-        return $this->getColorPixel(new Alpha($alpha, $color->toRgb()));
-    }
+		if ( $color instanceof Gray ) {
+			return new ImagickPixel(
+				sprintf(
+					'graya(%d%%, %F)',
+					$color->getGray(),
+					$alpha / 100
+				)
+			);
+		}
+
+		return $this->getColorPixel( new Alpha( $alpha, $color->toRgb() ) );
+	}
 }

@@ -15,43 +15,39 @@ use function strtr;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class StringEqualsStringIgnoringLineEndings extends Constraint
-{
-    private readonly string $string;
+final class StringEqualsStringIgnoringLineEndings extends Constraint {
 
-    public function __construct(string $string)
-    {
-        $this->string = $this->normalizeLineEndings($string);
-    }
+	private readonly string $string;
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        return sprintf(
-            'is equal to "%s" ignoring line endings',
-            $this->string,
-        );
-    }
+	public function __construct( string $string ) {
+		$this->string = $this->normalizeLineEndings( $string );
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        return $this->string === $this->normalizeLineEndings((string) $other);
-    }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		return sprintf(
+			'is equal to "%s" ignoring line endings',
+			$this->string,
+		);
+	}
 
-    private function normalizeLineEndings(string $string): string
-    {
-        return strtr(
-            $string,
-            [
-                "\r\n" => "\n",
-                "\r"   => "\n",
-            ],
-        );
-    }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		return $this->string === $this->normalizeLineEndings( (string) $other );
+	}
+
+	private function normalizeLineEndings( string $string ): string {
+		return strtr(
+			$string,
+			array(
+				"\r\n" => "\n",
+				"\r"   => "\n",
+			),
+		);
+	}
 }

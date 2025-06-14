@@ -9,6 +9,6 @@
  */
 namespace PHPUnit\Event;
 
-interface Exception extends \PHPUnit\Exception
-{
+interface Exception extends \PHPUnit\Exception {
+
 }

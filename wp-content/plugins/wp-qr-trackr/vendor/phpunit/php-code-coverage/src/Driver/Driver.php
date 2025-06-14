@@ -17,112 +17,104 @@ use SebastianBergmann\CodeCoverage\DeadCodeDetectionNotSupportedException;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-abstract class Driver
-{
-    /**
-     * @var int
-     *
-     * @see http://xdebug.org/docs/code_coverage
-     */
-    public const LINE_NOT_EXECUTABLE = -2;
+abstract class Driver {
 
-    /**
-     * @var int
-     *
-     * @see http://xdebug.org/docs/code_coverage
-     */
-    public const LINE_NOT_EXECUTED = -1;
+	/**
+	 * @var int
+	 *
+	 * @see http://xdebug.org/docs/code_coverage
+	 */
+	public const LINE_NOT_EXECUTABLE = -2;
 
-    /**
-     * @var int
-     *
-     * @see http://xdebug.org/docs/code_coverage
-     */
-    public const LINE_EXECUTED = 1;
+	/**
+	 * @var int
+	 *
+	 * @see http://xdebug.org/docs/code_coverage
+	 */
+	public const LINE_NOT_EXECUTED = -1;
 
-    /**
-     * @var int
-     *
-     * @see http://xdebug.org/docs/code_coverage
-     */
-    public const BRANCH_NOT_HIT = 0;
+	/**
+	 * @var int
+	 *
+	 * @see http://xdebug.org/docs/code_coverage
+	 */
+	public const LINE_EXECUTED = 1;
 
-    /**
-     * @var int
-     *
-     * @see http://xdebug.org/docs/code_coverage
-     */
-    public const BRANCH_HIT                    = 1;
-    private bool $collectBranchAndPathCoverage = false;
-    private bool $detectDeadCode               = false;
+	/**
+	 * @var int
+	 *
+	 * @see http://xdebug.org/docs/code_coverage
+	 */
+	public const BRANCH_NOT_HIT = 0;
 
-    public function canCollectBranchAndPathCoverage(): bool
-    {
-        return false;
-    }
+	/**
+	 * @var int
+	 *
+	 * @see http://xdebug.org/docs/code_coverage
+	 */
+	public const BRANCH_HIT                    = 1;
+	private bool $collectBranchAndPathCoverage = false;
+	private bool $detectDeadCode               = false;
 
-    public function collectsBranchAndPathCoverage(): bool
-    {
-        return $this->collectBranchAndPathCoverage;
-    }
+	public function canCollectBranchAndPathCoverage(): bool {
+		return false;
+	}
 
-    /**
-     * @throws BranchAndPathCoverageNotSupportedException
-     */
-    public function enableBranchAndPathCoverage(): void
-    {
-        if (!$this->canCollectBranchAndPathCoverage()) {
-            throw new BranchAndPathCoverageNotSupportedException(
-                sprintf(
-                    '%s does not support branch and path coverage',
-                    $this->nameAndVersion(),
-                ),
-            );
-        }
+	public function collectsBranchAndPathCoverage(): bool {
+		return $this->collectBranchAndPathCoverage;
+	}
 
-        $this->collectBranchAndPathCoverage = true;
-    }
+	/**
+	 * @throws BranchAndPathCoverageNotSupportedException
+	 */
+	public function enableBranchAndPathCoverage(): void {
+		if ( ! $this->canCollectBranchAndPathCoverage() ) {
+			throw new BranchAndPathCoverageNotSupportedException(
+				sprintf(
+					'%s does not support branch and path coverage',
+					$this->nameAndVersion(),
+				),
+			);
+		}
 
-    public function disableBranchAndPathCoverage(): void
-    {
-        $this->collectBranchAndPathCoverage = false;
-    }
+		$this->collectBranchAndPathCoverage = true;
+	}
 
-    public function canDetectDeadCode(): bool
-    {
-        return false;
-    }
+	public function disableBranchAndPathCoverage(): void {
+		$this->collectBranchAndPathCoverage = false;
+	}
 
-    public function detectsDeadCode(): bool
-    {
-        return $this->detectDeadCode;
-    }
+	public function canDetectDeadCode(): bool {
+		return false;
+	}
 
-    /**
-     * @throws DeadCodeDetectionNotSupportedException
-     */
-    public function enableDeadCodeDetection(): void
-    {
-        if (!$this->canDetectDeadCode()) {
-            throw new DeadCodeDetectionNotSupportedException(
-                sprintf(
-                    '%s does not support dead code detection',
-                    $this->nameAndVersion(),
-                ),
-            );
-        }
+	public function detectsDeadCode(): bool {
+		return $this->detectDeadCode;
+	}
 
-        $this->detectDeadCode = true;
-    }
+	/**
+	 * @throws DeadCodeDetectionNotSupportedException
+	 */
+	public function enableDeadCodeDetection(): void {
+		if ( ! $this->canDetectDeadCode() ) {
+			throw new DeadCodeDetectionNotSupportedException(
+				sprintf(
+					'%s does not support dead code detection',
+					$this->nameAndVersion(),
+				),
+			);
+		}
 
-    public function disableDeadCodeDetection(): void
-    {
-        $this->detectDeadCode = false;
-    }
+		$this->detectDeadCode = true;
+	}
 
-    abstract public function nameAndVersion(): string;
+	public function disableDeadCodeDetection(): void {
+		$this->detectDeadCode = false;
+	}
 
-    abstract public function start(): void;
+	abstract public function nameAndVersion(): string;
 
-    abstract public function stop(): RawCodeCoverageData;
+	abstract public function start(): void;
+
+	abstract public function stop(): RawCodeCoverageData;
 }

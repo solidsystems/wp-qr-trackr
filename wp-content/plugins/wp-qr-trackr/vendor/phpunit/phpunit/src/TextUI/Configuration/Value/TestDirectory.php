@@ -16,54 +16,48 @@ use PHPUnit\Util\VersionComparisonOperator;
  *
  * @psalm-immutable
  */
-final class TestDirectory
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $path;
-    private readonly string $prefix;
-    private readonly string $suffix;
-    private readonly string $phpVersion;
-    private readonly VersionComparisonOperator $phpVersionOperator;
+final class TestDirectory {
 
-    /**
-     * @psalm-param non-empty-string $path
-     */
-    public function __construct(string $path, string $prefix, string $suffix, string $phpVersion, VersionComparisonOperator $phpVersionOperator)
-    {
-        $this->path               = $path;
-        $this->prefix             = $prefix;
-        $this->suffix             = $suffix;
-        $this->phpVersion         = $phpVersion;
-        $this->phpVersionOperator = $phpVersionOperator;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $path;
+	private readonly string $prefix;
+	private readonly string $suffix;
+	private readonly string $phpVersion;
+	private readonly VersionComparisonOperator $phpVersionOperator;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function path(): string
-    {
-        return $this->path;
-    }
+	/**
+	 * @psalm-param non-empty-string $path
+	 */
+	public function __construct( string $path, string $prefix, string $suffix, string $phpVersion, VersionComparisonOperator $phpVersionOperator ) {
+		$this->path               = $path;
+		$this->prefix             = $prefix;
+		$this->suffix             = $suffix;
+		$this->phpVersion         = $phpVersion;
+		$this->phpVersionOperator = $phpVersionOperator;
+	}
 
-    public function prefix(): string
-    {
-        return $this->prefix;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function path(): string {
+		return $this->path;
+	}
 
-    public function suffix(): string
-    {
-        return $this->suffix;
-    }
+	public function prefix(): string {
+		return $this->prefix;
+	}
 
-    public function phpVersion(): string
-    {
-        return $this->phpVersion;
-    }
+	public function suffix(): string {
+		return $this->suffix;
+	}
 
-    public function phpVersionOperator(): VersionComparisonOperator
-    {
-        return $this->phpVersionOperator;
-    }
+	public function phpVersion(): string {
+		return $this->phpVersion;
+	}
+
+	public function phpVersionOperator(): VersionComparisonOperator {
+		return $this->phpVersionOperator;
+	}
 }

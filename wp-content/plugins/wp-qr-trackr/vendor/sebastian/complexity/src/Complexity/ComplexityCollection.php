@@ -21,112 +21,100 @@ use IteratorAggregate;
 /**
  * @psalm-immutable
  */
-final class ComplexityCollection implements Countable, IteratorAggregate
-{
-    /**
-     * @psalm-var list<Complexity>
-     */
-    private readonly array $items;
+final class ComplexityCollection implements Countable, IteratorAggregate {
 
-    public static function fromList(Complexity ...$items): self
-    {
-        return new self($items);
-    }
+	/**
+	 * @psalm-var list<Complexity>
+	 */
+	private readonly array $items;
 
-    /**
-     * @psalm-param list<Complexity> $items
-     */
-    private function __construct(array $items)
-    {
-        $this->items = $items;
-    }
+	public static function fromList( Complexity ...$items ): self {
+		return new self( $items );
+	}
 
-    /**
-     * @psalm-return list<Complexity>
-     */
-    public function asArray(): array
-    {
-        return $this->items;
-    }
+	/**
+	 * @psalm-param list<Complexity> $items
+	 */
+	private function __construct( array $items ) {
+		$this->items = $items;
+	}
 
-    public function getIterator(): ComplexityCollectionIterator
-    {
-        return new ComplexityCollectionIterator($this);
-    }
+	/**
+	 * @psalm-return list<Complexity>
+	 */
+	public function asArray(): array {
+		return $this->items;
+	}
 
-    /**
-     * @psalm-return non-negative-int
-     */
-    public function count(): int
-    {
-        return count($this->items);
-    }
+	public function getIterator(): ComplexityCollectionIterator {
+		return new ComplexityCollectionIterator( $this );
+	}
 
-    public function isEmpty(): bool
-    {
-        return empty($this->items);
-    }
+	/**
+	 * @psalm-return non-negative-int
+	 */
+	public function count(): int {
+		return count( $this->items );
+	}
 
-    /**
-     * @psalm-return non-negative-int
-     */
-    public function cyclomaticComplexity(): int
-    {
-        $cyclomaticComplexity = 0;
+	public function isEmpty(): bool {
+		return empty( $this->items );
+	}
 
-        foreach ($this as $item) {
-            $cyclomaticComplexity += $item->cyclomaticComplexity();
-        }
+	/**
+	 * @psalm-return non-negative-int
+	 */
+	public function cyclomaticComplexity(): int {
+		$cyclomaticComplexity = 0;
 
-        return $cyclomaticComplexity;
-    }
+		foreach ( $this as $item ) {
+			$cyclomaticComplexity += $item->cyclomaticComplexity();
+		}
 
-    public function isFunction(): self
-    {
-        return new self(
-            array_values(
-                array_filter(
-                    $this->items,
-                    static fn (Complexity $complexity): bool => $complexity->isFunction(),
-                ),
-            ),
-        );
-    }
+		return $cyclomaticComplexity;
+	}
 
-    public function isMethod(): self
-    {
-        return new self(
-            array_values(
-                array_filter(
-                    $this->items,
-                    static fn (Complexity $complexity): bool => $complexity->isMethod(),
-                ),
-            ),
-        );
-    }
+	public function isFunction(): self {
+		return new self(
+			array_values(
+				array_filter(
+					$this->items,
+					static fn ( Complexity $complexity ): bool => $complexity->isFunction(),
+				),
+			),
+		);
+	}
 
-    public function mergeWith(self $other): self
-    {
-        return new self(
-            array_merge(
-                $this->asArray(),
-                $other->asArray(),
-            ),
-        );
-    }
+	public function isMethod(): self {
+		return new self(
+			array_values(
+				array_filter(
+					$this->items,
+					static fn ( Complexity $complexity ): bool => $complexity->isMethod(),
+				),
+			),
+		);
+	}
 
-    public function sortByDescendingCyclomaticComplexity(): self
-    {
-        $items = $this->items;
+	public function mergeWith( self $other ): self {
+		return new self(
+			array_merge(
+				$this->asArray(),
+				$other->asArray(),
+			),
+		);
+	}
 
-        usort(
-            $items,
-            static function (Complexity $a, Complexity $b): int
-            {
-                return $a->cyclomaticComplexity() <=> $b->cyclomaticComplexity();
-            },
-        );
+	public function sortByDescendingCyclomaticComplexity(): self {
+		$items = $this->items;
 
-        return new self(array_reverse($items));
-    }
+		usort(
+			$items,
+			static function ( Complexity $a, Complexity $b ): int {
+				return $a->cyclomaticComplexity() <=> $b->cyclomaticComplexity();
+			},
+		);
+
+		return new self( array_reverse( $items ) );
+	}
 }

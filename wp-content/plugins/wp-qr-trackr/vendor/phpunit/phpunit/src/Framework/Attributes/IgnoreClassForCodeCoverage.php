@@ -18,27 +18,25 @@ use Attribute;
  *
  * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5513
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-final class IgnoreClassForCodeCoverage
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE )]
+final class IgnoreClassForCodeCoverage {
 
-    /**
-     * @psalm-param class-string $className
-     */
-    public function __construct(string $className)
-    {
-        $this->className = $className;
-    }
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 */
+	public function __construct( string $className ) {
+		$this->className = $className;
+	}
+
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
 }

@@ -7,33 +7,31 @@ use DeepCopy\Reflection\ReflectionHelper;
 /**
  * @final
  */
-class ReplaceFilter implements Filter
-{
-    /**
-     * @var callable
-     */
-    protected $callback;
+class ReplaceFilter implements Filter {
 
-    /**
-     * @param callable $callable Will be called to get the new value for each property to replace
-     */
-    public function __construct(callable $callable)
-    {
-        $this->callback = $callable;
-    }
+	/**
+	 * @var callable
+	 */
+	protected $callback;
 
-    /**
-     * Replaces the object property by the result of the callback called with the object property.
-     *
-     * {@inheritdoc}
-     */
-    public function apply($object, $property, $objectCopier)
-    {
-        $reflectionProperty = ReflectionHelper::getProperty($object, $property);
-        $reflectionProperty->setAccessible(true);
+	/**
+	 * @param callable $callable Will be called to get the new value for each property to replace
+	 */
+	public function __construct( callable $callable ) {
+		$this->callback = $callable;
+	}
 
-        $value = call_user_func($this->callback, $reflectionProperty->getValue($object));
+	/**
+	 * Replaces the object property by the result of the callback called with the object property.
+	 *
+	 * {@inheritdoc}
+	 */
+	public function apply( $object, $property, $objectCopier ) {
+		$reflectionProperty = ReflectionHelper::getProperty( $object, $property );
+		$reflectionProperty->setAccessible( true );
 
-        $reflectionProperty->setValue($object, $value);
-    }
+		$value = call_user_func( $this->callback, $reflectionProperty->getValue( $object ) );
+
+		$reflectionProperty->setValue( $object, $value );
+	}
 }

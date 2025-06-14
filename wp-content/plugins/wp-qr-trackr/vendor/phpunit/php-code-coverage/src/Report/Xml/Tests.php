@@ -16,29 +16,27 @@ use DOMElement;
  *
  * @psalm-import-type TestType from \SebastianBergmann\CodeCoverage\CodeCoverage
  */
-final class Tests
-{
-    private readonly DOMElement $contextNode;
+final class Tests {
 
-    public function __construct(DOMElement $context)
-    {
-        $this->contextNode = $context;
-    }
+	private readonly DOMElement $contextNode;
 
-    /**
-     * @param TestType $result
-     */
-    public function addTest(string $test, array $result): void
-    {
-        $node = $this->contextNode->appendChild(
-            $this->contextNode->ownerDocument->createElementNS(
-                'https://schema.phpunit.de/coverage/1.0',
-                'test',
-            ),
-        );
+	public function __construct( DOMElement $context ) {
+		$this->contextNode = $context;
+	}
 
-        $node->setAttribute('name', $test);
-        $node->setAttribute('size', $result['size']);
-        $node->setAttribute('status', $result['status']);
-    }
+	/**
+	 * @param TestType $result
+	 */
+	public function addTest( string $test, array $result ): void {
+		$node = $this->contextNode->appendChild(
+			$this->contextNode->ownerDocument->createElementNS(
+				'https://schema.phpunit.de/coverage/1.0',
+				'test',
+			),
+		);
+
+		$node->setAttribute( 'name', $test );
+		$node->setAttribute( 'size', $result['size'] );
+		$node->setAttribute( 'status', $result['status'] );
+	}
 }

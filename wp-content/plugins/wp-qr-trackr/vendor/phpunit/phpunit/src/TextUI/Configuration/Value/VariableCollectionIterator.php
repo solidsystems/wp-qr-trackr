@@ -19,46 +19,39 @@ use Iterator;
  *
  * @template-implements Iterator<int, Variable>
  */
-final class VariableCollectionIterator implements Countable, Iterator
-{
-    /**
-     * @psalm-var list<Variable>
-     */
-    private readonly array $variables;
-    private int $position = 0;
+final class VariableCollectionIterator implements Countable, Iterator {
 
-    public function __construct(VariableCollection $variables)
-    {
-        $this->variables = $variables->asArray();
-    }
+	/**
+	 * @psalm-var list<Variable>
+	 */
+	private readonly array $variables;
+	private int $position = 0;
 
-    public function count(): int
-    {
-        return iterator_count($this);
-    }
+	public function __construct( VariableCollection $variables ) {
+		$this->variables = $variables->asArray();
+	}
 
-    public function rewind(): void
-    {
-        $this->position = 0;
-    }
+	public function count(): int {
+		return iterator_count( $this );
+	}
 
-    public function valid(): bool
-    {
-        return $this->position < count($this->variables);
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function key(): int
-    {
-        return $this->position;
-    }
+	public function valid(): bool {
+		return $this->position < count( $this->variables );
+	}
 
-    public function current(): Variable
-    {
-        return $this->variables[$this->position];
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function next(): void
-    {
-        $this->position++;
-    }
+	public function current(): Variable {
+		return $this->variables[ $this->position ];
+	}
+
+	public function next(): void {
+		++$this->position;
+	}
 }

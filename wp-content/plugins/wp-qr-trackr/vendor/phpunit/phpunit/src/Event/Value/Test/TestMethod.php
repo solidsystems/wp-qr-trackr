@@ -20,136 +20,125 @@ use PHPUnit\Metadata\MetadataCollection;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestMethod extends Test
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+final class TestMethod extends Test {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $methodName;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-var non-negative-int
-     */
-    private readonly int $line;
-    private readonly TestDox $testDox;
-    private readonly MetadataCollection $metadata;
-    private readonly TestDataCollection $testData;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $methodName;
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     * @psalm-param non-empty-string $file
-     * @psalm-param non-negative-int $line
-     */
-    public function __construct(string $className, string $methodName, string $file, int $line, TestDox $testDox, MetadataCollection $metadata, TestDataCollection $testData)
-    {
-        parent::__construct($file);
+	/**
+	 * @psalm-var non-negative-int
+	 */
+	private readonly int $line;
+	private readonly TestDox $testDox;
+	private readonly MetadataCollection $metadata;
+	private readonly TestDataCollection $testData;
 
-        $this->className  = $className;
-        $this->methodName = $methodName;
-        $this->line       = $line;
-        $this->testDox    = $testDox;
-        $this->metadata   = $metadata;
-        $this->testData   = $testData;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 * @psalm-param non-empty-string $file
+	 * @psalm-param non-negative-int $line
+	 */
+	public function __construct( string $className, string $methodName, string $file, int $line, TestDox $testDox, MetadataCollection $metadata, TestDataCollection $testData ) {
+		parent::__construct( $file );
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+		$this->className  = $className;
+		$this->methodName = $methodName;
+		$this->line       = $line;
+		$this->testDox    = $testDox;
+		$this->metadata   = $metadata;
+		$this->testData   = $testData;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function methodName(): string
-    {
-        return $this->methodName;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
 
-    /**
-     * @psalm-return non-negative-int
-     */
-    public function line(): int
-    {
-        return $this->line;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function methodName(): string {
+		return $this->methodName;
+	}
 
-    public function testDox(): TestDox
-    {
-        return $this->testDox;
-    }
+	/**
+	 * @psalm-return non-negative-int
+	 */
+	public function line(): int {
+		return $this->line;
+	}
 
-    public function metadata(): MetadataCollection
-    {
-        return $this->metadata;
-    }
+	public function testDox(): TestDox {
+		return $this->testDox;
+	}
 
-    public function testData(): TestDataCollection
-    {
-        return $this->testData;
-    }
+	public function metadata(): MetadataCollection {
+		return $this->metadata;
+	}
 
-    /**
-     * @psalm-assert-if-true TestMethod $this
-     */
-    public function isTestMethod(): bool
-    {
-        return true;
-    }
+	public function testData(): TestDataCollection {
+		return $this->testData;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function id(): string
-    {
-        $buffer = $this->className . '::' . $this->methodName;
+	/**
+	 * @psalm-assert-if-true TestMethod $this
+	 */
+	public function isTestMethod(): bool {
+		return true;
+	}
 
-        if ($this->testData()->hasDataFromDataProvider()) {
-            $buffer .= '#' . $this->testData->dataFromDataProvider()->dataSetName();
-        }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function id(): string {
+		$buffer = $this->className . '::' . $this->methodName;
 
-        return $buffer;
-    }
+		if ( $this->testData()->hasDataFromDataProvider() ) {
+			$buffer .= '#' . $this->testData->dataFromDataProvider()->dataSetName();
+		}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function nameWithClass(): string
-    {
-        return $this->className . '::' . $this->name();
-    }
+		return $buffer;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function name(): string
-    {
-        if (!$this->testData->hasDataFromDataProvider()) {
-            return $this->methodName;
-        }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function nameWithClass(): string {
+		return $this->className . '::' . $this->name();
+	}
 
-        $dataSetName = $this->testData->dataFromDataProvider()->dataSetName();
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function name(): string {
+		if ( ! $this->testData->hasDataFromDataProvider() ) {
+			return $this->methodName;
+		}
 
-        if (is_int($dataSetName)) {
-            $dataSetName = sprintf(
-                ' with data set #%d',
-                $dataSetName,
-            );
-        } else {
-            $dataSetName = sprintf(
-                ' with data set "%s"',
-                $dataSetName,
-            );
-        }
+		$dataSetName = $this->testData->dataFromDataProvider()->dataSetName();
 
-        return $this->methodName . $dataSetName;
-    }
+		if ( is_int( $dataSetName ) ) {
+			$dataSetName = sprintf(
+				' with data set #%d',
+				$dataSetName,
+			);
+		} else {
+			$dataSetName = sprintf(
+				' with data set "%s"',
+				$dataSetName,
+			);
+		}
+
+		return $this->methodName . $dataSetName;
+	}
 }

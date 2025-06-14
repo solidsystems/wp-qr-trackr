@@ -34,248 +34,234 @@ use SebastianBergmann\CodeCoverage\StaticAnalysis\FileAnalyser;
  * @psalm-import-type XdebugCodeCoverageWithoutPathCoverageType from \SebastianBergmann\CodeCoverage\Driver\XdebugDriver
  * @psalm-import-type XdebugCodeCoverageWithPathCoverageType from \SebastianBergmann\CodeCoverage\Driver\XdebugDriver
  */
-final class RawCodeCoverageData
-{
-    /**
-     * @var array<string, array<int>>
-     */
-    private static array $emptyLineCache = [];
+final class RawCodeCoverageData {
 
-    /**
-     * @psalm-var XdebugCodeCoverageWithoutPathCoverageType
-     */
-    private array $lineCoverage;
+	/**
+	 * @var array<string, array<int>>
+	 */
+	private static array $emptyLineCache = array();
 
-    /**
-     * @psalm-var array<string, XdebugFunctionsCoverageType>
-     */
-    private array $functionCoverage;
+	/**
+	 * @psalm-var XdebugCodeCoverageWithoutPathCoverageType
+	 */
+	private array $lineCoverage;
 
-    /**
-     * @psalm-param XdebugCodeCoverageWithoutPathCoverageType $rawCoverage
-     */
-    public static function fromXdebugWithoutPathCoverage(array $rawCoverage): self
-    {
-        return new self($rawCoverage, []);
-    }
+	/**
+	 * @psalm-var array<string, XdebugFunctionsCoverageType>
+	 */
+	private array $functionCoverage;
 
-    /**
-     * @psalm-param XdebugCodeCoverageWithPathCoverageType $rawCoverage
-     */
-    public static function fromXdebugWithPathCoverage(array $rawCoverage): self
-    {
-        $lineCoverage     = [];
-        $functionCoverage = [];
+	/**
+	 * @psalm-param XdebugCodeCoverageWithoutPathCoverageType $rawCoverage
+	 */
+	public static function fromXdebugWithoutPathCoverage( array $rawCoverage ): self {
+		return new self( $rawCoverage, array() );
+	}
 
-        foreach ($rawCoverage as $file => $fileCoverageData) {
-            // Xdebug annotates the function name of traits, strip that off
-            foreach ($fileCoverageData['functions'] as $existingKey => $data) {
-                if (str_ends_with($existingKey, '}') && !str_starts_with($existingKey, '{')) { // don't want to catch {main}
-                    $newKey                                 = preg_replace('/\{.*}$/', '', $existingKey);
-                    $fileCoverageData['functions'][$newKey] = $data;
-                    unset($fileCoverageData['functions'][$existingKey]);
-                }
-            }
+	/**
+	 * @psalm-param XdebugCodeCoverageWithPathCoverageType $rawCoverage
+	 */
+	public static function fromXdebugWithPathCoverage( array $rawCoverage ): self {
+		$lineCoverage     = array();
+		$functionCoverage = array();
 
-            $lineCoverage[$file]     = $fileCoverageData['lines'];
-            $functionCoverage[$file] = $fileCoverageData['functions'];
-        }
+		foreach ( $rawCoverage as $file => $fileCoverageData ) {
+			// Xdebug annotates the function name of traits, strip that off
+			foreach ( $fileCoverageData['functions'] as $existingKey => $data ) {
+				if ( str_ends_with( $existingKey, '}' ) && ! str_starts_with( $existingKey, '{' ) ) { // don't want to catch {main}
+					$newKey                                   = preg_replace( '/\{.*}$/', '', $existingKey );
+					$fileCoverageData['functions'][ $newKey ] = $data;
+					unset( $fileCoverageData['functions'][ $existingKey ] );
+				}
+			}
 
-        return new self($lineCoverage, $functionCoverage);
-    }
+			$lineCoverage[ $file ]     = $fileCoverageData['lines'];
+			$functionCoverage[ $file ] = $fileCoverageData['functions'];
+		}
 
-    public static function fromUncoveredFile(string $filename, FileAnalyser $analyser): self
-    {
-        $lineCoverage = [];
+		return new self( $lineCoverage, $functionCoverage );
+	}
 
-        foreach ($analyser->executableLinesIn($filename) as $line => $branch) {
-            $lineCoverage[$line] = Driver::LINE_NOT_EXECUTED;
-        }
+	public static function fromUncoveredFile( string $filename, FileAnalyser $analyser ): self {
+		$lineCoverage = array();
 
-        return new self([$filename => $lineCoverage], []);
-    }
+		foreach ( $analyser->executableLinesIn( $filename ) as $line => $branch ) {
+			$lineCoverage[ $line ] = Driver::LINE_NOT_EXECUTED;
+		}
 
-    /**
-     * @psalm-param XdebugCodeCoverageWithoutPathCoverageType $lineCoverage
-     * @psalm-param array<string, XdebugFunctionsCoverageType> $functionCoverage
-     */
-    private function __construct(array $lineCoverage, array $functionCoverage)
-    {
-        $this->lineCoverage     = $lineCoverage;
-        $this->functionCoverage = $functionCoverage;
+		return new self( array( $filename => $lineCoverage ), array() );
+	}
 
-        $this->skipEmptyLines();
-    }
+	/**
+	 * @psalm-param XdebugCodeCoverageWithoutPathCoverageType $lineCoverage
+	 * @psalm-param array<string, XdebugFunctionsCoverageType> $functionCoverage
+	 */
+	private function __construct( array $lineCoverage, array $functionCoverage ) {
+		$this->lineCoverage     = $lineCoverage;
+		$this->functionCoverage = $functionCoverage;
 
-    public function clear(): void
-    {
-        $this->lineCoverage = $this->functionCoverage = [];
-    }
+		$this->skipEmptyLines();
+	}
 
-    /**
-     * @psalm-return XdebugCodeCoverageWithoutPathCoverageType
-     */
-    public function lineCoverage(): array
-    {
-        return $this->lineCoverage;
-    }
+	public function clear(): void {
+		$this->lineCoverage = $this->functionCoverage = array();
+	}
 
-    /**
-     * @psalm-return array<string, XdebugFunctionsCoverageType>
-     */
-    public function functionCoverage(): array
-    {
-        return $this->functionCoverage;
-    }
+	/**
+	 * @psalm-return XdebugCodeCoverageWithoutPathCoverageType
+	 */
+	public function lineCoverage(): array {
+		return $this->lineCoverage;
+	}
 
-    public function removeCoverageDataForFile(string $filename): void
-    {
-        unset($this->lineCoverage[$filename], $this->functionCoverage[$filename]);
-    }
+	/**
+	 * @psalm-return array<string, XdebugFunctionsCoverageType>
+	 */
+	public function functionCoverage(): array {
+		return $this->functionCoverage;
+	}
 
-    /**
-     * @param int[] $lines
-     */
-    public function keepLineCoverageDataOnlyForLines(string $filename, array $lines): void
-    {
-        if (!isset($this->lineCoverage[$filename])) {
-            return;
-        }
+	public function removeCoverageDataForFile( string $filename ): void {
+		unset( $this->lineCoverage[ $filename ], $this->functionCoverage[ $filename ] );
+	}
 
-        $this->lineCoverage[$filename] = array_intersect_key(
-            $this->lineCoverage[$filename],
-            array_flip($lines),
-        );
-    }
+	/**
+	 * @param int[] $lines
+	 */
+	public function keepLineCoverageDataOnlyForLines( string $filename, array $lines ): void {
+		if ( ! isset( $this->lineCoverage[ $filename ] ) ) {
+			return;
+		}
 
-    /**
-     * @param int[] $linesToBranchMap
-     */
-    public function markExecutableLineByBranch(string $filename, array $linesToBranchMap): void
-    {
-        if (!isset($this->lineCoverage[$filename])) {
-            return;
-        }
+		$this->lineCoverage[ $filename ] = array_intersect_key(
+			$this->lineCoverage[ $filename ],
+			array_flip( $lines ),
+		);
+	}
 
-        $linesByBranch = [];
+	/**
+	 * @param int[] $linesToBranchMap
+	 */
+	public function markExecutableLineByBranch( string $filename, array $linesToBranchMap ): void {
+		if ( ! isset( $this->lineCoverage[ $filename ] ) ) {
+			return;
+		}
 
-        foreach ($linesToBranchMap as $line => $branch) {
-            $linesByBranch[$branch][] = $line;
-        }
+		$linesByBranch = array();
 
-        foreach ($this->lineCoverage[$filename] as $line => $lineStatus) {
-            if (!isset($linesToBranchMap[$line])) {
-                continue;
-            }
+		foreach ( $linesToBranchMap as $line => $branch ) {
+			$linesByBranch[ $branch ][] = $line;
+		}
 
-            $branch = $linesToBranchMap[$line];
+		foreach ( $this->lineCoverage[ $filename ] as $line => $lineStatus ) {
+			if ( ! isset( $linesToBranchMap[ $line ] ) ) {
+				continue;
+			}
 
-            if (!isset($linesByBranch[$branch])) {
-                continue;
-            }
+			$branch = $linesToBranchMap[ $line ];
 
-            foreach ($linesByBranch[$branch] as $lineInBranch) {
-                $this->lineCoverage[$filename][$lineInBranch] = $lineStatus;
-            }
+			if ( ! isset( $linesByBranch[ $branch ] ) ) {
+				continue;
+			}
 
-            if (Driver::LINE_EXECUTED === $lineStatus) {
-                unset($linesByBranch[$branch]);
-            }
-        }
-    }
+			foreach ( $linesByBranch[ $branch ] as $lineInBranch ) {
+				$this->lineCoverage[ $filename ][ $lineInBranch ] = $lineStatus;
+			}
 
-    /**
-     * @param int[] $lines
-     */
-    public function keepFunctionCoverageDataOnlyForLines(string $filename, array $lines): void
-    {
-        if (!isset($this->functionCoverage[$filename])) {
-            return;
-        }
+			if ( Driver::LINE_EXECUTED === $lineStatus ) {
+				unset( $linesByBranch[ $branch ] );
+			}
+		}
+	}
 
-        foreach ($this->functionCoverage[$filename] as $functionName => $functionData) {
-            foreach ($functionData['branches'] as $branchId => $branch) {
-                if (count(array_diff(range($branch['line_start'], $branch['line_end']), $lines)) > 0) {
-                    unset($this->functionCoverage[$filename][$functionName]['branches'][$branchId]);
+	/**
+	 * @param int[] $lines
+	 */
+	public function keepFunctionCoverageDataOnlyForLines( string $filename, array $lines ): void {
+		if ( ! isset( $this->functionCoverage[ $filename ] ) ) {
+			return;
+		}
 
-                    foreach ($functionData['paths'] as $pathId => $path) {
-                        if (in_array($branchId, $path['path'], true)) {
-                            unset($this->functionCoverage[$filename][$functionName]['paths'][$pathId]);
-                        }
-                    }
-                }
-            }
-        }
-    }
+		foreach ( $this->functionCoverage[ $filename ] as $functionName => $functionData ) {
+			foreach ( $functionData['branches'] as $branchId => $branch ) {
+				if ( count( array_diff( range( $branch['line_start'], $branch['line_end'] ), $lines ) ) > 0 ) {
+					unset( $this->functionCoverage[ $filename ][ $functionName ]['branches'][ $branchId ] );
 
-    /**
-     * @param int[] $lines
-     */
-    public function removeCoverageDataForLines(string $filename, array $lines): void
-    {
-        if (empty($lines)) {
-            return;
-        }
+					foreach ( $functionData['paths'] as $pathId => $path ) {
+						if ( in_array( $branchId, $path['path'], true ) ) {
+							unset( $this->functionCoverage[ $filename ][ $functionName ]['paths'][ $pathId ] );
+						}
+					}
+				}
+			}
+		}
+	}
 
-        if (!isset($this->lineCoverage[$filename])) {
-            return;
-        }
+	/**
+	 * @param int[] $lines
+	 */
+	public function removeCoverageDataForLines( string $filename, array $lines ): void {
+		if ( empty( $lines ) ) {
+			return;
+		}
 
-        $this->lineCoverage[$filename] = array_diff_key(
-            $this->lineCoverage[$filename],
-            array_flip($lines),
-        );
+		if ( ! isset( $this->lineCoverage[ $filename ] ) ) {
+			return;
+		}
 
-        if (isset($this->functionCoverage[$filename])) {
-            foreach ($this->functionCoverage[$filename] as $functionName => $functionData) {
-                foreach ($functionData['branches'] as $branchId => $branch) {
-                    if (count(array_intersect($lines, range($branch['line_start'], $branch['line_end']))) > 0) {
-                        unset($this->functionCoverage[$filename][$functionName]['branches'][$branchId]);
+		$this->lineCoverage[ $filename ] = array_diff_key(
+			$this->lineCoverage[ $filename ],
+			array_flip( $lines ),
+		);
 
-                        foreach ($functionData['paths'] as $pathId => $path) {
-                            if (in_array($branchId, $path['path'], true)) {
-                                unset($this->functionCoverage[$filename][$functionName]['paths'][$pathId]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+		if ( isset( $this->functionCoverage[ $filename ] ) ) {
+			foreach ( $this->functionCoverage[ $filename ] as $functionName => $functionData ) {
+				foreach ( $functionData['branches'] as $branchId => $branch ) {
+					if ( count( array_intersect( $lines, range( $branch['line_start'], $branch['line_end'] ) ) ) > 0 ) {
+						unset( $this->functionCoverage[ $filename ][ $functionName ]['branches'][ $branchId ] );
 
-    /**
-     * At the end of a file, the PHP interpreter always sees an implicit return. Where this occurs in a file that has
-     * e.g. a class definition, that line cannot be invoked from a test and results in confusing coverage. This engine
-     * implementation detail therefore needs to be masked which is done here by simply ensuring that all empty lines
-     * are skipped over for coverage purposes.
-     *
-     * @see https://github.com/sebastianbergmann/php-code-coverage/issues/799
-     */
-    private function skipEmptyLines(): void
-    {
-        foreach ($this->lineCoverage as $filename => $coverage) {
-            foreach ($this->getEmptyLinesForFile($filename) as $emptyLine) {
-                unset($this->lineCoverage[$filename][$emptyLine]);
-            }
-        }
-    }
+						foreach ( $functionData['paths'] as $pathId => $path ) {
+							if ( in_array( $branchId, $path['path'], true ) ) {
+								unset( $this->functionCoverage[ $filename ][ $functionName ]['paths'][ $pathId ] );
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
-    private function getEmptyLinesForFile(string $filename): array
-    {
-        if (!isset(self::$emptyLineCache[$filename])) {
-            self::$emptyLineCache[$filename] = [];
+	/**
+	 * At the end of a file, the PHP interpreter always sees an implicit return. Where this occurs in a file that has
+	 * e.g. a class definition, that line cannot be invoked from a test and results in confusing coverage. This engine
+	 * implementation detail therefore needs to be masked which is done here by simply ensuring that all empty lines
+	 * are skipped over for coverage purposes.
+	 *
+	 * @see https://github.com/sebastianbergmann/php-code-coverage/issues/799
+	 */
+	private function skipEmptyLines(): void {
+		foreach ( $this->lineCoverage as $filename => $coverage ) {
+			foreach ( $this->getEmptyLinesForFile( $filename ) as $emptyLine ) {
+				unset( $this->lineCoverage[ $filename ][ $emptyLine ] );
+			}
+		}
+	}
 
-            if (is_file($filename)) {
-                $sourceLines = explode("\n", file_get_contents($filename));
+	private function getEmptyLinesForFile( string $filename ): array {
+		if ( ! isset( self::$emptyLineCache[ $filename ] ) ) {
+			self::$emptyLineCache[ $filename ] = array();
 
-                foreach ($sourceLines as $line => $source) {
-                    if (trim($source) === '') {
-                        self::$emptyLineCache[$filename][] = ($line + 1);
-                    }
-                }
-            }
-        }
+			if ( is_file( $filename ) ) {
+				$sourceLines = explode( "\n", file_get_contents( $filename ) );
 
-        return self::$emptyLineCache[$filename];
-    }
+				foreach ( $sourceLines as $line => $source ) {
+					if ( trim( $source ) === '' ) {
+						self::$emptyLineCache[ $filename ][] = ( $line + 1 );
+					}
+				}
+			}
+		}
+
+		return self::$emptyLineCache[ $filename ];
+	}
 }

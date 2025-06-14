@@ -16,30 +16,27 @@ use PHPUnit\Metadata\Version\Requirement;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class RequiresPhp extends Metadata
-{
-    private readonly Requirement $versionRequirement;
+final class RequiresPhp extends Metadata {
 
-    /**
-     * @psalm-param 0|1 $level
-     */
-    protected function __construct(int $level, Requirement $versionRequirement)
-    {
-        parent::__construct($level);
+	private readonly Requirement $versionRequirement;
 
-        $this->versionRequirement = $versionRequirement;
-    }
+	/**
+	 * @psalm-param 0|1 $level
+	 */
+	protected function __construct( int $level, Requirement $versionRequirement ) {
+		parent::__construct( $level );
 
-    /**
-     * @psalm-assert-if-true RequiresPhp $this
-     */
-    public function isRequiresPhp(): bool
-    {
-        return true;
-    }
+		$this->versionRequirement = $versionRequirement;
+	}
 
-    public function versionRequirement(): Requirement
-    {
-        return $this->versionRequirement;
-    }
+	/**
+	 * @psalm-assert-if-true RequiresPhp $this
+	 */
+	public function isRequiresPhp(): bool {
+		return true;
+	}
+
+	public function versionRequirement(): Requirement {
+		return $this->versionRequirement;
+	}
 }

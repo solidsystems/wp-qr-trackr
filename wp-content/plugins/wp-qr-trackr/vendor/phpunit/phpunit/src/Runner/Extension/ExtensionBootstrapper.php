@@ -25,73 +25,71 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ExtensionBootstrapper
-{
-    private readonly Configuration $configuration;
-    private readonly Facade $facade;
+final class ExtensionBootstrapper {
 
-    public function __construct(Configuration $configuration, Facade $facade)
-    {
-        $this->configuration = $configuration;
-        $this->facade        = $facade;
-    }
+	private readonly Configuration $configuration;
+	private readonly Facade $facade;
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param array<string, string> $parameters
-     */
-    public function bootstrap(string $className, array $parameters): void
-    {
-        if (!class_exists($className)) {
-            EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
-                sprintf(
-                    'Cannot bootstrap extension because class %s does not exist',
-                    $className,
-                ),
-            );
+	public function __construct( Configuration $configuration, Facade $facade ) {
+		$this->configuration = $configuration;
+		$this->facade        = $facade;
+	}
 
-            return;
-        }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param array<string, string> $parameters
+	 */
+	public function bootstrap( string $className, array $parameters ): void {
+		if ( ! class_exists( $className ) ) {
+			EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
+				sprintf(
+					'Cannot bootstrap extension because class %s does not exist',
+					$className,
+				),
+			);
 
-        if (!in_array(Extension::class, class_implements($className), true)) {
-            EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
-                sprintf(
-                    'Cannot bootstrap extension because class %s does not implement interface %s',
-                    $className,
-                    Extension::class,
-                ),
-            );
+			return;
+		}
 
-            return;
-        }
+		if ( ! in_array( Extension::class, class_implements( $className ), true ) ) {
+			EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
+				sprintf(
+					'Cannot bootstrap extension because class %s does not implement interface %s',
+					$className,
+					Extension::class,
+				),
+			);
 
-        try {
-            $instance = (new ReflectionClass($className))->newInstance();
+			return;
+		}
 
-            assert($instance instanceof Extension);
+		try {
+			$instance = ( new ReflectionClass( $className ) )->newInstance();
 
-            $instance->bootstrap(
-                $this->configuration,
-                $this->facade,
-                ParameterCollection::fromArray($parameters),
-            );
-        } catch (Throwable $t) {
-            EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
-                sprintf(
-                    'Bootstrapping of extension %s failed: %s%s%s',
-                    $className,
-                    $t->getMessage(),
-                    PHP_EOL,
-                    $t->getTraceAsString(),
-                ),
-            );
+			assert( $instance instanceof Extension );
 
-            return;
-        }
+			$instance->bootstrap(
+				$this->configuration,
+				$this->facade,
+				ParameterCollection::fromArray( $parameters ),
+			);
+		} catch ( Throwable $t ) {
+			EventFacade::emitter()->testRunnerTriggeredPhpunitWarning(
+				sprintf(
+					'Bootstrapping of extension %s failed: %s%s%s',
+					$className,
+					$t->getMessage(),
+					PHP_EOL,
+					$t->getTraceAsString(),
+				),
+			);
 
-        EventFacade::emitter()->testRunnerBootstrappedExtension(
-            $className,
-            $parameters,
-        );
-    }
+			return;
+		}
+
+		EventFacade::emitter()->testRunnerBootstrappedExtension(
+			$className,
+			$parameters,
+		);
+	}
 }

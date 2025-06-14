@@ -12,16 +12,15 @@ namespace SebastianBergmann\CodeCoverage;
 use function dirname;
 use SebastianBergmann\Version as VersionId;
 
-final class Version
-{
-    private static string $version = '';
+final class Version {
 
-    public static function id(): string
-    {
-        if (self::$version === '') {
-            self::$version = (new VersionId('10.1.16', dirname(__DIR__)))->asString();
-        }
+	private static string $version = '';
 
-        return self::$version;
-    }
+	public static function id(): string {
+		if ( self::$version === '' ) {
+			self::$version = ( new VersionId( '10.1.16', dirname( __DIR__ ) ) )->asString();
+		}
+
+		return self::$version;
+	}
 }

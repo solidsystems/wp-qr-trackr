@@ -20,18 +20,17 @@ use DOMDocument;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Validator
-{
-    public function validate(DOMDocument $document, string $xsdFilename): ValidationResult
-    {
-        $originalErrorHandling = libxml_use_internal_errors(true);
+final class Validator {
 
-        $document->schemaValidateSource(file_get_contents($xsdFilename));
+	public function validate( DOMDocument $document, string $xsdFilename ): ValidationResult {
+		$originalErrorHandling = libxml_use_internal_errors( true );
 
-        $errors = libxml_get_errors();
-        libxml_clear_errors();
-        libxml_use_internal_errors($originalErrorHandling);
+		$document->schemaValidateSource( file_get_contents( $xsdFilename ) );
 
-        return ValidationResult::fromArray($errors);
-    }
+		$errors = libxml_get_errors();
+		libxml_clear_errors();
+		libxml_use_internal_errors( $originalErrorHandling );
+
+		return ValidationResult::fromArray( $errors );
+	}
 }

@@ -10,23 +10,22 @@ use Endroid\QrCode\Matrix\MatrixFactoryInterface;
 use Endroid\QrCode\Matrix\MatrixInterface;
 use Endroid\QrCode\QrCodeInterface;
 
-final readonly class MatrixFactory implements MatrixFactoryInterface
-{
-    public function create(QrCodeInterface $qrCode): MatrixInterface
-    {
-        $baconErrorCorrectionLevel = ErrorCorrectionLevelConverter::convertToBaconErrorCorrectionLevel($qrCode->getErrorCorrectionLevel());
-        $baconMatrix = Encoder::encode($qrCode->getData(), $baconErrorCorrectionLevel, strval($qrCode->getEncoding()))->getMatrix();
+final readonly class MatrixFactory implements MatrixFactoryInterface {
 
-        $blockValues = [];
-        $columnCount = $baconMatrix->getWidth();
-        $rowCount = $baconMatrix->getHeight();
-        for ($rowIndex = 0; $rowIndex < $rowCount; ++$rowIndex) {
-            $blockValues[$rowIndex] = [];
-            for ($columnIndex = 0; $columnIndex < $columnCount; ++$columnIndex) {
-                $blockValues[$rowIndex][$columnIndex] = $baconMatrix->get($columnIndex, $rowIndex);
-            }
-        }
+	public function create( QrCodeInterface $qrCode ): MatrixInterface {
+		$baconErrorCorrectionLevel = ErrorCorrectionLevelConverter::convertToBaconErrorCorrectionLevel( $qrCode->getErrorCorrectionLevel() );
+		$baconMatrix               = Encoder::encode( $qrCode->getData(), $baconErrorCorrectionLevel, strval( $qrCode->getEncoding() ) )->getMatrix();
 
-        return new Matrix($blockValues, $qrCode->getSize(), $qrCode->getMargin(), $qrCode->getRoundBlockSizeMode());
-    }
+		$blockValues = array();
+		$columnCount = $baconMatrix->getWidth();
+		$rowCount    = $baconMatrix->getHeight();
+		for ( $rowIndex = 0; $rowIndex < $rowCount; ++$rowIndex ) {
+			$blockValues[ $rowIndex ] = array();
+			for ( $columnIndex = 0; $columnIndex < $columnCount; ++$columnIndex ) {
+				$blockValues[ $rowIndex ][ $columnIndex ] = $baconMatrix->get( $columnIndex, $rowIndex );
+			}
+		}
+
+		return new Matrix( $blockValues, $qrCode->getSize(), $qrCode->getMargin(), $qrCode->getRoundBlockSizeMode() );
+	}
 }

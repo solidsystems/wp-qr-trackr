@@ -17,27 +17,25 @@ use PHPUnit\Framework\MockObject\Stub;
 /**
  * Compares PHPUnit\Framework\MockObject\MockObject instances for equality.
  */
-final class MockObjectComparator extends ObjectComparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        return $expected instanceof Stub && $actual instanceof Stub;
-    }
+final class MockObjectComparator extends ObjectComparator {
 
-    protected function toArray(object $object): array
-    {
-        assert($object instanceof Stub);
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		return $expected instanceof Stub && $actual instanceof Stub;
+	}
 
-        $array = parent::toArray($object);
+	protected function toArray( object $object ): array {
+		assert( $object instanceof Stub );
 
-        foreach (array_keys($array) as $key) {
-            if (!str_starts_with($key, '__phpunit_')) {
-                continue;
-            }
+		$array = parent::toArray( $object );
 
-            unset($array[$key]);
-        }
+		foreach ( array_keys( $array ) as $key ) {
+			if ( ! str_starts_with( $key, '__phpunit_' ) ) {
+				continue;
+			}
 
-        return $array;
-    }
+			unset( $array[ $key ] );
+		}
+
+		return $array;
+	}
 }

@@ -16,23 +16,20 @@ namespace PHPUnit\Framework\TestStatus;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Failure extends Known
-{
-    /**
-     * @psalm-assert-if-true Failure $this
-     */
-    public function isFailure(): bool
-    {
-        return true;
-    }
+final class Failure extends Known {
 
-    public function asInt(): int
-    {
-        return 7;
-    }
+	/**
+	 * @psalm-assert-if-true Failure $this
+	 */
+	public function isFailure(): bool {
+		return true;
+	}
 
-    public function asString(): string
-    {
-        return 'failure';
-    }
+	public function asInt(): int {
+		return 7;
+	}
+
+	public function asString(): string {
+		return 'failure';
+	}
 }

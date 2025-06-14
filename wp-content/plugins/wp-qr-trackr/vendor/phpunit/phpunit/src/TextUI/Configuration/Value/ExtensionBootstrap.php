@@ -14,41 +14,38 @@ namespace PHPUnit\TextUI\Configuration;
  *
  * @psalm-immutable
  */
-final class ExtensionBootstrap
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+final class ExtensionBootstrap {
 
-    /**
-     * @psalm-var array<string,string>
-     */
-    private readonly array $parameters;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param array<string,string> $parameters
-     */
-    public function __construct(string $className, array $parameters)
-    {
-        $this->className  = $className;
-        $this->parameters = $parameters;
-    }
+	/**
+	 * @psalm-var array<string,string>
+	 */
+	private readonly array $parameters;
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param array<string,string> $parameters
+	 */
+	public function __construct( string $className, array $parameters ) {
+		$this->className  = $className;
+		$this->parameters = $parameters;
+	}
 
-    /**
-     * @psalm-return array<string,string>
-     */
-    public function parameters(): array
-    {
-        return $this->parameters;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
+
+	/**
+	 * @psalm-return array<string,string>
+	 */
+	public function parameters(): array {
+		return $this->parameters;
+	}
 }

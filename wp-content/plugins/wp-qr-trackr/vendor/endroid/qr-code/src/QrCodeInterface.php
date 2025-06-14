@@ -7,21 +7,21 @@ namespace Endroid\QrCode;
 use Endroid\QrCode\Color\ColorInterface;
 use Endroid\QrCode\Encoding\EncodingInterface;
 
-interface QrCodeInterface
-{
-    public function getData(): string;
+interface QrCodeInterface {
 
-    public function getEncoding(): EncodingInterface;
+	public function getData(): string;
 
-    public function getErrorCorrectionLevel(): ErrorCorrectionLevel;
+	public function getEncoding(): EncodingInterface;
 
-    public function getSize(): int;
+	public function getErrorCorrectionLevel(): ErrorCorrectionLevel;
 
-    public function getMargin(): int;
+	public function getSize(): int;
 
-    public function getRoundBlockSizeMode(): RoundBlockSizeMode;
+	public function getMargin(): int;
 
-    public function getForegroundColor(): ColorInterface;
+	public function getRoundBlockSizeMode(): RoundBlockSizeMode;
 
-    public function getBackgroundColor(): ColorInterface;
+	public function getForegroundColor(): ColorInterface;
+
+	public function getBackgroundColor(): ColorInterface;
 }

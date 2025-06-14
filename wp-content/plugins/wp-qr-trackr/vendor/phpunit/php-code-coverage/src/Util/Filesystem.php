@@ -16,22 +16,21 @@ use function sprintf;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class Filesystem
-{
-    /**
-     * @throws DirectoryCouldNotBeCreatedException
-     */
-    public static function createDirectory(string $directory): void
-    {
-        $success = !(!is_dir($directory) && !@mkdir($directory, 0o777, true) && !is_dir($directory));
+final class Filesystem {
 
-        if (!$success) {
-            throw new DirectoryCouldNotBeCreatedException(
-                sprintf(
-                    'Directory "%s" could not be created',
-                    $directory,
-                ),
-            );
-        }
-    }
+	/**
+	 * @throws DirectoryCouldNotBeCreatedException
+	 */
+	public static function createDirectory( string $directory ): void {
+		$success = ! ( ! is_dir( $directory ) && ! @mkdir( $directory, 0o777, true ) && ! is_dir( $directory ) );
+
+		if ( ! $success ) {
+			throw new DirectoryCouldNotBeCreatedException(
+				sprintf(
+					'Directory "%s" could not be created',
+					$directory,
+				),
+			);
+		}
+	}
 }

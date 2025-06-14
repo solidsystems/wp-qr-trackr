@@ -16,42 +16,39 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final class ExcludeStaticPropertyFromBackup
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE )]
+final class ExcludeStaticPropertyFromBackup {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $propertyName;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $propertyName
-     */
-    public function __construct(string $className, string $propertyName)
-    {
-        $this->className    = $className;
-        $this->propertyName = $propertyName;
-    }
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $propertyName;
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $propertyName
+	 */
+	public function __construct( string $className, string $propertyName ) {
+		$this->className    = $className;
+		$this->propertyName = $propertyName;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function propertyName(): string
-    {
-        return $this->propertyName;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function propertyName(): string {
+		return $this->propertyName;
+	}
 }

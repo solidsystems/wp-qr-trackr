@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -15,7 +15,7 @@ namespace Brain\Monkey;
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class Exception extends \Exception
-{
+class Exception extends \Exception {
+
 
 }

@@ -20,74 +20,70 @@ use function stream_get_contents;
 use function substr_count;
 use function trim;
 
-final class Version
-{
-    private readonly string $version;
+final class Version {
 
-    public function __construct(string $release, string $path)
-    {
-        $this->version = $this->generate($release, $path);
-    }
+	private readonly string $version;
 
-    public function asString(): string
-    {
-        return $this->version;
-    }
+	public function __construct( string $release, string $path ) {
+		$this->version = $this->generate( $release, $path );
+	}
 
-    private function generate(string $release, string $path): string
-    {
-        if (substr_count($release, '.') + 1 === 3) {
-            $version = $release;
-        } else {
-            $version = $release . '-dev';
-        }
+	public function asString(): string {
+		return $this->version;
+	}
 
-        $git = $this->getGitInformation($path);
+	private function generate( string $release, string $path ): string {
+		if ( substr_count( $release, '.' ) + 1 === 3 ) {
+			$version = $release;
+		} else {
+			$version = $release . '-dev';
+		}
 
-        if (!$git) {
-            return $version;
-        }
+		$git = $this->getGitInformation( $path );
 
-        if (substr_count($release, '.') + 1 === 3) {
-            return $git;
-        }
+		if ( ! $git ) {
+			return $version;
+		}
 
-        $git = explode('-', $git);
+		if ( substr_count( $release, '.' ) + 1 === 3 ) {
+			return $git;
+		}
 
-        return $release . '-' . end($git);
-    }
+		$git = explode( '-', $git );
 
-    private function getGitInformation(string $path): bool|string
-    {
-        if (!is_dir($path . DIRECTORY_SEPARATOR . '.git')) {
-            return false;
-        }
+		return $release . '-' . end( $git );
+	}
 
-        $process = proc_open(
-            'git describe --tags',
-            [
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w'],
-            ],
-            $pipes,
-            $path
-        );
+	private function getGitInformation( string $path ): bool|string {
+		if ( ! is_dir( $path . DIRECTORY_SEPARATOR . '.git' ) ) {
+			return false;
+		}
 
-        if (!is_resource($process)) {
-            return false;
-        }
+		$process = proc_open(
+			'git describe --tags',
+			array(
+				1 => array( 'pipe', 'w' ),
+				2 => array( 'pipe', 'w' ),
+			),
+			$pipes,
+			$path
+		);
 
-        $result = trim(stream_get_contents($pipes[1]));
+		if ( ! is_resource( $process ) ) {
+			return false;
+		}
 
-        fclose($pipes[1]);
-        fclose($pipes[2]);
+		$result = trim( stream_get_contents( $pipes[1] ) );
 
-        $returnCode = proc_close($process);
+		fclose( $pipes[1] );
+		fclose( $pipes[2] );
 
-        if ($returnCode !== 0) {
-            return false;
-        }
+		$returnCode = proc_close( $process );
 
-        return $result;
-    }
+		if ( $returnCode !== 0 ) {
+			return false;
+		}
+
+		return $result;
+	}
 }

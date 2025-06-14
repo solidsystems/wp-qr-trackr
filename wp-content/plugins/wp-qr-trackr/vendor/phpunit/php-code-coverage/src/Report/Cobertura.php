@@ -24,286 +24,285 @@ use SebastianBergmann\CodeCoverage\Driver\WriteOperationFailedException;
 use SebastianBergmann\CodeCoverage\Node\File;
 use SebastianBergmann\CodeCoverage\Util\Filesystem;
 
-final class Cobertura
-{
-    /**
-     * @throws WriteOperationFailedException
-     */
-    public function process(CodeCoverage $coverage, ?string $target = null): string
-    {
-        $time = (string) time();
+final class Cobertura {
 
-        $report = $coverage->getReport();
+	/**
+	 * @throws WriteOperationFailedException
+	 */
+	public function process( CodeCoverage $coverage, ?string $target = null ): string {
+		$time = (string) time();
 
-        $implementation = new DOMImplementation;
+		$report = $coverage->getReport();
 
-        $documentType = $implementation->createDocumentType(
-            'coverage',
-            '',
-            'http://cobertura.sourceforge.net/xml/coverage-04.dtd',
-        );
+		$implementation = new DOMImplementation();
 
-        $document               = $implementation->createDocument('', '', $documentType);
-        $document->xmlVersion   = '1.0';
-        $document->encoding     = 'UTF-8';
-        $document->formatOutput = true;
+		$documentType = $implementation->createDocumentType(
+			'coverage',
+			'',
+			'http://cobertura.sourceforge.net/xml/coverage-04.dtd',
+		);
 
-        $coverageElement = $document->createElement('coverage');
+		$document               = $implementation->createDocument( '', '', $documentType );
+		$document->xmlVersion   = '1.0';
+		$document->encoding     = 'UTF-8';
+		$document->formatOutput = true;
 
-        $linesValid   = $report->numberOfExecutableLines();
-        $linesCovered = $report->numberOfExecutedLines();
-        $lineRate     = $linesValid === 0 ? 0 : ($linesCovered / $linesValid);
-        $coverageElement->setAttribute('line-rate', (string) $lineRate);
+		$coverageElement = $document->createElement( 'coverage' );
 
-        $branchesValid   = $report->numberOfExecutableBranches();
-        $branchesCovered = $report->numberOfExecutedBranches();
-        $branchRate      = $branchesValid === 0 ? 0 : ($branchesCovered / $branchesValid);
-        $coverageElement->setAttribute('branch-rate', (string) $branchRate);
+		$linesValid   = $report->numberOfExecutableLines();
+		$linesCovered = $report->numberOfExecutedLines();
+		$lineRate     = $linesValid === 0 ? 0 : ( $linesCovered / $linesValid );
+		$coverageElement->setAttribute( 'line-rate', (string) $lineRate );
 
-        $coverageElement->setAttribute('lines-covered', (string) $report->numberOfExecutedLines());
-        $coverageElement->setAttribute('lines-valid', (string) $report->numberOfExecutableLines());
-        $coverageElement->setAttribute('branches-covered', (string) $report->numberOfExecutedBranches());
-        $coverageElement->setAttribute('branches-valid', (string) $report->numberOfExecutableBranches());
-        $coverageElement->setAttribute('complexity', '');
-        $coverageElement->setAttribute('version', '0.4');
-        $coverageElement->setAttribute('timestamp', $time);
+		$branchesValid   = $report->numberOfExecutableBranches();
+		$branchesCovered = $report->numberOfExecutedBranches();
+		$branchRate      = $branchesValid === 0 ? 0 : ( $branchesCovered / $branchesValid );
+		$coverageElement->setAttribute( 'branch-rate', (string) $branchRate );
 
-        $document->appendChild($coverageElement);
+		$coverageElement->setAttribute( 'lines-covered', (string) $report->numberOfExecutedLines() );
+		$coverageElement->setAttribute( 'lines-valid', (string) $report->numberOfExecutableLines() );
+		$coverageElement->setAttribute( 'branches-covered', (string) $report->numberOfExecutedBranches() );
+		$coverageElement->setAttribute( 'branches-valid', (string) $report->numberOfExecutableBranches() );
+		$coverageElement->setAttribute( 'complexity', '' );
+		$coverageElement->setAttribute( 'version', '0.4' );
+		$coverageElement->setAttribute( 'timestamp', $time );
 
-        $sourcesElement = $document->createElement('sources');
-        $coverageElement->appendChild($sourcesElement);
+		$document->appendChild( $coverageElement );
 
-        $sourceElement = $document->createElement('source', $report->pathAsString());
-        $sourcesElement->appendChild($sourceElement);
+		$sourcesElement = $document->createElement( 'sources' );
+		$coverageElement->appendChild( $sourcesElement );
 
-        $packagesElement = $document->createElement('packages');
-        $coverageElement->appendChild($packagesElement);
+		$sourceElement = $document->createElement( 'source', $report->pathAsString() );
+		$sourcesElement->appendChild( $sourceElement );
 
-        $complexity = 0;
+		$packagesElement = $document->createElement( 'packages' );
+		$coverageElement->appendChild( $packagesElement );
 
-        foreach ($report as $item) {
-            if (!$item instanceof File) {
-                continue;
-            }
+		$complexity = 0;
 
-            $packageElement    = $document->createElement('package');
-            $packageComplexity = 0;
+		foreach ( $report as $item ) {
+			if ( ! $item instanceof File ) {
+				continue;
+			}
 
-            $packageElement->setAttribute('name', str_replace($report->pathAsString() . DIRECTORY_SEPARATOR, '', $item->pathAsString()));
+			$packageElement    = $document->createElement( 'package' );
+			$packageComplexity = 0;
 
-            $linesValid   = $item->numberOfExecutableLines();
-            $linesCovered = $item->numberOfExecutedLines();
-            $lineRate     = $linesValid === 0 ? 0 : ($linesCovered / $linesValid);
+			$packageElement->setAttribute( 'name', str_replace( $report->pathAsString() . DIRECTORY_SEPARATOR, '', $item->pathAsString() ) );
 
-            $packageElement->setAttribute('line-rate', (string) $lineRate);
+			$linesValid   = $item->numberOfExecutableLines();
+			$linesCovered = $item->numberOfExecutedLines();
+			$lineRate     = $linesValid === 0 ? 0 : ( $linesCovered / $linesValid );
 
-            $branchesValid   = $item->numberOfExecutableBranches();
-            $branchesCovered = $item->numberOfExecutedBranches();
-            $branchRate      = $branchesValid === 0 ? 0 : ($branchesCovered / $branchesValid);
+			$packageElement->setAttribute( 'line-rate', (string) $lineRate );
 
-            $packageElement->setAttribute('branch-rate', (string) $branchRate);
+			$branchesValid   = $item->numberOfExecutableBranches();
+			$branchesCovered = $item->numberOfExecutedBranches();
+			$branchRate      = $branchesValid === 0 ? 0 : ( $branchesCovered / $branchesValid );
 
-            $packageElement->setAttribute('complexity', '');
-            $packagesElement->appendChild($packageElement);
+			$packageElement->setAttribute( 'branch-rate', (string) $branchRate );
 
-            $classesElement = $document->createElement('classes');
+			$packageElement->setAttribute( 'complexity', '' );
+			$packagesElement->appendChild( $packageElement );
 
-            $packageElement->appendChild($classesElement);
+			$classesElement = $document->createElement( 'classes' );
 
-            $classes      = $item->classesAndTraits();
-            $coverageData = $item->lineCoverageData();
+			$packageElement->appendChild( $classesElement );
 
-            foreach ($classes as $className => $class) {
-                $complexity        += $class['ccn'];
-                $packageComplexity += $class['ccn'];
+			$classes      = $item->classesAndTraits();
+			$coverageData = $item->lineCoverageData();
 
-                if (!empty($class['package']['namespace'])) {
-                    $className = $class['package']['namespace'] . '\\' . $className;
-                }
+			foreach ( $classes as $className => $class ) {
+				$complexity        += $class['ccn'];
+				$packageComplexity += $class['ccn'];
 
-                $linesValid   = $class['executableLines'];
-                $linesCovered = $class['executedLines'];
-                $lineRate     = $linesValid === 0 ? 0 : ($linesCovered / $linesValid);
+				if ( ! empty( $class['package']['namespace'] ) ) {
+					$className = $class['package']['namespace'] . '\\' . $className;
+				}
 
-                $branchesValid   = $class['executableBranches'];
-                $branchesCovered = $class['executedBranches'];
-                $branchRate      = $branchesValid === 0 ? 0 : ($branchesCovered / $branchesValid);
+				$linesValid   = $class['executableLines'];
+				$linesCovered = $class['executedLines'];
+				$lineRate     = $linesValid === 0 ? 0 : ( $linesCovered / $linesValid );
 
-                $classElement = $document->createElement('class');
+				$branchesValid   = $class['executableBranches'];
+				$branchesCovered = $class['executedBranches'];
+				$branchRate      = $branchesValid === 0 ? 0 : ( $branchesCovered / $branchesValid );
 
-                $classElement->setAttribute('name', $className);
-                $classElement->setAttribute('filename', str_replace($report->pathAsString() . DIRECTORY_SEPARATOR, '', $item->pathAsString()));
-                $classElement->setAttribute('line-rate', (string) $lineRate);
-                $classElement->setAttribute('branch-rate', (string) $branchRate);
-                $classElement->setAttribute('complexity', (string) $class['ccn']);
+				$classElement = $document->createElement( 'class' );
 
-                $classesElement->appendChild($classElement);
+				$classElement->setAttribute( 'name', $className );
+				$classElement->setAttribute( 'filename', str_replace( $report->pathAsString() . DIRECTORY_SEPARATOR, '', $item->pathAsString() ) );
+				$classElement->setAttribute( 'line-rate', (string) $lineRate );
+				$classElement->setAttribute( 'branch-rate', (string) $branchRate );
+				$classElement->setAttribute( 'complexity', (string) $class['ccn'] );
 
-                $methodsElement = $document->createElement('methods');
+				$classesElement->appendChild( $classElement );
 
-                $classElement->appendChild($methodsElement);
+				$methodsElement = $document->createElement( 'methods' );
 
-                $classLinesElement = $document->createElement('lines');
+				$classElement->appendChild( $methodsElement );
 
-                $classElement->appendChild($classLinesElement);
+				$classLinesElement = $document->createElement( 'lines' );
 
-                foreach ($class['methods'] as $methodName => $method) {
-                    if ($method['executableLines'] === 0) {
-                        continue;
-                    }
+				$classElement->appendChild( $classLinesElement );
 
-                    preg_match("/\((.*?)\)/", $method['signature'], $signature);
+				foreach ( $class['methods'] as $methodName => $method ) {
+					if ( $method['executableLines'] === 0 ) {
+						continue;
+					}
 
-                    $linesValid   = $method['executableLines'];
-                    $linesCovered = $method['executedLines'];
-                    $lineRate     = $linesValid === 0 ? 0 : ($linesCovered / $linesValid);
+					preg_match( '/\((.*?)\)/', $method['signature'], $signature );
 
-                    $branchesValid   = $method['executableBranches'];
-                    $branchesCovered = $method['executedBranches'];
-                    $branchRate      = $branchesValid === 0 ? 0 : ($branchesCovered / $branchesValid);
+					$linesValid   = $method['executableLines'];
+					$linesCovered = $method['executedLines'];
+					$lineRate     = $linesValid === 0 ? 0 : ( $linesCovered / $linesValid );
 
-                    $methodElement = $document->createElement('method');
+					$branchesValid   = $method['executableBranches'];
+					$branchesCovered = $method['executedBranches'];
+					$branchRate      = $branchesValid === 0 ? 0 : ( $branchesCovered / $branchesValid );
 
-                    $methodElement->setAttribute('name', $methodName);
-                    $methodElement->setAttribute('signature', $signature[1]);
-                    $methodElement->setAttribute('line-rate', (string) $lineRate);
-                    $methodElement->setAttribute('branch-rate', (string) $branchRate);
-                    $methodElement->setAttribute('complexity', (string) $method['ccn']);
+					$methodElement = $document->createElement( 'method' );
 
-                    $methodLinesElement = $document->createElement('lines');
+					$methodElement->setAttribute( 'name', $methodName );
+					$methodElement->setAttribute( 'signature', $signature[1] );
+					$methodElement->setAttribute( 'line-rate', (string) $lineRate );
+					$methodElement->setAttribute( 'branch-rate', (string) $branchRate );
+					$methodElement->setAttribute( 'complexity', (string) $method['ccn'] );
 
-                    $methodElement->appendChild($methodLinesElement);
+					$methodLinesElement = $document->createElement( 'lines' );
 
-                    foreach (range($method['startLine'], $method['endLine']) as $line) {
-                        if (!isset($coverageData[$line])) {
-                            continue;
-                        }
-                        $methodLineElement = $document->createElement('line');
+					$methodElement->appendChild( $methodLinesElement );
 
-                        $methodLineElement->setAttribute('number', (string) $line);
-                        $methodLineElement->setAttribute('hits', (string) count($coverageData[$line]));
+					foreach ( range( $method['startLine'], $method['endLine'] ) as $line ) {
+						if ( ! isset( $coverageData[ $line ] ) ) {
+							continue;
+						}
+						$methodLineElement = $document->createElement( 'line' );
 
-                        $methodLinesElement->appendChild($methodLineElement);
+						$methodLineElement->setAttribute( 'number', (string) $line );
+						$methodLineElement->setAttribute( 'hits', (string) count( $coverageData[ $line ] ) );
 
-                        $classLineElement = $methodLineElement->cloneNode();
+						$methodLinesElement->appendChild( $methodLineElement );
 
-                        $classLinesElement->appendChild($classLineElement);
-                    }
+						$classLineElement = $methodLineElement->cloneNode();
 
-                    $methodsElement->appendChild($methodElement);
-                }
-            }
+						$classLinesElement->appendChild( $classLineElement );
+					}
 
-            if ($item->numberOfFunctions() === 0) {
-                $packageElement->setAttribute('complexity', (string) $packageComplexity);
+					$methodsElement->appendChild( $methodElement );
+				}
+			}
 
-                continue;
-            }
+			if ( $item->numberOfFunctions() === 0 ) {
+				$packageElement->setAttribute( 'complexity', (string) $packageComplexity );
 
-            $functionsComplexity      = 0;
-            $functionsLinesValid      = 0;
-            $functionsLinesCovered    = 0;
-            $functionsBranchesValid   = 0;
-            $functionsBranchesCovered = 0;
+				continue;
+			}
 
-            $classElement = $document->createElement('class');
-            $classElement->setAttribute('name', basename($item->pathAsString()));
-            $classElement->setAttribute('filename', str_replace($report->pathAsString() . DIRECTORY_SEPARATOR, '', $item->pathAsString()));
+			$functionsComplexity      = 0;
+			$functionsLinesValid      = 0;
+			$functionsLinesCovered    = 0;
+			$functionsBranchesValid   = 0;
+			$functionsBranchesCovered = 0;
 
-            $methodsElement = $document->createElement('methods');
+			$classElement = $document->createElement( 'class' );
+			$classElement->setAttribute( 'name', basename( $item->pathAsString() ) );
+			$classElement->setAttribute( 'filename', str_replace( $report->pathAsString() . DIRECTORY_SEPARATOR, '', $item->pathAsString() ) );
 
-            $classElement->appendChild($methodsElement);
+			$methodsElement = $document->createElement( 'methods' );
 
-            $classLinesElement = $document->createElement('lines');
+			$classElement->appendChild( $methodsElement );
 
-            $classElement->appendChild($classLinesElement);
+			$classLinesElement = $document->createElement( 'lines' );
 
-            $functions = $item->functions();
+			$classElement->appendChild( $classLinesElement );
 
-            foreach ($functions as $functionName => $function) {
-                if ($function['executableLines'] === 0) {
-                    continue;
-                }
+			$functions = $item->functions();
 
-                $complexity          += $function['ccn'];
-                $packageComplexity   += $function['ccn'];
-                $functionsComplexity += $function['ccn'];
+			foreach ( $functions as $functionName => $function ) {
+				if ( $function['executableLines'] === 0 ) {
+					continue;
+				}
 
-                $linesValid   = $function['executableLines'];
-                $linesCovered = $function['executedLines'];
-                $lineRate     = $linesValid === 0 ? 0 : ($linesCovered / $linesValid);
+				$complexity          += $function['ccn'];
+				$packageComplexity   += $function['ccn'];
+				$functionsComplexity += $function['ccn'];
 
-                $functionsLinesValid   += $linesValid;
-                $functionsLinesCovered += $linesCovered;
+				$linesValid   = $function['executableLines'];
+				$linesCovered = $function['executedLines'];
+				$lineRate     = $linesValid === 0 ? 0 : ( $linesCovered / $linesValid );
 
-                $branchesValid   = $function['executableBranches'];
-                $branchesCovered = $function['executedBranches'];
-                $branchRate      = $branchesValid === 0 ? 0 : ($branchesCovered / $branchesValid);
+				$functionsLinesValid   += $linesValid;
+				$functionsLinesCovered += $linesCovered;
 
-                $functionsBranchesValid   += $branchesValid;
-                $functionsBranchesCovered += $branchesValid;
+				$branchesValid   = $function['executableBranches'];
+				$branchesCovered = $function['executedBranches'];
+				$branchRate      = $branchesValid === 0 ? 0 : ( $branchesCovered / $branchesValid );
 
-                $methodElement = $document->createElement('method');
+				$functionsBranchesValid   += $branchesValid;
+				$functionsBranchesCovered += $branchesValid;
 
-                $methodElement->setAttribute('name', $functionName);
-                $methodElement->setAttribute('signature', $function['signature']);
-                $methodElement->setAttribute('line-rate', (string) $lineRate);
-                $methodElement->setAttribute('branch-rate', (string) $branchRate);
-                $methodElement->setAttribute('complexity', (string) $function['ccn']);
+				$methodElement = $document->createElement( 'method' );
 
-                $methodLinesElement = $document->createElement('lines');
+				$methodElement->setAttribute( 'name', $functionName );
+				$methodElement->setAttribute( 'signature', $function['signature'] );
+				$methodElement->setAttribute( 'line-rate', (string) $lineRate );
+				$methodElement->setAttribute( 'branch-rate', (string) $branchRate );
+				$methodElement->setAttribute( 'complexity', (string) $function['ccn'] );
 
-                $methodElement->appendChild($methodLinesElement);
+				$methodLinesElement = $document->createElement( 'lines' );
 
-                foreach (range($function['startLine'], $function['endLine']) as $line) {
-                    if (!isset($coverageData[$line])) {
-                        continue;
-                    }
-                    $methodLineElement = $document->createElement('line');
+				$methodElement->appendChild( $methodLinesElement );
 
-                    $methodLineElement->setAttribute('number', (string) $line);
-                    $methodLineElement->setAttribute('hits', (string) count($coverageData[$line]));
+				foreach ( range( $function['startLine'], $function['endLine'] ) as $line ) {
+					if ( ! isset( $coverageData[ $line ] ) ) {
+						continue;
+					}
+					$methodLineElement = $document->createElement( 'line' );
 
-                    $methodLinesElement->appendChild($methodLineElement);
+					$methodLineElement->setAttribute( 'number', (string) $line );
+					$methodLineElement->setAttribute( 'hits', (string) count( $coverageData[ $line ] ) );
 
-                    $classLineElement = $methodLineElement->cloneNode();
+					$methodLinesElement->appendChild( $methodLineElement );
 
-                    $classLinesElement->appendChild($classLineElement);
-                }
+					$classLineElement = $methodLineElement->cloneNode();
 
-                $methodsElement->appendChild($methodElement);
-            }
+					$classLinesElement->appendChild( $classLineElement );
+				}
 
-            $packageElement->setAttribute('complexity', (string) $packageComplexity);
+				$methodsElement->appendChild( $methodElement );
+			}
 
-            if ($functionsLinesValid === 0) {
-                continue;
-            }
+			$packageElement->setAttribute( 'complexity', (string) $packageComplexity );
 
-            $lineRate   = $functionsLinesCovered / $functionsLinesValid;
-            $branchRate = $functionsBranchesValid === 0 ? 0 : ($functionsBranchesCovered / $functionsBranchesValid);
+			if ( $functionsLinesValid === 0 ) {
+				continue;
+			}
 
-            $classElement->setAttribute('line-rate', (string) $lineRate);
-            $classElement->setAttribute('branch-rate', (string) $branchRate);
-            $classElement->setAttribute('complexity', (string) $functionsComplexity);
+			$lineRate   = $functionsLinesCovered / $functionsLinesValid;
+			$branchRate = $functionsBranchesValid === 0 ? 0 : ( $functionsBranchesCovered / $functionsBranchesValid );
 
-            $classesElement->appendChild($classElement);
-        }
+			$classElement->setAttribute( 'line-rate', (string) $lineRate );
+			$classElement->setAttribute( 'branch-rate', (string) $branchRate );
+			$classElement->setAttribute( 'complexity', (string) $functionsComplexity );
 
-        $coverageElement->setAttribute('complexity', (string) $complexity);
+			$classesElement->appendChild( $classElement );
+		}
 
-        $buffer = $document->saveXML();
+		$coverageElement->setAttribute( 'complexity', (string) $complexity );
 
-        if ($target !== null) {
-            if (!str_contains($target, '://')) {
-                Filesystem::createDirectory(dirname($target));
-            }
+		$buffer = $document->saveXML();
 
-            if (@file_put_contents($target, $buffer) === false) {
-                throw new WriteOperationFailedException($target);
-            }
-        }
+		if ( $target !== null ) {
+			if ( ! str_contains( $target, '://' ) ) {
+				Filesystem::createDirectory( dirname( $target ) );
+			}
 
-        return $buffer;
-    }
+			if ( @file_put_contents( $target, $buffer ) === false ) {
+				throw new WriteOperationFailedException( $target );
+			}
+		}
+
+		return $buffer;
+	}
 }

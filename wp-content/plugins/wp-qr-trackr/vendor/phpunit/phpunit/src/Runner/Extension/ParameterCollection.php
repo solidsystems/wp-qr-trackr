@@ -17,37 +17,33 @@ use PHPUnit\Runner\ParameterDoesNotExistException;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ParameterCollection
-{
-    private readonly array $parameters;
+final class ParameterCollection {
 
-    /**
-     * @psalm-param array<string, string> $parameters
-     */
-    public static function fromArray(array $parameters): self
-    {
-        return new self($parameters);
-    }
+	private readonly array $parameters;
 
-    private function __construct(array $parameters)
-    {
-        $this->parameters = $parameters;
-    }
+	/**
+	 * @psalm-param array<string, string> $parameters
+	 */
+	public static function fromArray( array $parameters ): self {
+		return new self( $parameters );
+	}
 
-    public function has(string $name): bool
-    {
-        return array_key_exists($name, $this->parameters);
-    }
+	private function __construct( array $parameters ) {
+		$this->parameters = $parameters;
+	}
 
-    /**
-     * @throws ParameterDoesNotExistException
-     */
-    public function get(string $name): string
-    {
-        if (!$this->has($name)) {
-            throw new ParameterDoesNotExistException($name);
-        }
+	public function has( string $name ): bool {
+		return array_key_exists( $name, $this->parameters );
+	}
 
-        return $this->parameters[$name];
-    }
+	/**
+	 * @throws ParameterDoesNotExistException
+	 */
+	public function get( string $name ): string {
+		if ( ! $this->has( $name ) ) {
+			throw new ParameterDoesNotExistException( $name );
+		}
+
+		return $this->parameters[ $name ];
+	}
 }

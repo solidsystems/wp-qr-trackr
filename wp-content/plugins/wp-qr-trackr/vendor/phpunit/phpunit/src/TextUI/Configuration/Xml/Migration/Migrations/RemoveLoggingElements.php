@@ -18,33 +18,30 @@ use DOMXPath;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveLoggingElements implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $this->removeTestDoxElement($document);
-        $this->removeTextElement($document);
-    }
+final class RemoveLoggingElements implements Migration {
 
-    private function removeTestDoxElement(DOMDocument $document): void
-    {
-        $node = (new DOMXPath($document))->query('logging/testdoxXml')->item(0);
+	public function migrate( DOMDocument $document ): void {
+		$this->removeTestDoxElement( $document );
+		$this->removeTextElement( $document );
+	}
 
-        if (!$node instanceof DOMElement || $node->parentNode === null) {
-            return;
-        }
+	private function removeTestDoxElement( DOMDocument $document ): void {
+		$node = ( new DOMXPath( $document ) )->query( 'logging/testdoxXml' )->item( 0 );
 
-        $node->parentNode->removeChild($node);
-    }
+		if ( ! $node instanceof DOMElement || $node->parentNode === null ) {
+			return;
+		}
 
-    private function removeTextElement(DOMDocument $document): void
-    {
-        $node = (new DOMXPath($document))->query('logging/text')->item(0);
+		$node->parentNode->removeChild( $node );
+	}
 
-        if (!$node instanceof DOMElement || $node->parentNode === null) {
-            return;
-        }
+	private function removeTextElement( DOMDocument $document ): void {
+		$node = ( new DOMXPath( $document ) )->query( 'logging/text' )->item( 0 );
 
-        $node->parentNode->removeChild($node);
-    }
+		if ( ! $node instanceof DOMElement || $node->parentNode === null ) {
+			return;
+		}
+
+		$node->parentNode->removeChild( $node );
+	}
 }

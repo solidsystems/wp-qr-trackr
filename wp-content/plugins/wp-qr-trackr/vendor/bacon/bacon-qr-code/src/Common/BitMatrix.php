@@ -13,295 +13,282 @@ use SplFixedArray;
  * the common module, x is the column position, and y is the row position. The
  * ordering is always x, y. The origin is at the top-left.
  */
-class BitMatrix
-{
-    /**
-     * Width of the bit matrix.
-     */
-    private int $width;
+class BitMatrix {
 
-    /**
-     * Height of the bit matrix.
-     */
-    private ?int $height;
+	/**
+	 * Width of the bit matrix.
+	 */
+	private int $width;
 
-    /**
-     * Size in bits of each individual row.
-     */
-    private int $rowSize;
+	/**
+	 * Height of the bit matrix.
+	 */
+	private ?int $height;
 
-    /**
-     * Bits representation.
-     *
-     * @var SplFixedArray<int>
-     */
-    private SplFixedArray $bits;
+	/**
+	 * Size in bits of each individual row.
+	 */
+	private int $rowSize;
 
-    /**
-     * @throws InvalidArgumentException if a dimension is smaller than zero
-     */
-    public function __construct(int $width, ?int $height = null)
-    {
-        if (null === $height) {
-            $height = $width;
-        }
+	/**
+	 * Bits representation.
+	 *
+	 * @var SplFixedArray<int>
+	 */
+	private SplFixedArray $bits;
 
-        if ($width < 1 || $height < 1) {
-            throw new InvalidArgumentException('Both dimensions must be greater than zero');
-        }
+	/**
+	 * @throws InvalidArgumentException if a dimension is smaller than zero
+	 */
+	public function __construct( int $width, ?int $height = null ) {
+		if ( null === $height ) {
+			$height = $width;
+		}
 
-        $this->width = $width;
-        $this->height = $height;
-        $this->rowSize = ($width + 31) >> 5;
-        $this->bits = SplFixedArray::fromArray(array_fill(0, $this->rowSize * $height, 0));
-    }
+		if ( $width < 1 || $height < 1 ) {
+			throw new InvalidArgumentException( 'Both dimensions must be greater than zero' );
+		}
 
-    /**
-     * Gets the requested bit, where true means black.
-     */
-    public function get(int $x, int $y) : bool
-    {
-        $offset = $y * $this->rowSize + ($x >> 5);
-        return 0 !== (BitUtils::unsignedRightShift($this->bits[$offset], ($x & 0x1f)) & 1);
-    }
+		$this->width   = $width;
+		$this->height  = $height;
+		$this->rowSize = ( $width + 31 ) >> 5;
+		$this->bits    = SplFixedArray::fromArray( array_fill( 0, $this->rowSize * $height, 0 ) );
+	}
 
-    /**
-     * Sets the given bit to true.
-     */
-    public function set(int $x, int $y) : void
-    {
-        $offset = $y * $this->rowSize + ($x >> 5);
-        $this->bits[$offset] = $this->bits[$offset] | (1 << ($x & 0x1f));
-    }
+	/**
+	 * Gets the requested bit, where true means black.
+	 */
+	public function get( int $x, int $y ): bool {
+		$offset = $y * $this->rowSize + ( $x >> 5 );
+		return 0 !== ( BitUtils::unsignedRightShift( $this->bits[ $offset ], ( $x & 0x1f ) ) & 1 );
+	}
 
-    /**
-     * Flips the given bit.
-     */
-    public function flip(int $x, int $y) : void
-    {
-        $offset = $y * $this->rowSize + ($x >> 5);
-        $this->bits[$offset] = $this->bits[$offset] ^ (1 << ($x & 0x1f));
-    }
+	/**
+	 * Sets the given bit to true.
+	 */
+	public function set( int $x, int $y ): void {
+		$offset                = $y * $this->rowSize + ( $x >> 5 );
+		$this->bits[ $offset ] = $this->bits[ $offset ] | ( 1 << ( $x & 0x1f ) );
+	}
 
-    /**
-     * Clears all bits (set to false).
-     */
-    public function clear() : void
-    {
-        $max = count($this->bits);
+	/**
+	 * Flips the given bit.
+	 */
+	public function flip( int $x, int $y ): void {
+		$offset                = $y * $this->rowSize + ( $x >> 5 );
+		$this->bits[ $offset ] = $this->bits[ $offset ] ^ ( 1 << ( $x & 0x1f ) );
+	}
 
-        for ($i = 0; $i < $max; ++$i) {
-            $this->bits[$i] = 0;
-        }
-    }
+	/**
+	 * Clears all bits (set to false).
+	 */
+	public function clear(): void {
+		$max = count( $this->bits );
 
-    /**
-     * Sets a square region of the bit matrix to true.
-     *
-     * @throws InvalidArgumentException if left or top are negative
-     * @throws InvalidArgumentException if width or height are smaller than 1
-     * @throws InvalidArgumentException if region does not fit into the matix
-     */
-    public function setRegion(int $left, int $top, int $width, int $height) : void
-    {
-        if ($top < 0 || $left < 0) {
-            throw new InvalidArgumentException('Left and top must be non-negative');
-        }
+		for ( $i = 0; $i < $max; ++$i ) {
+			$this->bits[ $i ] = 0;
+		}
+	}
 
-        if ($height < 1 || $width < 1) {
-            throw new InvalidArgumentException('Width and height must be at least 1');
-        }
+	/**
+	 * Sets a square region of the bit matrix to true.
+	 *
+	 * @throws InvalidArgumentException if left or top are negative
+	 * @throws InvalidArgumentException if width or height are smaller than 1
+	 * @throws InvalidArgumentException if region does not fit into the matix
+	 */
+	public function setRegion( int $left, int $top, int $width, int $height ): void {
+		if ( $top < 0 || $left < 0 ) {
+			throw new InvalidArgumentException( 'Left and top must be non-negative' );
+		}
 
-        $right = $left + $width;
-        $bottom = $top + $height;
+		if ( $height < 1 || $width < 1 ) {
+			throw new InvalidArgumentException( 'Width and height must be at least 1' );
+		}
 
-        if ($bottom > $this->height || $right > $this->width) {
-            throw new InvalidArgumentException('The region must fit inside the matrix');
-        }
+		$right  = $left + $width;
+		$bottom = $top + $height;
 
-        for ($y = $top; $y < $bottom; ++$y) {
-            $offset = $y * $this->rowSize;
+		if ( $bottom > $this->height || $right > $this->width ) {
+			throw new InvalidArgumentException( 'The region must fit inside the matrix' );
+		}
 
-            for ($x = $left; $x < $right; ++$x) {
-                $index = $offset + ($x >> 5);
-                $this->bits[$index] = $this->bits[$index] | (1 << ($x & 0x1f));
-            }
-        }
-    }
+		for ( $y = $top; $y < $bottom; ++$y ) {
+			$offset = $y * $this->rowSize;
 
-    /**
-     * A fast method to retrieve one row of data from the matrix as a BitArray.
-     */
-    public function getRow(int $y, ?BitArray $row = null) : BitArray
-    {
-        if (null === $row || $row->getSize() < $this->width) {
-            $row = new BitArray($this->width);
-        }
+			for ( $x = $left; $x < $right; ++$x ) {
+				$index                = $offset + ( $x >> 5 );
+				$this->bits[ $index ] = $this->bits[ $index ] | ( 1 << ( $x & 0x1f ) );
+			}
+		}
+	}
 
-        $offset = $y * $this->rowSize;
+	/**
+	 * A fast method to retrieve one row of data from the matrix as a BitArray.
+	 */
+	public function getRow( int $y, ?BitArray $row = null ): BitArray {
+		if ( null === $row || $row->getSize() < $this->width ) {
+			$row = new BitArray( $this->width );
+		}
 
-        for ($x = 0; $x < $this->rowSize; ++$x) {
-            $row->setBulk($x << 5, $this->bits[$offset + $x]);
-        }
+		$offset = $y * $this->rowSize;
 
-        return $row;
-    }
+		for ( $x = 0; $x < $this->rowSize; ++$x ) {
+			$row->setBulk( $x << 5, $this->bits[ $offset + $x ] );
+		}
 
-    /**
-     * Sets a row of data from a BitArray.
-     */
-    public function setRow(int $y, BitArray $row) : void
-    {
-        $bits = $row->getBitArray();
+		return $row;
+	}
 
-        for ($i = 0; $i < $this->rowSize; ++$i) {
-            $this->bits[$y * $this->rowSize + $i] = $bits[$i];
-        }
-    }
+	/**
+	 * Sets a row of data from a BitArray.
+	 */
+	public function setRow( int $y, BitArray $row ): void {
+		$bits = $row->getBitArray();
 
-    /**
-     * This is useful in detecting the enclosing rectangle of a 'pure' barcode.
-     *
-     * @return int[]|null
-     */
-    public function getEnclosingRectangle() : ?array
-    {
-        $left = $this->width;
-        $top = $this->height;
-        $right = -1;
-        $bottom = -1;
+		for ( $i = 0; $i < $this->rowSize; ++$i ) {
+			$this->bits[ $y * $this->rowSize + $i ] = $bits[ $i ];
+		}
+	}
 
-        for ($y = 0; $y < $this->height; ++$y) {
-            for ($x32 = 0; $x32 < $this->rowSize; ++$x32) {
-                $bits = $this->bits[$y * $this->rowSize + $x32];
+	/**
+	 * This is useful in detecting the enclosing rectangle of a 'pure' barcode.
+	 *
+	 * @return int[]|null
+	 */
+	public function getEnclosingRectangle(): ?array {
+		$left   = $this->width;
+		$top    = $this->height;
+		$right  = -1;
+		$bottom = -1;
 
-                if (0 !== $bits) {
-                    if ($y < $top) {
-                        $top = $y;
-                    }
+		for ( $y = 0; $y < $this->height; ++$y ) {
+			for ( $x32 = 0; $x32 < $this->rowSize; ++$x32 ) {
+				$bits = $this->bits[ $y * $this->rowSize + $x32 ];
 
-                    if ($y > $bottom) {
-                        $bottom = $y;
-                    }
+				if ( 0 !== $bits ) {
+					if ( $y < $top ) {
+						$top = $y;
+					}
 
-                    if ($x32 * 32 < $left) {
-                        $bit = 0;
+					if ( $y > $bottom ) {
+						$bottom = $y;
+					}
 
-                        while (($bits << (31 - $bit)) === 0) {
-                            $bit++;
-                        }
+					if ( $x32 * 32 < $left ) {
+						$bit = 0;
 
-                        if (($x32 * 32 + $bit) < $left) {
-                            $left = $x32 * 32 + $bit;
-                        }
-                    }
-                }
+						while ( ( $bits << ( 31 - $bit ) ) === 0 ) {
+							++$bit;
+						}
 
-                if ($x32 * 32 + 31 > $right) {
-                    $bit = 31;
+						if ( ( $x32 * 32 + $bit ) < $left ) {
+							$left = $x32 * 32 + $bit;
+						}
+					}
+				}
 
-                    while (0 === BitUtils::unsignedRightShift($bits, $bit)) {
-                        --$bit;
-                    }
+				if ( $x32 * 32 + 31 > $right ) {
+					$bit = 31;
 
-                    if (($x32 * 32 + $bit) > $right) {
-                        $right = $x32 * 32 + $bit;
-                    }
-                }
-            }
-        }
+					while ( 0 === BitUtils::unsignedRightShift( $bits, $bit ) ) {
+						--$bit;
+					}
 
-        $width = $right - $left;
-        $height = $bottom - $top;
+					if ( ( $x32 * 32 + $bit ) > $right ) {
+						$right = $x32 * 32 + $bit;
+					}
+				}
+			}
+		}
 
-        if ($width < 0 || $height < 0) {
-            return null;
-        }
+		$width  = $right - $left;
+		$height = $bottom - $top;
 
-        return [$left, $top, $width, $height];
-    }
+		if ( $width < 0 || $height < 0 ) {
+			return null;
+		}
 
-    /**
-     * Gets the most top left set bit.
-     *
-     * This is useful in detecting a corner of a 'pure' barcode.
-     *
-     * @return int[]|null
-     */
-    public function getTopLeftOnBit() : ?array
-    {
-        $bitsOffset = 0;
+		return array( $left, $top, $width, $height );
+	}
 
-        while ($bitsOffset < count($this->bits) && 0 === $this->bits[$bitsOffset]) {
-            ++$bitsOffset;
-        }
+	/**
+	 * Gets the most top left set bit.
+	 *
+	 * This is useful in detecting a corner of a 'pure' barcode.
+	 *
+	 * @return int[]|null
+	 */
+	public function getTopLeftOnBit(): ?array {
+		$bitsOffset = 0;
 
-        if (count($this->bits) === $bitsOffset) {
-            return null;
-        }
+		while ( $bitsOffset < count( $this->bits ) && 0 === $this->bits[ $bitsOffset ] ) {
+			++$bitsOffset;
+		}
 
-        $x = intdiv($bitsOffset, $this->rowSize);
-        $y = ($bitsOffset % $this->rowSize) << 5;
+		if ( count( $this->bits ) === $bitsOffset ) {
+			return null;
+		}
 
-        $bits = $this->bits[$bitsOffset];
-        $bit = 0;
+		$x = intdiv( $bitsOffset, $this->rowSize );
+		$y = ( $bitsOffset % $this->rowSize ) << 5;
 
-        while (0 === ($bits << (31 - $bit))) {
-            ++$bit;
-        }
+		$bits = $this->bits[ $bitsOffset ];
+		$bit  = 0;
 
-        $x += $bit;
+		while ( 0 === ( $bits << ( 31 - $bit ) ) ) {
+			++$bit;
+		}
 
-        return [$x, $y];
-    }
+		$x += $bit;
 
-    /**
-     * Gets the most bottom right set bit.
-     *
-     * This is useful in detecting a corner of a 'pure' barcode.
-     *
-     * @return int[]|null
-     */
-    public function getBottomRightOnBit() : ?array
-    {
-        $bitsOffset = count($this->bits) - 1;
+		return array( $x, $y );
+	}
 
-        while ($bitsOffset >= 0 && 0 === $this->bits[$bitsOffset]) {
-            --$bitsOffset;
-        }
+	/**
+	 * Gets the most bottom right set bit.
+	 *
+	 * This is useful in detecting a corner of a 'pure' barcode.
+	 *
+	 * @return int[]|null
+	 */
+	public function getBottomRightOnBit(): ?array {
+		$bitsOffset = count( $this->bits ) - 1;
 
-        if ($bitsOffset < 0) {
-            return null;
-        }
+		while ( $bitsOffset >= 0 && 0 === $this->bits[ $bitsOffset ] ) {
+			--$bitsOffset;
+		}
 
-        $x = intdiv($bitsOffset, $this->rowSize);
-        $y = ($bitsOffset % $this->rowSize) << 5;
+		if ( $bitsOffset < 0 ) {
+			return null;
+		}
 
-        $bits = $this->bits[$bitsOffset];
-        $bit  = 0;
+		$x = intdiv( $bitsOffset, $this->rowSize );
+		$y = ( $bitsOffset % $this->rowSize ) << 5;
 
-        while (0 === BitUtils::unsignedRightShift($bits, $bit)) {
-            --$bit;
-        }
+		$bits = $this->bits[ $bitsOffset ];
+		$bit  = 0;
 
-        $x += $bit;
+		while ( 0 === BitUtils::unsignedRightShift( $bits, $bit ) ) {
+			--$bit;
+		}
 
-        return [$x, $y];
-    }
+		$x += $bit;
 
-    /**
-     * Gets the width of the matrix,
-     */
-    public function getWidth() : int
-    {
-        return $this->width;
-    }
+		return array( $x, $y );
+	}
 
-    /**
-     * Gets the height of the matrix.
-     */
-    public function getHeight() : int
-    {
-        return $this->height;
-    }
+	/**
+	 * Gets the width of the matrix,
+	 */
+	public function getWidth(): int {
+		return $this->width;
+	}
+
+	/**
+	 * Gets the height of the matrix.
+	 */
+	public function getHeight(): int {
+		return $this->height;
+	}
 }

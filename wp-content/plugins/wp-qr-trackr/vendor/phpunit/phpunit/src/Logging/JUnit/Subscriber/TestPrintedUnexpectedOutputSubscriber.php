@@ -17,10 +17,9 @@ use PHPUnit\Event\Test\PrintedUnexpectedOutputSubscriber;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestPrintedUnexpectedOutputSubscriber extends Subscriber implements PrintedUnexpectedOutputSubscriber
-{
-    public function notify(PrintedUnexpectedOutput $event): void
-    {
-        $this->logger()->testPrintedUnexpectedOutput($event);
-    }
+final class TestPrintedUnexpectedOutputSubscriber extends Subscriber implements PrintedUnexpectedOutputSubscriber {
+
+	public function notify( PrintedUnexpectedOutput $event ): void {
+		$this->logger()->testPrintedUnexpectedOutput( $event );
+	}
 }

@@ -14,43 +14,39 @@ namespace PHPUnit\Framework\MockObject;
  *
  * @internal This trait is not covered by the backward compatibility promise for PHPUnit
  */
-trait StubApi
-{
-    /**
-     * @psalm-var list<ConfigurableMethod>
-     */
-    private static array $__phpunit_configurableMethods;
-    private bool $__phpunit_returnValueGeneration          = true;
-    private ?InvocationHandler $__phpunit_invocationMocker = null;
+trait StubApi {
 
-    /** @noinspection MagicMethodsValidityInspection */
-    public static function __phpunit_initConfigurableMethods(ConfigurableMethod ...$configurableMethods): void
-    {
-        static::$__phpunit_configurableMethods = $configurableMethods;
-    }
+	/**
+	 * @psalm-var list<ConfigurableMethod>
+	 */
+	private static array $__phpunit_configurableMethods;
+	private bool $__phpunit_returnValueGeneration          = true;
+	private ?InvocationHandler $__phpunit_invocationMocker = null;
 
-    /** @noinspection MagicMethodsValidityInspection */
-    public function __phpunit_setReturnValueGeneration(bool $returnValueGeneration): void
-    {
-        $this->__phpunit_returnValueGeneration = $returnValueGeneration;
-    }
+	/** @noinspection MagicMethodsValidityInspection */
+	public static function __phpunit_initConfigurableMethods( ConfigurableMethod ...$configurableMethods ): void {
+		static::$__phpunit_configurableMethods = $configurableMethods;
+	}
 
-    /** @noinspection MagicMethodsValidityInspection */
-    public function __phpunit_getInvocationHandler(): InvocationHandler
-    {
-        if ($this->__phpunit_invocationMocker === null) {
-            $this->__phpunit_invocationMocker = new InvocationHandler(
-                static::$__phpunit_configurableMethods,
-                $this->__phpunit_returnValueGeneration,
-            );
-        }
+	/** @noinspection MagicMethodsValidityInspection */
+	public function __phpunit_setReturnValueGeneration( bool $returnValueGeneration ): void {
+		$this->__phpunit_returnValueGeneration = $returnValueGeneration;
+	}
 
-        return $this->__phpunit_invocationMocker;
-    }
+	/** @noinspection MagicMethodsValidityInspection */
+	public function __phpunit_getInvocationHandler(): InvocationHandler {
+		if ( $this->__phpunit_invocationMocker === null ) {
+			$this->__phpunit_invocationMocker = new InvocationHandler(
+				static::$__phpunit_configurableMethods,
+				$this->__phpunit_returnValueGeneration,
+			);
+		}
 
-    /** @noinspection MagicMethodsValidityInspection */
-    public function __phpunit_unsetInvocationMocker(): void
-    {
-        $this->__phpunit_invocationMocker = null;
-    }
+		return $this->__phpunit_invocationMocker;
+	}
+
+	/** @noinspection MagicMethodsValidityInspection */
+	public function __phpunit_unsetInvocationMocker(): void {
+		$this->__phpunit_invocationMocker = null;
+	}
 }

@@ -21,61 +21,58 @@ use function strlen;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Xml
-{
-    /**
-     * Escapes a string for the use in XML documents.
-     *
-     * Any Unicode character is allowed, excluding the surrogate blocks, FFFE,
-     * and FFFF (not even as character reference).
-     *
-     * @see https://www.w3.org/TR/xml/#charsets
-     */
-    public static function prepareString(string $string): string
-    {
-        return preg_replace(
-            '/[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]/',
-            '',
-            htmlspecialchars(
-                self::convertToUtf8($string),
-                ENT_QUOTES,
-            ),
-        );
-    }
+final class Xml {
 
-    private static function convertToUtf8(string $string): string
-    {
-        if (!self::isUtf8($string)) {
-            $string = mb_convert_encoding($string, 'UTF-8');
-        }
+	/**
+	 * Escapes a string for the use in XML documents.
+	 *
+	 * Any Unicode character is allowed, excluding the surrogate blocks, FFFE,
+	 * and FFFF (not even as character reference).
+	 *
+	 * @see https://www.w3.org/TR/xml/#charsets
+	 */
+	public static function prepareString( string $string ): string {
+		return preg_replace(
+			'/[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]/',
+			'',
+			htmlspecialchars(
+				self::convertToUtf8( $string ),
+				ENT_QUOTES,
+			),
+		);
+	}
 
-        return $string;
-    }
+	private static function convertToUtf8( string $string ): string {
+		if ( ! self::isUtf8( $string ) ) {
+			$string = mb_convert_encoding( $string, 'UTF-8' );
+		}
 
-    private static function isUtf8(string $string): bool
-    {
-        $length = strlen($string);
+		return $string;
+	}
 
-        for ($i = 0; $i < $length; $i++) {
-            if (ord($string[$i]) < 0x80) {
-                $n = 0;
-            } elseif ((ord($string[$i]) & 0xE0) === 0xC0) {
-                $n = 1;
-            } elseif ((ord($string[$i]) & 0xF0) === 0xE0) {
-                $n = 2;
-            } elseif ((ord($string[$i]) & 0xF0) === 0xF0) {
-                $n = 3;
-            } else {
-                return false;
-            }
+	private static function isUtf8( string $string ): bool {
+		$length = strlen( $string );
 
-            for ($j = 0; $j < $n; $j++) {
-                if ((++$i === $length) || ((ord($string[$i]) & 0xC0) !== 0x80)) {
-                    return false;
-                }
-            }
-        }
+		for ( $i = 0; $i < $length; $i++ ) {
+			if ( ord( $string[ $i ] ) < 0x80 ) {
+				$n = 0;
+			} elseif ( ( ord( $string[ $i ] ) & 0xE0 ) === 0xC0 ) {
+				$n = 1;
+			} elseif ( ( ord( $string[ $i ] ) & 0xF0 ) === 0xE0 ) {
+				$n = 2;
+			} elseif ( ( ord( $string[ $i ] ) & 0xF0 ) === 0xF0 ) {
+				$n = 3;
+			} else {
+				return false;
+			}
 
-        return true;
-    }
+			for ( $j = 0; $j < $n; $j++ ) {
+				if ( ( ++$i === $length ) || ( ( ord( $string[ $i ] ) & 0xC0 ) !== 0x80 ) ) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
 }

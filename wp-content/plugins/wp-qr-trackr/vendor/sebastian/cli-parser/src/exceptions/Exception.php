@@ -11,6 +11,6 @@ namespace SebastianBergmann\CliParser;
 
 use Throwable;
 
-interface Exception extends Throwable
-{
+interface Exception extends Throwable {
+
 }

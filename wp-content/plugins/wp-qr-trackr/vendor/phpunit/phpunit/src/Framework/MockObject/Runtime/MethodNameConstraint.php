@@ -18,25 +18,22 @@ use PHPUnit\Framework\Constraint\Constraint;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MethodNameConstraint extends Constraint
-{
-    private readonly string $methodName;
+final class MethodNameConstraint extends Constraint {
 
-    public function __construct(string $methodName)
-    {
-        $this->methodName = $methodName;
-    }
+	private readonly string $methodName;
 
-    public function toString(): string
-    {
-        return sprintf(
-            'is "%s"',
-            $this->methodName,
-        );
-    }
+	public function __construct( string $methodName ) {
+		$this->methodName = $methodName;
+	}
 
-    protected function matches(mixed $other): bool
-    {
-        return strtolower($this->methodName) === strtolower((string) $other);
-    }
+	public function toString(): string {
+		return sprintf(
+			'is "%s"',
+			$this->methodName,
+		);
+	}
+
+	protected function matches( mixed $other ): bool {
+		return strtolower( $this->methodName ) === strtolower( (string) $other );
+	}
 }

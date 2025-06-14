@@ -12,29 +12,27 @@ namespace SebastianBergmann\Timer;
 use function array_pop;
 use function hrtime;
 
-final class Timer
-{
-    /**
-     * @psalm-var list<float>
-     */
-    private array $startTimes = [];
+final class Timer {
 
-    public function start(): void
-    {
-        $this->startTimes[] = (float) hrtime(true);
-    }
+	/**
+	 * @psalm-var list<float>
+	 */
+	private array $startTimes = array();
 
-    /**
-     * @throws NoActiveTimerException
-     */
-    public function stop(): Duration
-    {
-        if (empty($this->startTimes)) {
-            throw new NoActiveTimerException(
-                'Timer::start() has to be called before Timer::stop()'
-            );
-        }
+	public function start(): void {
+		$this->startTimes[] = (float) hrtime( true );
+	}
 
-        return Duration::fromNanoseconds((float) hrtime(true) - array_pop($this->startTimes));
-    }
+	/**
+	 * @throws NoActiveTimerException
+	 */
+	public function stop(): Duration {
+		if ( empty( $this->startTimes ) ) {
+			throw new NoActiveTimerException(
+				'Timer::start() has to be called before Timer::stop()'
+			);
+		}
+
+		return Duration::fromNanoseconds( (float) hrtime( true ) - array_pop( $this->startTimes ) );
+	}
 }

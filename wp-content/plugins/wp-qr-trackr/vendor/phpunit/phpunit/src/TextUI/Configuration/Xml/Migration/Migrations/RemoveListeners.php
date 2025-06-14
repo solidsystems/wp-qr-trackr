@@ -17,16 +17,15 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveListeners implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $node = $document->getElementsByTagName('listeners')->item(0);
+final class RemoveListeners implements Migration {
 
-        if (!$node instanceof DOMElement || $node->parentNode === null) {
-            return;
-        }
+	public function migrate( DOMDocument $document ): void {
+		$node = $document->getElementsByTagName( 'listeners' )->item( 0 );
 
-        $node->parentNode->removeChild($node);
-    }
+		if ( ! $node instanceof DOMElement || $node->parentNode === null ) {
+			return;
+		}
+
+		$node->parentNode->removeChild( $node );
+	}
 }

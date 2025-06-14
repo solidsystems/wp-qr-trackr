@@ -19,41 +19,35 @@ use Iterator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestResultCollectionIterator implements Iterator
-{
-    /**
-     * @psalm-var list<TestResult>
-     */
-    private readonly array $testResults;
-    private int $position = 0;
+final class TestResultCollectionIterator implements Iterator {
 
-    public function __construct(TestResultCollection $testResults)
-    {
-        $this->testResults = $testResults->asArray();
-    }
+	/**
+	 * @psalm-var list<TestResult>
+	 */
+	private readonly array $testResults;
+	private int $position = 0;
 
-    public function rewind(): void
-    {
-        $this->position = 0;
-    }
+	public function __construct( TestResultCollection $testResults ) {
+		$this->testResults = $testResults->asArray();
+	}
 
-    public function valid(): bool
-    {
-        return $this->position < count($this->testResults);
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function key(): int
-    {
-        return $this->position;
-    }
+	public function valid(): bool {
+		return $this->position < count( $this->testResults );
+	}
 
-    public function current(): TestResult
-    {
-        return $this->testResults[$this->position];
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function next(): void
-    {
-        $this->position++;
-    }
+	public function current(): TestResult {
+		return $this->testResults[ $this->position ];
+	}
+
+	public function next(): void {
+		++$this->position;
+	}
 }

@@ -24,170 +24,156 @@ use Stringable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ExecutionOrderDependency implements Stringable
-{
-    private string $className  = '';
-    private string $methodName = '';
-    private readonly bool $shallowClone;
-    private readonly bool $deepClone;
+final class ExecutionOrderDependency implements Stringable {
 
-    public static function invalid(): self
-    {
-        return new self(
-            '',
-            '',
-            false,
-            false,
-        );
-    }
+	private string $className  = '';
+	private string $methodName = '';
+	private readonly bool $shallowClone;
+	private readonly bool $deepClone;
 
-    public static function forClass(DependsOnClass $metadata): self
-    {
-        return new self(
-            $metadata->className(),
-            'class',
-            $metadata->deepClone(),
-            $metadata->shallowClone(),
-        );
-    }
+	public static function invalid(): self {
+		return new self(
+			'',
+			'',
+			false,
+			false,
+		);
+	}
 
-    public static function forMethod(DependsOnMethod $metadata): self
-    {
-        return new self(
-            $metadata->className(),
-            $metadata->methodName(),
-            $metadata->deepClone(),
-            $metadata->shallowClone(),
-        );
-    }
+	public static function forClass( DependsOnClass $metadata ): self {
+		return new self(
+			$metadata->className(),
+			'class',
+			$metadata->deepClone(),
+			$metadata->shallowClone(),
+		);
+	}
 
-    /**
-     * @psalm-param list<ExecutionOrderDependency> $dependencies
-     *
-     * @psalm-return list<ExecutionOrderDependency>
-     */
-    public static function filterInvalid(array $dependencies): array
-    {
-        return array_values(
-            array_filter(
-                $dependencies,
-                static fn (self $d) => $d->isValid(),
-            ),
-        );
-    }
+	public static function forMethod( DependsOnMethod $metadata ): self {
+		return new self(
+			$metadata->className(),
+			$metadata->methodName(),
+			$metadata->deepClone(),
+			$metadata->shallowClone(),
+		);
+	}
 
-    /**
-     * @psalm-param list<ExecutionOrderDependency> $existing
-     * @psalm-param list<ExecutionOrderDependency> $additional
-     *
-     * @psalm-return list<ExecutionOrderDependency>
-     */
-    public static function mergeUnique(array $existing, array $additional): array
-    {
-        $existingTargets = array_map(
-            static fn ($dependency) => $dependency->getTarget(),
-            $existing,
-        );
+	/**
+	 * @psalm-param list<ExecutionOrderDependency> $dependencies
+	 *
+	 * @psalm-return list<ExecutionOrderDependency>
+	 */
+	public static function filterInvalid( array $dependencies ): array {
+		return array_values(
+			array_filter(
+				$dependencies,
+				static fn ( self $d ) => $d->isValid(),
+			),
+		);
+	}
 
-        foreach ($additional as $dependency) {
-            $additionalTarget = $dependency->getTarget();
+	/**
+	 * @psalm-param list<ExecutionOrderDependency> $existing
+	 * @psalm-param list<ExecutionOrderDependency> $additional
+	 *
+	 * @psalm-return list<ExecutionOrderDependency>
+	 */
+	public static function mergeUnique( array $existing, array $additional ): array {
+		$existingTargets = array_map(
+			static fn ( $dependency ) => $dependency->getTarget(),
+			$existing,
+		);
 
-            if (in_array($additionalTarget, $existingTargets, true)) {
-                continue;
-            }
+		foreach ( $additional as $dependency ) {
+			$additionalTarget = $dependency->getTarget();
 
-            $existingTargets[] = $additionalTarget;
-            $existing[]        = $dependency;
-        }
+			if ( in_array( $additionalTarget, $existingTargets, true ) ) {
+				continue;
+			}
 
-        return $existing;
-    }
+			$existingTargets[] = $additionalTarget;
+			$existing[]        = $dependency;
+		}
 
-    /**
-     * @psalm-param list<ExecutionOrderDependency> $left
-     * @psalm-param list<ExecutionOrderDependency> $right
-     *
-     * @psalm-return list<ExecutionOrderDependency>
-     */
-    public static function diff(array $left, array $right): array
-    {
-        if ($right === []) {
-            return $left;
-        }
+		return $existing;
+	}
 
-        if ($left === []) {
-            return [];
-        }
+	/**
+	 * @psalm-param list<ExecutionOrderDependency> $left
+	 * @psalm-param list<ExecutionOrderDependency> $right
+	 *
+	 * @psalm-return list<ExecutionOrderDependency>
+	 */
+	public static function diff( array $left, array $right ): array {
+		if ( $right === array() ) {
+			return $left;
+		}
 
-        $diff         = [];
-        $rightTargets = array_map(
-            static fn ($dependency) => $dependency->getTarget(),
-            $right,
-        );
+		if ( $left === array() ) {
+			return array();
+		}
 
-        foreach ($left as $dependency) {
-            if (in_array($dependency->getTarget(), $rightTargets, true)) {
-                continue;
-            }
+		$diff         = array();
+		$rightTargets = array_map(
+			static fn ( $dependency ) => $dependency->getTarget(),
+			$right,
+		);
 
-            $diff[] = $dependency;
-        }
+		foreach ( $left as $dependency ) {
+			if ( in_array( $dependency->getTarget(), $rightTargets, true ) ) {
+				continue;
+			}
 
-        return $diff;
-    }
+			$diff[] = $dependency;
+		}
 
-    public function __construct(string $classOrCallableName, ?string $methodName = null, bool $deepClone = false, bool $shallowClone = false)
-    {
-        $this->deepClone    = $deepClone;
-        $this->shallowClone = $shallowClone;
+		return $diff;
+	}
 
-        if ($classOrCallableName === '') {
-            return;
-        }
+	public function __construct( string $classOrCallableName, ?string $methodName = null, bool $deepClone = false, bool $shallowClone = false ) {
+		$this->deepClone    = $deepClone;
+		$this->shallowClone = $shallowClone;
 
-        if (str_contains($classOrCallableName, '::')) {
-            [$this->className, $this->methodName] = explode('::', $classOrCallableName);
-        } else {
-            $this->className  = $classOrCallableName;
-            $this->methodName = !empty($methodName) ? $methodName : 'class';
-        }
-    }
+		if ( $classOrCallableName === '' ) {
+			return;
+		}
 
-    public function __toString(): string
-    {
-        return $this->getTarget();
-    }
+		if ( str_contains( $classOrCallableName, '::' ) ) {
+			[$this->className, $this->methodName] = explode( '::', $classOrCallableName );
+		} else {
+			$this->className  = $classOrCallableName;
+			$this->methodName = ! empty( $methodName ) ? $methodName : 'class';
+		}
+	}
 
-    public function isValid(): bool
-    {
-        // Invalid dependencies can be declared and are skipped by the runner
-        return $this->className !== '' && $this->methodName !== '';
-    }
+	public function __toString(): string {
+		return $this->getTarget();
+	}
 
-    public function shallowClone(): bool
-    {
-        return $this->shallowClone;
-    }
+	public function isValid(): bool {
+		// Invalid dependencies can be declared and are skipped by the runner
+		return $this->className !== '' && $this->methodName !== '';
+	}
 
-    public function deepClone(): bool
-    {
-        return $this->deepClone;
-    }
+	public function shallowClone(): bool {
+		return $this->shallowClone;
+	}
 
-    public function targetIsClass(): bool
-    {
-        return $this->methodName === 'class';
-    }
+	public function deepClone(): bool {
+		return $this->deepClone;
+	}
 
-    public function getTarget(): string
-    {
-        return $this->isValid()
-            ? $this->className . '::' . $this->methodName
-            : '';
-    }
+	public function targetIsClass(): bool {
+		return $this->methodName === 'class';
+	}
 
-    public function getTargetClassName(): string
-    {
-        return $this->className;
-    }
+	public function getTarget(): string {
+		return $this->isValid()
+			? $this->className . '::' . $this->methodName
+			: '';
+	}
+
+	public function getTargetClassName(): string {
+		return $this->className;
+	}
 }

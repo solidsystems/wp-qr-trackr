@@ -12,53 +12,49 @@ namespace Mockery\Generator;
 
 use InvalidArgumentException;
 
-class MockDefinition
-{
-    /**
-     * @var string
-     */
-    protected $code;
+class MockDefinition {
 
-    /**
-     * @var MockConfiguration
-     */
-    protected $config;
+	/**
+	 * @var string
+	 */
+	protected $code;
 
-    /**
-     * @param  string                   $code
-     * @throws InvalidArgumentException
-     */
-    public function __construct(MockConfiguration $config, $code)
-    {
-        if (! $config->getName()) {
-            throw new InvalidArgumentException('MockConfiguration must contain a name');
-        }
+	/**
+	 * @var MockConfiguration
+	 */
+	protected $config;
 
-        $this->config = $config;
-        $this->code = $code;
-    }
+	/**
+	 * @param  string $code
+	 * @throws InvalidArgumentException
+	 */
+	public function __construct( MockConfiguration $config, $code ) {
+		if ( ! $config->getName() ) {
+			throw new InvalidArgumentException( 'MockConfiguration must contain a name' );
+		}
 
-    /**
-     * @return string
-     */
-    public function getClassName()
-    {
-        return $this->config->getName();
-    }
+		$this->config = $config;
+		$this->code   = $code;
+	}
 
-    /**
-     * @return string
-     */
-    public function getCode()
-    {
-        return $this->code;
-    }
+	/**
+	 * @return string
+	 */
+	public function getClassName() {
+		return $this->config->getName();
+	}
 
-    /**
-     * @return MockConfiguration
-     */
-    public function getConfig()
-    {
-        return $this->config;
-    }
+	/**
+	 * @return string
+	 */
+	public function getCode() {
+		return $this->code;
+	}
+
+	/**
+	 * @return MockConfiguration
+	 */
+	public function getConfig() {
+		return $this->config;
+	}
 }

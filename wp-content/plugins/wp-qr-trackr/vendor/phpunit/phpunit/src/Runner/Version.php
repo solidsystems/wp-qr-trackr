@@ -19,45 +19,41 @@ use SebastianBergmann\Version as VersionId;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Version
-{
-    private static string $pharVersion = '';
-    private static string $version     = '';
+final class Version {
 
-    /**
-     * Returns the current version of PHPUnit.
-     */
-    public static function id(): string
-    {
-        if (self::$pharVersion !== '') {
-            return self::$pharVersion;
-        }
+	private static string $pharVersion = '';
+	private static string $version     = '';
 
-        if (self::$version === '') {
-            self::$version = (new VersionId('10.5.46', dirname(__DIR__, 2)))->asString();
-        }
+	/**
+	 * Returns the current version of PHPUnit.
+	 */
+	public static function id(): string {
+		if ( self::$pharVersion !== '' ) {
+			return self::$pharVersion;
+		}
 
-        return self::$version;
-    }
+		if ( self::$version === '' ) {
+			self::$version = ( new VersionId( '10.5.46', dirname( __DIR__, 2 ) ) )->asString();
+		}
 
-    public static function series(): string
-    {
-        if (str_contains(self::id(), '-')) {
-            $version = explode('-', self::id(), 2)[0];
-        } else {
-            $version = self::id();
-        }
+		return self::$version;
+	}
 
-        return implode('.', array_slice(explode('.', $version), 0, 2));
-    }
+	public static function series(): string {
+		if ( str_contains( self::id(), '-' ) ) {
+			$version = explode( '-', self::id(), 2 )[0];
+		} else {
+			$version = self::id();
+		}
 
-    public static function majorVersionNumber(): int
-    {
-        return (int) explode('.', self::series())[0];
-    }
+		return implode( '.', array_slice( explode( '.', $version ), 0, 2 ) );
+	}
 
-    public static function getVersionString(): string
-    {
-        return 'PHPUnit ' . self::id() . ' by Sebastian Bergmann and contributors.';
-    }
+	public static function majorVersionNumber(): int {
+		return (int) explode( '.', self::series() )[0];
+	}
+
+	public static function getVersionString(): string {
+		return 'PHPUnit ' . self::id() . ' by Sebastian Bergmann and contributors.';
+	}
 }

@@ -17,20 +17,18 @@ use function func_get_args;
 /**
  * @internal
  */
-class ClosureWrapper
-{
-    private $closure;
+class ClosureWrapper {
 
-    public function __construct(Closure $closure)
-    {
-        $this->closure = $closure;
-    }
+	private $closure;
 
-    /**
-     * @return mixed
-     */
-    public function __invoke()
-    {
-        return ($this->closure)(...func_get_args());
-    }
+	public function __construct( Closure $closure ) {
+		$this->closure = $closure;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function __invoke() {
+		return ( $this->closure )( ...func_get_args() );
+	}
 }

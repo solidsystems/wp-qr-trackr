@@ -14,47 +14,43 @@ namespace PHPUnit\Metadata;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class CoversClass extends Metadata
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+final class CoversClass extends Metadata {
 
-    /**
-     * @psalm-param 0|1 $level
-     * @psalm-param class-string $className
-     */
-    protected function __construct(int $level, string $className)
-    {
-        parent::__construct($level);
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-        $this->className = $className;
-    }
+	/**
+	 * @psalm-param 0|1 $level
+	 * @psalm-param class-string $className
+	 */
+	protected function __construct( int $level, string $className ) {
+		parent::__construct( $level );
 
-    /**
-     * @psalm-assert-if-true CoversClass $this
-     */
-    public function isCoversClass(): bool
-    {
-        return true;
-    }
+		$this->className = $className;
+	}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-assert-if-true CoversClass $this
+	 */
+	public function isCoversClass(): bool {
+		return true;
+	}
 
-    /**
-     * @psalm-return class-string
-     *
-     * @internal This method is not covered by the backward compatibility promise for PHPUnit
-     */
-    public function asStringForCodeUnitMapper(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
+
+	/**
+	 * @psalm-return class-string
+	 *
+	 * @internal This method is not covered by the backward compatibility promise for PHPUnit
+	 */
+	public function asStringForCodeUnitMapper(): string {
+		return $this->className;
+	}
 }

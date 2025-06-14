@@ -14,51 +14,46 @@ use function str_contains;
 /**
  * @psalm-immutable
  */
-final class Complexity
-{
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $name;
+final class Complexity {
 
-    /**
-     * @psalm-var positive-int
-     */
-    private int $cyclomaticComplexity;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $name;
 
-    /**
-     * @psalm-param non-empty-string $name
-     * @psalm-param positive-int $cyclomaticComplexity
-     */
-    public function __construct(string $name, int $cyclomaticComplexity)
-    {
-        $this->name                 = $name;
-        $this->cyclomaticComplexity = $cyclomaticComplexity;
-    }
+	/**
+	 * @psalm-var positive-int
+	 */
+	private int $cyclomaticComplexity;
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function name(): string
-    {
-        return $this->name;
-    }
+	/**
+	 * @psalm-param non-empty-string $name
+	 * @psalm-param positive-int $cyclomaticComplexity
+	 */
+	public function __construct( string $name, int $cyclomaticComplexity ) {
+		$this->name                 = $name;
+		$this->cyclomaticComplexity = $cyclomaticComplexity;
+	}
 
-    /**
-     * @psalm-return positive-int
-     */
-    public function cyclomaticComplexity(): int
-    {
-        return $this->cyclomaticComplexity;
-    }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function name(): string {
+		return $this->name;
+	}
 
-    public function isFunction(): bool
-    {
-        return !$this->isMethod();
-    }
+	/**
+	 * @psalm-return positive-int
+	 */
+	public function cyclomaticComplexity(): int {
+		return $this->cyclomaticComplexity;
+	}
 
-    public function isMethod(): bool
-    {
-        return str_contains($this->name, '::');
-    }
+	public function isFunction(): bool {
+		return ! $this->isMethod();
+	}
+
+	public function isMethod(): bool {
+		return str_contains( $this->name, '::' );
+	}
 }

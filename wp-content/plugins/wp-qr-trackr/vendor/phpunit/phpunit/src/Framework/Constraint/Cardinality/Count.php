@@ -24,103 +24,98 @@ use Traversable;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-class Count extends Constraint
-{
-    private readonly int $expectedCount;
+class Count extends Constraint {
 
-    public function __construct(int $expected)
-    {
-        $this->expectedCount = $expected;
-    }
+	private readonly int $expectedCount;
 
-    public function toString(): string
-    {
-        return sprintf(
-            'count matches %d',
-            $this->expectedCount,
-        );
-    }
+	public function __construct( int $expected ) {
+		$this->expectedCount = $expected;
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     *
-     * @throws Exception
-     */
-    protected function matches(mixed $other): bool
-    {
-        return $this->expectedCount === $this->getCountOf($other);
-    }
+	public function toString(): string {
+		return sprintf(
+			'count matches %d',
+			$this->expectedCount,
+		);
+	}
 
-    /**
-     * @throws Exception
-     */
-    protected function getCountOf(mixed $other): ?int
-    {
-        if (is_countable($other)) {
-            return count($other);
-        }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 *
+	 * @throws Exception
+	 */
+	protected function matches( mixed $other ): bool {
+		return $this->expectedCount === $this->getCountOf( $other );
+	}
 
-        if ($other instanceof EmptyIterator) {
-            return 0;
-        }
+	/**
+	 * @throws Exception
+	 */
+	protected function getCountOf( mixed $other ): ?int {
+		if ( is_countable( $other ) ) {
+			return count( $other );
+		}
 
-        if ($other instanceof Traversable) {
-            while ($other instanceof IteratorAggregate) {
-                try {
-                    $other = $other->getIterator();
-                } catch (\Exception $e) {
-                    throw new Exception(
-                        $e->getMessage(),
-                        $e->getCode(),
-                        $e,
-                    );
-                }
-            }
+		if ( $other instanceof EmptyIterator ) {
+			return 0;
+		}
 
-            $iterator = $other;
+		if ( $other instanceof Traversable ) {
+			while ( $other instanceof IteratorAggregate ) {
+				try {
+					$other = $other->getIterator();
+				} catch ( \Exception $e ) {
+					throw new Exception(
+						$e->getMessage(),
+						$e->getCode(),
+						$e,
+					);
+				}
+			}
 
-            if ($iterator instanceof Generator) {
-                throw new GeneratorNotSupportedException;
-            }
+			$iterator = $other;
 
-            if (!$iterator instanceof Iterator) {
-                return iterator_count($iterator);
-            }
+			if ( $iterator instanceof Generator ) {
+				throw new GeneratorNotSupportedException();
+			}
 
-            $key   = $iterator->key();
-            $count = iterator_count($iterator);
+			if ( ! $iterator instanceof Iterator ) {
+				return iterator_count( $iterator );
+			}
 
-            // Manually rewind $iterator to previous key, since iterator_count
-            // moves pointer.
-            if ($key !== null) {
-                $iterator->rewind();
+			$key   = $iterator->key();
+			$count = iterator_count( $iterator );
 
-                while ($iterator->valid() && $key !== $iterator->key()) {
-                    $iterator->next();
-                }
-            }
+			// Manually rewind $iterator to previous key, since iterator_count
+			// moves pointer.
+			if ( $key !== null ) {
+				$iterator->rewind();
 
-            return $count;
-        }
+				while ( $iterator->valid() && $key !== $iterator->key() ) {
+					$iterator->next();
+				}
+			}
 
-        return null;
-    }
+			return $count;
+		}
 
-    /**
-     * Returns the description of the failure.
-     *
-     * The beginning of failure messages is "Failed asserting that" in most
-     * cases. This method should return the second part of that sentence.
-     *
-     * @throws Exception
-     */
-    protected function failureDescription(mixed $other): string
-    {
-        return sprintf(
-            'actual size %d matches expected size %d',
-            (int) $this->getCountOf($other),
-            $this->expectedCount,
-        );
-    }
+		return null;
+	}
+
+	/**
+	 * Returns the description of the failure.
+	 *
+	 * The beginning of failure messages is "Failed asserting that" in most
+	 * cases. This method should return the second part of that sentence.
+	 *
+	 * @throws Exception
+	 */
+	protected function failureDescription( mixed $other ): string {
+		return sprintf(
+			'actual size %d matches expected size %d',
+			(int) $this->getCountOf( $other ),
+			$this->expectedCount,
+		);
+	}
 }

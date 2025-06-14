@@ -18,17 +18,15 @@ use PHPUnit\TextUI\Configuration\Directory;
  *
  * @psalm-immutable
  */
-final class Xml
-{
-    private readonly Directory $target;
+final class Xml {
 
-    public function __construct(Directory $target)
-    {
-        $this->target = $target;
-    }
+	private readonly Directory $target;
 
-    public function target(): Directory
-    {
-        return $this->target;
-    }
+	public function __construct( Directory $target ) {
+		$this->target = $target;
+	}
+
+	public function target(): Directory {
+		return $this->target;
+	}
 }

@@ -14,22 +14,21 @@ use Mockery\Generator\MockConfiguration;
 use function ltrim;
 use function str_replace;
 
-class ClassNamePass implements Pass
-{
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        $namespace = $config->getNamespaceName();
+class ClassNamePass implements Pass {
 
-        $namespace = ltrim($namespace, '\\');
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		$namespace = $config->getNamespaceName();
 
-        $className = $config->getShortName();
+		$namespace = ltrim( $namespace, '\\' );
 
-        $code = str_replace('namespace Mockery;', $namespace !== '' ? 'namespace ' . $namespace . ';' : '', $code);
+		$className = $config->getShortName();
 
-        return str_replace('class Mock', 'class ' . $className, $code);
-    }
+		$code = str_replace( 'namespace Mockery;', $namespace !== '' ? 'namespace ' . $namespace . ';' : '', $code );
+
+		return str_replace( 'class Mock', 'class ' . $className, $code );
+	}
 }

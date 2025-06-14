@@ -22,457 +22,430 @@ use ReflectionMethod;
 /**
  * @psalm-immutable
  */
-abstract class CodeUnit
-{
-    private readonly string $name;
-    private readonly string $sourceFileName;
+abstract class CodeUnit {
 
-    /**
-     * @psalm-var list<int>
-     */
-    private readonly array $sourceLines;
+	private readonly string $name;
+	private readonly string $sourceFileName;
 
-    /**
-     * @psalm-param class-string $className
-     *
-     * @throws InvalidCodeUnitException
-     * @throws ReflectionException
-     */
-    public static function forClass(string $className): ClassUnit
-    {
-        self::ensureUserDefinedClass($className);
+	/**
+	 * @psalm-var list<int>
+	 */
+	private readonly array $sourceLines;
 
-        $reflector = self::reflectorForClass($className);
+	/**
+	 * @psalm-param class-string $className
+	 *
+	 * @throws InvalidCodeUnitException
+	 * @throws ReflectionException
+	 */
+	public static function forClass( string $className ): ClassUnit {
+		self::ensureUserDefinedClass( $className );
 
-        return new ClassUnit(
-            $className,
-            $reflector->getFileName(),
-            range(
-                $reflector->getStartLine(),
-                $reflector->getEndLine()
-            )
-        );
-    }
+		$reflector = self::reflectorForClass( $className );
 
-    /**
-     * @psalm-param class-string $className
-     *
-     * @throws InvalidCodeUnitException
-     * @throws ReflectionException
-     */
-    public static function forClassMethod(string $className, string $methodName): ClassMethodUnit
-    {
-        self::ensureUserDefinedClass($className);
+		return new ClassUnit(
+			$className,
+			$reflector->getFileName(),
+			range(
+				$reflector->getStartLine(),
+				$reflector->getEndLine()
+			)
+		);
+	}
 
-        $reflector = self::reflectorForClassMethod($className, $methodName);
+	/**
+	 * @psalm-param class-string $className
+	 *
+	 * @throws InvalidCodeUnitException
+	 * @throws ReflectionException
+	 */
+	public static function forClassMethod( string $className, string $methodName ): ClassMethodUnit {
+		self::ensureUserDefinedClass( $className );
 
-        return new ClassMethodUnit(
-            $className . '::' . $methodName,
-            $reflector->getFileName(),
-            range(
-                $reflector->getStartLine(),
-                $reflector->getEndLine()
-            )
-        );
-    }
+		$reflector = self::reflectorForClassMethod( $className, $methodName );
 
-    /**
-     * @throws InvalidCodeUnitException
-     */
-    public static function forFileWithAbsolutePath(string $path): FileUnit
-    {
-        self::ensureFileExistsAndIsReadable($path);
+		return new ClassMethodUnit(
+			$className . '::' . $methodName,
+			$reflector->getFileName(),
+			range(
+				$reflector->getStartLine(),
+				$reflector->getEndLine()
+			)
+		);
+	}
 
-        return new FileUnit(
-            $path,
-            $path,
-            range(
-                1,
-                count(file($path))
-            )
-        );
-    }
+	/**
+	 * @throws InvalidCodeUnitException
+	 */
+	public static function forFileWithAbsolutePath( string $path ): FileUnit {
+		self::ensureFileExistsAndIsReadable( $path );
 
-    /**
-     * @psalm-param class-string $interfaceName
-     *
-     * @throws InvalidCodeUnitException
-     * @throws ReflectionException
-     */
-    public static function forInterface(string $interfaceName): InterfaceUnit
-    {
-        self::ensureUserDefinedInterface($interfaceName);
+		return new FileUnit(
+			$path,
+			$path,
+			range(
+				1,
+				count( file( $path ) )
+			)
+		);
+	}
 
-        $reflector = self::reflectorForClass($interfaceName);
+	/**
+	 * @psalm-param class-string $interfaceName
+	 *
+	 * @throws InvalidCodeUnitException
+	 * @throws ReflectionException
+	 */
+	public static function forInterface( string $interfaceName ): InterfaceUnit {
+		self::ensureUserDefinedInterface( $interfaceName );
 
-        return new InterfaceUnit(
-            $interfaceName,
-            $reflector->getFileName(),
-            range(
-                $reflector->getStartLine(),
-                $reflector->getEndLine()
-            )
-        );
-    }
+		$reflector = self::reflectorForClass( $interfaceName );
 
-    /**
-     * @psalm-param class-string $interfaceName
-     *
-     * @throws InvalidCodeUnitException
-     * @throws ReflectionException
-     */
-    public static function forInterfaceMethod(string $interfaceName, string $methodName): InterfaceMethodUnit
-    {
-        self::ensureUserDefinedInterface($interfaceName);
+		return new InterfaceUnit(
+			$interfaceName,
+			$reflector->getFileName(),
+			range(
+				$reflector->getStartLine(),
+				$reflector->getEndLine()
+			)
+		);
+	}
 
-        $reflector = self::reflectorForClassMethod($interfaceName, $methodName);
+	/**
+	 * @psalm-param class-string $interfaceName
+	 *
+	 * @throws InvalidCodeUnitException
+	 * @throws ReflectionException
+	 */
+	public static function forInterfaceMethod( string $interfaceName, string $methodName ): InterfaceMethodUnit {
+		self::ensureUserDefinedInterface( $interfaceName );
 
-        return new InterfaceMethodUnit(
-            $interfaceName . '::' . $methodName,
-            $reflector->getFileName(),
-            range(
-                $reflector->getStartLine(),
-                $reflector->getEndLine()
-            )
-        );
-    }
+		$reflector = self::reflectorForClassMethod( $interfaceName, $methodName );
 
-    /**
-     * @psalm-param class-string $traitName
-     *
-     * @throws InvalidCodeUnitException
-     * @throws ReflectionException
-     */
-    public static function forTrait(string $traitName): TraitUnit
-    {
-        self::ensureUserDefinedTrait($traitName);
+		return new InterfaceMethodUnit(
+			$interfaceName . '::' . $methodName,
+			$reflector->getFileName(),
+			range(
+				$reflector->getStartLine(),
+				$reflector->getEndLine()
+			)
+		);
+	}
 
-        $reflector = self::reflectorForClass($traitName);
+	/**
+	 * @psalm-param class-string $traitName
+	 *
+	 * @throws InvalidCodeUnitException
+	 * @throws ReflectionException
+	 */
+	public static function forTrait( string $traitName ): TraitUnit {
+		self::ensureUserDefinedTrait( $traitName );
 
-        return new TraitUnit(
-            $traitName,
-            $reflector->getFileName(),
-            range(
-                $reflector->getStartLine(),
-                $reflector->getEndLine()
-            )
-        );
-    }
+		$reflector = self::reflectorForClass( $traitName );
 
-    /**
-     * @psalm-param class-string $traitName
-     *
-     * @throws InvalidCodeUnitException
-     * @throws ReflectionException
-     */
-    public static function forTraitMethod(string $traitName, string $methodName): TraitMethodUnit
-    {
-        self::ensureUserDefinedTrait($traitName);
+		return new TraitUnit(
+			$traitName,
+			$reflector->getFileName(),
+			range(
+				$reflector->getStartLine(),
+				$reflector->getEndLine()
+			)
+		);
+	}
 
-        $reflector = self::reflectorForClassMethod($traitName, $methodName);
+	/**
+	 * @psalm-param class-string $traitName
+	 *
+	 * @throws InvalidCodeUnitException
+	 * @throws ReflectionException
+	 */
+	public static function forTraitMethod( string $traitName, string $methodName ): TraitMethodUnit {
+		self::ensureUserDefinedTrait( $traitName );
 
-        return new TraitMethodUnit(
-            $traitName . '::' . $methodName,
-            $reflector->getFileName(),
-            range(
-                $reflector->getStartLine(),
-                $reflector->getEndLine()
-            )
-        );
-    }
+		$reflector = self::reflectorForClassMethod( $traitName, $methodName );
 
-    /**
-     * @psalm-param callable-string $functionName
-     *
-     * @throws InvalidCodeUnitException
-     * @throws ReflectionException
-     */
-    public static function forFunction(string $functionName): FunctionUnit
-    {
-        $reflector = self::reflectorForFunction($functionName);
+		return new TraitMethodUnit(
+			$traitName . '::' . $methodName,
+			$reflector->getFileName(),
+			range(
+				$reflector->getStartLine(),
+				$reflector->getEndLine()
+			)
+		);
+	}
 
-        if (!$reflector->isUserDefined()) {
-            throw new InvalidCodeUnitException(
-                sprintf(
-                    '"%s" is not a user-defined function',
-                    $functionName
-                )
-            );
-        }
+	/**
+	 * @psalm-param callable-string $functionName
+	 *
+	 * @throws InvalidCodeUnitException
+	 * @throws ReflectionException
+	 */
+	public static function forFunction( string $functionName ): FunctionUnit {
+		$reflector = self::reflectorForFunction( $functionName );
 
-        return new FunctionUnit(
-            $functionName,
-            $reflector->getFileName(),
-            range(
-                $reflector->getStartLine(),
-                $reflector->getEndLine()
-            )
-        );
-    }
+		if ( ! $reflector->isUserDefined() ) {
+			throw new InvalidCodeUnitException(
+				sprintf(
+					'"%s" is not a user-defined function',
+					$functionName
+				)
+			);
+		}
 
-    /**
-     * @psalm-param list<int> $sourceLines
-     */
-    private function __construct(string $name, string $sourceFileName, array $sourceLines)
-    {
-        $this->name           = $name;
-        $this->sourceFileName = $sourceFileName;
-        $this->sourceLines    = $sourceLines;
-    }
+		return new FunctionUnit(
+			$functionName,
+			$reflector->getFileName(),
+			range(
+				$reflector->getStartLine(),
+				$reflector->getEndLine()
+			)
+		);
+	}
 
-    public function name(): string
-    {
-        return $this->name;
-    }
+	/**
+	 * @psalm-param list<int> $sourceLines
+	 */
+	private function __construct( string $name, string $sourceFileName, array $sourceLines ) {
+		$this->name           = $name;
+		$this->sourceFileName = $sourceFileName;
+		$this->sourceLines    = $sourceLines;
+	}
 
-    public function sourceFileName(): string
-    {
-        return $this->sourceFileName;
-    }
+	public function name(): string {
+		return $this->name;
+	}
 
-    /**
-     * @psalm-return list<int>
-     */
-    public function sourceLines(): array
-    {
-        return $this->sourceLines;
-    }
+	public function sourceFileName(): string {
+		return $this->sourceFileName;
+	}
 
-    public function isClass(): bool
-    {
-        return false;
-    }
+	/**
+	 * @psalm-return list<int>
+	 */
+	public function sourceLines(): array {
+		return $this->sourceLines;
+	}
 
-    public function isClassMethod(): bool
-    {
-        return false;
-    }
+	public function isClass(): bool {
+		return false;
+	}
 
-    public function isInterface(): bool
-    {
-        return false;
-    }
+	public function isClassMethod(): bool {
+		return false;
+	}
 
-    public function isInterfaceMethod(): bool
-    {
-        return false;
-    }
+	public function isInterface(): bool {
+		return false;
+	}
 
-    public function isTrait(): bool
-    {
-        return false;
-    }
+	public function isInterfaceMethod(): bool {
+		return false;
+	}
 
-    public function isTraitMethod(): bool
-    {
-        return false;
-    }
+	public function isTrait(): bool {
+		return false;
+	}
 
-    public function isFunction(): bool
-    {
-        return false;
-    }
+	public function isTraitMethod(): bool {
+		return false;
+	}
 
-    public function isFile(): bool
-    {
-        return false;
-    }
+	public function isFunction(): bool {
+		return false;
+	}
 
-    /**
-     * @throws InvalidCodeUnitException
-     */
-    private static function ensureFileExistsAndIsReadable(string $path): void
-    {
-        if (!(file_exists($path) && is_readable($path))) {
-            throw new InvalidCodeUnitException(
-                sprintf(
-                    'File "%s" does not exist or is not readable',
-                    $path
-                )
-            );
-        }
-    }
+	public function isFile(): bool {
+		return false;
+	}
 
-    /**
-     * @psalm-param class-string $className
-     *
-     * @throws InvalidCodeUnitException
-     */
-    private static function ensureUserDefinedClass(string $className): void
-    {
-        try {
-            $reflector = new ReflectionClass($className);
+	/**
+	 * @throws InvalidCodeUnitException
+	 */
+	private static function ensureFileExistsAndIsReadable( string $path ): void {
+		if ( ! ( file_exists( $path ) && is_readable( $path ) ) ) {
+			throw new InvalidCodeUnitException(
+				sprintf(
+					'File "%s" does not exist or is not readable',
+					$path
+				)
+			);
+		}
+	}
 
-            if ($reflector->isInterface()) {
-                throw new InvalidCodeUnitException(
-                    sprintf(
-                        '"%s" is an interface and not a class',
-                        $className
-                    )
-                );
-            }
+	/**
+	 * @psalm-param class-string $className
+	 *
+	 * @throws InvalidCodeUnitException
+	 */
+	private static function ensureUserDefinedClass( string $className ): void {
+		try {
+			$reflector = new ReflectionClass( $className );
 
-            if ($reflector->isTrait()) {
-                throw new InvalidCodeUnitException(
-                    sprintf(
-                        '"%s" is a trait and not a class',
-                        $className
-                    )
-                );
-            }
+			if ( $reflector->isInterface() ) {
+				throw new InvalidCodeUnitException(
+					sprintf(
+						'"%s" is an interface and not a class',
+						$className
+					)
+				);
+			}
 
-            if (!$reflector->isUserDefined()) {
-                throw new InvalidCodeUnitException(
-                    sprintf(
-                        '"%s" is not a user-defined class',
-                        $className
-                    )
-                );
-            }
-            // @codeCoverageIgnoreStart
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e
-            );
-        }
-        // @codeCoverageIgnoreEnd
-    }
+			if ( $reflector->isTrait() ) {
+				throw new InvalidCodeUnitException(
+					sprintf(
+						'"%s" is a trait and not a class',
+						$className
+					)
+				);
+			}
 
-    /**
-     * @psalm-param class-string $interfaceName
-     *
-     * @throws InvalidCodeUnitException
-     */
-    private static function ensureUserDefinedInterface(string $interfaceName): void
-    {
-        try {
-            $reflector = new ReflectionClass($interfaceName);
+			if ( ! $reflector->isUserDefined() ) {
+				throw new InvalidCodeUnitException(
+					sprintf(
+						'"%s" is not a user-defined class',
+						$className
+					)
+				);
+			}
+			// @codeCoverageIgnoreStart
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e
+			);
+		}
+		// @codeCoverageIgnoreEnd
+	}
 
-            if (!$reflector->isInterface()) {
-                throw new InvalidCodeUnitException(
-                    sprintf(
-                        '"%s" is not an interface',
-                        $interfaceName
-                    )
-                );
-            }
+	/**
+	 * @psalm-param class-string $interfaceName
+	 *
+	 * @throws InvalidCodeUnitException
+	 */
+	private static function ensureUserDefinedInterface( string $interfaceName ): void {
+		try {
+			$reflector = new ReflectionClass( $interfaceName );
 
-            if (!$reflector->isUserDefined()) {
-                throw new InvalidCodeUnitException(
-                    sprintf(
-                        '"%s" is not a user-defined interface',
-                        $interfaceName
-                    )
-                );
-            }
-            // @codeCoverageIgnoreStart
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e
-            );
-        }
-        // @codeCoverageIgnoreEnd
-    }
+			if ( ! $reflector->isInterface() ) {
+				throw new InvalidCodeUnitException(
+					sprintf(
+						'"%s" is not an interface',
+						$interfaceName
+					)
+				);
+			}
 
-    /**
-     * @psalm-param class-string $traitName
-     *
-     * @throws InvalidCodeUnitException
-     */
-    private static function ensureUserDefinedTrait(string $traitName): void
-    {
-        try {
-            $reflector = new ReflectionClass($traitName);
+			if ( ! $reflector->isUserDefined() ) {
+				throw new InvalidCodeUnitException(
+					sprintf(
+						'"%s" is not a user-defined interface',
+						$interfaceName
+					)
+				);
+			}
+			// @codeCoverageIgnoreStart
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e
+			);
+		}
+		// @codeCoverageIgnoreEnd
+	}
 
-            if (!$reflector->isTrait()) {
-                throw new InvalidCodeUnitException(
-                    sprintf(
-                        '"%s" is not a trait',
-                        $traitName
-                    )
-                );
-            }
+	/**
+	 * @psalm-param class-string $traitName
+	 *
+	 * @throws InvalidCodeUnitException
+	 */
+	private static function ensureUserDefinedTrait( string $traitName ): void {
+		try {
+			$reflector = new ReflectionClass( $traitName );
 
-            // @codeCoverageIgnoreStart
-            if (!$reflector->isUserDefined()) {
-                throw new InvalidCodeUnitException(
-                    sprintf(
-                        '"%s" is not a user-defined trait',
-                        $traitName
-                    )
-                );
-            }
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e
-            );
-        }
-        // @codeCoverageIgnoreEnd
-    }
+			if ( ! $reflector->isTrait() ) {
+				throw new InvalidCodeUnitException(
+					sprintf(
+						'"%s" is not a trait',
+						$traitName
+					)
+				);
+			}
 
-    /**
-     * @psalm-param class-string $className
-     *
-     * @throws ReflectionException
-     */
-    private static function reflectorForClass(string $className): ReflectionClass
-    {
-        try {
-            return new ReflectionClass($className);
-            // @codeCoverageIgnoreStart
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e
-            );
-        }
-        // @codeCoverageIgnoreEnd
-    }
+			// @codeCoverageIgnoreStart
+			if ( ! $reflector->isUserDefined() ) {
+				throw new InvalidCodeUnitException(
+					sprintf(
+						'"%s" is not a user-defined trait',
+						$traitName
+					)
+				);
+			}
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e
+			);
+		}
+		// @codeCoverageIgnoreEnd
+	}
 
-    /**
-     * @psalm-param class-string $className
-     *
-     * @throws ReflectionException
-     */
-    private static function reflectorForClassMethod(string $className, string $methodName): ReflectionMethod
-    {
-        try {
-            return new ReflectionMethod($className, $methodName);
-            // @codeCoverageIgnoreStart
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e
-            );
-        }
-        // @codeCoverageIgnoreEnd
-    }
+	/**
+	 * @psalm-param class-string $className
+	 *
+	 * @throws ReflectionException
+	 */
+	private static function reflectorForClass( string $className ): ReflectionClass {
+		try {
+			return new ReflectionClass( $className );
+			// @codeCoverageIgnoreStart
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e
+			);
+		}
+		// @codeCoverageIgnoreEnd
+	}
 
-    /**
-     * @psalm-param callable-string $functionName
-     *
-     * @throws ReflectionException
-     */
-    private static function reflectorForFunction(string $functionName): ReflectionFunction
-    {
-        try {
-            return new ReflectionFunction($functionName);
-            // @codeCoverageIgnoreStart
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e
-            );
-        }
-        // @codeCoverageIgnoreEnd
-    }
+	/**
+	 * @psalm-param class-string $className
+	 *
+	 * @throws ReflectionException
+	 */
+	private static function reflectorForClassMethod( string $className, string $methodName ): ReflectionMethod {
+		try {
+			return new ReflectionMethod( $className, $methodName );
+			// @codeCoverageIgnoreStart
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e
+			);
+		}
+		// @codeCoverageIgnoreEnd
+	}
+
+	/**
+	 * @psalm-param callable-string $functionName
+	 *
+	 * @throws ReflectionException
+	 */
+	private static function reflectorForFunction( string $functionName ): ReflectionFunction {
+		try {
+			return new ReflectionFunction( $functionName );
+			// @codeCoverageIgnoreStart
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e
+			);
+		}
+		// @codeCoverageIgnoreEnd
+	}
 }

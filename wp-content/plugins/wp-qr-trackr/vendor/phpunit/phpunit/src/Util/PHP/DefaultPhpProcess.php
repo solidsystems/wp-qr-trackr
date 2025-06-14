@@ -28,121 +28,120 @@ use PHPUnit\Framework\Exception;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-class DefaultPhpProcess extends AbstractPhpProcess
-{
-    private ?string $tempFile = null;
+class DefaultPhpProcess extends AbstractPhpProcess {
 
-    /**
-     * Runs a single job (PHP code) using a separate PHP process.
-     *
-     * @psalm-return array{stdout: string, stderr: string}
-     *
-     * @throws Exception
-     * @throws PhpProcessException
-     */
-    public function runJob(string $job, array $settings = []): array
-    {
-        if ($this->stdin) {
-            if (!($this->tempFile = tempnam(sys_get_temp_dir(), 'phpunit_')) ||
-                file_put_contents($this->tempFile, $job) === false) {
-                throw new PhpProcessException(
-                    'Unable to write temporary file',
-                );
-            }
+	private ?string $tempFile = null;
 
-            $job = $this->stdin;
-        }
+	/**
+	 * Runs a single job (PHP code) using a separate PHP process.
+	 *
+	 * @psalm-return array{stdout: string, stderr: string}
+	 *
+	 * @throws Exception
+	 * @throws PhpProcessException
+	 */
+	public function runJob( string $job, array $settings = array() ): array {
+		if ( $this->stdin ) {
+			if ( ! ( $this->tempFile = tempnam( sys_get_temp_dir(), 'phpunit_' ) ) ||
+				file_put_contents( $this->tempFile, $job ) === false ) {
+				throw new PhpProcessException(
+					'Unable to write temporary file',
+				);
+			}
 
-        return $this->runProcess($job, $settings);
-    }
+			$job = $this->stdin;
+		}
 
-    /**
-     * Handles creating the child process and returning the STDOUT and STDERR.
-     *
-     * @psalm-return array{stdout: string, stderr: string}
-     *
-     * @throws Exception
-     * @throws PhpProcessException
-     */
-    protected function runProcess(string $job, array $settings): array
-    {
-        $env = null;
+		return $this->runProcess( $job, $settings );
+	}
 
-        if ($this->env) {
-            $env = $_SERVER ?? [];
-            unset($env['argv'], $env['argc']);
-            $env = array_merge($env, $this->env);
+	/**
+	 * Handles creating the child process and returning the STDOUT and STDERR.
+	 *
+	 * @psalm-return array{stdout: string, stderr: string}
+	 *
+	 * @throws Exception
+	 * @throws PhpProcessException
+	 */
+	protected function runProcess( string $job, array $settings ): array {
+		$env = null;
 
-            foreach ($env as $envKey => $envVar) {
-                if (is_array($envVar)) {
-                    unset($env[$envKey]);
-                }
-            }
-        }
+		if ( $this->env ) {
+			$env = $_SERVER ?? array();
+			unset( $env['argv'], $env['argc'] );
+			$env = array_merge( $env, $this->env );
 
-        $pipeSpec = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
+			foreach ( $env as $envKey => $envVar ) {
+				if ( is_array( $envVar ) ) {
+					unset( $env[ $envKey ] );
+				}
+			}
+		}
 
-        if ($this->stderrRedirection) {
-            $pipeSpec[2] = ['redirect', 1];
-        }
+		$pipeSpec = array(
+			0 => array( 'pipe', 'r' ),
+			1 => array( 'pipe', 'w' ),
+			2 => array( 'pipe', 'w' ),
+		);
 
-        $process = proc_open(
-            $this->getCommand($settings, $this->tempFile),
-            $pipeSpec,
-            $pipes,
-            null,
-            $env,
-        );
+		if ( $this->stderrRedirection ) {
+			$pipeSpec[2] = array( 'redirect', 1 );
+		}
 
-        if (!is_resource($process)) {
-            throw new PhpProcessException(
-                'Unable to spawn worker process',
-            );
-        }
+		$process = proc_open(
+			$this->getCommand( $settings, $this->tempFile ),
+			$pipeSpec,
+			$pipes,
+			null,
+			$env,
+		);
 
-        if ($job) {
-            $this->process($pipes[0], $job);
-        }
+		if ( ! is_resource( $process ) ) {
+			throw new PhpProcessException(
+				'Unable to spawn worker process',
+			);
+		}
 
-        fclose($pipes[0]);
+		if ( $job ) {
+			$this->process( $pipes[0], $job );
+		}
 
-        $stderr = $stdout = '';
+		fclose( $pipes[0] );
 
-        if (isset($pipes[1])) {
-            $stdout = stream_get_contents($pipes[1]);
+		$stderr = $stdout = '';
 
-            fclose($pipes[1]);
-        }
+		if ( isset( $pipes[1] ) ) {
+			$stdout = stream_get_contents( $pipes[1] );
 
-        if (isset($pipes[2])) {
-            $stderr = stream_get_contents($pipes[2]);
+			fclose( $pipes[1] );
+		}
 
-            fclose($pipes[2]);
-        }
+		if ( isset( $pipes[2] ) ) {
+			$stderr = stream_get_contents( $pipes[2] );
 
-        proc_close($process);
+			fclose( $pipes[2] );
+		}
 
-        $this->cleanup();
+		proc_close( $process );
 
-        return ['stdout' => $stdout, 'stderr' => $stderr];
-    }
+		$this->cleanup();
 
-    /**
-     * @param resource $pipe
-     */
-    protected function process($pipe, string $job): void
-    {
-        fwrite($pipe, $job);
-    }
+		return array(
+			'stdout' => $stdout,
+			'stderr' => $stderr,
+		);
+	}
 
-    protected function cleanup(): void
-    {
-        if ($this->tempFile) {
-            unlink($this->tempFile);
-        }
-    }
+	/**
+	 * @param resource $pipe
+	 */
+	protected function process( $pipe, string $job ): void {
+		fwrite( $pipe, $job );
+	}
+
+	protected function cleanup(): void {
+		if ( $this->tempFile ) {
+			unlink( $this->tempFile );
+		}
+	}
 }

@@ -24,235 +24,235 @@ use SebastianBergmann\CodeCoverage\Driver\WriteOperationFailedException;
 use SebastianBergmann\CodeCoverage\Node\File;
 use SebastianBergmann\CodeCoverage\Util\Filesystem;
 
-final class Clover
-{
-    /**
-     * @throws WriteOperationFailedException
-     */
-    public function process(CodeCoverage $coverage, ?string $target = null, ?string $name = null): string
-    {
-        $time = (string) time();
+final class Clover {
 
-        $xmlDocument               = new DOMDocument('1.0', 'UTF-8');
-        $xmlDocument->formatOutput = true;
+	/**
+	 * @throws WriteOperationFailedException
+	 */
+	public function process( CodeCoverage $coverage, ?string $target = null, ?string $name = null ): string {
+		$time = (string) time();
 
-        $xmlCoverage = $xmlDocument->createElement('coverage');
-        $xmlCoverage->setAttribute('generated', $time);
-        $xmlDocument->appendChild($xmlCoverage);
+		$xmlDocument               = new DOMDocument( '1.0', 'UTF-8' );
+		$xmlDocument->formatOutput = true;
 
-        $xmlProject = $xmlDocument->createElement('project');
-        $xmlProject->setAttribute('timestamp', $time);
+		$xmlCoverage = $xmlDocument->createElement( 'coverage' );
+		$xmlCoverage->setAttribute( 'generated', $time );
+		$xmlDocument->appendChild( $xmlCoverage );
 
-        if (is_string($name)) {
-            $xmlProject->setAttribute('name', $name);
-        }
+		$xmlProject = $xmlDocument->createElement( 'project' );
+		$xmlProject->setAttribute( 'timestamp', $time );
 
-        $xmlCoverage->appendChild($xmlProject);
+		if ( is_string( $name ) ) {
+			$xmlProject->setAttribute( 'name', $name );
+		}
 
-        $packages = [];
-        $report   = $coverage->getReport();
+		$xmlCoverage->appendChild( $xmlProject );
 
-        foreach ($report as $item) {
-            if (!$item instanceof File) {
-                continue;
-            }
+		$packages = array();
+		$report   = $coverage->getReport();
 
-            /* @var File $item */
+		foreach ( $report as $item ) {
+			if ( ! $item instanceof File ) {
+				continue;
+			}
 
-            $xmlFile = $xmlDocument->createElement('file');
-            $xmlFile->setAttribute('name', $item->pathAsString());
+			/* @var File $item */
 
-            $classes      = $item->classesAndTraits();
-            $coverageData = $item->lineCoverageData();
-            $lines        = [];
-            $namespace    = 'global';
+			$xmlFile = $xmlDocument->createElement( 'file' );
+			$xmlFile->setAttribute( 'name', $item->pathAsString() );
 
-            foreach ($classes as $className => $class) {
-                $classStatements        = 0;
-                $coveredClassStatements = 0;
-                $coveredMethods         = 0;
-                $classMethods           = 0;
+			$classes      = $item->classesAndTraits();
+			$coverageData = $item->lineCoverageData();
+			$lines        = array();
+			$namespace    = 'global';
 
-                foreach ($class['methods'] as $methodName => $method) {
-                    if ($method['executableLines'] == 0) {
-                        continue;
-                    }
+			foreach ( $classes as $className => $class ) {
+				$classStatements        = 0;
+				$coveredClassStatements = 0;
+				$coveredMethods         = 0;
+				$classMethods           = 0;
 
-                    $classMethods++;
-                    $classStatements        += $method['executableLines'];
-                    $coveredClassStatements += $method['executedLines'];
+				foreach ( $class['methods'] as $methodName => $method ) {
+					if ( $method['executableLines'] == 0 ) {
+						continue;
+					}
 
-                    if ($method['coverage'] == 100) {
-                        $coveredMethods++;
-                    }
+					++$classMethods;
+					$classStatements        += $method['executableLines'];
+					$coveredClassStatements += $method['executedLines'];
 
-                    $methodCount = 0;
+					if ( $method['coverage'] == 100 ) {
+						++$coveredMethods;
+					}
 
-                    foreach (range($method['startLine'], $method['endLine']) as $line) {
-                        if (isset($coverageData[$line])) {
-                            $methodCount = max($methodCount, count($coverageData[$line]));
-                        }
-                    }
+					$methodCount = 0;
 
-                    $lines[$method['startLine']] = [
-                        'ccn'        => $method['ccn'],
-                        'count'      => $methodCount,
-                        'crap'       => $method['crap'],
-                        'type'       => 'method',
-                        'visibility' => $method['visibility'],
-                        'name'       => $methodName,
-                    ];
-                }
+					foreach ( range( $method['startLine'], $method['endLine'] ) as $line ) {
+						if ( isset( $coverageData[ $line ] ) ) {
+							$methodCount = max( $methodCount, count( $coverageData[ $line ] ) );
+						}
+					}
 
-                if (!empty($class['package']['namespace'])) {
-                    $namespace = $class['package']['namespace'];
-                }
+					$lines[ $method['startLine'] ] = array(
+						'ccn'        => $method['ccn'],
+						'count'      => $methodCount,
+						'crap'       => $method['crap'],
+						'type'       => 'method',
+						'visibility' => $method['visibility'],
+						'name'       => $methodName,
+					);
+				}
 
-                $xmlClass = $xmlDocument->createElement('class');
-                $xmlClass->setAttribute('name', $className);
-                $xmlClass->setAttribute('namespace', $namespace);
+				if ( ! empty( $class['package']['namespace'] ) ) {
+					$namespace = $class['package']['namespace'];
+				}
 
-                if (!empty($class['package']['fullPackage'])) {
-                    $xmlClass->setAttribute(
-                        'fullPackage',
-                        $class['package']['fullPackage'],
-                    );
-                }
+				$xmlClass = $xmlDocument->createElement( 'class' );
+				$xmlClass->setAttribute( 'name', $className );
+				$xmlClass->setAttribute( 'namespace', $namespace );
 
-                if (!empty($class['package']['category'])) {
-                    $xmlClass->setAttribute(
-                        'category',
-                        $class['package']['category'],
-                    );
-                }
+				if ( ! empty( $class['package']['fullPackage'] ) ) {
+					$xmlClass->setAttribute(
+						'fullPackage',
+						$class['package']['fullPackage'],
+					);
+				}
 
-                if (!empty($class['package']['package'])) {
-                    $xmlClass->setAttribute(
-                        'package',
-                        $class['package']['package'],
-                    );
-                }
+				if ( ! empty( $class['package']['category'] ) ) {
+					$xmlClass->setAttribute(
+						'category',
+						$class['package']['category'],
+					);
+				}
 
-                if (!empty($class['package']['subpackage'])) {
-                    $xmlClass->setAttribute(
-                        'subpackage',
-                        $class['package']['subpackage'],
-                    );
-                }
+				if ( ! empty( $class['package']['package'] ) ) {
+					$xmlClass->setAttribute(
+						'package',
+						$class['package']['package'],
+					);
+				}
 
-                $xmlFile->appendChild($xmlClass);
+				if ( ! empty( $class['package']['subpackage'] ) ) {
+					$xmlClass->setAttribute(
+						'subpackage',
+						$class['package']['subpackage'],
+					);
+				}
 
-                $xmlMetrics = $xmlDocument->createElement('metrics');
-                $xmlMetrics->setAttribute('complexity', (string) $class['ccn']);
-                $xmlMetrics->setAttribute('methods', (string) $classMethods);
-                $xmlMetrics->setAttribute('coveredmethods', (string) $coveredMethods);
-                $xmlMetrics->setAttribute('conditionals', (string) $class['executableBranches']);
-                $xmlMetrics->setAttribute('coveredconditionals', (string) $class['executedBranches']);
-                $xmlMetrics->setAttribute('statements', (string) $classStatements);
-                $xmlMetrics->setAttribute('coveredstatements', (string) $coveredClassStatements);
-                $xmlMetrics->setAttribute('elements', (string) ($classMethods + $classStatements + $class['executableBranches']));
-                $xmlMetrics->setAttribute('coveredelements', (string) ($coveredMethods + $coveredClassStatements + $class['executedBranches']));
-                $xmlClass->appendChild($xmlMetrics);
-            }
+				$xmlFile->appendChild( $xmlClass );
 
-            foreach ($coverageData as $line => $data) {
-                if ($data === null || isset($lines[$line])) {
-                    continue;
-                }
+				$xmlMetrics = $xmlDocument->createElement( 'metrics' );
+				$xmlMetrics->setAttribute( 'complexity', (string) $class['ccn'] );
+				$xmlMetrics->setAttribute( 'methods', (string) $classMethods );
+				$xmlMetrics->setAttribute( 'coveredmethods', (string) $coveredMethods );
+				$xmlMetrics->setAttribute( 'conditionals', (string) $class['executableBranches'] );
+				$xmlMetrics->setAttribute( 'coveredconditionals', (string) $class['executedBranches'] );
+				$xmlMetrics->setAttribute( 'statements', (string) $classStatements );
+				$xmlMetrics->setAttribute( 'coveredstatements', (string) $coveredClassStatements );
+				$xmlMetrics->setAttribute( 'elements', (string) ( $classMethods + $classStatements + $class['executableBranches'] ) );
+				$xmlMetrics->setAttribute( 'coveredelements', (string) ( $coveredMethods + $coveredClassStatements + $class['executedBranches'] ) );
+				$xmlClass->appendChild( $xmlMetrics );
+			}
 
-                $lines[$line] = [
-                    'count' => count($data), 'type' => 'stmt',
-                ];
-            }
+			foreach ( $coverageData as $line => $data ) {
+				if ( $data === null || isset( $lines[ $line ] ) ) {
+					continue;
+				}
 
-            ksort($lines);
+				$lines[ $line ] = array(
+					'count' => count( $data ),
+					'type'  => 'stmt',
+				);
+			}
 
-            foreach ($lines as $line => $data) {
-                $xmlLine = $xmlDocument->createElement('line');
-                $xmlLine->setAttribute('num', (string) $line);
-                $xmlLine->setAttribute('type', $data['type']);
+			ksort( $lines );
 
-                if (isset($data['name'])) {
-                    $xmlLine->setAttribute('name', $data['name']);
-                }
+			foreach ( $lines as $line => $data ) {
+				$xmlLine = $xmlDocument->createElement( 'line' );
+				$xmlLine->setAttribute( 'num', (string) $line );
+				$xmlLine->setAttribute( 'type', $data['type'] );
 
-                if (isset($data['visibility'])) {
-                    $xmlLine->setAttribute('visibility', $data['visibility']);
-                }
+				if ( isset( $data['name'] ) ) {
+					$xmlLine->setAttribute( 'name', $data['name'] );
+				}
 
-                if (isset($data['ccn'])) {
-                    $xmlLine->setAttribute('complexity', (string) $data['ccn']);
-                }
+				if ( isset( $data['visibility'] ) ) {
+					$xmlLine->setAttribute( 'visibility', $data['visibility'] );
+				}
 
-                if (isset($data['crap'])) {
-                    $xmlLine->setAttribute('crap', (string) $data['crap']);
-                }
+				if ( isset( $data['ccn'] ) ) {
+					$xmlLine->setAttribute( 'complexity', (string) $data['ccn'] );
+				}
 
-                $xmlLine->setAttribute('count', (string) $data['count']);
-                $xmlFile->appendChild($xmlLine);
-            }
+				if ( isset( $data['crap'] ) ) {
+					$xmlLine->setAttribute( 'crap', (string) $data['crap'] );
+				}
 
-            $linesOfCode = $item->linesOfCode();
+				$xmlLine->setAttribute( 'count', (string) $data['count'] );
+				$xmlFile->appendChild( $xmlLine );
+			}
 
-            $xmlMetrics = $xmlDocument->createElement('metrics');
-            $xmlMetrics->setAttribute('loc', (string) $linesOfCode['linesOfCode']);
-            $xmlMetrics->setAttribute('ncloc', (string) $linesOfCode['nonCommentLinesOfCode']);
-            $xmlMetrics->setAttribute('classes', (string) $item->numberOfClassesAndTraits());
-            $xmlMetrics->setAttribute('methods', (string) $item->numberOfMethods());
-            $xmlMetrics->setAttribute('coveredmethods', (string) $item->numberOfTestedMethods());
-            $xmlMetrics->setAttribute('conditionals', (string) $item->numberOfExecutableBranches());
-            $xmlMetrics->setAttribute('coveredconditionals', (string) $item->numberOfExecutedBranches());
-            $xmlMetrics->setAttribute('statements', (string) $item->numberOfExecutableLines());
-            $xmlMetrics->setAttribute('coveredstatements', (string) $item->numberOfExecutedLines());
-            $xmlMetrics->setAttribute('elements', (string) ($item->numberOfMethods() + $item->numberOfExecutableLines() + $item->numberOfExecutableBranches()));
-            $xmlMetrics->setAttribute('coveredelements', (string) ($item->numberOfTestedMethods() + $item->numberOfExecutedLines() + $item->numberOfExecutedBranches()));
-            $xmlFile->appendChild($xmlMetrics);
+			$linesOfCode = $item->linesOfCode();
 
-            if ($namespace === 'global') {
-                $xmlProject->appendChild($xmlFile);
-            } else {
-                if (!isset($packages[$namespace])) {
-                    $packages[$namespace] = $xmlDocument->createElement(
-                        'package',
-                    );
+			$xmlMetrics = $xmlDocument->createElement( 'metrics' );
+			$xmlMetrics->setAttribute( 'loc', (string) $linesOfCode['linesOfCode'] );
+			$xmlMetrics->setAttribute( 'ncloc', (string) $linesOfCode['nonCommentLinesOfCode'] );
+			$xmlMetrics->setAttribute( 'classes', (string) $item->numberOfClassesAndTraits() );
+			$xmlMetrics->setAttribute( 'methods', (string) $item->numberOfMethods() );
+			$xmlMetrics->setAttribute( 'coveredmethods', (string) $item->numberOfTestedMethods() );
+			$xmlMetrics->setAttribute( 'conditionals', (string) $item->numberOfExecutableBranches() );
+			$xmlMetrics->setAttribute( 'coveredconditionals', (string) $item->numberOfExecutedBranches() );
+			$xmlMetrics->setAttribute( 'statements', (string) $item->numberOfExecutableLines() );
+			$xmlMetrics->setAttribute( 'coveredstatements', (string) $item->numberOfExecutedLines() );
+			$xmlMetrics->setAttribute( 'elements', (string) ( $item->numberOfMethods() + $item->numberOfExecutableLines() + $item->numberOfExecutableBranches() ) );
+			$xmlMetrics->setAttribute( 'coveredelements', (string) ( $item->numberOfTestedMethods() + $item->numberOfExecutedLines() + $item->numberOfExecutedBranches() ) );
+			$xmlFile->appendChild( $xmlMetrics );
 
-                    $packages[$namespace]->setAttribute('name', $namespace);
-                    $xmlProject->appendChild($packages[$namespace]);
-                }
+			if ( $namespace === 'global' ) {
+				$xmlProject->appendChild( $xmlFile );
+			} else {
+				if ( ! isset( $packages[ $namespace ] ) ) {
+					$packages[ $namespace ] = $xmlDocument->createElement(
+						'package',
+					);
 
-                $packages[$namespace]->appendChild($xmlFile);
-            }
-        }
+					$packages[ $namespace ]->setAttribute( 'name', $namespace );
+					$xmlProject->appendChild( $packages[ $namespace ] );
+				}
 
-        $linesOfCode = $report->linesOfCode();
+				$packages[ $namespace ]->appendChild( $xmlFile );
+			}
+		}
 
-        $xmlMetrics = $xmlDocument->createElement('metrics');
-        $xmlMetrics->setAttribute('files', (string) count($report));
-        $xmlMetrics->setAttribute('loc', (string) $linesOfCode['linesOfCode']);
-        $xmlMetrics->setAttribute('ncloc', (string) $linesOfCode['nonCommentLinesOfCode']);
-        $xmlMetrics->setAttribute('classes', (string) $report->numberOfClassesAndTraits());
-        $xmlMetrics->setAttribute('methods', (string) $report->numberOfMethods());
-        $xmlMetrics->setAttribute('coveredmethods', (string) $report->numberOfTestedMethods());
-        $xmlMetrics->setAttribute('conditionals', (string) $report->numberOfExecutableBranches());
-        $xmlMetrics->setAttribute('coveredconditionals', (string) $report->numberOfExecutedBranches());
-        $xmlMetrics->setAttribute('statements', (string) $report->numberOfExecutableLines());
-        $xmlMetrics->setAttribute('coveredstatements', (string) $report->numberOfExecutedLines());
-        $xmlMetrics->setAttribute('elements', (string) ($report->numberOfMethods() + $report->numberOfExecutableLines() + $report->numberOfExecutableBranches()));
-        $xmlMetrics->setAttribute('coveredelements', (string) ($report->numberOfTestedMethods() + $report->numberOfExecutedLines() + $report->numberOfExecutedBranches()));
-        $xmlProject->appendChild($xmlMetrics);
+		$linesOfCode = $report->linesOfCode();
 
-        $buffer = $xmlDocument->saveXML();
+		$xmlMetrics = $xmlDocument->createElement( 'metrics' );
+		$xmlMetrics->setAttribute( 'files', (string) count( $report ) );
+		$xmlMetrics->setAttribute( 'loc', (string) $linesOfCode['linesOfCode'] );
+		$xmlMetrics->setAttribute( 'ncloc', (string) $linesOfCode['nonCommentLinesOfCode'] );
+		$xmlMetrics->setAttribute( 'classes', (string) $report->numberOfClassesAndTraits() );
+		$xmlMetrics->setAttribute( 'methods', (string) $report->numberOfMethods() );
+		$xmlMetrics->setAttribute( 'coveredmethods', (string) $report->numberOfTestedMethods() );
+		$xmlMetrics->setAttribute( 'conditionals', (string) $report->numberOfExecutableBranches() );
+		$xmlMetrics->setAttribute( 'coveredconditionals', (string) $report->numberOfExecutedBranches() );
+		$xmlMetrics->setAttribute( 'statements', (string) $report->numberOfExecutableLines() );
+		$xmlMetrics->setAttribute( 'coveredstatements', (string) $report->numberOfExecutedLines() );
+		$xmlMetrics->setAttribute( 'elements', (string) ( $report->numberOfMethods() + $report->numberOfExecutableLines() + $report->numberOfExecutableBranches() ) );
+		$xmlMetrics->setAttribute( 'coveredelements', (string) ( $report->numberOfTestedMethods() + $report->numberOfExecutedLines() + $report->numberOfExecutedBranches() ) );
+		$xmlProject->appendChild( $xmlMetrics );
 
-        if ($target !== null) {
-            if (!str_contains($target, '://')) {
-                Filesystem::createDirectory(dirname($target));
-            }
+		$buffer = $xmlDocument->saveXML();
 
-            if (@file_put_contents($target, $buffer) === false) {
-                throw new WriteOperationFailedException($target);
-            }
-        }
+		if ( $target !== null ) {
+			if ( ! str_contains( $target, '://' ) ) {
+				Filesystem::createDirectory( dirname( $target ) );
+			}
 
-        return $buffer;
-    }
+			if ( @file_put_contents( $target, $buffer ) === false ) {
+				throw new WriteOperationFailedException( $target );
+			}
+		}
+
+		return $buffer;
+	}
 }

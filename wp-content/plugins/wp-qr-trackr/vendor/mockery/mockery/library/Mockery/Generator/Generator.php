@@ -10,10 +10,10 @@
 
 namespace Mockery\Generator;
 
-interface Generator
-{
-    /**
-     * @returns MockDefinition
-     */
-    public function generate(MockConfiguration $config);
+interface Generator {
+
+	/**
+	 * @returns MockDefinition
+	 */
+	public function generate( MockConfiguration $config );
 }

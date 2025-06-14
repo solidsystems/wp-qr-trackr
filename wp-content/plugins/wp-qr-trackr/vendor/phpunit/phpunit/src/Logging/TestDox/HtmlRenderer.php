@@ -16,12 +16,12 @@ use function sprintf;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class HtmlRenderer
-{
-    /**
-     * @var string
-     */
-    private const PAGE_HEADER = <<<'EOT'
+final class HtmlRenderer {
+
+	/**
+	 * @var string
+	 */
+	private const PAGE_HEADER = <<<'EOT'
 <!doctype html>
 <html lang="en">
     <head>
@@ -77,82 +77,80 @@ final class HtmlRenderer
     <body>
 EOT;
 
-    /**
-     * @var string
-     */
-    private const CLASS_HEADER = <<<'EOT'
+	/**
+	 * @var string
+	 */
+	private const CLASS_HEADER = <<<'EOT'
 
         <h2>%s</h2>
         <ul>
 
 EOT;
 
-    /**
-     * @var string
-     */
-    private const CLASS_FOOTER = <<<'EOT'
+	/**
+	 * @var string
+	 */
+	private const CLASS_FOOTER = <<<'EOT'
         </ul>
 EOT;
 
-    /**
-     * @var string
-     */
-    private const PAGE_FOOTER = <<<'EOT'
+	/**
+	 * @var string
+	 */
+	private const PAGE_FOOTER = <<<'EOT'
 
     </body>
 </html>
 EOT;
 
-    /**
-     * @psalm-param array<string, TestResultCollection> $tests
-     */
-    public function render(array $tests): string
-    {
-        $buffer = self::PAGE_HEADER;
+	/**
+	 * @psalm-param array<string, TestResultCollection> $tests
+	 */
+	public function render( array $tests ): string {
+		$buffer = self::PAGE_HEADER;
 
-        foreach ($tests as $prettifiedClassName => $_tests) {
-            $buffer .= sprintf(
-                self::CLASS_HEADER,
-                $prettifiedClassName,
-            );
+		foreach ( $tests as $prettifiedClassName => $_tests ) {
+			$buffer .= sprintf(
+				self::CLASS_HEADER,
+				$prettifiedClassName,
+			);
 
-            foreach ($this->reduce($_tests) as $prettifiedMethodName => $outcome) {
-                $buffer .= sprintf(
-                    "            <li class=\"%s\">%s</li>\n",
-                    $outcome,
-                    $prettifiedMethodName,
-                );
-            }
+			foreach ( $this->reduce( $_tests ) as $prettifiedMethodName => $outcome ) {
+				$buffer .= sprintf(
+					"            <li class=\"%s\">%s</li>\n",
+					$outcome,
+					$prettifiedMethodName,
+				);
+			}
 
-            $buffer .= self::CLASS_FOOTER;
-        }
+			$buffer .= self::CLASS_FOOTER;
+		}
 
-        return $buffer . self::PAGE_FOOTER;
-    }
+		return $buffer . self::PAGE_FOOTER;
+	}
 
-    /**
-     * @psalm-return array<string, 'success'|'defect'>
-     */
-    private function reduce(TestResultCollection $tests): array
-    {
-        $result = [];
+	/**
+	 * @psalm-return array<string, 'success'|'defect'>
+	 */
+	private function reduce( TestResultCollection $tests ): array {
+		$result = array();
 
-        foreach ($tests as $test) {
-            $prettifiedMethodName = $test->test()->testDox()->prettifiedMethodName();
+		foreach ( $tests as $test ) {
+			$prettifiedMethodName = $test->test()->testDox()->prettifiedMethodName();
 
-            if (!isset($result[$prettifiedMethodName])) {
-                $result[$prettifiedMethodName] = $test->status()->isSuccess() ? 'success' : 'defect';
+			if ( ! isset( $result[ $prettifiedMethodName ] ) ) {
+				$result[ $prettifiedMethodName ] = $test->status()->isSuccess() ? 'success' : 'defect';
 
-                continue;
-            }
+				continue;
+			}
 
-            if ($test->status()->isSuccess()) {
-                continue;
-            }
+			if ( $test->status()->isSuccess() ) {
+				continue;
+			}
 
-            $result[$prettifiedMethodName] = 'defect';
-        }
+			$result[ $prettifiedMethodName ] = 'defect';
+		}
 
-        return $result;
-    }
+		return $result;
+	}
 }

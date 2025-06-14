@@ -18,50 +18,47 @@ use function pcntl_signal;
 use function sprintf;
 use Throwable;
 
-final class Invoker
-{
-    private int $timeout;
+final class Invoker {
 
-    /**
-     * @throws Throwable
-     */
-    public function invoke(callable $callable, array $arguments, int $timeout): mixed
-    {
-        if (!$this->canInvokeWithTimeout()) {
-            throw new ProcessControlExtensionNotLoadedException(
-                'The pcntl (process control) extension for PHP is required'
-            );
-        }
+	private int $timeout;
 
-        pcntl_signal(
-            SIGALRM,
-            function (): void
-            {
-                throw new TimeoutException(
-                    sprintf(
-                        'Execution aborted after %d second%s',
-                        $this->timeout,
-                        $this->timeout === 1 ? '' : 's'
-                    )
-                );
-            },
-            true
-        );
+	/**
+	 * @throws Throwable
+	 */
+	public function invoke( callable $callable, array $arguments, int $timeout ): mixed {
+		if ( ! $this->canInvokeWithTimeout() ) {
+			throw new ProcessControlExtensionNotLoadedException(
+				'The pcntl (process control) extension for PHP is required'
+			);
+		}
 
-        $this->timeout = $timeout;
+		pcntl_signal(
+			SIGALRM,
+			function (): void {
+				throw new TimeoutException(
+					sprintf(
+						'Execution aborted after %d second%s',
+						$this->timeout,
+						$this->timeout === 1 ? '' : 's'
+					)
+				);
+			},
+			true
+		);
 
-        pcntl_async_signals(true);
-        pcntl_alarm($timeout);
+		$this->timeout = $timeout;
 
-        try {
-            return call_user_func_array($callable, $arguments);
-        } finally {
-            pcntl_alarm(0);
-        }
-    }
+		pcntl_async_signals( true );
+		pcntl_alarm( $timeout );
 
-    public function canInvokeWithTimeout(): bool
-    {
-        return function_exists('pcntl_signal') && function_exists('pcntl_async_signals') && function_exists('pcntl_alarm');
-    }
+		try {
+			return call_user_func_array( $callable, $arguments );
+		} finally {
+			pcntl_alarm( 0 );
+		}
+	}
+
+	public function canInvokeWithTimeout(): bool {
+		return function_exists( 'pcntl_signal' ) && function_exists( 'pcntl_async_signals' ) && function_exists( 'pcntl_alarm' );
+	}
 }

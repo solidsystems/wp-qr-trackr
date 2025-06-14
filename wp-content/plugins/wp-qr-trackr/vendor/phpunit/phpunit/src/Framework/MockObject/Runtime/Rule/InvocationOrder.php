@@ -18,35 +18,31 @@ use PHPUnit\Framework\SelfDescribing;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract class InvocationOrder implements SelfDescribing
-{
-    /**
-     * @psalm-var list<BaseInvocation>
-     */
-    private array $invocations = [];
+abstract class InvocationOrder implements SelfDescribing {
 
-    public function numberOfInvocations(): int
-    {
-        return count($this->invocations);
-    }
+	/**
+	 * @psalm-var list<BaseInvocation>
+	 */
+	private array $invocations = array();
 
-    public function hasBeenInvoked(): bool
-    {
-        return count($this->invocations) > 0;
-    }
+	public function numberOfInvocations(): int {
+		return count( $this->invocations );
+	}
 
-    final public function invoked(BaseInvocation $invocation): void
-    {
-        $this->invocations[] = $invocation;
+	public function hasBeenInvoked(): bool {
+		return count( $this->invocations ) > 0;
+	}
 
-        $this->invokedDo($invocation);
-    }
+	final public function invoked( BaseInvocation $invocation ): void {
+		$this->invocations[] = $invocation;
 
-    abstract public function matches(BaseInvocation $invocation): bool;
+		$this->invokedDo( $invocation );
+	}
 
-    abstract public function verify(): void;
+	abstract public function matches( BaseInvocation $invocation ): bool;
 
-    protected function invokedDo(BaseInvocation $invocation): void
-    {
-    }
+	abstract public function verify(): void;
+
+	protected function invokedDo( BaseInvocation $invocation ): void {
+	}
 }

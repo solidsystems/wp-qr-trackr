@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "husky": "^9.1.7"
+  },
+  "scripts": {
+    "setup:ci": "yarn install && npx husky install"
+  }
+}

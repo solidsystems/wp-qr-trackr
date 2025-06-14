@@ -18,24 +18,23 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveLogTypes implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $logging = $document->getElementsByTagName('logging')->item(0);
+final class RemoveLogTypes implements Migration {
 
-        if (!$logging instanceof DOMElement) {
-            return;
-        }
+	public function migrate( DOMDocument $document ): void {
+		$logging = $document->getElementsByTagName( 'logging' )->item( 0 );
 
-        foreach (SnapshotNodeList::fromNodeList($logging->getElementsByTagName('log')) as $logNode) {
-            assert($logNode instanceof DOMElement);
+		if ( ! $logging instanceof DOMElement ) {
+			return;
+		}
 
-            switch ($logNode->getAttribute('type')) {
-                case 'json':
-                case 'tap':
-                    $logging->removeChild($logNode);
-            }
-        }
-    }
+		foreach ( SnapshotNodeList::fromNodeList( $logging->getElementsByTagName( 'log' ) ) as $logNode ) {
+			assert( $logNode instanceof DOMElement );
+
+			switch ( $logNode->getAttribute( 'type' ) ) {
+				case 'json':
+				case 'tap':
+					$logging->removeChild( $logNode );
+			}
+		}
+	}
 }

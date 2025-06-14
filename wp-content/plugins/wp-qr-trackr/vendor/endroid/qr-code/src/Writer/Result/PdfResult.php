@@ -6,27 +6,24 @@ namespace Endroid\QrCode\Writer\Result;
 
 use Endroid\QrCode\Matrix\MatrixInterface;
 
-final class PdfResult extends AbstractResult
-{
-    public function __construct(
-        MatrixInterface $matrix,
-        private readonly \FPDF $fpdf,
-    ) {
-        parent::__construct($matrix);
-    }
+final class PdfResult extends AbstractResult {
 
-    public function getPdf(): \FPDF
-    {
-        return $this->fpdf;
-    }
+	public function __construct(
+		MatrixInterface $matrix,
+		private readonly \FPDF $fpdf,
+	) {
+		parent::__construct( $matrix );
+	}
 
-    public function getString(): string
-    {
-        return $this->fpdf->Output('S');
-    }
+	public function getPdf(): \FPDF {
+		return $this->fpdf;
+	}
 
-    public function getMimeType(): string
-    {
-        return 'application/pdf';
-    }
+	public function getString(): string {
+		return $this->fpdf->Output( 'S' );
+	}
+
+	public function getMimeType(): string {
+		return 'application/pdf';
+	}
 }

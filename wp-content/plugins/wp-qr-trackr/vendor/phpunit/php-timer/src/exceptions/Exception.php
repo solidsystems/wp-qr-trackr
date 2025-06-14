@@ -11,6 +11,6 @@ namespace SebastianBergmann\Timer;
 
 use Throwable;
 
-interface Exception extends Throwable
-{
+interface Exception extends Throwable {
+
 }

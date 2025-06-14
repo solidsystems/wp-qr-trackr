@@ -10,6 +10,6 @@
 
 namespace Mockery\Matcher;
 
-interface ArgumentListMatcher
-{
+interface ArgumentListMatcher {
+
 }

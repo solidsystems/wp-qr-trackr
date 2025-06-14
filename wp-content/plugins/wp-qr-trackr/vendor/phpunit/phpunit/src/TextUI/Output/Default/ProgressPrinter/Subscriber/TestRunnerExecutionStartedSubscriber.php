@@ -17,10 +17,9 @@ use PHPUnit\Event\TestRunner\ExecutionStartedSubscriber;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestRunnerExecutionStartedSubscriber extends Subscriber implements ExecutionStartedSubscriber
-{
-    public function notify(ExecutionStarted $event): void
-    {
-        $this->printer()->testRunnerExecutionStarted($event);
-    }
+final class TestRunnerExecutionStartedSubscriber extends Subscriber implements ExecutionStartedSubscriber {
+
+	public function notify( ExecutionStarted $event ): void {
+		$this->printer()->testRunnerExecutionStarted( $event );
+	}
 }

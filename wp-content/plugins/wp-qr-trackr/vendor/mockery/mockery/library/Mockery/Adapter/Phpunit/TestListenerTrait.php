@@ -23,62 +23,60 @@ use function dirname;
 use function method_exists;
 use function sprintf;
 
-class TestListenerTrait
-{
-    /**
-     * endTest is called after each test and checks if \Mockery::close() has
-     * been called, and will let the test fail if it hasn't.
-     *
-     * @param Test  $test
-     * @param float $time
-     */
-    public function endTest(Test $test, $time)
-    {
-        if (! $test instanceof TestCase) {
-            // We need the getTestResultObject and getStatus methods which are
-            // not part of the interface.
-            return;
-        }
+class TestListenerTrait {
 
-        if ($test->getStatus() !== BaseTestRunner::STATUS_PASSED) {
-            // If the test didn't pass there is no guarantee that
-            // verifyMockObjects and assertPostConditions have been called.
-            // And even if it did, the point here is to prevent false
-            // negatives, not to make failing tests fail for more reasons.
-            return;
-        }
+	/**
+	 * endTest is called after each test and checks if \Mockery::close() has
+	 * been called, and will let the test fail if it hasn't.
+	 *
+	 * @param Test  $test
+	 * @param float $time
+	 */
+	public function endTest( Test $test, $time ) {
+		if ( ! $test instanceof TestCase ) {
+			// We need the getTestResultObject and getStatus methods which are
+			// not part of the interface.
+			return;
+		}
 
-        try {
-            // The self() call is used as a sentinel. Anything that throws if
-            // the container is closed already will do.
-            Mockery::self();
-        } catch (LogicException $logicException) {
-            return;
-        }
+		if ( $test->getStatus() !== BaseTestRunner::STATUS_PASSED ) {
+			// If the test didn't pass there is no guarantee that
+			// verifyMockObjects and assertPostConditions have been called.
+			// And even if it did, the point here is to prevent false
+			// negatives, not to make failing tests fail for more reasons.
+			return;
+		}
 
-        $e = new ExpectationFailedException(
-            sprintf(
-                "Mockery's expectations have not been verified. Make sure that \Mockery::close() is called at the end of the test. Consider using %s\MockeryPHPUnitIntegration or extending %s\MockeryTestCase.",
-                __NAMESPACE__,
-                __NAMESPACE__
-            )
-        );
+		try {
+			// The self() call is used as a sentinel. Anything that throws if
+			// the container is closed already will do.
+			Mockery::self();
+		} catch ( LogicException $logicException ) {
+			return;
+		}
 
-        /** @var \PHPUnit\Framework\TestResult $result */
-        $result = $test->getTestResultObject();
+		$e = new ExpectationFailedException(
+			sprintf(
+				"Mockery's expectations have not been verified. Make sure that \Mockery::close() is called at the end of the test. Consider using %s\MockeryPHPUnitIntegration or extending %s\MockeryTestCase.",
+				__NAMESPACE__,
+				__NAMESPACE__
+			)
+		);
 
-        if ($result !== null) {
-            $result->addFailure($test, $e, $time);
-        }
-    }
+		/** @var \PHPUnit\Framework\TestResult $result */
+		$result = $test->getTestResultObject();
 
-    public function startTestSuite()
-    {
-        if (method_exists(Blacklist::class, 'addDirectory')) {
-            (new Blacklist())->getBlacklistedDirectories();
-            Blacklist::addDirectory(dirname((new ReflectionClass(Mockery::class))->getFileName()));
-        } else {
-            Blacklist::$blacklistedClassNames[Mockery::class] = 1;
-        }
-    }
+		if ( $result !== null ) {
+			$result->addFailure( $test, $e, $time );
+		}
+	}
+
+	public function startTestSuite() {
+		if ( method_exists( Blacklist::class, 'addDirectory' ) ) {
+			( new Blacklist() )->getBlacklistedDirectories();
+			Blacklist::addDirectory( dirname( ( new ReflectionClass( Mockery::class ) )->getFileName() ) );
+		} else {
+			Blacklist::$blacklistedClassNames[ Mockery::class ] = 1;
+		}
+	}
 }

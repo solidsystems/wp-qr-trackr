@@ -25,57 +25,55 @@ use SebastianBergmann\Timer\Timer;
  *
  * @codeCoverageIgnore
  */
-final class WarmCodeCoverageCacheCommand implements Command
-{
-    private readonly Configuration $configuration;
-    private readonly CodeCoverageFilterRegistry $codeCoverageFilterRegistry;
+final class WarmCodeCoverageCacheCommand implements Command {
 
-    public function __construct(Configuration $configuration, CodeCoverageFilterRegistry $codeCoverageFilterRegistry)
-    {
-        $this->configuration              = $configuration;
-        $this->codeCoverageFilterRegistry = $codeCoverageFilterRegistry;
-    }
+	private readonly Configuration $configuration;
+	private readonly CodeCoverageFilterRegistry $codeCoverageFilterRegistry;
 
-    /**
-     * @throws NoActiveTimerException
-     * @throws NoCoverageCacheDirectoryException
-     */
-    public function execute(): Result
-    {
-        if (!$this->configuration->hasCoverageCacheDirectory()) {
-            return Result::from(
-                'Cache for static analysis has not been configured' . PHP_EOL,
-                Result::FAILURE,
-            );
-        }
+	public function __construct( Configuration $configuration, CodeCoverageFilterRegistry $codeCoverageFilterRegistry ) {
+		$this->configuration              = $configuration;
+		$this->codeCoverageFilterRegistry = $codeCoverageFilterRegistry;
+	}
 
-        $this->codeCoverageFilterRegistry->init($this->configuration, true);
+	/**
+	 * @throws NoActiveTimerException
+	 * @throws NoCoverageCacheDirectoryException
+	 */
+	public function execute(): Result {
+		if ( ! $this->configuration->hasCoverageCacheDirectory() ) {
+			return Result::from(
+				'Cache for static analysis has not been configured' . PHP_EOL,
+				Result::FAILURE,
+			);
+		}
 
-        if (!$this->codeCoverageFilterRegistry->configured()) {
-            return Result::from(
-                'Filter for code coverage has not been configured' . PHP_EOL,
-                Result::FAILURE,
-            );
-        }
+		$this->codeCoverageFilterRegistry->init( $this->configuration, true );
 
-        $timer = new Timer;
-        $timer->start();
+		if ( ! $this->codeCoverageFilterRegistry->configured() ) {
+			return Result::from(
+				'Filter for code coverage has not been configured' . PHP_EOL,
+				Result::FAILURE,
+			);
+		}
 
-        print 'Warming cache for static analysis ... ';
+		$timer = new Timer();
+		$timer->start();
 
-        (new CacheWarmer)->warmCache(
-            $this->configuration->coverageCacheDirectory(),
-            !$this->configuration->disableCodeCoverageIgnore(),
-            $this->configuration->ignoreDeprecatedCodeUnitsFromCodeCoverage(),
-            $this->codeCoverageFilterRegistry->get(),
-        );
+		print 'Warming cache for static analysis ... ';
 
-        printf(
-            '[%s]%s',
-            $timer->stop()->asString(),
-            PHP_EOL,
-        );
+		( new CacheWarmer() )->warmCache(
+			$this->configuration->coverageCacheDirectory(),
+			! $this->configuration->disableCodeCoverageIgnore(),
+			$this->configuration->ignoreDeprecatedCodeUnitsFromCodeCoverage(),
+			$this->codeCoverageFilterRegistry->get(),
+		);
 
-        return Result::from();
-    }
+		printf(
+			'[%s]%s',
+			$timer->stop()->asString(),
+			PHP_EOL,
+		);
+
+		return Result::from();
+	}
 }

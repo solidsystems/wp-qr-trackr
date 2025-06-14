@@ -18,36 +18,34 @@ use PHPUnit\Logging\TestDox\NamePrettifier;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestDoxBuilder
-{
-    /**
-     * @throws MoreThanOneDataSetFromDataProviderException
-     */
-    public static function fromTestCase(TestCase $testCase): TestDox
-    {
-        $prettifier = new NamePrettifier;
+final class TestDoxBuilder {
 
-        return new TestDox(
-            $prettifier->prettifyTestClassName($testCase::class),
-            $prettifier->prettifyTestCase($testCase, false),
-            $prettifier->prettifyTestCase($testCase, true),
-        );
-    }
+	/**
+	 * @throws MoreThanOneDataSetFromDataProviderException
+	 */
+	public static function fromTestCase( TestCase $testCase ): TestDox {
+		$prettifier = new NamePrettifier();
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    public static function fromClassNameAndMethodName(string $className, string $methodName): TestDox
-    {
-        $prettifier = new NamePrettifier;
+		return new TestDox(
+			$prettifier->prettifyTestClassName( $testCase::class ),
+			$prettifier->prettifyTestCase( $testCase, false ),
+			$prettifier->prettifyTestCase( $testCase, true ),
+		);
+	}
 
-        $prettifiedMethodName = $prettifier->prettifyTestMethodName($methodName);
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	public static function fromClassNameAndMethodName( string $className, string $methodName ): TestDox {
+		$prettifier = new NamePrettifier();
 
-        return new TestDox(
-            $prettifier->prettifyTestClassName($className),
-            $prettifiedMethodName,
-            $prettifiedMethodName,
-        );
-    }
+		$prettifiedMethodName = $prettifier->prettifyTestMethodName( $methodName );
+
+		return new TestDox(
+			$prettifier->prettifyTestClassName( $className ),
+			$prettifiedMethodName,
+			$prettifiedMethodName,
+		);
+	}
 }

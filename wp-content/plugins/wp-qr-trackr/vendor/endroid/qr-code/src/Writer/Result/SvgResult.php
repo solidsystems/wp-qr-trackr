@@ -6,38 +6,35 @@ namespace Endroid\QrCode\Writer\Result;
 
 use Endroid\QrCode\Matrix\MatrixInterface;
 
-final class SvgResult extends AbstractResult
-{
-    public function __construct(
-        MatrixInterface $matrix,
-        private readonly \SimpleXMLElement $xml,
-        private readonly bool $excludeXmlDeclaration = false,
-    ) {
-        parent::__construct($matrix);
-    }
+final class SvgResult extends AbstractResult {
 
-    public function getXml(): \SimpleXMLElement
-    {
-        return $this->xml;
-    }
+	public function __construct(
+		MatrixInterface $matrix,
+		private readonly \SimpleXMLElement $xml,
+		private readonly bool $excludeXmlDeclaration = false,
+	) {
+		parent::__construct( $matrix );
+	}
 
-    public function getString(): string
-    {
-        $string = $this->xml->asXML();
+	public function getXml(): \SimpleXMLElement {
+		return $this->xml;
+	}
 
-        if (!is_string($string)) {
-            throw new \Exception('Could not save SVG XML to string');
-        }
+	public function getString(): string {
+		$string = $this->xml->asXML();
 
-        if ($this->excludeXmlDeclaration) {
-            $string = str_replace("<?xml version=\"1.0\"?>\n", '', $string);
-        }
+		if ( ! is_string( $string ) ) {
+			throw new \Exception( 'Could not save SVG XML to string' );
+		}
 
-        return $string;
-    }
+		if ( $this->excludeXmlDeclaration ) {
+			$string = str_replace( "<?xml version=\"1.0\"?>\n", '', $string );
+		}
 
-    public function getMimeType(): string
-    {
-        return 'image/svg+xml';
-    }
+		return $string;
+	}
+
+	public function getMimeType(): string {
+		return 'image/svg+xml';
+	}
 }

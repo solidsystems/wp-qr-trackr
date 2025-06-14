@@ -16,6 +16,6 @@ namespace PHPUnit\TextUI\XmlConfiguration;
  *
  * @psalm-immutable
  */
-final class FailedSchemaDetectionResult extends SchemaDetectionResult
-{
+final class FailedSchemaDetectionResult extends SchemaDetectionResult {
+
 }

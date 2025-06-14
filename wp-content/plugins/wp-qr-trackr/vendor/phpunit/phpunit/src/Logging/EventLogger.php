@@ -26,43 +26,40 @@ use PHPUnit\Event\Tracer\Tracer;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class EventLogger implements Tracer
-{
-    private readonly string $path;
-    private readonly bool $includeTelemetryInfo;
+final class EventLogger implements Tracer {
 
-    public function __construct(string $path, bool $includeTelemetryInfo)
-    {
-        $this->path                 = $path;
-        $this->includeTelemetryInfo = $includeTelemetryInfo;
-    }
+	private readonly string $path;
+	private readonly bool $includeTelemetryInfo;
 
-    public function trace(Event $event): void
-    {
-        $telemetryInfo = $this->telemetryInfo($event);
-        $indentation   = PHP_EOL . str_repeat(' ', strlen($telemetryInfo));
-        $lines         = preg_split('/\r\n|\r|\n/', $event->asString());
+	public function __construct( string $path, bool $includeTelemetryInfo ) {
+		$this->path                 = $path;
+		$this->includeTelemetryInfo = $includeTelemetryInfo;
+	}
 
-        $flags = FILE_APPEND;
+	public function trace( Event $event ): void {
+		$telemetryInfo = $this->telemetryInfo( $event );
+		$indentation   = PHP_EOL . str_repeat( ' ', strlen( $telemetryInfo ) );
+		$lines         = preg_split( '/\r\n|\r|\n/', $event->asString() );
 
-        if (!(PHP_OS_FAMILY === 'Windows' || PHP_OS_FAMILY === 'Darwin') ||
-            $this->path !== 'php://stdout') {
-            $flags |= LOCK_EX;
-        }
+		$flags = FILE_APPEND;
 
-        file_put_contents(
-            $this->path,
-            $telemetryInfo . implode($indentation, $lines) . PHP_EOL,
-            $flags,
-        );
-    }
+		if ( ! ( PHP_OS_FAMILY === 'Windows' || PHP_OS_FAMILY === 'Darwin' ) ||
+			$this->path !== 'php://stdout' ) {
+			$flags |= LOCK_EX;
+		}
 
-    private function telemetryInfo(Event $event): string
-    {
-        if (!$this->includeTelemetryInfo) {
-            return '';
-        }
+		file_put_contents(
+			$this->path,
+			$telemetryInfo . implode( $indentation, $lines ) . PHP_EOL,
+			$flags,
+		);
+	}
 
-        return $event->telemetryInfo()->asString() . ' ';
-    }
+	private function telemetryInfo( Event $event ): string {
+		if ( ! $this->includeTelemetryInfo ) {
+			return '';
+		}
+
+		return $event->telemetryInfo()->asString() . ' ';
+	}
 }

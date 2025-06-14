@@ -20,86 +20,77 @@ use PHPUnit\TextUI\XmlConfiguration\Logging\TestDox\Text as TestDoxText;
  *
  * @psalm-immutable
  */
-final class Logging
-{
-    private readonly ?Junit $junit;
-    private readonly ?TeamCity $teamCity;
-    private readonly ?TestDoxHtml $testDoxHtml;
-    private readonly ?TestDoxText $testDoxText;
+final class Logging {
 
-    public function __construct(?Junit $junit, ?TeamCity $teamCity, ?TestDoxHtml $testDoxHtml, ?TestDoxText $testDoxText)
-    {
-        $this->junit       = $junit;
-        $this->teamCity    = $teamCity;
-        $this->testDoxHtml = $testDoxHtml;
-        $this->testDoxText = $testDoxText;
-    }
+	private readonly ?Junit $junit;
+	private readonly ?TeamCity $teamCity;
+	private readonly ?TestDoxHtml $testDoxHtml;
+	private readonly ?TestDoxText $testDoxText;
 
-    public function hasJunit(): bool
-    {
-        return $this->junit !== null;
-    }
+	public function __construct( ?Junit $junit, ?TeamCity $teamCity, ?TestDoxHtml $testDoxHtml, ?TestDoxText $testDoxText ) {
+		$this->junit       = $junit;
+		$this->teamCity    = $teamCity;
+		$this->testDoxHtml = $testDoxHtml;
+		$this->testDoxText = $testDoxText;
+	}
 
-    /**
-     * @throws Exception
-     */
-    public function junit(): Junit
-    {
-        if ($this->junit === null) {
-            throw new Exception('Logger "JUnit XML" is not configured');
-        }
+	public function hasJunit(): bool {
+		return $this->junit !== null;
+	}
 
-        return $this->junit;
-    }
+	/**
+	 * @throws Exception
+	 */
+	public function junit(): Junit {
+		if ( $this->junit === null ) {
+			throw new Exception( 'Logger "JUnit XML" is not configured' );
+		}
 
-    public function hasTeamCity(): bool
-    {
-        return $this->teamCity !== null;
-    }
+		return $this->junit;
+	}
 
-    /**
-     * @throws Exception
-     */
-    public function teamCity(): TeamCity
-    {
-        if ($this->teamCity === null) {
-            throw new Exception('Logger "Team City" is not configured');
-        }
+	public function hasTeamCity(): bool {
+		return $this->teamCity !== null;
+	}
 
-        return $this->teamCity;
-    }
+	/**
+	 * @throws Exception
+	 */
+	public function teamCity(): TeamCity {
+		if ( $this->teamCity === null ) {
+			throw new Exception( 'Logger "Team City" is not configured' );
+		}
 
-    public function hasTestDoxHtml(): bool
-    {
-        return $this->testDoxHtml !== null;
-    }
+		return $this->teamCity;
+	}
 
-    /**
-     * @throws Exception
-     */
-    public function testDoxHtml(): TestDoxHtml
-    {
-        if ($this->testDoxHtml === null) {
-            throw new Exception('Logger "TestDox HTML" is not configured');
-        }
+	public function hasTestDoxHtml(): bool {
+		return $this->testDoxHtml !== null;
+	}
 
-        return $this->testDoxHtml;
-    }
+	/**
+	 * @throws Exception
+	 */
+	public function testDoxHtml(): TestDoxHtml {
+		if ( $this->testDoxHtml === null ) {
+			throw new Exception( 'Logger "TestDox HTML" is not configured' );
+		}
 
-    public function hasTestDoxText(): bool
-    {
-        return $this->testDoxText !== null;
-    }
+		return $this->testDoxHtml;
+	}
 
-    /**
-     * @throws Exception
-     */
-    public function testDoxText(): TestDoxText
-    {
-        if ($this->testDoxText === null) {
-            throw new Exception('Logger "TestDox Text" is not configured');
-        }
+	public function hasTestDoxText(): bool {
+		return $this->testDoxText !== null;
+	}
 
-        return $this->testDoxText;
-    }
+	/**
+	 * @throws Exception
+	 */
+	public function testDoxText(): TestDoxText {
+		if ( $this->testDoxText === null ) {
+			throw new Exception( 'Logger "TestDox Text" is not configured' );
+		}
+
+		return $this->testDoxText;
+	}
 }

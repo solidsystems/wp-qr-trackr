@@ -24,80 +24,78 @@ use PHPUnit\TextUI\XmlConfiguration\Generator;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class GenerateConfigurationCommand implements Command
-{
-    public function execute(): Result
-    {
-        print 'Generating phpunit.xml in ' . getcwd() . PHP_EOL . PHP_EOL;
-        print 'Bootstrap script (relative to path shown above; default: vendor/autoload.php): ';
+final class GenerateConfigurationCommand implements Command {
 
-        $bootstrapScript = $this->read();
+	public function execute(): Result {
+		print 'Generating phpunit.xml in ' . getcwd() . PHP_EOL . PHP_EOL;
+		print 'Bootstrap script (relative to path shown above; default: vendor/autoload.php): ';
 
-        print 'Tests directory (relative to path shown above; default: tests): ';
+		$bootstrapScript = $this->read();
 
-        $testsDirectory = $this->read();
+		print 'Tests directory (relative to path shown above; default: tests): ';
 
-        print 'Source directory (relative to path shown above; default: src): ';
+		$testsDirectory = $this->read();
 
-        $src = $this->read();
+		print 'Source directory (relative to path shown above; default: src): ';
 
-        print 'Cache directory (relative to path shown above; default: .phpunit.cache): ';
+		$src = $this->read();
 
-        $cacheDirectory = $this->read();
+		print 'Cache directory (relative to path shown above; default: .phpunit.cache): ';
 
-        if ($bootstrapScript === '') {
-            $bootstrapScript = 'vendor/autoload.php';
-        }
+		$cacheDirectory = $this->read();
 
-        if ($testsDirectory === '') {
-            $testsDirectory = 'tests';
-        }
+		if ( $bootstrapScript === '' ) {
+			$bootstrapScript = 'vendor/autoload.php';
+		}
 
-        if ($src === '') {
-            $src = 'src';
-        }
+		if ( $testsDirectory === '' ) {
+			$testsDirectory = 'tests';
+		}
 
-        if ($cacheDirectory === '') {
-            $cacheDirectory = '.phpunit.cache';
-        }
+		if ( $src === '' ) {
+			$src = 'src';
+		}
 
-        $generator = new Generator;
+		if ( $cacheDirectory === '' ) {
+			$cacheDirectory = '.phpunit.cache';
+		}
 
-        $result = @file_put_contents(
-            'phpunit.xml',
-            $generator->generateDefaultConfiguration(
-                Version::series(),
-                $bootstrapScript,
-                $testsDirectory,
-                $src,
-                $cacheDirectory,
-            ),
-        );
+		$generator = new Generator();
 
-        if ($result !== false) {
-            return Result::from(
-                sprintf(
-                    PHP_EOL . 'Generated phpunit.xml in %s.' . PHP_EOL .
-                    'Make sure to exclude the %s directory from version control.' . PHP_EOL,
-                    getcwd(),
-                    $cacheDirectory,
-                ),
-            );
-        }
+		$result = @file_put_contents(
+			'phpunit.xml',
+			$generator->generateDefaultConfiguration(
+				Version::series(),
+				$bootstrapScript,
+				$testsDirectory,
+				$src,
+				$cacheDirectory,
+			),
+		);
 
-        // @codeCoverageIgnoreStart
-        return Result::from(
-            sprintf(
-                PHP_EOL . 'Could not write phpunit.xml in %s.' . PHP_EOL,
-                getcwd(),
-            ),
-            Result::EXCEPTION,
-        );
-        // @codeCoverageIgnoreEnd
-    }
+		if ( $result !== false ) {
+			return Result::from(
+				sprintf(
+					PHP_EOL . 'Generated phpunit.xml in %s.' . PHP_EOL .
+					'Make sure to exclude the %s directory from version control.' . PHP_EOL,
+					getcwd(),
+					$cacheDirectory,
+				),
+			);
+		}
 
-    private function read(): string
-    {
-        return trim(fgets(STDIN));
-    }
+		// @codeCoverageIgnoreStart
+		return Result::from(
+			sprintf(
+				PHP_EOL . 'Could not write phpunit.xml in %s.' . PHP_EOL,
+				getcwd(),
+			),
+			Result::EXCEPTION,
+		);
+		// @codeCoverageIgnoreEnd
+	}
+
+	private function read(): string {
+		return trim( fgets( STDIN ) );
+	}
 }

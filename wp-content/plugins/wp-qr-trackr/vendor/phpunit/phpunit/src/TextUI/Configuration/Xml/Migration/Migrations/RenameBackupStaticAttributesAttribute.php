@@ -18,23 +18,22 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RenameBackupStaticAttributesAttribute implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $root = $document->documentElement;
+final class RenameBackupStaticAttributesAttribute implements Migration {
 
-        assert($root instanceof DOMElement);
+	public function migrate( DOMDocument $document ): void {
+		$root = $document->documentElement;
 
-        if ($root->hasAttribute('backupStaticProperties')) {
-            return;
-        }
+		assert( $root instanceof DOMElement );
 
-        if (!$root->hasAttribute('backupStaticAttributes')) {
-            return;
-        }
+		if ( $root->hasAttribute( 'backupStaticProperties' ) ) {
+			return;
+		}
 
-        $root->setAttribute('backupStaticProperties', $root->getAttribute('backupStaticAttributes'));
-        $root->removeAttribute('backupStaticAttributes');
-    }
+		if ( ! $root->hasAttribute( 'backupStaticAttributes' ) ) {
+			return;
+		}
+
+		$root->setAttribute( 'backupStaticProperties', $root->getAttribute( 'backupStaticAttributes' ) );
+		$root->removeAttribute( 'backupStaticAttributes' );
+	}
 }

@@ -15,61 +15,58 @@ use PHPUnit\Framework\ExpectationFailedException;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TraversableContainsOnly extends Constraint
-{
-    private Constraint $constraint;
-    private readonly string $type;
+final class TraversableContainsOnly extends Constraint {
 
-    /**
-     * @throws Exception
-     */
-    public function __construct(string $type, bool $isNativeType = true)
-    {
-        if ($isNativeType) {
-            $this->constraint = new IsType($type);
-        } else {
-            $this->constraint = new IsInstanceOf($type);
-        }
+	private Constraint $constraint;
+	private readonly string $type;
 
-        $this->type = $type;
-    }
+	/**
+	 * @throws Exception
+	 */
+	public function __construct( string $type, bool $isNativeType = true ) {
+		if ( $isNativeType ) {
+			$this->constraint = new IsType( $type );
+		} else {
+			$this->constraint = new IsInstanceOf( $type );
+		}
 
-    /**
-     * Evaluates the constraint for parameter $other.
-     *
-     * If $returnResult is set to false (the default), an exception is thrown
-     * in case of a failure. null is returned otherwise.
-     *
-     * If $returnResult is true, the result of the evaluation is returned as
-     * a boolean value instead: true in case of success, false in case of a
-     * failure.
-     *
-     * @throws ExpectationFailedException
-     */
-    public function evaluate(mixed $other, string $description = '', bool $returnResult = false): bool
-    {
-        $success = true;
+		$this->type = $type;
+	}
 
-        foreach ($other as $item) {
-            if (!$this->constraint->evaluate($item, '', true)) {
-                $success = false;
+	/**
+	 * Evaluates the constraint for parameter $other.
+	 *
+	 * If $returnResult is set to false (the default), an exception is thrown
+	 * in case of a failure. null is returned otherwise.
+	 *
+	 * If $returnResult is true, the result of the evaluation is returned as
+	 * a boolean value instead: true in case of success, false in case of a
+	 * failure.
+	 *
+	 * @throws ExpectationFailedException
+	 */
+	public function evaluate( mixed $other, string $description = '', bool $returnResult = false ): bool {
+		$success = true;
 
-                break;
-            }
-        }
+		foreach ( $other as $item ) {
+			if ( ! $this->constraint->evaluate( $item, '', true ) ) {
+				$success = false;
 
-        if (!$success && !$returnResult) {
-            $this->fail($other, $description);
-        }
+				break;
+			}
+		}
 
-        return $success;
-    }
+		if ( ! $success && ! $returnResult ) {
+			$this->fail( $other, $description );
+		}
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        return 'contains only values of type "' . $this->type . '"';
-    }
+		return $success;
+	}
+
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		return 'contains only values of type "' . $this->type . '"';
+	}
 }

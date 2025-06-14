@@ -18,16 +18,15 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveBeStrictAboutResourceUsageDuringSmallTestsAttribute implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $root = $document->documentElement;
+final class RemoveBeStrictAboutResourceUsageDuringSmallTestsAttribute implements Migration {
 
-        assert($root instanceof DOMElement);
+	public function migrate( DOMDocument $document ): void {
+		$root = $document->documentElement;
 
-        if ($root->hasAttribute('beStrictAboutResourceUsageDuringSmallTests')) {
-            $root->removeAttribute('beStrictAboutResourceUsageDuringSmallTests');
-        }
-    }
+		assert( $root instanceof DOMElement );
+
+		if ( $root->hasAttribute( 'beStrictAboutResourceUsageDuringSmallTests' ) ) {
+			$root->removeAttribute( 'beStrictAboutResourceUsageDuringSmallTests' );
+		}
+	}
 }

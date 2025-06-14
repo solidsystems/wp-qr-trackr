@@ -17,25 +17,24 @@ use PHPUnit\Util\Xml\XmlException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class SchemaDetector
-{
-    /**
-     * @throws XmlException
-     */
-    public function detect(string $filename): SchemaDetectionResult
-    {
-        $document = (new Loader)->loadFile($filename);
+final class SchemaDetector {
 
-        $schemaFinder = new SchemaFinder;
+	/**
+	 * @throws XmlException
+	 */
+	public function detect( string $filename ): SchemaDetectionResult {
+		$document = ( new Loader() )->loadFile( $filename );
 
-        foreach ($schemaFinder->available() as $candidate) {
-            $schema = (new SchemaFinder)->find($candidate);
+		$schemaFinder = new SchemaFinder();
 
-            if (!(new Validator)->validate($document, $schema)->hasValidationErrors()) {
-                return new SuccessfulSchemaDetectionResult($candidate);
-            }
-        }
+		foreach ( $schemaFinder->available() as $candidate ) {
+			$schema = ( new SchemaFinder() )->find( $candidate );
 
-        return new FailedSchemaDetectionResult;
-    }
+			if ( ! ( new Validator() )->validate( $document, $schema )->hasValidationErrors() ) {
+				return new SuccessfulSchemaDetectionResult( $candidate );
+			}
+		}
+
+		return new FailedSchemaDetectionResult();
+	}
 }

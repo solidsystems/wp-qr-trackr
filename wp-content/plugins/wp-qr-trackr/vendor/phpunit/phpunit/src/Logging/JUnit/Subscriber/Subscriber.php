@@ -14,17 +14,15 @@ namespace PHPUnit\Logging\JUnit;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract class Subscriber
-{
-    private readonly JunitXmlLogger $logger;
+abstract class Subscriber {
 
-    public function __construct(JunitXmlLogger $logger)
-    {
-        $this->logger = $logger;
-    }
+	private readonly JunitXmlLogger $logger;
 
-    protected function logger(): JunitXmlLogger
-    {
-        return $this->logger;
-    }
+	public function __construct( JunitXmlLogger $logger ) {
+		$this->logger = $logger;
+	}
+
+	protected function logger(): JunitXmlLogger {
+		return $this->logger;
+	}
 }

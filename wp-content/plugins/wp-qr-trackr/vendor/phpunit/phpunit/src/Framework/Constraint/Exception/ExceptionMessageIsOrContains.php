@@ -18,52 +18,48 @@ use PHPUnit\Util\Exporter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ExceptionMessageIsOrContains extends Constraint
-{
-    private readonly string $expectedMessage;
+final class ExceptionMessageIsOrContains extends Constraint {
 
-    public function __construct(string $expectedMessage)
-    {
-        $this->expectedMessage = $expectedMessage;
-    }
+	private readonly string $expectedMessage;
 
-    public function toString(): string
-    {
-        if ($this->expectedMessage === '') {
-            return 'exception message is empty';
-        }
+	public function __construct( string $expectedMessage ) {
+		$this->expectedMessage = $expectedMessage;
+	}
 
-        return 'exception message contains ' . Exporter::export($this->expectedMessage);
-    }
+	public function toString(): string {
+		if ( $this->expectedMessage === '' ) {
+			return 'exception message is empty';
+		}
 
-    protected function matches(mixed $other): bool
-    {
-        if ($this->expectedMessage === '') {
-            return $other === '';
-        }
+		return 'exception message contains ' . Exporter::export( $this->expectedMessage );
+	}
 
-        return str_contains((string) $other, $this->expectedMessage);
-    }
+	protected function matches( mixed $other ): bool {
+		if ( $this->expectedMessage === '' ) {
+			return $other === '';
+		}
 
-    /**
-     * Returns the description of the failure.
-     *
-     * The beginning of failure messages is "Failed asserting that" in most
-     * cases. This method should return the second part of that sentence.
-     */
-    protected function failureDescription(mixed $other): string
-    {
-        if ($this->expectedMessage === '') {
-            return sprintf(
-                "exception message is empty but is '%s'",
-                $other,
-            );
-        }
+		return str_contains( (string) $other, $this->expectedMessage );
+	}
 
-        return sprintf(
-            "exception message '%s' contains '%s'",
-            $other,
-            $this->expectedMessage,
-        );
-    }
+	/**
+	 * Returns the description of the failure.
+	 *
+	 * The beginning of failure messages is "Failed asserting that" in most
+	 * cases. This method should return the second part of that sentence.
+	 */
+	protected function failureDescription( mixed $other ): string {
+		if ( $this->expectedMessage === '' ) {
+			return sprintf(
+				"exception message is empty but is '%s'",
+				$other,
+			);
+		}
+
+		return sprintf(
+			"exception message '%s' contains '%s'",
+			$other,
+			$this->expectedMessage,
+		);
+	}
 }

@@ -19,46 +19,39 @@ use Iterator;
  *
  * @template-implements Iterator<int, Constant>
  */
-final class ConstantCollectionIterator implements Countable, Iterator
-{
-    /**
-     * @psalm-var list<Constant>
-     */
-    private readonly array $constants;
-    private int $position = 0;
+final class ConstantCollectionIterator implements Countable, Iterator {
 
-    public function __construct(ConstantCollection $constants)
-    {
-        $this->constants = $constants->asArray();
-    }
+	/**
+	 * @psalm-var list<Constant>
+	 */
+	private readonly array $constants;
+	private int $position = 0;
 
-    public function count(): int
-    {
-        return iterator_count($this);
-    }
+	public function __construct( ConstantCollection $constants ) {
+		$this->constants = $constants->asArray();
+	}
 
-    public function rewind(): void
-    {
-        $this->position = 0;
-    }
+	public function count(): int {
+		return iterator_count( $this );
+	}
 
-    public function valid(): bool
-    {
-        return $this->position < count($this->constants);
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function key(): int
-    {
-        return $this->position;
-    }
+	public function valid(): bool {
+		return $this->position < count( $this->constants );
+	}
 
-    public function current(): Constant
-    {
-        return $this->constants[$this->position];
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function next(): void
-    {
-        $this->position++;
-    }
+	public function current(): Constant {
+		return $this->constants[ $this->position ];
+	}
+
+	public function next(): void {
+		++$this->position;
+	}
 }

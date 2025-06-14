@@ -15,36 +15,32 @@ use SebastianBergmann\CodeCoverage\InvalidArgumentException;
 /**
  * @psalm-immutable
  */
-final class CustomCssFile
-{
-    private readonly string $path;
+final class CustomCssFile {
 
-    public static function default(): self
-    {
-        return new self(__DIR__ . '/Renderer/Template/css/custom.css');
-    }
+	private readonly string $path;
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public static function from(string $path): self
-    {
-        if (!is_file($path)) {
-            throw new InvalidArgumentException(
-                '$path does not exist',
-            );
-        }
+	public static function default(): self {
+		return new self( __DIR__ . '/Renderer/Template/css/custom.css' );
+	}
 
-        return new self($path);
-    }
+	/**
+	 * @throws InvalidArgumentException
+	 */
+	public static function from( string $path ): self {
+		if ( ! is_file( $path ) ) {
+			throw new InvalidArgumentException(
+				'$path does not exist',
+			);
+		}
 
-    private function __construct(string $path)
-    {
-        $this->path = $path;
-    }
+		return new self( $path );
+	}
 
-    public function path(): string
-    {
-        return $this->path;
-    }
+	private function __construct( string $path ) {
+		$this->path = $path;
+	}
+
+	public function path(): string {
+		return $this->path;
+	}
 }

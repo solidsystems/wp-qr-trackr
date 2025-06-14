@@ -11,6 +11,6 @@ namespace PHPUnit\Metadata;
 
 use RuntimeException;
 
-final class NoVersionRequirementException extends RuntimeException implements Exception
-{
+final class NoVersionRequirementException extends RuntimeException implements Exception {
+
 }

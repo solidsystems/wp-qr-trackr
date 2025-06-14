@@ -10,151 +10,143 @@ use Traversable;
 /**
  * Edge iterator based on potrace.
  */
-final class EdgeIterator implements IteratorAggregate
-{
-    /**
-     * @var int[]
-     */
-    private array $bytes = [];
+final class EdgeIterator implements IteratorAggregate {
 
-    private ?int $size;
+	/**
+	 * @var int[]
+	 */
+	private array $bytes = array();
 
-    private int $width;
+	private ?int $size;
 
-    private int $height;
+	private int $width;
 
-    public function __construct(ByteMatrix $matrix)
-    {
-        $this->bytes = iterator_to_array($matrix->getBytes());
-        $this->size = count($this->bytes);
-        $this->width = $matrix->getWidth();
-        $this->height = $matrix->getHeight();
-    }
+	private int $height;
 
-    /**
-     * @return Traversable<Edge>
-     */
-    public function getIterator() : Traversable
-    {
-        $originalBytes = $this->bytes;
-        $point = $this->findNext(0, 0);
+	public function __construct( ByteMatrix $matrix ) {
+		$this->bytes  = iterator_to_array( $matrix->getBytes() );
+		$this->size   = count( $this->bytes );
+		$this->width  = $matrix->getWidth();
+		$this->height = $matrix->getHeight();
+	}
 
-        while (null !== $point) {
-            $edge = $this->findEdge($point[0], $point[1]);
-            $this->xorEdge($edge);
+	/**
+	 * @return Traversable<Edge>
+	 */
+	public function getIterator(): Traversable {
+		$originalBytes = $this->bytes;
+		$point         = $this->findNext( 0, 0 );
 
-            yield $edge;
+		while ( null !== $point ) {
+			$edge = $this->findEdge( $point[0], $point[1] );
+			$this->xorEdge( $edge );
 
-            $point = $this->findNext($point[0], $point[1]);
-        }
+			yield $edge;
 
-        $this->bytes = $originalBytes;
-    }
+			$point = $this->findNext( $point[0], $point[1] );
+		}
 
-    /**
-     * @return int[]|null
-     */
-    private function findNext(int $x, int $y) : ?array
-    {
-        $i = $this->width * $y + $x;
+		$this->bytes = $originalBytes;
+	}
 
-        while ($i < $this->size && 1 !== $this->bytes[$i]) {
-            ++$i;
-        }
+	/**
+	 * @return int[]|null
+	 */
+	private function findNext( int $x, int $y ): ?array {
+		$i = $this->width * $y + $x;
 
-        if ($i < $this->size) {
-            return $this->pointOf($i);
-        }
+		while ( $i < $this->size && 1 !== $this->bytes[ $i ] ) {
+			++$i;
+		}
 
-        return null;
-    }
+		if ( $i < $this->size ) {
+			return $this->pointOf( $i );
+		}
 
-    private function findEdge(int $x, int $y) : Edge
-    {
-        $edge = new Edge($this->isSet($x, $y));
-        $startX = $x;
-        $startY = $y;
-        $dirX = 0;
-        $dirY = 1;
+		return null;
+	}
 
-        while (true) {
-            $edge->addPoint($x, $y);
-            $x += $dirX;
-            $y += $dirY;
+	private function findEdge( int $x, int $y ): Edge {
+		$edge   = new Edge( $this->isSet( $x, $y ) );
+		$startX = $x;
+		$startY = $y;
+		$dirX   = 0;
+		$dirY   = 1;
 
-            if ($x === $startX && $y === $startY) {
-                break;
-            }
+		while ( true ) {
+			$edge->addPoint( $x, $y );
+			$x += $dirX;
+			$y += $dirY;
 
-            $left = $this->isSet($x + ($dirX + $dirY - 1 ) / 2, $y + ($dirY - $dirX - 1) / 2);
-            $right = $this->isSet($x + ($dirX - $dirY - 1) / 2, $y + ($dirY + $dirX - 1) / 2);
+			if ( $x === $startX && $y === $startY ) {
+				break;
+			}
 
-            if ($right && ! $left) {
-                $tmp = $dirX;
-                $dirX = -$dirY;
-                $dirY = $tmp;
-            } elseif ($right) {
-                $tmp = $dirX;
-                $dirX = -$dirY;
-                $dirY = $tmp;
-            } elseif (! $left) {
-                $tmp = $dirX;
-                $dirX = $dirY;
-                $dirY = -$tmp;
-            }
-        }
+			$left  = $this->isSet( $x + ( $dirX + $dirY - 1 ) / 2, $y + ( $dirY - $dirX - 1 ) / 2 );
+			$right = $this->isSet( $x + ( $dirX - $dirY - 1 ) / 2, $y + ( $dirY + $dirX - 1 ) / 2 );
 
-        return $edge;
-    }
+			if ( $right && ! $left ) {
+				$tmp  = $dirX;
+				$dirX = -$dirY;
+				$dirY = $tmp;
+			} elseif ( $right ) {
+				$tmp  = $dirX;
+				$dirX = -$dirY;
+				$dirY = $tmp;
+			} elseif ( ! $left ) {
+				$tmp  = $dirX;
+				$dirX = $dirY;
+				$dirY = -$tmp;
+			}
+		}
 
-    private function xorEdge(Edge $path) : void
-    {
-        $points = $path->getPoints();
-        $y1 = $points[0][1];
-        $length = count($points);
-        $maxX = $path->getMaxX();
+		return $edge;
+	}
 
-        for ($i = 1; $i < $length; ++$i) {
-            $y = $points[$i][1];
+	private function xorEdge( Edge $path ): void {
+		$points = $path->getPoints();
+		$y1     = $points[0][1];
+		$length = count( $points );
+		$maxX   = $path->getMaxX();
 
-            if ($y === $y1) {
-                continue;
-            }
+		for ( $i = 1; $i < $length; ++$i ) {
+			$y = $points[ $i ][1];
 
-            $x = $points[$i][0];
-            $minY = min($y1, $y);
+			if ( $y === $y1 ) {
+				continue;
+			}
 
-            for ($j = $x; $j < $maxX; ++$j) {
-                $this->flip($j, $minY);
-            }
+			$x    = $points[ $i ][0];
+			$minY = min( $y1, $y );
 
-            $y1 = $y;
-        }
-    }
+			for ( $j = $x; $j < $maxX; ++$j ) {
+				$this->flip( $j, $minY );
+			}
 
-    private function isSet(int $x, int $y) : bool
-    {
-        return (
-            $x >= 0
-            && $x < $this->width
-            && $y >= 0
-            && $y < $this->height
-        ) && 1 === $this->bytes[$this->width * $y + $x];
-    }
+			$y1 = $y;
+		}
+	}
 
-    /**
-     * @return int[]
-     */
-    private function pointOf(int $i) : array
-    {
-        $y = intdiv($i, $this->width);
-        return [$i - $y * $this->width, $y];
-    }
+	private function isSet( int $x, int $y ): bool {
+		return (
+			$x >= 0
+			&& $x < $this->width
+			&& $y >= 0
+			&& $y < $this->height
+		) && 1 === $this->bytes[ $this->width * $y + $x ];
+	}
 
-    private function flip(int $x, int $y) : void
-    {
-        $this->bytes[$this->width * $y + $x] = (
-            $this->isSet($x, $y) ? 0 : 1
-        );
-    }
+	/**
+	 * @return int[]
+	 */
+	private function pointOf( int $i ): array {
+		$y = intdiv( $i, $this->width );
+		return array( $i - $y * $this->width, $y );
+	}
+
+	private function flip( int $x, int $y ): void {
+		$this->bytes[ $this->width * $y + $x ] = (
+			$this->isSet( $x, $y ) ? 0 : 1
+		);
+	}
 }

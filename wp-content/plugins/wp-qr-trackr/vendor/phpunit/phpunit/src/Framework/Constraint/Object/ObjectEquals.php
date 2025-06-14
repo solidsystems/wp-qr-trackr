@@ -22,121 +22,117 @@ use ReflectionObject;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class ObjectEquals extends Constraint
-{
-    private readonly object $expected;
-    private readonly string $method;
+final class ObjectEquals extends Constraint {
 
-    public function __construct(object $object, string $method = 'equals')
-    {
-        $this->expected = $object;
-        $this->method   = $method;
-    }
+	private readonly object $expected;
+	private readonly string $method;
 
-    public function toString(): string
-    {
-        return 'two objects are equal';
-    }
+	public function __construct( object $object, string $method = 'equals' ) {
+		$this->expected = $object;
+		$this->method   = $method;
+	}
 
-    /**
-     * @throws ActualValueIsNotAnObjectException
-     * @throws ComparisonMethodDoesNotAcceptParameterTypeException
-     * @throws ComparisonMethodDoesNotDeclareBoolReturnTypeException
-     * @throws ComparisonMethodDoesNotDeclareExactlyOneParameterException
-     * @throws ComparisonMethodDoesNotDeclareParameterTypeException
-     * @throws ComparisonMethodDoesNotExistException
-     */
-    protected function matches(mixed $other): bool
-    {
-        if (!is_object($other)) {
-            throw new ActualValueIsNotAnObjectException;
-        }
+	public function toString(): string {
+		return 'two objects are equal';
+	}
 
-        $object = new ReflectionObject($other);
+	/**
+	 * @throws ActualValueIsNotAnObjectException
+	 * @throws ComparisonMethodDoesNotAcceptParameterTypeException
+	 * @throws ComparisonMethodDoesNotDeclareBoolReturnTypeException
+	 * @throws ComparisonMethodDoesNotDeclareExactlyOneParameterException
+	 * @throws ComparisonMethodDoesNotDeclareParameterTypeException
+	 * @throws ComparisonMethodDoesNotExistException
+	 */
+	protected function matches( mixed $other ): bool {
+		if ( ! is_object( $other ) ) {
+			throw new ActualValueIsNotAnObjectException();
+		}
 
-        if (!$object->hasMethod($this->method)) {
-            throw new ComparisonMethodDoesNotExistException(
-                $other::class,
-                $this->method,
-            );
-        }
+		$object = new ReflectionObject( $other );
 
-        $method = $object->getMethod($this->method);
+		if ( ! $object->hasMethod( $this->method ) ) {
+			throw new ComparisonMethodDoesNotExistException(
+				$other::class,
+				$this->method,
+			);
+		}
 
-        if (!$method->hasReturnType()) {
-            throw new ComparisonMethodDoesNotDeclareBoolReturnTypeException(
-                $other::class,
-                $this->method,
-            );
-        }
+		$method = $object->getMethod( $this->method );
 
-        $returnType = $method->getReturnType();
+		if ( ! $method->hasReturnType() ) {
+			throw new ComparisonMethodDoesNotDeclareBoolReturnTypeException(
+				$other::class,
+				$this->method,
+			);
+		}
 
-        if (!$returnType instanceof ReflectionNamedType) {
-            throw new ComparisonMethodDoesNotDeclareBoolReturnTypeException(
-                $other::class,
-                $this->method,
-            );
-        }
+		$returnType = $method->getReturnType();
 
-        if ($returnType->allowsNull()) {
-            throw new ComparisonMethodDoesNotDeclareBoolReturnTypeException(
-                $other::class,
-                $this->method,
-            );
-        }
+		if ( ! $returnType instanceof ReflectionNamedType ) {
+			throw new ComparisonMethodDoesNotDeclareBoolReturnTypeException(
+				$other::class,
+				$this->method,
+			);
+		}
 
-        if ($returnType->getName() !== 'bool') {
-            throw new ComparisonMethodDoesNotDeclareBoolReturnTypeException(
-                $other::class,
-                $this->method,
-            );
-        }
+		if ( $returnType->allowsNull() ) {
+			throw new ComparisonMethodDoesNotDeclareBoolReturnTypeException(
+				$other::class,
+				$this->method,
+			);
+		}
 
-        if ($method->getNumberOfParameters() !== 1 || $method->getNumberOfRequiredParameters() !== 1) {
-            throw new ComparisonMethodDoesNotDeclareExactlyOneParameterException(
-                $other::class,
-                $this->method,
-            );
-        }
+		if ( $returnType->getName() !== 'bool' ) {
+			throw new ComparisonMethodDoesNotDeclareBoolReturnTypeException(
+				$other::class,
+				$this->method,
+			);
+		}
 
-        $parameter = $method->getParameters()[0];
+		if ( $method->getNumberOfParameters() !== 1 || $method->getNumberOfRequiredParameters() !== 1 ) {
+			throw new ComparisonMethodDoesNotDeclareExactlyOneParameterException(
+				$other::class,
+				$this->method,
+			);
+		}
 
-        if (!$parameter->hasType()) {
-            throw new ComparisonMethodDoesNotDeclareParameterTypeException(
-                $other::class,
-                $this->method,
-            );
-        }
+		$parameter = $method->getParameters()[0];
 
-        $type = $parameter->getType();
+		if ( ! $parameter->hasType() ) {
+			throw new ComparisonMethodDoesNotDeclareParameterTypeException(
+				$other::class,
+				$this->method,
+			);
+		}
 
-        if (!$type instanceof ReflectionNamedType) {
-            throw new ComparisonMethodDoesNotDeclareParameterTypeException(
-                $other::class,
-                $this->method,
-            );
-        }
+		$type = $parameter->getType();
 
-        $typeName = $type->getName();
+		if ( ! $type instanceof ReflectionNamedType ) {
+			throw new ComparisonMethodDoesNotDeclareParameterTypeException(
+				$other::class,
+				$this->method,
+			);
+		}
 
-        if ($typeName === 'self') {
-            $typeName = $other::class;
-        }
+		$typeName = $type->getName();
 
-        if (!$this->expected instanceof $typeName) {
-            throw new ComparisonMethodDoesNotAcceptParameterTypeException(
-                $other::class,
-                $this->method,
-                $this->expected::class,
-            );
-        }
+		if ( $typeName === 'self' ) {
+			$typeName = $other::class;
+		}
 
-        return $other->{$this->method}($this->expected);
-    }
+		if ( ! $this->expected instanceof $typeName ) {
+			throw new ComparisonMethodDoesNotAcceptParameterTypeException(
+				$other::class,
+				$this->method,
+				$this->expected::class,
+			);
+		}
 
-    protected function failureDescription(mixed $other): string
-    {
-        return $this->toString(true);
-    }
+		return $other->{$this->method}( $this->expected );
+	}
+
+	protected function failureDescription( mixed $other ): string {
+		return $this->toString( true );
+	}
 }

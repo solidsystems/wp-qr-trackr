@@ -19,88 +19,77 @@ use PHPUnit\TextUI\Configuration\NoCustomCssFileException;
  *
  * @psalm-immutable
  */
-final class Html
-{
-    private readonly Directory $target;
-    private readonly int $lowUpperBound;
-    private readonly int $highLowerBound;
-    private readonly string $colorSuccessLow;
-    private readonly string $colorSuccessMedium;
-    private readonly string $colorSuccessHigh;
-    private readonly string $colorWarning;
-    private readonly string $colorDanger;
-    private readonly ?string $customCssFile;
+final class Html {
 
-    public function __construct(Directory $target, int $lowUpperBound, int $highLowerBound, string $colorSuccessLow, string $colorSuccessMedium, string $colorSuccessHigh, string $colorWarning, string $colorDanger, ?string $customCssFile)
-    {
-        $this->target             = $target;
-        $this->lowUpperBound      = $lowUpperBound;
-        $this->highLowerBound     = $highLowerBound;
-        $this->colorSuccessLow    = $colorSuccessLow;
-        $this->colorSuccessMedium = $colorSuccessMedium;
-        $this->colorSuccessHigh   = $colorSuccessHigh;
-        $this->colorWarning       = $colorWarning;
-        $this->colorDanger        = $colorDanger;
-        $this->customCssFile      = $customCssFile;
-    }
+	private readonly Directory $target;
+	private readonly int $lowUpperBound;
+	private readonly int $highLowerBound;
+	private readonly string $colorSuccessLow;
+	private readonly string $colorSuccessMedium;
+	private readonly string $colorSuccessHigh;
+	private readonly string $colorWarning;
+	private readonly string $colorDanger;
+	private readonly ?string $customCssFile;
 
-    public function target(): Directory
-    {
-        return $this->target;
-    }
+	public function __construct( Directory $target, int $lowUpperBound, int $highLowerBound, string $colorSuccessLow, string $colorSuccessMedium, string $colorSuccessHigh, string $colorWarning, string $colorDanger, ?string $customCssFile ) {
+		$this->target             = $target;
+		$this->lowUpperBound      = $lowUpperBound;
+		$this->highLowerBound     = $highLowerBound;
+		$this->colorSuccessLow    = $colorSuccessLow;
+		$this->colorSuccessMedium = $colorSuccessMedium;
+		$this->colorSuccessHigh   = $colorSuccessHigh;
+		$this->colorWarning       = $colorWarning;
+		$this->colorDanger        = $colorDanger;
+		$this->customCssFile      = $customCssFile;
+	}
 
-    public function lowUpperBound(): int
-    {
-        return $this->lowUpperBound;
-    }
+	public function target(): Directory {
+		return $this->target;
+	}
 
-    public function highLowerBound(): int
-    {
-        return $this->highLowerBound;
-    }
+	public function lowUpperBound(): int {
+		return $this->lowUpperBound;
+	}
 
-    public function colorSuccessLow(): string
-    {
-        return $this->colorSuccessLow;
-    }
+	public function highLowerBound(): int {
+		return $this->highLowerBound;
+	}
 
-    public function colorSuccessMedium(): string
-    {
-        return $this->colorSuccessMedium;
-    }
+	public function colorSuccessLow(): string {
+		return $this->colorSuccessLow;
+	}
 
-    public function colorSuccessHigh(): string
-    {
-        return $this->colorSuccessHigh;
-    }
+	public function colorSuccessMedium(): string {
+		return $this->colorSuccessMedium;
+	}
 
-    public function colorWarning(): string
-    {
-        return $this->colorWarning;
-    }
+	public function colorSuccessHigh(): string {
+		return $this->colorSuccessHigh;
+	}
 
-    public function colorDanger(): string
-    {
-        return $this->colorDanger;
-    }
+	public function colorWarning(): string {
+		return $this->colorWarning;
+	}
 
-    /**
-     * @psalm-assert-if-true !null $this->customCssFile
-     */
-    public function hasCustomCssFile(): bool
-    {
-        return $this->customCssFile !== null;
-    }
+	public function colorDanger(): string {
+		return $this->colorDanger;
+	}
 
-    /**
-     * @throws NoCustomCssFileException
-     */
-    public function customCssFile(): string
-    {
-        if (!$this->hasCustomCssFile()) {
-            throw new NoCustomCssFileException;
-        }
+	/**
+	 * @psalm-assert-if-true !null $this->customCssFile
+	 */
+	public function hasCustomCssFile(): bool {
+		return $this->customCssFile !== null;
+	}
 
-        return $this->customCssFile;
-    }
+	/**
+	 * @throws NoCustomCssFileException
+	 */
+	public function customCssFile(): string {
+		if ( ! $this->hasCustomCssFile() ) {
+			throw new NoCustomCssFileException();
+		}
+
+		return $this->customCssFile;
+	}
 }

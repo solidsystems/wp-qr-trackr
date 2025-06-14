@@ -2,6 +2,12 @@
 
 Thank you for your interest in contributing! This project is both a production-ready WordPress plugin (QR Trackr) and a modern template for building your own plugins. We welcome improvements, bug fixes, and new features.
 
+## Getting Started
+
+- Please review the [How to Use with GitHub Actions (CI/CD)](./README.md#how-to-use-with-github-actions-cicd) section in the README before running or modifying any CI/CD workflows. This section lists all required environment variables, secrets, and infrastructure expectations for automated testing, linting, and deployment.
+
+- Make sure your environment and secrets are set up as described to avoid CI failures.
+
 ## How to Contribute
 - Fork the repository and create a feature branch for your changes.
 - Ensure your code follows project standards (see `.cursorrules`).
@@ -33,6 +39,19 @@ _Add your name in parentheses if you start working on an item!_
 - Use Yarn for JS dependencies.
 - All new features must include documentation and tests.
 - See `.cursorrules` for more details.
+
+## Coding Standards
+
+- All PHP code must comply with the project's `.phpcs.xml` ruleset.
+- The `vendor/` directory is excluded from all linting and auto-fixing.
+- Never manually edit files in `vendor/`.
+- To auto-fix most issues, use:
+
+```sh
+./vendor/bin/phpcbf --standard=.phpcs.xml --extensions=php .
+```
+
+- Pre-commit hooks and CI will enforce these rules automatically.
 
 ## Questions or Suggestions?
 Open an issue or start a discussion! We're happy to help and open to new ideas. 

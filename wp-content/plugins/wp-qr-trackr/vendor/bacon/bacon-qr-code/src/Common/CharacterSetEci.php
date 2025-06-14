@@ -38,140 +38,134 @@ use DASPRiD\Enum\AbstractEnum;
  * @method static self GB18030()
  * @method static self EUC_KR()
  */
-final class CharacterSetEci extends AbstractEnum
-{
-    protected const CP437 = [[0, 2]];
-    protected const ISO8859_1 = [[1, 3], 'ISO-8859-1'];
-    protected const ISO8859_2 = [[4], 'ISO-8859-2'];
-    protected const ISO8859_3 = [[5], 'ISO-8859-3'];
-    protected const ISO8859_4 = [[6], 'ISO-8859-4'];
-    protected const ISO8859_5 = [[7], 'ISO-8859-5'];
-    protected const ISO8859_6 = [[8], 'ISO-8859-6'];
-    protected const ISO8859_7 = [[9], 'ISO-8859-7'];
-    protected const ISO8859_8 = [[10], 'ISO-8859-8'];
-    protected const ISO8859_9 = [[11], 'ISO-8859-9'];
-    protected const ISO8859_10 = [[12], 'ISO-8859-10'];
-    protected const ISO8859_11 = [[13], 'ISO-8859-11'];
-    protected const ISO8859_12 = [[14], 'ISO-8859-12'];
-    protected const ISO8859_13 = [[15], 'ISO-8859-13'];
-    protected const ISO8859_14 = [[16], 'ISO-8859-14'];
-    protected const ISO8859_15 = [[17], 'ISO-8859-15'];
-    protected const ISO8859_16 = [[18], 'ISO-8859-16'];
-    protected const SJIS = [[20], 'Shift_JIS'];
-    protected const CP1250 = [[21], 'windows-1250'];
-    protected const CP1251 = [[22], 'windows-1251'];
-    protected const CP1252 = [[23], 'windows-1252'];
-    protected const CP1256 = [[24], 'windows-1256'];
-    protected const UNICODE_BIG_UNMARKED = [[25], 'UTF-16BE', 'UnicodeBig'];
-    protected const UTF8 = [[26], 'UTF-8'];
-    protected const ASCII = [[27, 170], 'US-ASCII'];
-    protected const BIG5 = [[28]];
-    protected const GB18030 = [[29], 'GB2312', 'EUC_CN', 'GBK'];
-    protected const EUC_KR = [[30], 'EUC-KR'];
+final class CharacterSetEci extends AbstractEnum {
 
-    /**
-     * @var string[]
-     */
-    private array $otherEncodingNames;
+	protected const CP437                = array( array( 0, 2 ) );
+	protected const ISO8859_1            = array( array( 1, 3 ), 'ISO-8859-1' );
+	protected const ISO8859_2            = array( array( 4 ), 'ISO-8859-2' );
+	protected const ISO8859_3            = array( array( 5 ), 'ISO-8859-3' );
+	protected const ISO8859_4            = array( array( 6 ), 'ISO-8859-4' );
+	protected const ISO8859_5            = array( array( 7 ), 'ISO-8859-5' );
+	protected const ISO8859_6            = array( array( 8 ), 'ISO-8859-6' );
+	protected const ISO8859_7            = array( array( 9 ), 'ISO-8859-7' );
+	protected const ISO8859_8            = array( array( 10 ), 'ISO-8859-8' );
+	protected const ISO8859_9            = array( array( 11 ), 'ISO-8859-9' );
+	protected const ISO8859_10           = array( array( 12 ), 'ISO-8859-10' );
+	protected const ISO8859_11           = array( array( 13 ), 'ISO-8859-11' );
+	protected const ISO8859_12           = array( array( 14 ), 'ISO-8859-12' );
+	protected const ISO8859_13           = array( array( 15 ), 'ISO-8859-13' );
+	protected const ISO8859_14           = array( array( 16 ), 'ISO-8859-14' );
+	protected const ISO8859_15           = array( array( 17 ), 'ISO-8859-15' );
+	protected const ISO8859_16           = array( array( 18 ), 'ISO-8859-16' );
+	protected const SJIS                 = array( array( 20 ), 'Shift_JIS' );
+	protected const CP1250               = array( array( 21 ), 'windows-1250' );
+	protected const CP1251               = array( array( 22 ), 'windows-1251' );
+	protected const CP1252               = array( array( 23 ), 'windows-1252' );
+	protected const CP1256               = array( array( 24 ), 'windows-1256' );
+	protected const UNICODE_BIG_UNMARKED = array( array( 25 ), 'UTF-16BE', 'UnicodeBig' );
+	protected const UTF8                 = array( array( 26 ), 'UTF-8' );
+	protected const ASCII                = array( array( 27, 170 ), 'US-ASCII' );
+	protected const BIG5                 = array( array( 28 ) );
+	protected const GB18030              = array( array( 29 ), 'GB2312', 'EUC_CN', 'GBK' );
+	protected const EUC_KR               = array( array( 30 ), 'EUC-KR' );
 
-    /**
-     * @var array<int, self>|null
-     */
-    private static ?array $valueToEci;
+	/**
+	 * @var string[]
+	 */
+	private array $otherEncodingNames;
 
-    /**
-     * @var array<string, self>|null
-     */
-    private static ?array $nameToEci = null;
+	/**
+	 * @var array<int, self>|null
+	 */
+	private static ?array $valueToEci;
 
-    /**
-     * @param int[] $values
-     */
-    public function __construct(private readonly array $values, string ...$otherEncodingNames)
-    {
-        $this->otherEncodingNames = $otherEncodingNames;
-    }
+	/**
+	 * @var array<string, self>|null
+	 */
+	private static ?array $nameToEci = null;
 
-    /**
-     * Returns the primary value.
-     */
-    public function getValue() : int
-    {
-        return $this->values[0];
-    }
+	/**
+	 * @param int[] $values
+	 */
+	public function __construct( private readonly array $values, string ...$otherEncodingNames ) {
+		$this->otherEncodingNames = $otherEncodingNames;
+	}
 
-    /**
-     * Gets character set ECI by value.
-     *
-     * Returns the representing ECI of a given value, or null if it is legal but unsupported.
-     *
-     * @throws InvalidArgumentException if value is not between 0 and 900
-     */
-    public static function getCharacterSetEciByValue(int $value) : ?self
-    {
-        if ($value < 0 || $value >= 900) {
-            throw new InvalidArgumentException('Value must be between 0 and 900');
-        }
+	/**
+	 * Returns the primary value.
+	 */
+	public function getValue(): int {
+		return $this->values[0];
+	}
 
-        $valueToEci = self::valueToEci();
+	/**
+	 * Gets character set ECI by value.
+	 *
+	 * Returns the representing ECI of a given value, or null if it is legal but unsupported.
+	 *
+	 * @throws InvalidArgumentException if value is not between 0 and 900
+	 */
+	public static function getCharacterSetEciByValue( int $value ): ?self {
+		if ( $value < 0 || $value >= 900 ) {
+			throw new InvalidArgumentException( 'Value must be between 0 and 900' );
+		}
 
-        if (! array_key_exists($value, $valueToEci)) {
-            return null;
-        }
+		$valueToEci = self::valueToEci();
 
-        return $valueToEci[$value];
-    }
+		if ( ! array_key_exists( $value, $valueToEci ) ) {
+			return null;
+		}
 
-    /**
-     * Returns character set ECI by name.
-     *
-     * Returns the representing ECI of a given name, or null if it is legal but unsupported
-     */
-    public static function getCharacterSetEciByName(string $name) : ?self
-    {
-        $nameToEci = self::nameToEci();
-        $name = strtolower($name);
+		return $valueToEci[ $value ];
+	}
 
-        if (! array_key_exists($name, $nameToEci)) {
-            return null;
-        }
+	/**
+	 * Returns character set ECI by name.
+	 *
+	 * Returns the representing ECI of a given name, or null if it is legal but unsupported
+	 */
+	public static function getCharacterSetEciByName( string $name ): ?self {
+		$nameToEci = self::nameToEci();
+		$name      = strtolower( $name );
 
-        return $nameToEci[$name];
-    }
+		if ( ! array_key_exists( $name, $nameToEci ) ) {
+			return null;
+		}
 
-    private static function valueToEci() : array
-    {
-        if (null !== self::$valueToEci) {
-            return self::$valueToEci;
-        }
+		return $nameToEci[ $name ];
+	}
 
-        self::$valueToEci = [];
+	private static function valueToEci(): array {
+		if ( null !== self::$valueToEci ) {
+			return self::$valueToEci;
+		}
 
-        foreach (self::values() as $eci) {
-            foreach ($eci->values as $value) {
-                self::$valueToEci[$value] = $eci;
-            }
-        }
+		self::$valueToEci = array();
 
-        return self::$valueToEci;
-    }
+		foreach ( self::values() as $eci ) {
+			foreach ( $eci->values as $value ) {
+				self::$valueToEci[ $value ] = $eci;
+			}
+		}
 
-    private static function nameToEci() : array
-    {
-        if (null !== self::$nameToEci) {
-            return self::$nameToEci;
-        }
+		return self::$valueToEci;
+	}
 
-        self::$nameToEci = [];
+	private static function nameToEci(): array {
+		if ( null !== self::$nameToEci ) {
+			return self::$nameToEci;
+		}
 
-        foreach (self::values() as $eci) {
-            self::$nameToEci[strtolower($eci->name())] = $eci;
+		self::$nameToEci = array();
 
-            foreach ($eci->otherEncodingNames as $name) {
-                self::$nameToEci[strtolower($name)] = $eci;
-            }
-        }
+		foreach ( self::values() as $eci ) {
+			self::$nameToEci[ strtolower( $eci->name() ) ] = $eci;
 
-        return self::$nameToEci;
-    }
+			foreach ( $eci->otherEncodingNames as $name ) {
+				self::$nameToEci[ strtolower( $name ) ] = $eci;
+			}
+		}
+
+		return self::$nameToEci;
+	}
 }

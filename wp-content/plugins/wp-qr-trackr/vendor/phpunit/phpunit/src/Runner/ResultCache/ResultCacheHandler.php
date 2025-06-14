@@ -30,128 +30,116 @@ use PHPUnit\Framework\TestStatus\TestStatus;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ResultCacheHandler
-{
-    private readonly ResultCache $cache;
-    private ?HRTime $time  = null;
-    private int $testSuite = 0;
+final class ResultCacheHandler {
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
-    public function __construct(ResultCache $cache, Facade $facade)
-    {
-        $this->cache = $cache;
+	private readonly ResultCache $cache;
+	private ?HRTime $time  = null;
+	private int $testSuite = 0;
 
-        $this->registerSubscribers($facade);
-    }
+	/**
+	 * @throws EventFacadeIsSealedException
+	 * @throws UnknownSubscriberTypeException
+	 */
+	public function __construct( ResultCache $cache, Facade $facade ) {
+		$this->cache = $cache;
 
-    public function testSuiteStarted(): void
-    {
-        $this->testSuite++;
-    }
+		$this->registerSubscribers( $facade );
+	}
 
-    public function testSuiteFinished(): void
-    {
-        $this->testSuite--;
+	public function testSuiteStarted(): void {
+		++$this->testSuite;
+	}
 
-        if ($this->testSuite === 0) {
-            $this->cache->persist();
-        }
-    }
+	public function testSuiteFinished(): void {
+		--$this->testSuite;
 
-    public function testPrepared(Prepared $event): void
-    {
-        $this->time = $event->telemetryInfo()->time();
-    }
+		if ( $this->testSuite === 0 ) {
+			$this->cache->persist();
+		}
+	}
 
-    public function testMarkedIncomplete(MarkedIncomplete $event): void
-    {
-        $this->cache->setStatus(
-            $event->test()->id(),
-            TestStatus::incomplete($event->throwable()->message()),
-        );
-    }
+	public function testPrepared( Prepared $event ): void {
+		$this->time = $event->telemetryInfo()->time();
+	}
 
-    public function testConsideredRisky(ConsideredRisky $event): void
-    {
-        $this->cache->setStatus(
-            $event->test()->id(),
-            TestStatus::risky($event->message()),
-        );
-    }
+	public function testMarkedIncomplete( MarkedIncomplete $event ): void {
+		$this->cache->setStatus(
+			$event->test()->id(),
+			TestStatus::incomplete( $event->throwable()->message() ),
+		);
+	}
 
-    public function testErrored(Errored $event): void
-    {
-        $this->cache->setStatus(
-            $event->test()->id(),
-            TestStatus::error($event->throwable()->message()),
-        );
-    }
+	public function testConsideredRisky( ConsideredRisky $event ): void {
+		$this->cache->setStatus(
+			$event->test()->id(),
+			TestStatus::risky( $event->message() ),
+		);
+	}
 
-    public function testFailed(Failed $event): void
-    {
-        $this->cache->setStatus(
-            $event->test()->id(),
-            TestStatus::failure($event->throwable()->message()),
-        );
-    }
+	public function testErrored( Errored $event ): void {
+		$this->cache->setStatus(
+			$event->test()->id(),
+			TestStatus::error( $event->throwable()->message() ),
+		);
+	}
 
-    /**
-     * @throws \PHPUnit\Event\InvalidArgumentException
-     * @throws InvalidArgumentException
-     */
-    public function testSkipped(Skipped $event): void
-    {
-        $this->cache->setStatus(
-            $event->test()->id(),
-            TestStatus::skipped($event->message()),
-        );
+	public function testFailed( Failed $event ): void {
+		$this->cache->setStatus(
+			$event->test()->id(),
+			TestStatus::failure( $event->throwable()->message() ),
+		);
+	}
 
-        $this->cache->setTime($event->test()->id(), $this->duration($event));
-    }
+	/**
+	 * @throws \PHPUnit\Event\InvalidArgumentException
+	 * @throws InvalidArgumentException
+	 */
+	public function testSkipped( Skipped $event ): void {
+		$this->cache->setStatus(
+			$event->test()->id(),
+			TestStatus::skipped( $event->message() ),
+		);
 
-    /**
-     * @throws \PHPUnit\Event\InvalidArgumentException
-     * @throws InvalidArgumentException
-     */
-    public function testFinished(Finished $event): void
-    {
-        $this->cache->setTime($event->test()->id(), $this->duration($event));
+		$this->cache->setTime( $event->test()->id(), $this->duration( $event ) );
+	}
 
-        $this->time = null;
-    }
+	/**
+	 * @throws \PHPUnit\Event\InvalidArgumentException
+	 * @throws InvalidArgumentException
+	 */
+	public function testFinished( Finished $event ): void {
+		$this->cache->setTime( $event->test()->id(), $this->duration( $event ) );
 
-    /**
-     * @throws \PHPUnit\Event\InvalidArgumentException
-     * @throws InvalidArgumentException
-     */
-    private function duration(Event $event): float
-    {
-        if ($this->time === null) {
-            return 0.0;
-        }
+		$this->time = null;
+	}
 
-        return round($event->telemetryInfo()->time()->duration($this->time)->asFloat(), 3);
-    }
+	/**
+	 * @throws \PHPUnit\Event\InvalidArgumentException
+	 * @throws InvalidArgumentException
+	 */
+	private function duration( Event $event ): float {
+		if ( $this->time === null ) {
+			return 0.0;
+		}
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
-    private function registerSubscribers(Facade $facade): void
-    {
-        $facade->registerSubscribers(
-            new TestSuiteStartedSubscriber($this),
-            new TestSuiteFinishedSubscriber($this),
-            new TestPreparedSubscriber($this),
-            new TestMarkedIncompleteSubscriber($this),
-            new TestConsideredRiskySubscriber($this),
-            new TestErroredSubscriber($this),
-            new TestFailedSubscriber($this),
-            new TestSkippedSubscriber($this),
-            new TestFinishedSubscriber($this),
-        );
-    }
+		return round( $event->telemetryInfo()->time()->duration( $this->time )->asFloat(), 3 );
+	}
+
+	/**
+	 * @throws EventFacadeIsSealedException
+	 * @throws UnknownSubscriberTypeException
+	 */
+	private function registerSubscribers( Facade $facade ): void {
+		$facade->registerSubscribers(
+			new TestSuiteStartedSubscriber( $this ),
+			new TestSuiteFinishedSubscriber( $this ),
+			new TestPreparedSubscriber( $this ),
+			new TestMarkedIncompleteSubscriber( $this ),
+			new TestConsideredRiskySubscriber( $this ),
+			new TestErroredSubscriber( $this ),
+			new TestFailedSubscriber( $this ),
+			new TestSkippedSubscriber( $this ),
+			new TestFinishedSubscriber( $this ),
+		);
+	}
 }

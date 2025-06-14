@@ -18,34 +18,33 @@ use PHPUnit\Util\Xml\XmlException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Migrator
-{
-    /**
-     * @throws Exception
-     * @throws MigrationException
-     * @throws XmlException
-     */
-    public function migrate(string $filename): string
-    {
-        $origin = (new SchemaDetector)->detect($filename);
+final class Migrator {
 
-        if (!$origin->detected()) {
-            throw new Exception('The file does not validate against any known schema');
-        }
+	/**
+	 * @throws Exception
+	 * @throws MigrationException
+	 * @throws XmlException
+	 */
+	public function migrate( string $filename ): string {
+		$origin = ( new SchemaDetector() )->detect( $filename );
 
-        if ($origin->version() === Version::series()) {
-            throw new Exception('The file does not need to be migrated');
-        }
+		if ( ! $origin->detected() ) {
+			throw new Exception( 'The file does not validate against any known schema' );
+		}
 
-        $configurationDocument = (new XmlLoader)->loadFile($filename);
+		if ( $origin->version() === Version::series() ) {
+			throw new Exception( 'The file does not need to be migrated' );
+		}
 
-        foreach ((new MigrationBuilder)->build($origin->version()) as $migration) {
-            $migration->migrate($configurationDocument);
-        }
+		$configurationDocument = ( new XmlLoader() )->loadFile( $filename );
 
-        $configurationDocument->formatOutput       = true;
-        $configurationDocument->preserveWhiteSpace = false;
+		foreach ( ( new MigrationBuilder() )->build( $origin->version() ) as $migration ) {
+			$migration->migrate( $configurationDocument );
+		}
 
-        return $configurationDocument->saveXML();
-    }
+		$configurationDocument->formatOutput       = true;
+		$configurationDocument->preserveWhiteSpace = false;
+
+		return $configurationDocument->saveXML();
+	}
 }

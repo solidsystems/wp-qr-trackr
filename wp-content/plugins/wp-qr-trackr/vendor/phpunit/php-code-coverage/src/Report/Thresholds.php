@@ -14,43 +14,38 @@ use SebastianBergmann\CodeCoverage\InvalidArgumentException;
 /**
  * @psalm-immutable
  */
-final class Thresholds
-{
-    private readonly int $lowUpperBound;
-    private readonly int $highLowerBound;
+final class Thresholds {
 
-    public static function default(): self
-    {
-        return new self(50, 90);
-    }
+	private readonly int $lowUpperBound;
+	private readonly int $highLowerBound;
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public static function from(int $lowUpperBound, int $highLowerBound): self
-    {
-        if ($lowUpperBound > $highLowerBound) {
-            throw new InvalidArgumentException(
-                '$lowUpperBound must not be larger than $highLowerBound',
-            );
-        }
+	public static function default(): self {
+		return new self( 50, 90 );
+	}
 
-        return new self($lowUpperBound, $highLowerBound);
-    }
+	/**
+	 * @throws InvalidArgumentException
+	 */
+	public static function from( int $lowUpperBound, int $highLowerBound ): self {
+		if ( $lowUpperBound > $highLowerBound ) {
+			throw new InvalidArgumentException(
+				'$lowUpperBound must not be larger than $highLowerBound',
+			);
+		}
 
-    private function __construct(int $lowUpperBound, int $highLowerBound)
-    {
-        $this->lowUpperBound  = $lowUpperBound;
-        $this->highLowerBound = $highLowerBound;
-    }
+		return new self( $lowUpperBound, $highLowerBound );
+	}
 
-    public function lowUpperBound(): int
-    {
-        return $this->lowUpperBound;
-    }
+	private function __construct( int $lowUpperBound, int $highLowerBound ) {
+		$this->lowUpperBound  = $lowUpperBound;
+		$this->highLowerBound = $highLowerBound;
+	}
 
-    public function highLowerBound(): int
-    {
-        return $this->highLowerBound;
-    }
+	public function lowUpperBound(): int {
+		return $this->lowUpperBound;
+	}
+
+	public function highLowerBound(): int {
+		return $this->highLowerBound;
+	}
 }

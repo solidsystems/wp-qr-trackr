@@ -18,24 +18,21 @@ use PHPUnit\TextUI\Configuration\File;
  *
  * @psalm-immutable
  */
-final class Crap4j
-{
-    private readonly File $target;
-    private readonly int $threshold;
+final class Crap4j {
 
-    public function __construct(File $target, int $threshold)
-    {
-        $this->target    = $target;
-        $this->threshold = $threshold;
-    }
+	private readonly File $target;
+	private readonly int $threshold;
 
-    public function target(): File
-    {
-        return $this->target;
-    }
+	public function __construct( File $target, int $threshold ) {
+		$this->target    = $target;
+		$this->threshold = $threshold;
+	}
 
-    public function threshold(): int
-    {
-        return $this->threshold;
-    }
+	public function target(): File {
+		return $this->target;
+	}
+
+	public function threshold(): int {
+		return $this->threshold;
+	}
 }

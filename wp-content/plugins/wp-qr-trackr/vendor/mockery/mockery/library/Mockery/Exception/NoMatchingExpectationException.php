@@ -13,90 +13,83 @@ namespace Mockery\Exception;
 use Mockery\Exception;
 use Mockery\LegacyMockInterface;
 
-class NoMatchingExpectationException extends Exception
-{
-    /**
-     * @var array<mixed>
-     */
-    protected $actual = [];
+class NoMatchingExpectationException extends Exception {
 
-    /**
-     * @var string|null
-     */
-    protected $method = null;
+	/**
+	 * @var array<mixed>
+	 */
+	protected $actual = array();
 
-    /**
-     * @var LegacyMockInterface|null
-     */
-    protected $mockObject = null;
+	/**
+	 * @var string|null
+	 */
+	protected $method = null;
 
-    /**
-     * @return array<mixed>
-     */
-    public function getActualArguments()
-    {
-        return $this->actual;
-    }
+	/**
+	 * @var LegacyMockInterface|null
+	 */
+	protected $mockObject = null;
 
-    /**
-     * @return string|null
-     */
-    public function getMethodName()
-    {
-        return $this->method;
-    }
+	/**
+	 * @return array<mixed>
+	 */
+	public function getActualArguments() {
+		return $this->actual;
+	}
 
-    /**
-     * @return LegacyMockInterface|null
-     */
-    public function getMock()
-    {
-        return $this->mockObject;
-    }
+	/**
+	 * @return string|null
+	 */
+	public function getMethodName() {
+		return $this->method;
+	}
 
-    /**
-     * @return string|null
-     */
-    public function getMockName()
-    {
-        $mock = $this->getMock();
+	/**
+	 * @return LegacyMockInterface|null
+	 */
+	public function getMock() {
+		return $this->mockObject;
+	}
 
-        if ($mock === null) {
-            return $mock;
-        }
+	/**
+	 * @return string|null
+	 */
+	public function getMockName() {
+		$mock = $this->getMock();
 
-        return $mock->mockery_getName();
-    }
+		if ( $mock === null ) {
+			return $mock;
+		}
 
-    /**
-     * @todo Rename param `count` to `args`
-     * @template TMixed
-     *
-     * @param  array<TMixed> $count
-     * @return self
-     */
-    public function setActualArguments($count)
-    {
-        $this->actual = $count;
-        return $this;
-    }
+		return $mock->mockery_getName();
+	}
 
-    /**
-     * @param  string $name
-     * @return self
-     */
-    public function setMethodName($name)
-    {
-        $this->method = $name;
-        return $this;
-    }
+	/**
+	 * @todo Rename param `count` to `args`
+	 * @template TMixed
+	 *
+	 * @param  array<TMixed> $count
+	 * @return self
+	 */
+	public function setActualArguments( $count ) {
+		$this->actual = $count;
+		return $this;
+	}
 
-    /**
-     * @return self
-     */
-    public function setMock(LegacyMockInterface $mock)
-    {
-        $this->mockObject = $mock;
-        return $this;
-    }
+	/**
+	 * @param  string $name
+	 * @return self
+	 */
+	public function setMethodName( $name ) {
+		$this->method = $name;
+		return $this;
+	}
+
+	/**
+	 * @return self
+	 */
+	public function setMock( LegacyMockInterface $mock ) {
+		$this->mockObject = $mock;
+		return $this;
+	}
 }

@@ -14,38 +14,35 @@ namespace PHPUnit\TextUI\Configuration;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class SourceFilter
-{
-    private static ?self $instance = null;
+final class SourceFilter {
 
-    /**
-     * @psalm-var array<non-empty-string, true>
-     */
-    private readonly array $map;
+	private static ?self $instance = null;
 
-    public static function instance(): self
-    {
-        if (self::$instance === null) {
-            self::$instance = new self(
-                (new SourceMapper)->map(
-                    Registry::get()->source(),
-                ),
-            );
-        }
+	/**
+	 * @psalm-var array<non-empty-string, true>
+	 */
+	private readonly array $map;
 
-        return self::$instance;
-    }
+	public static function instance(): self {
+		if ( self::$instance === null ) {
+			self::$instance = new self(
+				( new SourceMapper() )->map(
+					Registry::get()->source(),
+				),
+			);
+		}
 
-    /**
-     * @psalm-param array<non-empty-string, true> $map
-     */
-    public function __construct(array $map)
-    {
-        $this->map = $map;
-    }
+		return self::$instance;
+	}
 
-    public function includes(string $path): bool
-    {
-        return isset($this->map[$path]);
-    }
+	/**
+	 * @psalm-param array<non-empty-string, true> $map
+	 */
+	public function __construct( array $map ) {
+		$this->map = $map;
+	}
+
+	public function includes( string $path ): bool {
+		return isset( $this->map[ $path ] );
+	}
 }

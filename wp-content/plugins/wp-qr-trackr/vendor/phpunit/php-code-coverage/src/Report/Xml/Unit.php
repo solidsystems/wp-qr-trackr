@@ -14,62 +14,56 @@ use DOMElement;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class Unit
-{
-    private readonly DOMElement $contextNode;
+final class Unit {
 
-    public function __construct(DOMElement $context, string $name)
-    {
-        $this->contextNode = $context;
+	private readonly DOMElement $contextNode;
 
-        $this->setName($name);
-    }
+	public function __construct( DOMElement $context, string $name ) {
+		$this->contextNode = $context;
 
-    public function setLines(int $start, int $executable, int $executed): void
-    {
-        $this->contextNode->setAttribute('start', (string) $start);
-        $this->contextNode->setAttribute('executable', (string) $executable);
-        $this->contextNode->setAttribute('executed', (string) $executed);
-    }
+		$this->setName( $name );
+	}
 
-    public function setCrap(float $crap): void
-    {
-        $this->contextNode->setAttribute('crap', (string) $crap);
-    }
+	public function setLines( int $start, int $executable, int $executed ): void {
+		$this->contextNode->setAttribute( 'start', (string) $start );
+		$this->contextNode->setAttribute( 'executable', (string) $executable );
+		$this->contextNode->setAttribute( 'executed', (string) $executed );
+	}
 
-    public function setNamespace(string $namespace): void
-    {
-        $node = $this->contextNode->getElementsByTagNameNS(
-            'https://schema.phpunit.de/coverage/1.0',
-            'namespace',
-        )->item(0);
+	public function setCrap( float $crap ): void {
+		$this->contextNode->setAttribute( 'crap', (string) $crap );
+	}
 
-        if (!$node) {
-            $node = $this->contextNode->appendChild(
-                $this->contextNode->ownerDocument->createElementNS(
-                    'https://schema.phpunit.de/coverage/1.0',
-                    'namespace',
-                ),
-            );
-        }
+	public function setNamespace( string $namespace ): void {
+		$node = $this->contextNode->getElementsByTagNameNS(
+			'https://schema.phpunit.de/coverage/1.0',
+			'namespace',
+		)->item( 0 );
 
-        $node->setAttribute('name', $namespace);
-    }
+		if ( ! $node ) {
+			$node = $this->contextNode->appendChild(
+				$this->contextNode->ownerDocument->createElementNS(
+					'https://schema.phpunit.de/coverage/1.0',
+					'namespace',
+				),
+			);
+		}
 
-    public function addMethod(string $name): Method
-    {
-        $node = $this->contextNode->appendChild(
-            $this->contextNode->ownerDocument->createElementNS(
-                'https://schema.phpunit.de/coverage/1.0',
-                'method',
-            ),
-        );
+		$node->setAttribute( 'name', $namespace );
+	}
 
-        return new Method($node, $name);
-    }
+	public function addMethod( string $name ): Method {
+		$node = $this->contextNode->appendChild(
+			$this->contextNode->ownerDocument->createElementNS(
+				'https://schema.phpunit.de/coverage/1.0',
+				'method',
+			),
+		);
 
-    private function setName(string $name): void
-    {
-        $this->contextNode->setAttribute('name', $name);
-    }
+		return new Method( $node, $name );
+	}
+
+	private function setName( string $name ): void {
+		$this->contextNode->setAttribute( 'name', $name );
+	}
 }

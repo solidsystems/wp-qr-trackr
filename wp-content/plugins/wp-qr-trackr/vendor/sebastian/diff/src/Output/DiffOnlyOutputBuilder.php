@@ -21,50 +21,48 @@ use SebastianBergmann\Diff\Differ;
  * Builds a diff string representation in a loose unified diff format
  * listing only changes lines. Does not include line numbers.
  */
-final class DiffOnlyOutputBuilder implements DiffOutputBuilderInterface
-{
-    private string $header;
+final class DiffOnlyOutputBuilder implements DiffOutputBuilderInterface {
 
-    public function __construct(string $header = "--- Original\n+++ New\n")
-    {
-        $this->header = $header;
-    }
+	private string $header;
 
-    public function getDiff(array $diff): string
-    {
-        $buffer = fopen('php://memory', 'r+b');
+	public function __construct( string $header = "--- Original\n+++ New\n" ) {
+		$this->header = $header;
+	}
 
-        if ('' !== $this->header) {
-            fwrite($buffer, $this->header);
+	public function getDiff( array $diff ): string {
+		$buffer = fopen( 'php://memory', 'r+b' );
 
-            if (!str_ends_with($this->header, "\n")) {
-                fwrite($buffer, "\n");
-            }
-        }
+		if ( '' !== $this->header ) {
+			fwrite( $buffer, $this->header );
 
-        foreach ($diff as $diffEntry) {
-            if ($diffEntry[1] === Differ::ADDED) {
-                fwrite($buffer, '+' . $diffEntry[0]);
-            } elseif ($diffEntry[1] === Differ::REMOVED) {
-                fwrite($buffer, '-' . $diffEntry[0]);
-            } elseif ($diffEntry[1] === Differ::DIFF_LINE_END_WARNING) {
-                fwrite($buffer, ' ' . $diffEntry[0]);
+			if ( ! str_ends_with( $this->header, "\n" ) ) {
+				fwrite( $buffer, "\n" );
+			}
+		}
 
-                continue; // Warnings should not be tested for line break, it will always be there
-            } else { /* Not changed (old) 0 */
-                continue; // we didn't write the not-changed line, so do not add a line break either
-            }
+		foreach ( $diff as $diffEntry ) {
+			if ( $diffEntry[1] === Differ::ADDED ) {
+				fwrite( $buffer, '+' . $diffEntry[0] );
+			} elseif ( $diffEntry[1] === Differ::REMOVED ) {
+				fwrite( $buffer, '-' . $diffEntry[0] );
+			} elseif ( $diffEntry[1] === Differ::DIFF_LINE_END_WARNING ) {
+				fwrite( $buffer, ' ' . $diffEntry[0] );
 
-            $lc = substr($diffEntry[0], -1);
+				continue; // Warnings should not be tested for line break, it will always be there
+			} else { /* Not changed (old) 0 */
+				continue; // we didn't write the not-changed line, so do not add a line break either
+			}
 
-            if ($lc !== "\n" && $lc !== "\r") {
-                fwrite($buffer, "\n"); // \No newline at end of file
-            }
-        }
+			$lc = substr( $diffEntry[0], -1 );
 
-        $diff = stream_get_contents($buffer, -1, 0);
-        fclose($buffer);
+			if ( $lc !== "\n" && $lc !== "\r" ) {
+				fwrite( $buffer, "\n" ); // \No newline at end of file
+			}
+		}
 
-        return $diff;
-    }
+		$diff = stream_get_contents( $buffer, -1, 0 );
+		fclose( $buffer );
+
+		return $diff;
+	}
 }

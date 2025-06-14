@@ -40,43 +40,40 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-class Exception extends RuntimeException implements \PHPUnit\Exception
-{
-    protected array $serializableTrace;
+class Exception extends RuntimeException implements \PHPUnit\Exception {
 
-    public function __construct(string $message = '', int|string $code = 0, ?Throwable $previous = null)
-    {
-        /**
-         * @see https://github.com/sebastianbergmann/phpunit/issues/5965
-         */
-        if (!is_int($code)) {
-            $message .= sprintf(
-                ' (exception code: %s)',
-                $code,
-            );
+	protected array $serializableTrace;
 
-            $code = 0;
-        }
+	public function __construct( string $message = '', int|string $code = 0, ?Throwable $previous = null ) {
+		/**
+		 * @see https://github.com/sebastianbergmann/phpunit/issues/5965
+		 */
+		if ( ! is_int( $code ) ) {
+			$message .= sprintf(
+				' (exception code: %s)',
+				$code,
+			);
 
-        parent::__construct($message, $code, $previous);
+			$code = 0;
+		}
 
-        $this->serializableTrace = $this->getTrace();
+		parent::__construct( $message, $code, $previous );
 
-        foreach (array_keys($this->serializableTrace) as $key) {
-            unset($this->serializableTrace[$key]['args']);
-        }
-    }
+		$this->serializableTrace = $this->getTrace();
 
-    public function __sleep(): array
-    {
-        return array_keys(get_object_vars($this));
-    }
+		foreach ( array_keys( $this->serializableTrace ) as $key ) {
+			unset( $this->serializableTrace[ $key ]['args'] );
+		}
+	}
 
-    /**
-     * Returns the serializable trace (without 'args').
-     */
-    public function getSerializableTrace(): array
-    {
-        return $this->serializableTrace;
-    }
+	public function __sleep(): array {
+		return array_keys( get_object_vars( $this ) );
+	}
+
+	/**
+	 * Returns the serializable trace (without 'args').
+	 */
+	public function getSerializableTrace(): array {
+		return $this->serializableTrace;
+	}
 }

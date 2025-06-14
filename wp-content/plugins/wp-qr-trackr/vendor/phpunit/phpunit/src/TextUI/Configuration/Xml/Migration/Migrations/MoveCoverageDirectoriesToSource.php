@@ -19,46 +19,45 @@ use DOMXPath;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MoveCoverageDirectoriesToSource implements Migration
-{
-    /**
-     * @throws MigrationException
-     */
-    public function migrate(DOMDocument $document): void
-    {
-        $source = $document->getElementsByTagName('source')->item(0);
+final class MoveCoverageDirectoriesToSource implements Migration {
 
-        if ($source !== null) {
-            return;
-        }
+	/**
+	 * @throws MigrationException
+	 */
+	public function migrate( DOMDocument $document ): void {
+		$source = $document->getElementsByTagName( 'source' )->item( 0 );
 
-        $coverage = $document->getElementsByTagName('coverage')->item(0);
+		if ( $source !== null ) {
+			return;
+		}
 
-        if ($coverage === null) {
-            return;
-        }
+		$coverage = $document->getElementsByTagName( 'coverage' )->item( 0 );
 
-        $root = $document->documentElement;
+		if ( $coverage === null ) {
+			return;
+		}
 
-        assert($root instanceof DOMElement);
+		$root = $document->documentElement;
 
-        $source = $document->createElement('source');
-        $root->appendChild($source);
+		assert( $root instanceof DOMElement );
 
-        $xpath = new DOMXPath($document);
+		$source = $document->createElement( 'source' );
+		$root->appendChild( $source );
 
-        foreach (['include', 'exclude'] as $element) {
-            foreach (SnapshotNodeList::fromNodeList($xpath->query('//coverage/' . $element)) as $node) {
-                $source->appendChild($node);
-            }
-        }
+		$xpath = new DOMXPath( $document );
 
-        if ($coverage->childElementCount !== 0) {
-            return;
-        }
+		foreach ( array( 'include', 'exclude' ) as $element ) {
+			foreach ( SnapshotNodeList::fromNodeList( $xpath->query( '//coverage/' . $element ) ) as $node ) {
+				$source->appendChild( $node );
+			}
+		}
 
-        assert($coverage->parentNode !== null);
+		if ( $coverage->childElementCount !== 0 ) {
+			return;
+		}
 
-        $coverage->parentNode->removeChild($coverage);
-    }
+		assert( $coverage->parentNode !== null );
+
+		$coverage->parentNode->removeChild( $coverage );
+	}
 }

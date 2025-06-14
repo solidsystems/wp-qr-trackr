@@ -19,51 +19,49 @@ use DASPRiD\Enum\AbstractEnum;
  * @method static self FNC1_SECOND_POSITION()
  * @method static self HANZI()
  */
-final class Mode extends AbstractEnum
-{
-    protected const TERMINATOR = [[0, 0, 0], 0x00];
-    protected const NUMERIC = [[10, 12, 14], 0x01];
-    protected const ALPHANUMERIC = [[9, 11, 13], 0x02];
-    protected const STRUCTURED_APPEND = [[0, 0, 0], 0x03];
-    protected const BYTE = [[8, 16, 16], 0x04];
-    protected const ECI = [[0, 0, 0], 0x07];
-    protected const KANJI = [[8, 10, 12], 0x08];
-    protected const FNC1_FIRST_POSITION = [[0, 0, 0], 0x05];
-    protected const FNC1_SECOND_POSITION = [[0, 0, 0], 0x09];
-    protected const HANZI = [[8, 10, 12], 0x0d];
+final class Mode extends AbstractEnum {
 
-    /**
-     * @param int[] $characterCountBitsForVersions
-     */
-    protected function __construct(
-        private readonly array $characterCountBitsForVersions,
-        private readonly int   $bits
-    ) {
-    }
+	protected const TERMINATOR           = array( array( 0, 0, 0 ), 0x00 );
+	protected const NUMERIC              = array( array( 10, 12, 14 ), 0x01 );
+	protected const ALPHANUMERIC         = array( array( 9, 11, 13 ), 0x02 );
+	protected const STRUCTURED_APPEND    = array( array( 0, 0, 0 ), 0x03 );
+	protected const BYTE                 = array( array( 8, 16, 16 ), 0x04 );
+	protected const ECI                  = array( array( 0, 0, 0 ), 0x07 );
+	protected const KANJI                = array( array( 8, 10, 12 ), 0x08 );
+	protected const FNC1_FIRST_POSITION  = array( array( 0, 0, 0 ), 0x05 );
+	protected const FNC1_SECOND_POSITION = array( array( 0, 0, 0 ), 0x09 );
+	protected const HANZI                = array( array( 8, 10, 12 ), 0x0d );
 
-    /**
-     * Returns the number of bits used in a specific QR code version.
-     */
-    public function getCharacterCountBits(Version $version) : int
-    {
-        $number = $version->getVersionNumber();
+	/**
+	 * @param int[] $characterCountBitsForVersions
+	 */
+	protected function __construct(
+		private readonly array $characterCountBitsForVersions,
+		private readonly int $bits
+	) {
+	}
 
-        if ($number <= 9) {
-            $offset = 0;
-        } elseif ($number <= 26) {
-            $offset = 1;
-        } else {
-            $offset = 2;
-        }
+	/**
+	 * Returns the number of bits used in a specific QR code version.
+	 */
+	public function getCharacterCountBits( Version $version ): int {
+		$number = $version->getVersionNumber();
 
-        return $this->characterCountBitsForVersions[$offset];
-    }
+		if ( $number <= 9 ) {
+			$offset = 0;
+		} elseif ( $number <= 26 ) {
+			$offset = 1;
+		} else {
+			$offset = 2;
+		}
 
-    /**
-     * Returns the four bits used to encode this mode.
-     */
-    public function getBits() : int
-    {
-        return $this->bits;
-    }
+		return $this->characterCountBitsForVersions[ $offset ];
+	}
+
+	/**
+	 * Returns the four bits used to encode this mode.
+	 */
+	public function getBits(): int {
+		return $this->bits;
+	}
 }

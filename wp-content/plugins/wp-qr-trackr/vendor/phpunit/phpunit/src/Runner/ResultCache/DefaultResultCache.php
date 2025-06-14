@@ -31,136 +31,128 @@ use PHPUnit\Util\Filesystem;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class DefaultResultCache implements ResultCache
-{
-    /**
-     * @var int
-     */
-    private const VERSION = 1;
+final class DefaultResultCache implements ResultCache {
 
-    /**
-     * @var string
-     */
-    private const DEFAULT_RESULT_CACHE_FILENAME = '.phpunit.result.cache';
-    private readonly string $cacheFilename;
+	/**
+	 * @var int
+	 */
+	private const VERSION = 1;
 
-    /**
-     * @psalm-var array<string, TestStatus>
-     */
-    private array $defects = [];
+	/**
+	 * @var string
+	 */
+	private const DEFAULT_RESULT_CACHE_FILENAME = '.phpunit.result.cache';
+	private readonly string $cacheFilename;
 
-    /**
-     * @psalm-var array<string, float>
-     */
-    private array $times = [];
+	/**
+	 * @psalm-var array<string, TestStatus>
+	 */
+	private array $defects = array();
 
-    public function __construct(?string $filepath = null)
-    {
-        if ($filepath !== null && is_dir($filepath)) {
-            $filepath .= DIRECTORY_SEPARATOR . self::DEFAULT_RESULT_CACHE_FILENAME;
-        }
+	/**
+	 * @psalm-var array<string, float>
+	 */
+	private array $times = array();
 
-        $this->cacheFilename = $filepath ?? $_ENV['PHPUNIT_RESULT_CACHE'] ?? self::DEFAULT_RESULT_CACHE_FILENAME;
-    }
+	public function __construct( ?string $filepath = null ) {
+		if ( $filepath !== null && is_dir( $filepath ) ) {
+			$filepath .= DIRECTORY_SEPARATOR . self::DEFAULT_RESULT_CACHE_FILENAME;
+		}
 
-    public function setStatus(string $id, TestStatus $status): void
-    {
-        if ($status->isSuccess()) {
-            return;
-        }
+		$this->cacheFilename = $filepath ?? $_ENV['PHPUNIT_RESULT_CACHE'] ?? self::DEFAULT_RESULT_CACHE_FILENAME;
+	}
 
-        $this->defects[$id] = $status;
-    }
+	public function setStatus( string $id, TestStatus $status ): void {
+		if ( $status->isSuccess() ) {
+			return;
+		}
 
-    public function status(string $id): TestStatus
-    {
-        return $this->defects[$id] ?? TestStatus::unknown();
-    }
+		$this->defects[ $id ] = $status;
+	}
 
-    public function setTime(string $id, float $time): void
-    {
-        $this->times[$id] = $time;
-    }
+	public function status( string $id ): TestStatus {
+		return $this->defects[ $id ] ?? TestStatus::unknown();
+	}
 
-    public function time(string $id): float
-    {
-        return $this->times[$id] ?? 0.0;
-    }
+	public function setTime( string $id, float $time ): void {
+		$this->times[ $id ] = $time;
+	}
 
-    public function mergeWith(self $other): void
-    {
-        foreach ($other->defects as $id => $defect) {
-            $this->defects[$id] = $defect;
-        }
+	public function time( string $id ): float {
+		return $this->times[ $id ] ?? 0.0;
+	}
 
-        foreach ($other->times as $id => $time) {
-            $this->times[$id] = $time;
-        }
-    }
+	public function mergeWith( self $other ): void {
+		foreach ( $other->defects as $id => $defect ) {
+			$this->defects[ $id ] = $defect;
+		}
 
-    public function load(): void
-    {
-        if (!is_file($this->cacheFilename)) {
-            return;
-        }
+		foreach ( $other->times as $id => $time ) {
+			$this->times[ $id ] = $time;
+		}
+	}
 
-        $contents = file_get_contents($this->cacheFilename);
+	public function load(): void {
+		if ( ! is_file( $this->cacheFilename ) ) {
+			return;
+		}
 
-        if ($contents === false) {
-            return;
-        }
+		$contents = file_get_contents( $this->cacheFilename );
 
-        $data = json_decode(
-            $contents,
-            true,
-        );
+		if ( $contents === false ) {
+			return;
+		}
 
-        if ($data === null) {
-            return;
-        }
+		$data = json_decode(
+			$contents,
+			true,
+		);
 
-        if (!isset($data['version'])) {
-            return;
-        }
+		if ( $data === null ) {
+			return;
+		}
 
-        if ($data['version'] !== self::VERSION) {
-            return;
-        }
+		if ( ! isset( $data['version'] ) ) {
+			return;
+		}
 
-        assert(isset($data['defects']) && is_array($data['defects']));
-        assert(isset($data['times']) && is_array($data['times']));
+		if ( $data['version'] !== self::VERSION ) {
+			return;
+		}
 
-        foreach (array_keys($data['defects']) as $test) {
-            $data['defects'][$test] = TestStatus::from($data['defects'][$test]);
-        }
+		assert( isset( $data['defects'] ) && is_array( $data['defects'] ) );
+		assert( isset( $data['times'] ) && is_array( $data['times'] ) );
 
-        $this->defects = $data['defects'];
-        $this->times   = $data['times'];
-    }
+		foreach ( array_keys( $data['defects'] ) as $test ) {
+			$data['defects'][ $test ] = TestStatus::from( $data['defects'][ $test ] );
+		}
 
-    /**
-     * @throws Exception
-     */
-    public function persist(): void
-    {
-        if (!Filesystem::createDirectory(dirname($this->cacheFilename))) {
-            throw new DirectoryDoesNotExistException(dirname($this->cacheFilename));
-        }
+		$this->defects = $data['defects'];
+		$this->times   = $data['times'];
+	}
 
-        $data = [
-            'version' => self::VERSION,
-            'defects' => [],
-            'times'   => $this->times,
-        ];
+	/**
+	 * @throws Exception
+	 */
+	public function persist(): void {
+		if ( ! Filesystem::createDirectory( dirname( $this->cacheFilename ) ) ) {
+			throw new DirectoryDoesNotExistException( dirname( $this->cacheFilename ) );
+		}
 
-        foreach ($this->defects as $test => $status) {
-            $data['defects'][$test] = $status->asInt();
-        }
+		$data = array(
+			'version' => self::VERSION,
+			'defects' => array(),
+			'times'   => $this->times,
+		);
 
-        file_put_contents(
-            $this->cacheFilename,
-            json_encode($data),
-            LOCK_EX,
-        );
-    }
+		foreach ( $this->defects as $test => $status ) {
+			$data['defects'][ $test ] = $status->asInt();
+		}
+
+		file_put_contents(
+			$this->cacheFilename,
+			json_encode( $data ),
+			LOCK_EX,
+		);
+	}
 }

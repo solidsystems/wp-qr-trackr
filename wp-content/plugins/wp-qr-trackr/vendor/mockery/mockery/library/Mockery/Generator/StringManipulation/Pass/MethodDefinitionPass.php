@@ -29,171 +29,165 @@ use function substr;
 use function var_export;
 use const PHP_VERSION_ID;
 
-class MethodDefinitionPass implements Pass
-{
-    /**
-     * @param  string $code
-     * @return string
-     */
-    public function apply($code, MockConfiguration $config)
-    {
-        foreach ($config->getMethodsToMock() as $method) {
-            if ($method->isPublic()) {
-                $methodDef = 'public';
-            } elseif ($method->isProtected()) {
-                $methodDef = 'protected';
-            } else {
-                $methodDef = 'private';
-            }
+class MethodDefinitionPass implements Pass {
 
-            if ($method->isStatic()) {
-                $methodDef .= ' static';
-            }
+	/**
+	 * @param  string $code
+	 * @return string
+	 */
+	public function apply( $code, MockConfiguration $config ) {
+		foreach ( $config->getMethodsToMock() as $method ) {
+			if ( $method->isPublic() ) {
+				$methodDef = 'public';
+			} elseif ( $method->isProtected() ) {
+				$methodDef = 'protected';
+			} else {
+				$methodDef = 'private';
+			}
 
-            $methodDef .= ' function ';
-            $methodDef .= $method->returnsReference() ? ' & ' : '';
-            $methodDef .= $method->getName();
-            $methodDef .= $this->renderParams($method, $config);
-            $methodDef .= $this->renderReturnType($method);
-            $methodDef .= $this->renderMethodBody($method, $config);
+			if ( $method->isStatic() ) {
+				$methodDef .= ' static';
+			}
 
-            $code = $this->appendToClass($code, $methodDef);
-        }
+			$methodDef .= ' function ';
+			$methodDef .= $method->returnsReference() ? ' & ' : '';
+			$methodDef .= $method->getName();
+			$methodDef .= $this->renderParams( $method, $config );
+			$methodDef .= $this->renderReturnType( $method );
+			$methodDef .= $this->renderMethodBody( $method, $config );
 
-        return $code;
-    }
+			$code = $this->appendToClass( $code, $methodDef );
+		}
 
-    protected function appendToClass($class, $code)
-    {
-        $lastBrace = strrpos($class, '}');
-        return substr($class, 0, $lastBrace) . $code . "\n    }\n";
-    }
+		return $code;
+	}
 
-    protected function renderParams(Method $method, $config)
-    {
-        $class = $method->getDeclaringClass();
-        if ($class->isInternal()) {
-            $overrides = $config->getParameterOverrides();
+	protected function appendToClass( $class, $code ) {
+		$lastBrace = strrpos( $class, '}' );
+		return substr( $class, 0, $lastBrace ) . $code . "\n    }\n";
+	}
 
-            if (isset($overrides[strtolower($class->getName())][$method->getName()])) {
-                return '(' . implode(',', $overrides[strtolower($class->getName())][$method->getName()]) . ')';
-            }
-        }
+	protected function renderParams( Method $method, $config ) {
+		$class = $method->getDeclaringClass();
+		if ( $class->isInternal() ) {
+			$overrides = $config->getParameterOverrides();
 
-        $methodParams = [];
-        $params = $method->getParameters();
-        $isPhp81 = PHP_VERSION_ID >= 80100;
-        foreach ($params as $param) {
-            $paramDef = $this->renderTypeHint($param);
-            $paramDef .= $param->isPassedByReference() ? '&' : '';
-            $paramDef .= $param->isVariadic() ? '...' : '';
-            $paramDef .= '$' . $param->getName();
+			if ( isset( $overrides[ strtolower( $class->getName() ) ][ $method->getName() ] ) ) {
+				return '(' . implode( ',', $overrides[ strtolower( $class->getName() ) ][ $method->getName() ] ) . ')';
+			}
+		}
 
-            if (! $param->isVariadic()) {
-                if ($param->isDefaultValueAvailable() !== false) {
-                    $defaultValue = $param->getDefaultValue();
+		$methodParams = array();
+		$params       = $method->getParameters();
+		$isPhp81      = PHP_VERSION_ID >= 80100;
+		foreach ( $params as $param ) {
+			$paramDef  = $this->renderTypeHint( $param );
+			$paramDef .= $param->isPassedByReference() ? '&' : '';
+			$paramDef .= $param->isVariadic() ? '...' : '';
+			$paramDef .= '$' . $param->getName();
 
-                    if (is_object($defaultValue)) {
-                        $prefix = get_class($defaultValue);
-                        if ($isPhp81) {
-                            if (enum_exists($prefix)) {
-                                $prefix = var_export($defaultValue, true);
-                            } elseif (
-                                ! $param->isDefaultValueConstant() &&
-                                // "Parameter #1 [ <optional> F\Q\CN $a = new \F\Q\CN(param1, param2: 2) ]
-                                preg_match(
-                                    '#<optional>\s.*?\s=\snew\s(.*?)\s]$#',
-                                    $param->__toString(),
-                                    $matches
-                                ) === 1
-                            ) {
-                                $prefix = 'new ' . $matches[1];
-                            }
-                        }
-                    } else {
-                        $prefix = var_export($defaultValue, true);
-                    }
+			if ( ! $param->isVariadic() ) {
+				if ( $param->isDefaultValueAvailable() !== false ) {
+					$defaultValue = $param->getDefaultValue();
 
-                    $paramDef .= ' = ' . $prefix;
-                } elseif ($param->isOptional()) {
-                    $paramDef .= ' = null';
-                }
-            }
+					if ( is_object( $defaultValue ) ) {
+						$prefix = get_class( $defaultValue );
+						if ( $isPhp81 ) {
+							if ( enum_exists( $prefix ) ) {
+								$prefix = var_export( $defaultValue, true );
+							} elseif (
+								! $param->isDefaultValueConstant() &&
+								// "Parameter #1 [ <optional> F\Q\CN $a = new \F\Q\CN(param1, param2: 2) ]
+								preg_match(
+									'#<optional>\s.*?\s=\snew\s(.*?)\s]$#',
+									$param->__toString(),
+									$matches
+								) === 1
+							) {
+								$prefix = 'new ' . $matches[1];
+							}
+						}
+					} else {
+						$prefix = var_export( $defaultValue, true );
+					}
 
-            $methodParams[] = $paramDef;
-        }
+					$paramDef .= ' = ' . $prefix;
+				} elseif ( $param->isOptional() ) {
+					$paramDef .= ' = null';
+				}
+			}
 
-        return '(' . implode(', ', $methodParams) . ')';
-    }
+			$methodParams[] = $paramDef;
+		}
 
-    protected function renderReturnType(Method $method)
-    {
-        $type = $method->getReturnType();
+		return '(' . implode( ', ', $methodParams ) . ')';
+	}
 
-        return $type ? sprintf(': %s', $type) : '';
-    }
+	protected function renderReturnType( Method $method ) {
+		$type = $method->getReturnType();
 
-    protected function renderTypeHint(Parameter $param)
-    {
-        $typeHint = $param->getTypeHint();
+		return $type ? sprintf( ': %s', $type ) : '';
+	}
 
-        return $typeHint === null ? '' : sprintf('%s ', $typeHint);
-    }
+	protected function renderTypeHint( Parameter $param ) {
+		$typeHint = $param->getTypeHint();
 
-    private function renderMethodBody($method, $config)
-    {
-        $invoke = $method->isStatic() ? 'static::_mockery_handleStaticMethodCall' : '$this->_mockery_handleMethodCall';
-        $body = <<<BODY
+		return $typeHint === null ? '' : sprintf( '%s ', $typeHint );
+	}
+
+	private function renderMethodBody( $method, $config ) {
+		$invoke = $method->isStatic() ? 'static::_mockery_handleStaticMethodCall' : '$this->_mockery_handleMethodCall';
+		$body   = <<<BODY
 {
 \$argc = func_num_args();
 \$argv = func_get_args();
 
 BODY;
 
-        // Fix up known parameters by reference - used func_get_args() above
-        // in case more parameters are passed in than the function definition
-        // says - eg varargs.
-        $class = $method->getDeclaringClass();
-        $class_name = strtolower($class->getName());
-        $overrides = $config->getParameterOverrides();
-        if (isset($overrides[$class_name][$method->getName()])) {
-            $params = array_values($overrides[$class_name][$method->getName()]);
-            $paramCount = count($params);
-            for ($i = 0; $i < $paramCount; ++$i) {
-                $param = $params[$i];
-                if (strpos($param, '&') !== false) {
-                    $body .= <<<BODY
+		// Fix up known parameters by reference - used func_get_args() above
+		// in case more parameters are passed in than the function definition
+		// says - eg varargs.
+		$class      = $method->getDeclaringClass();
+		$class_name = strtolower( $class->getName() );
+		$overrides  = $config->getParameterOverrides();
+		if ( isset( $overrides[ $class_name ][ $method->getName() ] ) ) {
+			$params     = array_values( $overrides[ $class_name ][ $method->getName() ] );
+			$paramCount = count( $params );
+			for ( $i = 0; $i < $paramCount; ++$i ) {
+				$param = $params[ $i ];
+				if ( strpos( $param, '&' ) !== false ) {
+					$body .= <<<BODY
 if (\$argc > {$i}) {
     \$argv[{$i}] = {$param};
 }
 
 BODY;
-                }
-            }
-        } else {
-            $params = array_values($method->getParameters());
-            $paramCount = count($params);
-            for ($i = 0; $i < $paramCount; ++$i) {
-                $param = $params[$i];
-                if (! $param->isPassedByReference()) {
-                    continue;
-                }
+				}
+			}
+		} else {
+			$params     = array_values( $method->getParameters() );
+			$paramCount = count( $params );
+			for ( $i = 0; $i < $paramCount; ++$i ) {
+				$param = $params[ $i ];
+				if ( ! $param->isPassedByReference() ) {
+					continue;
+				}
 
-                $body .= <<<BODY
+				$body .= <<<BODY
 if (\$argc > {$i}) {
     \$argv[{$i}] =& \${$param->getName()};
 }
 
 BODY;
-            }
-        }
+			}
+		}
 
-        $body .= "\$ret = {$invoke}(__FUNCTION__, \$argv);\n";
+		$body .= "\$ret = {$invoke}(__FUNCTION__, \$argv);\n";
 
-        if (! in_array($method->getReturnType(), ['never', 'void'], true)) {
-            $body .= "return \$ret;\n";
-        }
+		if ( ! in_array( $method->getReturnType(), array( 'never', 'void' ), true ) ) {
+			$body .= "return \$ret;\n";
+		}
 
-        return $body . "}\n";
-    }
+		return $body . "}\n";
+	}
 }

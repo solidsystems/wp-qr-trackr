@@ -16,48 +16,45 @@ use XMLWriter;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class Coverage
-{
-    private readonly XMLWriter $writer;
-    private readonly DOMElement $contextNode;
-    private bool $finalized = false;
+final class Coverage {
 
-    public function __construct(DOMElement $context, string $line)
-    {
-        $this->contextNode = $context;
+	private readonly XMLWriter $writer;
+	private readonly DOMElement $contextNode;
+	private bool $finalized = false;
 
-        $this->writer = new XMLWriter;
-        $this->writer->openMemory();
-        $this->writer->startElementNS(null, $context->nodeName, 'https://schema.phpunit.de/coverage/1.0');
-        $this->writer->writeAttribute('nr', $line);
-    }
+	public function __construct( DOMElement $context, string $line ) {
+		$this->contextNode = $context;
 
-    /**
-     * @throws ReportAlreadyFinalizedException
-     */
-    public function addTest(string $test): void
-    {
-        if ($this->finalized) {
-            throw new ReportAlreadyFinalizedException;
-        }
+		$this->writer = new XMLWriter();
+		$this->writer->openMemory();
+		$this->writer->startElementNS( null, $context->nodeName, 'https://schema.phpunit.de/coverage/1.0' );
+		$this->writer->writeAttribute( 'nr', $line );
+	}
 
-        $this->writer->startElement('covered');
-        $this->writer->writeAttribute('by', $test);
-        $this->writer->endElement();
-    }
+	/**
+	 * @throws ReportAlreadyFinalizedException
+	 */
+	public function addTest( string $test ): void {
+		if ( $this->finalized ) {
+			throw new ReportAlreadyFinalizedException();
+		}
 
-    public function finalize(): void
-    {
-        $this->writer->endElement();
+		$this->writer->startElement( 'covered' );
+		$this->writer->writeAttribute( 'by', $test );
+		$this->writer->endElement();
+	}
 
-        $fragment = $this->contextNode->ownerDocument->createDocumentFragment();
-        $fragment->appendXML($this->writer->outputMemory());
+	public function finalize(): void {
+		$this->writer->endElement();
 
-        $this->contextNode->parentNode->replaceChild(
-            $fragment,
-            $this->contextNode,
-        );
+		$fragment = $this->contextNode->ownerDocument->createDocumentFragment();
+		$fragment->appendXML( $this->writer->outputMemory() );
 
-        $this->finalized = true;
-    }
+		$this->contextNode->parentNode->replaceChild(
+			$fragment,
+			$this->contextNode,
+		);
+
+		$this->finalized = true;
+	}
 }

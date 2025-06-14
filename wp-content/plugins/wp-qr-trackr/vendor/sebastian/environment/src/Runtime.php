@@ -28,267 +28,250 @@ use function phpversion;
 use function sprintf;
 use function strrpos;
 
-final class Runtime
-{
-    private static string $rawBinary;
-    private static bool $initialized = false;
+final class Runtime {
 
-    /**
-     * Returns true when Xdebug or PCOV is available or
-     * the runtime used is PHPDBG.
-     */
-    public function canCollectCodeCoverage(): bool
-    {
-        return $this->hasXdebug() || $this->hasPCOV() || $this->hasPHPDBGCodeCoverage();
-    }
+	private static string $rawBinary;
+	private static bool $initialized = false;
 
-    /**
-     * Returns true when Zend OPcache is loaded, enabled,
-     * and is configured to discard comments.
-     */
-    public function discardsComments(): bool
-    {
-        if (!$this->isOpcacheActive()) {
-            return false;
-        }
+	/**
+	 * Returns true when Xdebug or PCOV is available or
+	 * the runtime used is PHPDBG.
+	 */
+	public function canCollectCodeCoverage(): bool {
+		return $this->hasXdebug() || $this->hasPCOV() || $this->hasPHPDBGCodeCoverage();
+	}
 
-        if (ini_get('opcache.save_comments') !== '0') {
-            return false;
-        }
+	/**
+	 * Returns true when Zend OPcache is loaded, enabled,
+	 * and is configured to discard comments.
+	 */
+	public function discardsComments(): bool {
+		if ( ! $this->isOpcacheActive() ) {
+			return false;
+		}
 
-        return true;
-    }
+		if ( ini_get( 'opcache.save_comments' ) !== '0' ) {
+			return false;
+		}
 
-    /**
-     * Returns true when Zend OPcache is loaded, enabled,
-     * and is configured to perform just-in-time compilation.
-     */
-    public function performsJustInTimeCompilation(): bool
-    {
-        if (PHP_MAJOR_VERSION < 8) {
-            return false;
-        }
+		return true;
+	}
 
-        if (!$this->isOpcacheActive()) {
-            return false;
-        }
+	/**
+	 * Returns true when Zend OPcache is loaded, enabled,
+	 * and is configured to perform just-in-time compilation.
+	 */
+	public function performsJustInTimeCompilation(): bool {
+		if ( PHP_MAJOR_VERSION < 8 ) {
+			return false;
+		}
 
-        if (ini_get('opcache.jit_buffer_size') === '0') {
-            return false;
-        }
+		if ( ! $this->isOpcacheActive() ) {
+			return false;
+		}
 
-        $jit = ini_get('opcache.jit');
+		if ( ini_get( 'opcache.jit_buffer_size' ) === '0' ) {
+			return false;
+		}
 
-        if (($jit === 'disable') || ($jit === 'off')) {
-            return false;
-        }
+		$jit = ini_get( 'opcache.jit' );
 
-        if (strrpos($jit, '0') === 3) {
-            return false;
-        }
+		if ( ( $jit === 'disable' ) || ( $jit === 'off' ) ) {
+			return false;
+		}
 
-        return true;
-    }
+		if ( strrpos( $jit, '0' ) === 3 ) {
+			return false;
+		}
 
-    /**
-     * Returns the raw path to the binary of the current runtime.
-     */
-    public function getRawBinary(): string
-    {
-        if (self::$initialized) {
-            return self::$rawBinary;
-        }
+		return true;
+	}
 
-        if (PHP_BINARY !== '') {
-            self::$rawBinary   = PHP_BINARY;
-            self::$initialized = true;
+	/**
+	 * Returns the raw path to the binary of the current runtime.
+	 */
+	public function getRawBinary(): string {
+		if ( self::$initialized ) {
+			return self::$rawBinary;
+		}
 
-            return self::$rawBinary;
-        }
+		if ( PHP_BINARY !== '' ) {
+			self::$rawBinary   = PHP_BINARY;
+			self::$initialized = true;
 
-        // @codeCoverageIgnoreStart
-        $possibleBinaryLocations = [
-            PHP_BINDIR . '/php',
-            PHP_BINDIR . '/php-cli.exe',
-            PHP_BINDIR . '/php.exe',
-        ];
+			return self::$rawBinary;
+		}
 
-        foreach ($possibleBinaryLocations as $binary) {
-            if (is_readable($binary)) {
-                self::$rawBinary   = $binary;
-                self::$initialized = true;
+		// @codeCoverageIgnoreStart
+		$possibleBinaryLocations = array(
+			PHP_BINDIR . '/php',
+			PHP_BINDIR . '/php-cli.exe',
+			PHP_BINDIR . '/php.exe',
+		);
 
-                return self::$rawBinary;
-            }
-        }
+		foreach ( $possibleBinaryLocations as $binary ) {
+			if ( is_readable( $binary ) ) {
+				self::$rawBinary   = $binary;
+				self::$initialized = true;
 
-        self::$rawBinary   = 'php';
-        self::$initialized = true;
+				return self::$rawBinary;
+			}
+		}
 
-        return self::$rawBinary;
-        // @codeCoverageIgnoreEnd
-    }
+		self::$rawBinary   = 'php';
+		self::$initialized = true;
 
-    /**
-     * Returns the escaped path to the binary of the current runtime.
-     */
-    public function getBinary(): string
-    {
-        return escapeshellarg($this->getRawBinary());
-    }
+		return self::$rawBinary;
+		// @codeCoverageIgnoreEnd
+	}
 
-    public function getNameWithVersion(): string
-    {
-        return $this->getName() . ' ' . $this->getVersion();
-    }
+	/**
+	 * Returns the escaped path to the binary of the current runtime.
+	 */
+	public function getBinary(): string {
+		return escapeshellarg( $this->getRawBinary() );
+	}
 
-    public function getNameWithVersionAndCodeCoverageDriver(): string
-    {
-        if ($this->hasPCOV()) {
-            return sprintf(
-                '%s with PCOV %s',
-                $this->getNameWithVersion(),
-                phpversion('pcov'),
-            );
-        }
+	public function getNameWithVersion(): string {
+		return $this->getName() . ' ' . $this->getVersion();
+	}
 
-        if ($this->hasXdebug()) {
-            return sprintf(
-                '%s with Xdebug %s',
-                $this->getNameWithVersion(),
-                phpversion('xdebug'),
-            );
-        }
+	public function getNameWithVersionAndCodeCoverageDriver(): string {
+		if ( $this->hasPCOV() ) {
+			return sprintf(
+				'%s with PCOV %s',
+				$this->getNameWithVersion(),
+				phpversion( 'pcov' ),
+			);
+		}
 
-        return $this->getNameWithVersion();
-    }
+		if ( $this->hasXdebug() ) {
+			return sprintf(
+				'%s with Xdebug %s',
+				$this->getNameWithVersion(),
+				phpversion( 'xdebug' ),
+			);
+		}
 
-    public function getName(): string
-    {
-        if ($this->isPHPDBG()) {
-            // @codeCoverageIgnoreStart
-            return 'PHPDBG';
-            // @codeCoverageIgnoreEnd
-        }
+		return $this->getNameWithVersion();
+	}
 
-        return 'PHP';
-    }
+	public function getName(): string {
+		if ( $this->isPHPDBG() ) {
+			// @codeCoverageIgnoreStart
+			return 'PHPDBG';
+			// @codeCoverageIgnoreEnd
+		}
 
-    public function getVendorUrl(): string
-    {
-        return 'https://www.php.net/';
-    }
+		return 'PHP';
+	}
 
-    public function getVersion(): string
-    {
-        return PHP_VERSION;
-    }
+	public function getVendorUrl(): string {
+		return 'https://www.php.net/';
+	}
 
-    /**
-     * Returns true when the runtime used is PHP and Xdebug is loaded.
-     */
-    public function hasXdebug(): bool
-    {
-        return $this->isPHP() && extension_loaded('xdebug');
-    }
+	public function getVersion(): string {
+		return PHP_VERSION;
+	}
 
-    /**
-     * Returns true when the runtime used is PHP without the PHPDBG SAPI.
-     */
-    public function isPHP(): bool
-    {
-        return !$this->isPHPDBG();
-    }
+	/**
+	 * Returns true when the runtime used is PHP and Xdebug is loaded.
+	 */
+	public function hasXdebug(): bool {
+		return $this->isPHP() && extension_loaded( 'xdebug' );
+	}
 
-    /**
-     * Returns true when the runtime used is PHP with the PHPDBG SAPI.
-     */
-    public function isPHPDBG(): bool
-    {
-        return PHP_SAPI === 'phpdbg';
-    }
+	/**
+	 * Returns true when the runtime used is PHP without the PHPDBG SAPI.
+	 */
+	public function isPHP(): bool {
+		return ! $this->isPHPDBG();
+	}
 
-    /**
-     * Returns true when the runtime used is PHP with the PHPDBG SAPI
-     * and the phpdbg_*_oplog() functions are available (PHP >= 7.0).
-     */
-    public function hasPHPDBGCodeCoverage(): bool
-    {
-        return $this->isPHPDBG();
-    }
+	/**
+	 * Returns true when the runtime used is PHP with the PHPDBG SAPI.
+	 */
+	public function isPHPDBG(): bool {
+		return PHP_SAPI === 'phpdbg';
+	}
 
-    /**
-     * Returns true when the runtime used is PHP with PCOV loaded and enabled.
-     */
-    public function hasPCOV(): bool
-    {
-        return $this->isPHP() && extension_loaded('pcov') && ini_get('pcov.enabled');
-    }
+	/**
+	 * Returns true when the runtime used is PHP with the PHPDBG SAPI
+	 * and the phpdbg_*_oplog() functions are available (PHP >= 7.0).
+	 */
+	public function hasPHPDBGCodeCoverage(): bool {
+		return $this->isPHPDBG();
+	}
 
-    /**
-     * Parses the loaded php.ini file (if any) as well as all
-     * additional php.ini files from the additional ini dir for
-     * a list of all configuration settings loaded from files
-     * at startup. Then checks for each php.ini setting passed
-     * via the `$values` parameter whether this setting has
-     * been changed at runtime. Returns an array of strings
-     * where each string has the format `key=value` denoting
-     * the name of a changed php.ini setting with its new value.
-     *
-     * @return string[]
-     */
-    public function getCurrentSettings(array $values): array
-    {
-        $diff  = [];
-        $files = [];
+	/**
+	 * Returns true when the runtime used is PHP with PCOV loaded and enabled.
+	 */
+	public function hasPCOV(): bool {
+		return $this->isPHP() && extension_loaded( 'pcov' ) && ini_get( 'pcov.enabled' );
+	}
 
-        if ($file = php_ini_loaded_file()) {
-            $files[] = $file;
-        }
+	/**
+	 * Parses the loaded php.ini file (if any) as well as all
+	 * additional php.ini files from the additional ini dir for
+	 * a list of all configuration settings loaded from files
+	 * at startup. Then checks for each php.ini setting passed
+	 * via the `$values` parameter whether this setting has
+	 * been changed at runtime. Returns an array of strings
+	 * where each string has the format `key=value` denoting
+	 * the name of a changed php.ini setting with its new value.
+	 *
+	 * @return string[]
+	 */
+	public function getCurrentSettings( array $values ): array {
+		$diff  = array();
+		$files = array();
 
-        if ($scanned = php_ini_scanned_files()) {
-            $files = array_merge(
-                $files,
-                array_map(
-                    'trim',
-                    explode(",\n", $scanned),
-                ),
-            );
-        }
+		if ( $file = php_ini_loaded_file() ) {
+			$files[] = $file;
+		}
 
-        foreach ($files as $ini) {
-            $config = parse_ini_file($ini, true);
+		if ( $scanned = php_ini_scanned_files() ) {
+			$files = array_merge(
+				$files,
+				array_map(
+					'trim',
+					explode( ",\n", $scanned ),
+				),
+			);
+		}
 
-            foreach ($values as $value) {
-                $set = ini_get($value);
+		foreach ( $files as $ini ) {
+			$config = parse_ini_file( $ini, true );
 
-                if (empty($set)) {
-                    continue;
-                }
+			foreach ( $values as $value ) {
+				$set = ini_get( $value );
 
-                if ((!isset($config[$value]) || ($set !== $config[$value]))) {
-                    $diff[$value] = sprintf('%s=%s', $value, $set);
-                }
-            }
-        }
+				if ( empty( $set ) ) {
+					continue;
+				}
 
-        return $diff;
-    }
+				if ( ( ! isset( $config[ $value ] ) || ( $set !== $config[ $value ] ) ) ) {
+					$diff[ $value ] = sprintf( '%s=%s', $value, $set );
+				}
+			}
+		}
 
-    private function isOpcacheActive(): bool
-    {
-        if (!extension_loaded('Zend OPcache')) {
-            return false;
-        }
+		return $diff;
+	}
 
-        if ((PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg') && ini_get('opcache.enable_cli') === '1') {
-            return true;
-        }
+	private function isOpcacheActive(): bool {
+		if ( ! extension_loaded( 'Zend OPcache' ) ) {
+			return false;
+		}
 
-        if (PHP_SAPI !== 'cli' && PHP_SAPI !== 'phpdbg' && ini_get('opcache.enable') === '1') {
-            return true;
-        }
+		if ( ( PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg' ) && ini_get( 'opcache.enable_cli' ) === '1' ) {
+			return true;
+		}
 
-        return false;
-    }
+		if ( PHP_SAPI !== 'cli' && PHP_SAPI !== 'phpdbg' && ini_get( 'opcache.enable' ) === '1' ) {
+			return true;
+		}
+
+		return false;
+	}
 }

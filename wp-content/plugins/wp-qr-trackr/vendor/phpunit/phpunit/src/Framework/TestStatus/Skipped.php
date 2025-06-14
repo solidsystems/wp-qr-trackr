@@ -16,23 +16,20 @@ namespace PHPUnit\Framework\TestStatus;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Skipped extends Known
-{
-    /**
-     * @psalm-assert-if-true Skipped $this
-     */
-    public function isSkipped(): bool
-    {
-        return true;
-    }
+final class Skipped extends Known {
 
-    public function asInt(): int
-    {
-        return 1;
-    }
+	/**
+	 * @psalm-assert-if-true Skipped $this
+	 */
+	public function isSkipped(): bool {
+		return true;
+	}
 
-    public function asString(): string
-    {
-        return 'skipped';
-    }
+	public function asInt(): int {
+		return 1;
+	}
+
+	public function asString(): string {
+		return 'skipped';
+	}
 }

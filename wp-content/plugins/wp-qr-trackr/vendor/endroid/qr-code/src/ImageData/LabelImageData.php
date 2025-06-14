@@ -6,43 +6,40 @@ namespace Endroid\QrCode\ImageData;
 
 use Endroid\QrCode\Label\LabelInterface;
 
-final readonly class LabelImageData
-{
-    private function __construct(
-        private int $width,
-        private int $height,
-    ) {
-    }
+final readonly class LabelImageData {
 
-    public static function createForLabel(LabelInterface $label): self
-    {
-        if (str_contains($label->getText(), "\n")) {
-            throw new \Exception('Label does not support line breaks');
-        }
+	private function __construct(
+		private int $width,
+		private int $height,
+	) {
+	}
 
-        if (!function_exists('imagettfbbox')) {
-            throw new \Exception('Function "imagettfbbox" does not exist: check your FreeType installation');
-        }
+	public static function createForLabel( LabelInterface $label ): self {
+		if ( str_contains( $label->getText(), "\n" ) ) {
+			throw new \Exception( 'Label does not support line breaks' );
+		}
 
-        $labelBox = imagettfbbox($label->getFont()->getSize(), 0, $label->getFont()->getPath(), $label->getText());
+		if ( ! function_exists( 'imagettfbbox' ) ) {
+			throw new \Exception( 'Function "imagettfbbox" does not exist: check your FreeType installation' );
+		}
 
-        if (!is_array($labelBox)) {
-            throw new \Exception('Unable to generate label image box: check your FreeType installation');
-        }
+		$labelBox = imagettfbbox( $label->getFont()->getSize(), 0, $label->getFont()->getPath(), $label->getText() );
 
-        return new self(
-            intval($labelBox[2] - $labelBox[0]),
-            intval($labelBox[0] - $labelBox[7])
-        );
-    }
+		if ( ! is_array( $labelBox ) ) {
+			throw new \Exception( 'Unable to generate label image box: check your FreeType installation' );
+		}
 
-    public function getWidth(): int
-    {
-        return $this->width;
-    }
+		return new self(
+			intval( $labelBox[2] - $labelBox[0] ),
+			intval( $labelBox[0] - $labelBox[7] )
+		);
+	}
 
-    public function getHeight(): int
-    {
-        return $this->height;
-    }
+	public function getWidth(): int {
+		return $this->width;
+	}
+
+	public function getHeight(): int {
+		return $this->height;
+	}
 }

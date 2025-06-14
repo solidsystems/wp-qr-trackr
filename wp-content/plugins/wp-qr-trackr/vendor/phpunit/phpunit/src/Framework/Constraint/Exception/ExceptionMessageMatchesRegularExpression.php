@@ -19,55 +19,51 @@ use PHPUnit\Util\Exporter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ExceptionMessageMatchesRegularExpression extends Constraint
-{
-    private readonly string $regularExpression;
+final class ExceptionMessageMatchesRegularExpression extends Constraint {
 
-    public function __construct(string $regularExpression)
-    {
-        $this->regularExpression = $regularExpression;
-    }
+	private readonly string $regularExpression;
 
-    public function toString(): string
-    {
-        return 'exception message matches ' . Exporter::export($this->regularExpression);
-    }
+	public function __construct( string $regularExpression ) {
+		$this->regularExpression = $regularExpression;
+	}
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     *
-     * @throws \PHPUnit\Framework\Exception
-     * @throws Exception
-     */
-    protected function matches(mixed $other): bool
-    {
-        $match = @preg_match($this->regularExpression, (string) $other);
+	public function toString(): string {
+		return 'exception message matches ' . Exporter::export( $this->regularExpression );
+	}
 
-        if ($match === false) {
-            throw new \PHPUnit\Framework\Exception(
-                sprintf(
-                    'Invalid expected exception message regular expression given: %s',
-                    $this->regularExpression,
-                ),
-            );
-        }
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 *
+	 * @throws \PHPUnit\Framework\Exception
+	 * @throws Exception
+	 */
+	protected function matches( mixed $other ): bool {
+		$match = @preg_match( $this->regularExpression, (string) $other );
 
-        return $match === 1;
-    }
+		if ( $match === false ) {
+			throw new \PHPUnit\Framework\Exception(
+				sprintf(
+					'Invalid expected exception message regular expression given: %s',
+					$this->regularExpression,
+				),
+			);
+		}
 
-    /**
-     * Returns the description of the failure.
-     *
-     * The beginning of failure messages is "Failed asserting that" in most
-     * cases. This method should return the second part of that sentence.
-     */
-    protected function failureDescription(mixed $other): string
-    {
-        return sprintf(
-            "exception message '%s' matches '%s'",
-            $other,
-            $this->regularExpression,
-        );
-    }
+		return $match === 1;
+	}
+
+	/**
+	 * Returns the description of the failure.
+	 *
+	 * The beginning of failure messages is "Failed asserting that" in most
+	 * cases. This method should return the second part of that sentence.
+	 */
+	protected function failureDescription( mixed $other ): string {
+		return sprintf(
+			"exception message '%s' matches '%s'",
+			$other,
+			$this->regularExpression,
+		);
+	}
 }

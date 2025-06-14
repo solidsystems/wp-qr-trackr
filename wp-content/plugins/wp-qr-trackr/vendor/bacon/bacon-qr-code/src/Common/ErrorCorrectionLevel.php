@@ -14,44 +14,41 @@ use DASPRiD\Enum\AbstractEnum;
  * @method static self Q() ~25% correction
  * @method static self H() ~30% correction
  */
-final class ErrorCorrectionLevel extends AbstractEnum
-{
-    protected const L = [0x01];
-    protected const M = [0x00];
-    protected const Q = [0x03];
-    protected const H = [0x02];
+final class ErrorCorrectionLevel extends AbstractEnum {
 
-    protected function __construct(private readonly int $bits)
-    {
-    }
+	protected const L = array( 0x01 );
+	protected const M = array( 0x00 );
+	protected const Q = array( 0x03 );
+	protected const H = array( 0x02 );
 
-    /**
-     * @throws OutOfBoundsException if number of bits is invalid
-     */
-    public static function forBits(int $bits) : self
-    {
-        switch ($bits) {
-            case 0:
-                return self::M();
+	protected function __construct( private readonly int $bits ) {
+	}
 
-            case 1:
-                return self::L();
+	/**
+	 * @throws OutOfBoundsException if number of bits is invalid
+	 */
+	public static function forBits( int $bits ): self {
+		switch ( $bits ) {
+			case 0:
+				return self::M();
 
-            case 2:
-                return self::H();
+			case 1:
+				return self::L();
 
-            case 3:
-                return self::Q();
-        }
+			case 2:
+				return self::H();
 
-        throw new OutOfBoundsException('Invalid number of bits');
-    }
+			case 3:
+				return self::Q();
+		}
 
-    /**
-     * Returns the two bits used to encode this error correction level.
-     */
-    public function getBits() : int
-    {
-        return $this->bits;
-    }
+		throw new OutOfBoundsException( 'Invalid number of bits' );
+	}
+
+	/**
+	 * Returns the two bits used to encode this error correction level.
+	 */
+	public function getBits(): int {
+		return $this->bits;
+	}
 }

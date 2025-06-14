@@ -18,50 +18,46 @@ use function is_string;
 use function sprintf;
 use SebastianBergmann\Exporter\Exporter;
 
-final class NumericComparator extends ScalarComparator
-{
-    public function accepts(mixed $expected, mixed $actual): bool
-    {
-        // all numerical values, but not if both of them are strings
-        return is_numeric($expected) && is_numeric($actual) &&
-               !(is_string($expected) && is_string($actual));
-    }
+final class NumericComparator extends ScalarComparator {
 
-    /**
-     * @throws ComparisonFailure
-     */
-    public function assertEquals(mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false): void
-    {
-        if ($this->isInfinite($actual) && $this->isInfinite($expected)) {
-            return;
-        }
+	public function accepts( mixed $expected, mixed $actual ): bool {
+		// all numerical values, but not if both of them are strings
+		return is_numeric( $expected ) && is_numeric( $actual ) &&
+				! ( is_string( $expected ) && is_string( $actual ) );
+	}
 
-        if (($this->isInfinite($actual) xor $this->isInfinite($expected)) ||
-            ($this->isNan($actual) || $this->isNan($expected)) ||
-            abs($actual - $expected) > $delta) {
-            $exporter = new Exporter;
+	/**
+	 * @throws ComparisonFailure
+	 */
+	public function assertEquals( mixed $expected, mixed $actual, float $delta = 0.0, bool $canonicalize = false, bool $ignoreCase = false ): void {
+		if ( $this->isInfinite( $actual ) && $this->isInfinite( $expected ) ) {
+			return;
+		}
 
-            throw new ComparisonFailure(
-                $expected,
-                $actual,
-                '',
-                '',
-                sprintf(
-                    'Failed asserting that %s matches expected %s.',
-                    $exporter->export($actual),
-                    $exporter->export($expected),
-                ),
-            );
-        }
-    }
+		if ( ( $this->isInfinite( $actual ) xor $this->isInfinite( $expected ) ) ||
+			( $this->isNan( $actual ) || $this->isNan( $expected ) ) ||
+			abs( $actual - $expected ) > $delta ) {
+			$exporter = new Exporter();
 
-    private function isInfinite(mixed $value): bool
-    {
-        return is_float($value) && is_infinite($value);
-    }
+			throw new ComparisonFailure(
+				$expected,
+				$actual,
+				'',
+				'',
+				sprintf(
+					'Failed asserting that %s matches expected %s.',
+					$exporter->export( $actual ),
+					$exporter->export( $expected ),
+				),
+			);
+		}
+	}
 
-    private function isNan(mixed $value): bool
-    {
-        return is_float($value) && is_nan($value);
-    }
+	private function isInfinite( mixed $value ): bool {
+		return is_float( $value ) && is_infinite( $value );
+	}
+
+	private function isNan( mixed $value ): bool {
+		return is_float( $value ) && is_nan( $value );
+	}
 }

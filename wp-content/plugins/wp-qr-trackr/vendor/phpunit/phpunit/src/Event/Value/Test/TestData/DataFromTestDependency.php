@@ -14,18 +14,16 @@ namespace PHPUnit\Event\TestData;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class DataFromTestDependency extends TestData
-{
-    public static function from(string $data): self
-    {
-        return new self($data);
-    }
+final class DataFromTestDependency extends TestData {
 
-    /**
-     * @psalm-assert-if-true DataFromTestDependency $this
-     */
-    public function isFromTestDependency(): bool
-    {
-        return true;
-    }
+	public static function from( string $data ): self {
+		return new self( $data );
+	}
+
+	/**
+	 * @psalm-assert-if-true DataFromTestDependency $this
+	 */
+	public function isFromTestDependency(): bool {
+		return true;
+	}
 }

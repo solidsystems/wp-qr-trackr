@@ -14,7 +14,7 @@ use PHPUnit\Event\Subscriber;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-interface TestProxyCreatedSubscriber extends Subscriber
-{
-    public function notify(TestProxyCreated $event): void;
+interface TestProxyCreatedSubscriber extends Subscriber {
+
+	public function notify( TestProxyCreated $event ): void;
 }

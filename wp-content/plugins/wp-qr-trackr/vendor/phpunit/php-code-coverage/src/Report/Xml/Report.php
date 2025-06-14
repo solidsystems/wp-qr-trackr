@@ -16,84 +16,76 @@ use DOMDocument;
 /**
  * @internal This class is not covered by the backward compatibility promise for phpunit/php-code-coverage
  */
-final class Report extends File
-{
-    public function __construct(string $name)
-    {
-        $dom = new DOMDocument;
-        $dom->loadXML('<?xml version="1.0" ?><phpunit xmlns="https://schema.phpunit.de/coverage/1.0"><file /></phpunit>');
+final class Report extends File {
 
-        $contextNode = $dom->getElementsByTagNameNS(
-            'https://schema.phpunit.de/coverage/1.0',
-            'file',
-        )->item(0);
+	public function __construct( string $name ) {
+		$dom = new DOMDocument();
+		$dom->loadXML( '<?xml version="1.0" ?><phpunit xmlns="https://schema.phpunit.de/coverage/1.0"><file /></phpunit>' );
 
-        parent::__construct($contextNode);
+		$contextNode = $dom->getElementsByTagNameNS(
+			'https://schema.phpunit.de/coverage/1.0',
+			'file',
+		)->item( 0 );
 
-        $this->setName($name);
-    }
+		parent::__construct( $contextNode );
 
-    public function asDom(): DOMDocument
-    {
-        return $this->dom();
-    }
+		$this->setName( $name );
+	}
 
-    public function functionObject($name): Method
-    {
-        $node = $this->contextNode()->appendChild(
-            $this->dom()->createElementNS(
-                'https://schema.phpunit.de/coverage/1.0',
-                'function',
-            ),
-        );
+	public function asDom(): DOMDocument {
+		return $this->dom();
+	}
 
-        return new Method($node, $name);
-    }
+	public function functionObject( $name ): Method {
+		$node = $this->contextNode()->appendChild(
+			$this->dom()->createElementNS(
+				'https://schema.phpunit.de/coverage/1.0',
+				'function',
+			),
+		);
 
-    public function classObject($name): Unit
-    {
-        return $this->unitObject('class', $name);
-    }
+		return new Method( $node, $name );
+	}
 
-    public function traitObject($name): Unit
-    {
-        return $this->unitObject('trait', $name);
-    }
+	public function classObject( $name ): Unit {
+		return $this->unitObject( 'class', $name );
+	}
 
-    public function source(): Source
-    {
-        $source = $this->contextNode()->getElementsByTagNameNS(
-            'https://schema.phpunit.de/coverage/1.0',
-            'source',
-        )->item(0);
+	public function traitObject( $name ): Unit {
+		return $this->unitObject( 'trait', $name );
+	}
 
-        if (!$source) {
-            $source = $this->contextNode()->appendChild(
-                $this->dom()->createElementNS(
-                    'https://schema.phpunit.de/coverage/1.0',
-                    'source',
-                ),
-            );
-        }
+	public function source(): Source {
+		$source = $this->contextNode()->getElementsByTagNameNS(
+			'https://schema.phpunit.de/coverage/1.0',
+			'source',
+		)->item( 0 );
 
-        return new Source($source);
-    }
+		if ( ! $source ) {
+			$source = $this->contextNode()->appendChild(
+				$this->dom()->createElementNS(
+					'https://schema.phpunit.de/coverage/1.0',
+					'source',
+				),
+			);
+		}
 
-    private function setName(string $name): void
-    {
-        $this->contextNode()->setAttribute('name', basename($name));
-        $this->contextNode()->setAttribute('path', dirname($name));
-    }
+		return new Source( $source );
+	}
 
-    private function unitObject(string $tagName, $name): Unit
-    {
-        $node = $this->contextNode()->appendChild(
-            $this->dom()->createElementNS(
-                'https://schema.phpunit.de/coverage/1.0',
-                $tagName,
-            ),
-        );
+	private function setName( string $name ): void {
+		$this->contextNode()->setAttribute( 'name', basename( $name ) );
+		$this->contextNode()->setAttribute( 'path', dirname( $name ) );
+	}
 
-        return new Unit($node, $name);
-    }
+	private function unitObject( string $tagName, $name ): Unit {
+		$node = $this->contextNode()->appendChild(
+			$this->dom()->createElementNS(
+				'https://schema.phpunit.de/coverage/1.0',
+				$tagName,
+			),
+		);
+
+		return new Unit( $node, $name );
+	}
 }

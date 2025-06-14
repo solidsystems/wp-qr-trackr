@@ -14,33 +14,29 @@ namespace PHPUnit\Event\TestData;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract class TestData
-{
-    private readonly string $data;
+abstract class TestData {
 
-    protected function __construct(string $data)
-    {
-        $this->data = $data;
-    }
+	private readonly string $data;
 
-    public function data(): string
-    {
-        return $this->data;
-    }
+	protected function __construct( string $data ) {
+		$this->data = $data;
+	}
 
-    /**
-     * @psalm-assert-if-true DataFromDataProvider $this
-     */
-    public function isFromDataProvider(): bool
-    {
-        return false;
-    }
+	public function data(): string {
+		return $this->data;
+	}
 
-    /**
-     * @psalm-assert-if-true DataFromTestDependency $this
-     */
-    public function isFromTestDependency(): bool
-    {
-        return false;
-    }
+	/**
+	 * @psalm-assert-if-true DataFromDataProvider $this
+	 */
+	public function isFromDataProvider(): bool {
+		return false;
+	}
+
+	/**
+	 * @psalm-assert-if-true DataFromTestDependency $this
+	 */
+	public function isFromTestDependency(): bool {
+		return false;
+	}
 }

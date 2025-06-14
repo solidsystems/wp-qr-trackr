@@ -31,87 +31,86 @@ use SebastianBergmann\FileIterator\Facade;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestSuiteMapper
-{
-    /**
-     * @psalm-param non-empty-string $xmlConfigurationFile,
-     *
-     * @throws RuntimeException
-     * @throws TestDirectoryNotFoundException
-     * @throws TestFileNotFoundException
-     */
-    public function map(string $xmlConfigurationFile, TestSuiteCollection $configuration, string $filter, string $excludedTestSuites): TestSuiteObject
-    {
-        try {
-            $filterAsArray         = $filter ? explode(',', $filter) : [];
-            $excludedFilterAsArray = $excludedTestSuites ? explode(',', $excludedTestSuites) : [];
-            $result                = TestSuiteObject::empty($xmlConfigurationFile);
+final class TestSuiteMapper {
 
-            foreach ($configuration as $testSuiteConfiguration) {
-                if (!empty($filterAsArray) && !in_array($testSuiteConfiguration->name(), $filterAsArray, true)) {
-                    continue;
-                }
+	/**
+	 * @psalm-param non-empty-string $xmlConfigurationFile,
+	 *
+	 * @throws RuntimeException
+	 * @throws TestDirectoryNotFoundException
+	 * @throws TestFileNotFoundException
+	 */
+	public function map( string $xmlConfigurationFile, TestSuiteCollection $configuration, string $filter, string $excludedTestSuites ): TestSuiteObject {
+		try {
+			$filterAsArray         = $filter ? explode( ',', $filter ) : array();
+			$excludedFilterAsArray = $excludedTestSuites ? explode( ',', $excludedTestSuites ) : array();
+			$result                = TestSuiteObject::empty( $xmlConfigurationFile );
 
-                if (!empty($excludedFilterAsArray) && in_array($testSuiteConfiguration->name(), $excludedFilterAsArray, true)) {
-                    continue;
-                }
+			foreach ( $configuration as $testSuiteConfiguration ) {
+				if ( ! empty( $filterAsArray ) && ! in_array( $testSuiteConfiguration->name(), $filterAsArray, true ) ) {
+					continue;
+				}
 
-                $exclude = [];
+				if ( ! empty( $excludedFilterAsArray ) && in_array( $testSuiteConfiguration->name(), $excludedFilterAsArray, true ) ) {
+					continue;
+				}
 
-                foreach ($testSuiteConfiguration->exclude()->asArray() as $file) {
-                    $exclude[] = $file->path();
-                }
+				$exclude = array();
 
-                $files = [];
+				foreach ( $testSuiteConfiguration->exclude()->asArray() as $file ) {
+					$exclude[] = $file->path();
+				}
 
-                foreach ($testSuiteConfiguration->directories() as $directory) {
-                    if (!str_contains($directory->path(), '*') && !is_dir($directory->path())) {
-                        throw new TestDirectoryNotFoundException($directory->path());
-                    }
+				$files = array();
 
-                    if (!version_compare(PHP_VERSION, $directory->phpVersion(), $directory->phpVersionOperator()->asString())) {
-                        continue;
-                    }
+				foreach ( $testSuiteConfiguration->directories() as $directory ) {
+					if ( ! str_contains( $directory->path(), '*' ) && ! is_dir( $directory->path() ) ) {
+						throw new TestDirectoryNotFoundException( $directory->path() );
+					}
 
-                    $files = array_merge(
-                        $files,
-                        (new Facade)->getFilesAsArray(
-                            $directory->path(),
-                            $directory->suffix(),
-                            $directory->prefix(),
-                            $exclude,
-                        ),
-                    );
-                }
+					if ( ! version_compare( PHP_VERSION, $directory->phpVersion(), $directory->phpVersionOperator()->asString() ) ) {
+						continue;
+					}
 
-                foreach ($testSuiteConfiguration->files() as $file) {
-                    if (!is_file($file->path())) {
-                        throw new TestFileNotFoundException($file->path());
-                    }
+					$files = array_merge(
+						$files,
+						( new Facade() )->getFilesAsArray(
+							$directory->path(),
+							$directory->suffix(),
+							$directory->prefix(),
+							$exclude,
+						),
+					);
+				}
 
-                    if (!version_compare(PHP_VERSION, $file->phpVersion(), $file->phpVersionOperator()->asString())) {
-                        continue;
-                    }
+				foreach ( $testSuiteConfiguration->files() as $file ) {
+					if ( ! is_file( $file->path() ) ) {
+						throw new TestFileNotFoundException( $file->path() );
+					}
 
-                    $files[] = $file->path();
-                }
+					if ( ! version_compare( PHP_VERSION, $file->phpVersion(), $file->phpVersionOperator()->asString() ) ) {
+						continue;
+					}
 
-                if (!empty($files)) {
-                    $testSuite = TestSuiteObject::empty($testSuiteConfiguration->name());
+					$files[] = $file->path();
+				}
 
-                    $testSuite->addTestFiles(array_unique($files));
+				if ( ! empty( $files ) ) {
+					$testSuite = TestSuiteObject::empty( $testSuiteConfiguration->name() );
 
-                    $result->addTest($testSuite);
-                }
-            }
+					$testSuite->addTestFiles( array_unique( $files ) );
 
-            return $result;
-        } catch (FrameworkException $e) {
-            throw new RuntimeException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e,
-            );
-        }
-    }
+					$result->addTest( $testSuite );
+				}
+			}
+
+			return $result;
+		} catch ( FrameworkException $e ) {
+			throw new RuntimeException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e,
+			);
+		}
+	}
 }

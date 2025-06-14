@@ -14,9 +14,9 @@ namespace PHPUnit\Event\Telemetry;
  *
  * @internal This interface is not covered by the backward compatibility promise for PHPUnit
  */
-interface MemoryMeter
-{
-    public function memoryUsage(): MemoryUsage;
+interface MemoryMeter {
 
-    public function peakMemoryUsage(): MemoryUsage;
+	public function memoryUsage(): MemoryUsage;
+
+	public function peakMemoryUsage(): MemoryUsage;
 }

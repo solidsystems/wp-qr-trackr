@@ -15,76 +15,68 @@ use function sprintf;
 /**
  * @psalm-immutable
  */
-final class Duration
-{
-    private readonly float $nanoseconds;
-    private readonly int $hours;
-    private readonly int $minutes;
-    private readonly int $seconds;
-    private readonly int $milliseconds;
+final class Duration {
 
-    public static function fromMicroseconds(float $microseconds): self
-    {
-        return new self($microseconds * 1000);
-    }
+	private readonly float $nanoseconds;
+	private readonly int $hours;
+	private readonly int $minutes;
+	private readonly int $seconds;
+	private readonly int $milliseconds;
 
-    public static function fromNanoseconds(float $nanoseconds): self
-    {
-        return new self($nanoseconds);
-    }
+	public static function fromMicroseconds( float $microseconds ): self {
+		return new self( $microseconds * 1000 );
+	}
 
-    private function __construct(float $nanoseconds)
-    {
-        $this->nanoseconds     = $nanoseconds;
-        $timeInMilliseconds    = $nanoseconds / 1000000;
-        $hours                 = floor($timeInMilliseconds / 60 / 60 / 1000);
-        $hoursInMilliseconds   = $hours * 60 * 60 * 1000;
-        $minutes               = floor($timeInMilliseconds / 60 / 1000) % 60;
-        $minutesInMilliseconds = $minutes * 60 * 1000;
-        $seconds               = floor(($timeInMilliseconds - $hoursInMilliseconds - $minutesInMilliseconds) / 1000);
-        $secondsInMilliseconds = $seconds * 1000;
-        $milliseconds          = $timeInMilliseconds - $hoursInMilliseconds - $minutesInMilliseconds - $secondsInMilliseconds;
-        $this->hours           = (int) $hours;
-        $this->minutes         = $minutes;
-        $this->seconds         = (int) $seconds;
-        $this->milliseconds    = (int) $milliseconds;
-    }
+	public static function fromNanoseconds( float $nanoseconds ): self {
+		return new self( $nanoseconds );
+	}
 
-    public function asNanoseconds(): float
-    {
-        return $this->nanoseconds;
-    }
+	private function __construct( float $nanoseconds ) {
+		$this->nanoseconds     = $nanoseconds;
+		$timeInMilliseconds    = $nanoseconds / 1000000;
+		$hours                 = floor( $timeInMilliseconds / 60 / 60 / 1000 );
+		$hoursInMilliseconds   = $hours * 60 * 60 * 1000;
+		$minutes               = floor( $timeInMilliseconds / 60 / 1000 ) % 60;
+		$minutesInMilliseconds = $minutes * 60 * 1000;
+		$seconds               = floor( ( $timeInMilliseconds - $hoursInMilliseconds - $minutesInMilliseconds ) / 1000 );
+		$secondsInMilliseconds = $seconds * 1000;
+		$milliseconds          = $timeInMilliseconds - $hoursInMilliseconds - $minutesInMilliseconds - $secondsInMilliseconds;
+		$this->hours           = (int) $hours;
+		$this->minutes         = $minutes;
+		$this->seconds         = (int) $seconds;
+		$this->milliseconds    = (int) $milliseconds;
+	}
 
-    public function asMicroseconds(): float
-    {
-        return $this->nanoseconds / 1000;
-    }
+	public function asNanoseconds(): float {
+		return $this->nanoseconds;
+	}
 
-    public function asMilliseconds(): float
-    {
-        return $this->nanoseconds / 1000000;
-    }
+	public function asMicroseconds(): float {
+		return $this->nanoseconds / 1000;
+	}
 
-    public function asSeconds(): float
-    {
-        return $this->nanoseconds / 1000000000;
-    }
+	public function asMilliseconds(): float {
+		return $this->nanoseconds / 1000000;
+	}
 
-    public function asString(): string
-    {
-        $result = '';
+	public function asSeconds(): float {
+		return $this->nanoseconds / 1000000000;
+	}
 
-        if ($this->hours > 0) {
-            $result = sprintf('%02d', $this->hours) . ':';
-        }
+	public function asString(): string {
+		$result = '';
 
-        $result .= sprintf('%02d', $this->minutes) . ':';
-        $result .= sprintf('%02d', $this->seconds);
+		if ( $this->hours > 0 ) {
+			$result = sprintf( '%02d', $this->hours ) . ':';
+		}
 
-        if ($this->milliseconds > 0) {
-            $result .= '.' . sprintf('%03d', $this->milliseconds);
-        }
+		$result .= sprintf( '%02d', $this->minutes ) . ':';
+		$result .= sprintf( '%02d', $this->seconds );
 
-        return $result;
-    }
+		if ( $this->milliseconds > 0 ) {
+			$result .= '.' . sprintf( '%03d', $this->milliseconds );
+		}
+
+		return $result;
+	}
 }

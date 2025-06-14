@@ -6,15 +6,15 @@ namespace Endroid\QrCode\Writer\Result;
 
 use Endroid\QrCode\Matrix\MatrixInterface;
 
-interface ResultInterface
-{
-    public function getMatrix(): MatrixInterface;
+interface ResultInterface {
 
-    public function getString(): string;
+	public function getMatrix(): MatrixInterface;
 
-    public function getDataUri(): string;
+	public function getString(): string;
 
-    public function saveToFile(string $path): void;
+	public function getDataUri(): string;
 
-    public function getMimeType(): string;
+	public function saveToFile( string $path ): void;
+
+	public function getMimeType(): string;
 }

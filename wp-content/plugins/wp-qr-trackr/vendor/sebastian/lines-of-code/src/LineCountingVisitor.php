@@ -18,76 +18,72 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\NodeVisitorAbstract;
 
-final class LineCountingVisitor extends NodeVisitorAbstract
-{
-    /**
-     * @psalm-var non-negative-int
-     */
-    private readonly int $linesOfCode;
+final class LineCountingVisitor extends NodeVisitorAbstract {
 
-    /**
-     * @var Comment[]
-     */
-    private array $comments = [];
+	/**
+	 * @psalm-var non-negative-int
+	 */
+	private readonly int $linesOfCode;
 
-    /**
-     * @var int[]
-     */
-    private array $linesWithStatements = [];
+	/**
+	 * @var Comment[]
+	 */
+	private array $comments = array();
 
-    /**
-     * @psalm-param non-negative-int $linesOfCode
-     */
-    public function __construct(int $linesOfCode)
-    {
-        $this->linesOfCode = $linesOfCode;
-    }
+	/**
+	 * @var int[]
+	 */
+	private array $linesWithStatements = array();
 
-    public function enterNode(Node $node): void
-    {
-        $this->comments = array_merge($this->comments, $node->getComments());
+	/**
+	 * @psalm-param non-negative-int $linesOfCode
+	 */
+	public function __construct( int $linesOfCode ) {
+		$this->linesOfCode = $linesOfCode;
+	}
 
-        if (!$node instanceof Expr) {
-            return;
-        }
+	public function enterNode( Node $node ): void {
+		$this->comments = array_merge( $this->comments, $node->getComments() );
 
-        $this->linesWithStatements[] = $node->getStartLine();
-    }
+		if ( ! $node instanceof Expr ) {
+			return;
+		}
 
-    public function result(): LinesOfCode
-    {
-        $commentLinesOfCode = 0;
+		$this->linesWithStatements[] = $node->getStartLine();
+	}
 
-        foreach ($this->comments() as $comment) {
-            $commentLinesOfCode += ($comment->getEndLine() - $comment->getStartLine() + 1);
-        }
+	public function result(): LinesOfCode {
+		$commentLinesOfCode = 0;
 
-        $nonCommentLinesOfCode = $this->linesOfCode - $commentLinesOfCode;
-        $logicalLinesOfCode    = count(array_unique($this->linesWithStatements));
+		foreach ( $this->comments() as $comment ) {
+			$commentLinesOfCode += ( $comment->getEndLine() - $comment->getStartLine() + 1 );
+		}
 
-        assert($commentLinesOfCode >= 0);
-        assert($nonCommentLinesOfCode >= 0);
-        assert($logicalLinesOfCode >= 0);
+		$nonCommentLinesOfCode = $this->linesOfCode - $commentLinesOfCode;
+		$logicalLinesOfCode    = count( array_unique( $this->linesWithStatements ) );
 
-        return new LinesOfCode(
-            $this->linesOfCode,
-            $commentLinesOfCode,
-            $nonCommentLinesOfCode,
-            $logicalLinesOfCode,
-        );
-    }
+		assert( $commentLinesOfCode >= 0 );
+		assert( $nonCommentLinesOfCode >= 0 );
+		assert( $logicalLinesOfCode >= 0 );
 
-    /**
-     * @return Comment[]
-     */
-    private function comments(): array
-    {
-        $comments = [];
+		return new LinesOfCode(
+			$this->linesOfCode,
+			$commentLinesOfCode,
+			$nonCommentLinesOfCode,
+			$logicalLinesOfCode,
+		);
+	}
 
-        foreach ($this->comments as $comment) {
-            $comments[$comment->getStartLine() . '_' . $comment->getStartTokenPos() . '_' . $comment->getEndLine() . '_' . $comment->getEndTokenPos()] = $comment;
-        }
+	/**
+	 * @return Comment[]
+	 */
+	private function comments(): array {
+		$comments = array();
 
-        return $comments;
-    }
+		foreach ( $this->comments as $comment ) {
+			$comments[ $comment->getStartLine() . '_' . $comment->getStartTokenPos() . '_' . $comment->getEndLine() . '_' . $comment->getEndTokenPos() ] = $comment;
+		}
+
+		return $comments;
+	}
 }

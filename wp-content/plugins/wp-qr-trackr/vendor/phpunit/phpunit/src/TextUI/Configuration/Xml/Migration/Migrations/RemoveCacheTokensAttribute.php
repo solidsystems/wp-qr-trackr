@@ -18,16 +18,15 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveCacheTokensAttribute implements Migration
-{
-    public function migrate(DOMDocument $document): void
-    {
-        $root = $document->documentElement;
+final class RemoveCacheTokensAttribute implements Migration {
 
-        assert($root instanceof DOMElement);
+	public function migrate( DOMDocument $document ): void {
+		$root = $document->documentElement;
 
-        if ($root->hasAttribute('cacheTokens')) {
-            $root->removeAttribute('cacheTokens');
-        }
-    }
+		assert( $root instanceof DOMElement );
+
+		if ( $root->hasAttribute( 'cacheTokens' ) ) {
+			$root->removeAttribute( 'cacheTokens' );
+		}
+	}
 }

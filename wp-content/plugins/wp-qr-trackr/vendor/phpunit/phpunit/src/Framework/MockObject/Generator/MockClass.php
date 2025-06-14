@@ -18,53 +18,50 @@ use PHPUnit\Framework\MockObject\ConfigurableMethod;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MockClass implements MockType
-{
-    private readonly string $classCode;
+final class MockClass implements MockType {
 
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $mockName;
+	private readonly string $classCode;
 
-    /**
-     * @psalm-var list<ConfigurableMethod>
-     */
-    private readonly array $configurableMethods;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $mockName;
 
-    /**
-     * @psalm-param class-string $mockName
-     * @psalm-param list<ConfigurableMethod> $configurableMethods
-     */
-    public function __construct(string $classCode, string $mockName, array $configurableMethods)
-    {
-        $this->classCode           = $classCode;
-        $this->mockName            = $mockName;
-        $this->configurableMethods = $configurableMethods;
-    }
+	/**
+	 * @psalm-var list<ConfigurableMethod>
+	 */
+	private readonly array $configurableMethods;
 
-    /**
-     * @psalm-return class-string
-     */
-    public function generate(): string
-    {
-        if (!class_exists($this->mockName, false)) {
-            eval($this->classCode);
+	/**
+	 * @psalm-param class-string $mockName
+	 * @psalm-param list<ConfigurableMethod> $configurableMethods
+	 */
+	public function __construct( string $classCode, string $mockName, array $configurableMethods ) {
+		$this->classCode           = $classCode;
+		$this->mockName            = $mockName;
+		$this->configurableMethods = $configurableMethods;
+	}
 
-            call_user_func(
-                [
-                    $this->mockName,
-                    '__phpunit_initConfigurableMethods',
-                ],
-                ...$this->configurableMethods,
-            );
-        }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function generate(): string {
+		if ( ! class_exists( $this->mockName, false ) ) {
+			eval( $this->classCode );
 
-        return $this->mockName;
-    }
+			call_user_func(
+				array(
+					$this->mockName,
+					'__phpunit_initConfigurableMethods',
+				),
+				...$this->configurableMethods,
+			);
+		}
 
-    public function classCode(): string
-    {
-        return $this->classCode;
-    }
+		return $this->mockName;
+	}
+
+	public function classCode(): string {
+		return $this->classCode;
+	}
 }

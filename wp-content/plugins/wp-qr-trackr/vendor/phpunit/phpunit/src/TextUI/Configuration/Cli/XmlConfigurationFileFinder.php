@@ -19,51 +19,49 @@ use function realpath;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class XmlConfigurationFileFinder
-{
-    public function find(Configuration $configuration): false|string
-    {
-        $useDefaultConfiguration = $configuration->useDefaultConfiguration();
+final class XmlConfigurationFileFinder {
 
-        if ($configuration->hasConfigurationFile()) {
-            if (is_dir($configuration->configurationFile())) {
-                $candidate = $this->configurationFileInDirectory($configuration->configurationFile());
+	public function find( Configuration $configuration ): false|string {
+		$useDefaultConfiguration = $configuration->useDefaultConfiguration();
 
-                if ($candidate !== false) {
-                    return $candidate;
-                }
+		if ( $configuration->hasConfigurationFile() ) {
+			if ( is_dir( $configuration->configurationFile() ) ) {
+				$candidate = $this->configurationFileInDirectory( $configuration->configurationFile() );
 
-                return false;
-            }
+				if ( $candidate !== false ) {
+					return $candidate;
+				}
 
-            return $configuration->configurationFile();
-        }
+				return false;
+			}
 
-        if ($useDefaultConfiguration) {
-            $candidate = $this->configurationFileInDirectory(getcwd());
+			return $configuration->configurationFile();
+		}
 
-            if ($candidate !== false) {
-                return $candidate;
-            }
-        }
+		if ( $useDefaultConfiguration ) {
+			$candidate = $this->configurationFileInDirectory( getcwd() );
 
-        return false;
-    }
+			if ( $candidate !== false ) {
+				return $candidate;
+			}
+		}
 
-    private function configurationFileInDirectory(string $directory): false|string
-    {
-        $candidates = [
-            $directory . '/phpunit.xml',
-            $directory . '/phpunit.dist.xml',
-            $directory . '/phpunit.xml.dist',
-        ];
+		return false;
+	}
 
-        foreach ($candidates as $candidate) {
-            if (is_file($candidate)) {
-                return realpath($candidate);
-            }
-        }
+	private function configurationFileInDirectory( string $directory ): false|string {
+		$candidates = array(
+			$directory . '/phpunit.xml',
+			$directory . '/phpunit.dist.xml',
+			$directory . '/phpunit.xml.dist',
+		);
 
-        return false;
-    }
+		foreach ( $candidates as $candidate ) {
+			if ( is_file( $candidate ) ) {
+				return realpath( $candidate );
+			}
+		}
+
+		return false;
+	}
 }

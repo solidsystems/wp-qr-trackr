@@ -18,49 +18,45 @@ use PHPUnit\Framework\MockObject\Invocation as BaseInvocation;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class InvokedAtLeastCount extends InvocationOrder
-{
-    private readonly int $requiredInvocations;
+final class InvokedAtLeastCount extends InvocationOrder {
 
-    public function __construct(int $requiredInvocations)
-    {
-        $this->requiredInvocations = $requiredInvocations;
-    }
+	private readonly int $requiredInvocations;
 
-    public function toString(): string
-    {
-        return sprintf(
-            'invoked at least %d time%s',
-            $this->requiredInvocations,
-            $this->requiredInvocations !== 1 ? 's' : '',
-        );
-    }
+	public function __construct( int $requiredInvocations ) {
+		$this->requiredInvocations = $requiredInvocations;
+	}
 
-    /**
-     * Verifies that the current expectation is valid. If everything is OK the
-     * code should just return, if not it must throw an exception.
-     *
-     * @throws ExpectationFailedException
-     */
-    public function verify(): void
-    {
-        $actualInvocations = $this->numberOfInvocations();
+	public function toString(): string {
+		return sprintf(
+			'invoked at least %d time%s',
+			$this->requiredInvocations,
+			$this->requiredInvocations !== 1 ? 's' : '',
+		);
+	}
 
-        if ($actualInvocations < $this->requiredInvocations) {
-            throw new ExpectationFailedException(
-                sprintf(
-                    'Expected invocation at least %d time%s but it occurred %d time%s.',
-                    $this->requiredInvocations,
-                    $this->requiredInvocations !== 1 ? 's' : '',
-                    $actualInvocations,
-                    $actualInvocations !== 1 ? 's' : '',
-                ),
-            );
-        }
-    }
+	/**
+	 * Verifies that the current expectation is valid. If everything is OK the
+	 * code should just return, if not it must throw an exception.
+	 *
+	 * @throws ExpectationFailedException
+	 */
+	public function verify(): void {
+		$actualInvocations = $this->numberOfInvocations();
 
-    public function matches(BaseInvocation $invocation): bool
-    {
-        return true;
-    }
+		if ( $actualInvocations < $this->requiredInvocations ) {
+			throw new ExpectationFailedException(
+				sprintf(
+					'Expected invocation at least %d time%s but it occurred %d time%s.',
+					$this->requiredInvocations,
+					$this->requiredInvocations !== 1 ? 's' : '',
+					$actualInvocations,
+					$actualInvocations !== 1 ? 's' : '',
+				),
+			);
+		}
+	}
+
+	public function matches( BaseInvocation $invocation ): bool {
+		return true;
+	}
 }

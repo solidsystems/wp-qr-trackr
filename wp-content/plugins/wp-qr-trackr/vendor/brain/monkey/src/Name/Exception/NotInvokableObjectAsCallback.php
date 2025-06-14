@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -10,20 +10,17 @@
 
 namespace Brain\Monkey\Name\Exception;
 
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class NotInvokableObjectAsCallback extends Exception
-{
+class NotInvokableObjectAsCallback extends Exception {
 
-    public function __construct()
-    {
-        parent::__construct(
-            'Only closures and invokable objects can be used as callbacks for hooks.'
-        );
-    }
 
+	public function __construct() {
+		parent::__construct(
+			'Only closures and invokable objects can be used as callbacks for hooks.'
+		);
+	}
 }

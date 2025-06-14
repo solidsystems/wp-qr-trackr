@@ -14,41 +14,35 @@ use Iterator;
 /**
  * @template-implements Iterator<int, CodeUnit>
  */
-final class CodeUnitCollectionIterator implements Iterator
-{
-    /**
-     * @psalm-var list<CodeUnit>
-     */
-    private array $codeUnits;
-    private int $position = 0;
+final class CodeUnitCollectionIterator implements Iterator {
 
-    public function __construct(CodeUnitCollection $collection)
-    {
-        $this->codeUnits = $collection->asArray();
-    }
+	/**
+	 * @psalm-var list<CodeUnit>
+	 */
+	private array $codeUnits;
+	private int $position = 0;
 
-    public function rewind(): void
-    {
-        $this->position = 0;
-    }
+	public function __construct( CodeUnitCollection $collection ) {
+		$this->codeUnits = $collection->asArray();
+	}
 
-    public function valid(): bool
-    {
-        return isset($this->codeUnits[$this->position]);
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function key(): int
-    {
-        return $this->position;
-    }
+	public function valid(): bool {
+		return isset( $this->codeUnits[ $this->position ] );
+	}
 
-    public function current(): CodeUnit
-    {
-        return $this->codeUnits[$this->position];
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function next(): void
-    {
-        $this->position++;
-    }
+	public function current(): CodeUnit {
+		return $this->codeUnits[ $this->position ];
+	}
+
+	public function next(): void {
+		++$this->position;
+	}
 }

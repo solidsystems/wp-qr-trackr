@@ -16,40 +16,35 @@ namespace PHPUnit\Framework;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class PhptAssertionFailedError extends AssertionFailedError
-{
-    private readonly string $syntheticFile;
-    private readonly int $syntheticLine;
-    private readonly array $syntheticTrace;
-    private readonly string $diff;
+final class PhptAssertionFailedError extends AssertionFailedError {
 
-    public function __construct(string $message, int $code, string $file, int $line, array $trace, string $diff)
-    {
-        parent::__construct($message, $code);
+	private readonly string $syntheticFile;
+	private readonly int $syntheticLine;
+	private readonly array $syntheticTrace;
+	private readonly string $diff;
 
-        $this->syntheticFile  = $file;
-        $this->syntheticLine  = $line;
-        $this->syntheticTrace = $trace;
-        $this->diff           = $diff;
-    }
+	public function __construct( string $message, int $code, string $file, int $line, array $trace, string $diff ) {
+		parent::__construct( $message, $code );
 
-    public function syntheticFile(): string
-    {
-        return $this->syntheticFile;
-    }
+		$this->syntheticFile  = $file;
+		$this->syntheticLine  = $line;
+		$this->syntheticTrace = $trace;
+		$this->diff           = $diff;
+	}
 
-    public function syntheticLine(): int
-    {
-        return $this->syntheticLine;
-    }
+	public function syntheticFile(): string {
+		return $this->syntheticFile;
+	}
 
-    public function syntheticTrace(): array
-    {
-        return $this->syntheticTrace;
-    }
+	public function syntheticLine(): int {
+		return $this->syntheticLine;
+	}
 
-    public function diff(): string
-    {
-        return $this->diff;
-    }
+	public function syntheticTrace(): array {
+		return $this->syntheticTrace;
+	}
+
+	public function diff(): string {
+		return $this->diff;
+	}
 }

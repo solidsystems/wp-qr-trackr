@@ -10,99 +10,92 @@ use BaconQrCode\Common\Version;
 /**
  * QR code.
  */
-final class QrCode
-{
-    /**
-     * Number of possible mask patterns.
-     */
-    public const NUM_MASK_PATTERNS = 8;
+final class QrCode {
 
-    /**
-     * Mask pattern of the QR code.
-     */
-    private int $maskPattern = -1;
+	/**
+	 * Number of possible mask patterns.
+	 */
+	public const NUM_MASK_PATTERNS = 8;
 
-    /**
-     * Matrix of the QR code.
-     */
-    private ByteMatrix $matrix;
+	/**
+	 * Mask pattern of the QR code.
+	 */
+	private int $maskPattern = -1;
 
-    public function __construct(
-        private readonly Mode                 $mode,
-        private readonly ErrorCorrectionLevel $errorCorrectionLevel,
-        private readonly Version              $version,
-        int                                   $maskPattern,
-        ByteMatrix                            $matrix
-    ) {
-        $this->maskPattern = $maskPattern;
-        $this->matrix = $matrix;
-    }
+	/**
+	 * Matrix of the QR code.
+	 */
+	private ByteMatrix $matrix;
 
-    /**
-     * Gets the mode.
-     */
-    public function getMode() : Mode
-    {
-        return $this->mode;
-    }
+	public function __construct(
+		private readonly Mode $mode,
+		private readonly ErrorCorrectionLevel $errorCorrectionLevel,
+		private readonly Version $version,
+		int $maskPattern,
+		ByteMatrix $matrix
+	) {
+		$this->maskPattern = $maskPattern;
+		$this->matrix      = $matrix;
+	}
 
-    /**
-     * Gets the EC level.
-     */
-    public function getErrorCorrectionLevel() : ErrorCorrectionLevel
-    {
-        return $this->errorCorrectionLevel;
-    }
+	/**
+	 * Gets the mode.
+	 */
+	public function getMode(): Mode {
+		return $this->mode;
+	}
 
-    /**
-     * Gets the version.
-     */
-    public function getVersion() : Version
-    {
-        return $this->version;
-    }
+	/**
+	 * Gets the EC level.
+	 */
+	public function getErrorCorrectionLevel(): ErrorCorrectionLevel {
+		return $this->errorCorrectionLevel;
+	}
 
-    /**
-     * Gets the mask pattern.
-     */
-    public function getMaskPattern() : int
-    {
-        return $this->maskPattern;
-    }
+	/**
+	 * Gets the version.
+	 */
+	public function getVersion(): Version {
+		return $this->version;
+	}
 
-    public function getMatrix(): ByteMatrix
-    {
-        return $this->matrix;
-    }
+	/**
+	 * Gets the mask pattern.
+	 */
+	public function getMaskPattern(): int {
+		return $this->maskPattern;
+	}
 
-    /**
-     * Validates whether a mask pattern is valid.
-     */
-    public static function isValidMaskPattern(int $maskPattern) : bool
-    {
-        return $maskPattern > 0 && $maskPattern < self::NUM_MASK_PATTERNS;
-    }
+	public function getMatrix(): ByteMatrix {
+		return $this->matrix;
+	}
 
-    /**
-     * Returns a string representation of the QR code.
-     */
-    public function __toString() : string
-    {
-        $result = "<<\n"
-                . ' mode: ' . $this->mode . "\n"
-                . ' ecLevel: ' . $this->errorCorrectionLevel . "\n"
-                . ' version: ' . $this->version . "\n"
-                . ' maskPattern: ' . $this->maskPattern . "\n";
+	/**
+	 * Validates whether a mask pattern is valid.
+	 */
+	public static function isValidMaskPattern( int $maskPattern ): bool {
+		return $maskPattern > 0 && $maskPattern < self::NUM_MASK_PATTERNS;
+	}
 
-        if ($this->matrix === null) {
-            $result .= " matrix: null\n";
-        } else {
-            $result .= " matrix:\n";
-            $result .= $this->matrix;
-        }
+	/**
+	 * Returns a string representation of the QR code.
+	 */
+	public function __toString(): string {
+		$result = "<<\n"
+				. ' mode: ' . $this->mode . "\n"
+				. ' ecLevel: ' . $this->errorCorrectionLevel . "\n"
+				. ' version: ' . $this->version . "\n"
+				. ' maskPattern: ' . $this->maskPattern . "\n";
 
-        $result .= ">>\n";
+		if ( $this->matrix === null ) {
+			$result .= " matrix: null\n";
+		} else {
+			$result .= " matrix:\n";
+			$result .= $this->matrix;
+		}
 
-        return $result;
-    }
+		$result .= ">>\n";
+
+		return $result;
+	}
 }

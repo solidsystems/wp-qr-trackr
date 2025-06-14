@@ -21,84 +21,81 @@ use SebastianBergmann\Comparator\Factory as ComparatorFactory;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsEqualIgnoringCase extends Constraint
-{
-    private readonly mixed $value;
+final class IsEqualIgnoringCase extends Constraint {
 
-    public function __construct(mixed $value)
-    {
-        $this->value = $value;
-    }
+	private readonly mixed $value;
 
-    /**
-     * Evaluates the constraint for parameter $other.
-     *
-     * If $returnResult is set to false (the default), an exception is thrown
-     * in case of a failure. null is returned otherwise.
-     *
-     * If $returnResult is true, the result of the evaluation is returned as
-     * a boolean value instead: true in case of success, false in case of a
-     * failure.
-     *
-     * @throws ExpectationFailedException
-     */
-    public function evaluate(mixed $other, string $description = '', bool $returnResult = false): ?bool
-    {
-        // If $this->value and $other are identical, they are also equal.
-        // This is the most common path and will allow us to skip
-        // initialization of all the comparators.
-        if ($this->value === $other) {
-            return true;
-        }
+	public function __construct( mixed $value ) {
+		$this->value = $value;
+	}
 
-        $comparatorFactory = ComparatorFactory::getInstance();
+	/**
+	 * Evaluates the constraint for parameter $other.
+	 *
+	 * If $returnResult is set to false (the default), an exception is thrown
+	 * in case of a failure. null is returned otherwise.
+	 *
+	 * If $returnResult is true, the result of the evaluation is returned as
+	 * a boolean value instead: true in case of success, false in case of a
+	 * failure.
+	 *
+	 * @throws ExpectationFailedException
+	 */
+	public function evaluate( mixed $other, string $description = '', bool $returnResult = false ): ?bool {
+		// If $this->value and $other are identical, they are also equal.
+		// This is the most common path and will allow us to skip
+		// initialization of all the comparators.
+		if ( $this->value === $other ) {
+			return true;
+		}
 
-        try {
-            $comparator = $comparatorFactory->getComparatorFor(
-                $this->value,
-                $other,
-            );
+		$comparatorFactory = ComparatorFactory::getInstance();
 
-            $comparator->assertEquals(
-                $this->value,
-                $other,
-                0.0,
-                false,
-                true,
-            );
-        } catch (ComparisonFailure $f) {
-            if ($returnResult) {
-                return false;
-            }
+		try {
+			$comparator = $comparatorFactory->getComparatorFor(
+				$this->value,
+				$other,
+			);
 
-            throw new ExpectationFailedException(
-                trim($description . "\n" . $f->getMessage()),
-                $f,
-            );
-        }
+			$comparator->assertEquals(
+				$this->value,
+				$other,
+				0.0,
+				false,
+				true,
+			);
+		} catch ( ComparisonFailure $f ) {
+			if ( $returnResult ) {
+				return false;
+			}
 
-        return true;
-    }
+			throw new ExpectationFailedException(
+				trim( $description . "\n" . $f->getMessage() ),
+				$f,
+			);
+		}
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(bool $exportObjects = false): string
-    {
-        if (is_string($this->value)) {
-            if (str_contains($this->value, "\n")) {
-                return 'is equal to <text>';
-            }
+		return true;
+	}
 
-            return sprintf(
-                "is equal to '%s'",
-                $this->value,
-            );
-        }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString( bool $exportObjects = false ): string {
+		if ( is_string( $this->value ) ) {
+			if ( str_contains( $this->value, "\n" ) ) {
+				return 'is equal to <text>';
+			}
 
-        return sprintf(
-            'is equal to %s',
-            Exporter::export($this->value, $exportObjects),
-        );
-    }
+			return sprintf(
+				"is equal to '%s'",
+				$this->value,
+			);
+		}
+
+		return sprintf(
+			'is equal to %s',
+			Exporter::export( $this->value, $exportObjects ),
+		);
+	}
 }

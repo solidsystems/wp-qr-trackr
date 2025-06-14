@@ -23,69 +23,65 @@ use function sprintf;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class IsJson extends Constraint
-{
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        return 'is valid JSON';
-    }
+final class IsJson extends Constraint {
 
-    /**
-     * Evaluates the constraint for parameter $other. Returns true if the
-     * constraint is met, false otherwise.
-     */
-    protected function matches(mixed $other): bool
-    {
-        if (!is_string($other) || $other === '') {
-            return false;
-        }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		return 'is valid JSON';
+	}
 
-        json_decode($other);
+	/**
+	 * Evaluates the constraint for parameter $other. Returns true if the
+	 * constraint is met, false otherwise.
+	 */
+	protected function matches( mixed $other ): bool {
+		if ( ! is_string( $other ) || $other === '' ) {
+			return false;
+		}
 
-        if (json_last_error()) {
-            return false;
-        }
+		json_decode( $other );
 
-        return true;
-    }
+		if ( json_last_error() ) {
+			return false;
+		}
 
-    /**
-     * Returns the description of the failure.
-     *
-     * The beginning of failure messages is "Failed asserting that" in most
-     * cases. This method should return the second part of that sentence.
-     */
-    protected function failureDescription(mixed $other): string
-    {
-        if (!is_string($other)) {
-            return $this->valueToTypeStringFragment($other) . 'is valid JSON';
-        }
+		return true;
+	}
 
-        if ($other === '') {
-            return 'an empty string is valid JSON';
-        }
+	/**
+	 * Returns the description of the failure.
+	 *
+	 * The beginning of failure messages is "Failed asserting that" in most
+	 * cases. This method should return the second part of that sentence.
+	 */
+	protected function failureDescription( mixed $other ): string {
+		if ( ! is_string( $other ) ) {
+			return $this->valueToTypeStringFragment( $other ) . 'is valid JSON';
+		}
 
-        return sprintf(
-            'a string is valid JSON (%s)',
-            $this->determineJsonError($other),
-        );
-    }
+		if ( $other === '' ) {
+			return 'an empty string is valid JSON';
+		}
 
-    private function determineJsonError(string $json): string
-    {
-        json_decode($json);
+		return sprintf(
+			'a string is valid JSON (%s)',
+			$this->determineJsonError( $other ),
+		);
+	}
 
-        return match (json_last_error()) {
-            JSON_ERROR_NONE           => '',
-            JSON_ERROR_DEPTH          => 'Maximum stack depth exceeded',
-            JSON_ERROR_STATE_MISMATCH => 'Underflow or the modes mismatch',
-            JSON_ERROR_CTRL_CHAR      => 'Unexpected control character found',
-            JSON_ERROR_SYNTAX         => 'Syntax error, malformed JSON',
-            JSON_ERROR_UTF8           => 'Malformed UTF-8 characters, possibly incorrectly encoded',
-            default                   => 'Unknown error',
-        };
-    }
+	private function determineJsonError( string $json ): string {
+		json_decode( $json );
+
+		return match ( json_last_error() ) {
+			JSON_ERROR_NONE           => '',
+			JSON_ERROR_DEPTH          => 'Maximum stack depth exceeded',
+			JSON_ERROR_STATE_MISMATCH => 'Underflow or the modes mismatch',
+			JSON_ERROR_CTRL_CHAR      => 'Unexpected control character found',
+			JSON_ERROR_SYNTAX         => 'Syntax error, malformed JSON',
+			JSON_ERROR_UTF8           => 'Malformed UTF-8 characters, possibly incorrectly encoded',
+			default                   => 'Unknown error',
+		};
+	}
 }

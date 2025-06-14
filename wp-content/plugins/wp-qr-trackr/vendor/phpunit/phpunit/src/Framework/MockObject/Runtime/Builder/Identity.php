@@ -14,12 +14,12 @@ namespace PHPUnit\Framework\MockObject\Builder;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-interface Identity
-{
-    /**
-     * Sets the identification of the expectation to $id.
-     *
-     * @note The identifier is unique per mock object.
-     */
-    public function id(string $id): self;
+interface Identity {
+
+	/**
+	 * Sets the identification of the expectation to $id.
+	 *
+	 * @note The identifier is unique per mock object.
+	 */
+	public function id( string $id ): self;
 }

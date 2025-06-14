@@ -18,45 +18,39 @@ use IteratorAggregate;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class EventCollection implements Countable, IteratorAggregate
-{
-    /**
-     * @psalm-var list<Event>
-     */
-    private array $events = [];
+final class EventCollection implements Countable, IteratorAggregate {
 
-    public function add(Event ...$events): void
-    {
-        foreach ($events as $event) {
-            $this->events[] = $event;
-        }
-    }
+	/**
+	 * @psalm-var list<Event>
+	 */
+	private array $events = array();
 
-    /**
-     * @psalm-return list<Event>
-     */
-    public function asArray(): array
-    {
-        return $this->events;
-    }
+	public function add( Event ...$events ): void {
+		foreach ( $events as $event ) {
+			$this->events[] = $event;
+		}
+	}
 
-    public function count(): int
-    {
-        return count($this->events);
-    }
+	/**
+	 * @psalm-return list<Event>
+	 */
+	public function asArray(): array {
+		return $this->events;
+	}
 
-    public function isEmpty(): bool
-    {
-        return $this->count() === 0;
-    }
+	public function count(): int {
+		return count( $this->events );
+	}
 
-    public function isNotEmpty(): bool
-    {
-        return $this->count() > 0;
-    }
+	public function isEmpty(): bool {
+		return $this->count() === 0;
+	}
 
-    public function getIterator(): EventCollectionIterator
-    {
-        return new EventCollectionIterator($this);
-    }
+	public function isNotEmpty(): bool {
+		return $this->count() > 0;
+	}
+
+	public function getIterator(): EventCollectionIterator {
+		return new EventCollectionIterator( $this );
+	}
 }

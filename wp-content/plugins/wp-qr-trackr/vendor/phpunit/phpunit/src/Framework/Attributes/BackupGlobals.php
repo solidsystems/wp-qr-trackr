@@ -16,18 +16,16 @@ use Attribute;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
-final class BackupGlobals
-{
-    private readonly bool $enabled;
+#[Attribute( Attribute::TARGET_CLASS | Attribute::TARGET_METHOD )]
+final class BackupGlobals {
 
-    public function __construct(bool $enabled)
-    {
-        $this->enabled = $enabled;
-    }
+	private readonly bool $enabled;
 
-    public function enabled(): bool
-    {
-        return $this->enabled;
-    }
+	public function __construct( bool $enabled ) {
+		$this->enabled = $enabled;
+	}
+
+	public function enabled(): bool {
+		return $this->enabled;
+	}
 }

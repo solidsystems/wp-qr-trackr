@@ -11,140 +11,138 @@ use BaconQrCode\Renderer\Path\Path;
 use BaconQrCode\Renderer\RendererStyle\EyeFill;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 
-final class ImageRenderer implements RendererInterface
-{
-    public function __construct(
-        private readonly RendererStyle         $rendererStyle,
-        private readonly ImageBackEndInterface $imageBackEnd
-    ) {
-    }
+final class ImageRenderer implements RendererInterface {
 
-    /**
-     * @throws InvalidArgumentException if matrix width doesn't match height
-     */
-    public function render(QrCode $qrCode) : string
-    {
-        $size = $this->rendererStyle->getSize();
-        $margin = $this->rendererStyle->getMargin();
-        $matrix = $qrCode->getMatrix();
-        $matrixSize = $matrix->getWidth();
+	public function __construct(
+		private readonly RendererStyle $rendererStyle,
+		private readonly ImageBackEndInterface $imageBackEnd
+	) {
+	}
 
-        if ($matrixSize !== $matrix->getHeight()) {
-            throw new InvalidArgumentException('Matrix must have the same width and height');
-        }
+	/**
+	 * @throws InvalidArgumentException if matrix width doesn't match height
+	 */
+	public function render( QrCode $qrCode ): string {
+		$size       = $this->rendererStyle->getSize();
+		$margin     = $this->rendererStyle->getMargin();
+		$matrix     = $qrCode->getMatrix();
+		$matrixSize = $matrix->getWidth();
 
-        $totalSize = $matrixSize + ($margin * 2);
-        $moduleSize = $size / $totalSize;
-        $fill = $this->rendererStyle->getFill();
+		if ( $matrixSize !== $matrix->getHeight() ) {
+			throw new InvalidArgumentException( 'Matrix must have the same width and height' );
+		}
 
-        $this->imageBackEnd->new($size, $fill->getBackgroundColor());
-        $this->imageBackEnd->scale((float) $moduleSize);
-        $this->imageBackEnd->translate((float) $margin, (float) $margin);
+		$totalSize  = $matrixSize + ( $margin * 2 );
+		$moduleSize = $size / $totalSize;
+		$fill       = $this->rendererStyle->getFill();
 
-        $module = $this->rendererStyle->getModule();
-        $moduleMatrix = clone $matrix;
-        MatrixUtil::removePositionDetectionPatterns($moduleMatrix);
-        $modulePath = $this->drawEyes($matrixSize, $module->createPath($moduleMatrix));
+		$this->imageBackEnd->new( $size, $fill->getBackgroundColor() );
+		$this->imageBackEnd->scale( (float) $moduleSize );
+		$this->imageBackEnd->translate( (float) $margin, (float) $margin );
 
-        if ($fill->hasGradientFill()) {
-            $this->imageBackEnd->drawPathWithGradient(
-                $modulePath,
-                $fill->getForegroundGradient(),
-                0,
-                0,
-                $matrixSize,
-                $matrixSize
-            );
-        } else {
-            $this->imageBackEnd->drawPathWithColor($modulePath, $fill->getForegroundColor());
-        }
+		$module       = $this->rendererStyle->getModule();
+		$moduleMatrix = clone $matrix;
+		MatrixUtil::removePositionDetectionPatterns( $moduleMatrix );
+		$modulePath = $this->drawEyes( $matrixSize, $module->createPath( $moduleMatrix ) );
 
-        return $this->imageBackEnd->done();
-    }
+		if ( $fill->hasGradientFill() ) {
+			$this->imageBackEnd->drawPathWithGradient(
+				$modulePath,
+				$fill->getForegroundGradient(),
+				0,
+				0,
+				$matrixSize,
+				$matrixSize
+			);
+		} else {
+			$this->imageBackEnd->drawPathWithColor( $modulePath, $fill->getForegroundColor() );
+		}
 
-    private function drawEyes(int $matrixSize, Path $modulePath) : Path
-    {
-        $fill = $this->rendererStyle->getFill();
+		return $this->imageBackEnd->done();
+	}
 
-        $eye = $this->rendererStyle->getEye();
-        $externalPath = $eye->getExternalPath();
-        $internalPath = $eye->getInternalPath();
+	private function drawEyes( int $matrixSize, Path $modulePath ): Path {
+		$fill = $this->rendererStyle->getFill();
 
-        $modulePath = $this->drawEye(
-            $externalPath,
-            $internalPath,
-            $fill->getTopLeftEyeFill(),
-            3.5,
-            3.5,
-            0,
-            $modulePath
-        );
-        $modulePath = $this->drawEye(
-            $externalPath,
-            $internalPath,
-            $fill->getTopRightEyeFill(),
-            $matrixSize - 3.5,
-            3.5,
-            90,
-            $modulePath
-        );
-        $modulePath = $this->drawEye(
-            $externalPath,
-            $internalPath,
-            $fill->getBottomLeftEyeFill(),
-            3.5,
-            $matrixSize - 3.5,
-            -90,
-            $modulePath
-        );
+		$eye          = $this->rendererStyle->getEye();
+		$externalPath = $eye->getExternalPath();
+		$internalPath = $eye->getInternalPath();
 
-        return $modulePath;
-    }
+		$modulePath = $this->drawEye(
+			$externalPath,
+			$internalPath,
+			$fill->getTopLeftEyeFill(),
+			3.5,
+			3.5,
+			0,
+			$modulePath
+		);
+		$modulePath = $this->drawEye(
+			$externalPath,
+			$internalPath,
+			$fill->getTopRightEyeFill(),
+			$matrixSize - 3.5,
+			3.5,
+			90,
+			$modulePath
+		);
+		$modulePath = $this->drawEye(
+			$externalPath,
+			$internalPath,
+			$fill->getBottomLeftEyeFill(),
+			3.5,
+			$matrixSize - 3.5,
+			-90,
+			$modulePath
+		);
 
-    private function drawEye(
-        Path $externalPath,
-        Path $internalPath,
-        EyeFill $fill,
-        float $xTranslation,
-        float $yTranslation,
-        int $rotation,
-        Path $modulePath
-    ) : Path {
-        if ($fill->inheritsBothColors()) {
-            return $modulePath
-                ->append(
-                    $externalPath->rotate($rotation)->translate($xTranslation, $yTranslation)
-                )
-                ->append(
-                    $internalPath->rotate($rotation)->translate($xTranslation, $yTranslation)
-                );
-        }
+		return $modulePath;
+	}
 
-        $this->imageBackEnd->push();
-        $this->imageBackEnd->translate($xTranslation, $yTranslation);
+	private function drawEye(
+		Path $externalPath,
+		Path $internalPath,
+		EyeFill $fill,
+		float $xTranslation,
+		float $yTranslation,
+		int $rotation,
+		Path $modulePath
+	): Path {
+		if ( $fill->inheritsBothColors() ) {
+			return $modulePath
+				->append(
+					$externalPath->rotate( $rotation )->translate( $xTranslation, $yTranslation )
+				)
+				->append(
+					$internalPath->rotate( $rotation )->translate( $xTranslation, $yTranslation )
+				);
+		}
 
-        if (0 !== $rotation) {
-            $this->imageBackEnd->rotate($rotation);
-        }
+		$this->imageBackEnd->push();
+		$this->imageBackEnd->translate( $xTranslation, $yTranslation );
 
-        if ($fill->inheritsExternalColor()) {
-            $modulePath = $modulePath->append(
-                $externalPath->rotate($rotation)->translate($xTranslation, $yTranslation)
-            );
-        } else {
-            $this->imageBackEnd->drawPathWithColor($externalPath, $fill->getExternalColor());
-        }
+		if ( 0 !== $rotation ) {
+			$this->imageBackEnd->rotate( $rotation );
+		}
 
-        if ($fill->inheritsInternalColor()) {
-            $modulePath = $modulePath->append(
-                $internalPath->rotate($rotation)->translate($xTranslation, $yTranslation)
-            );
-        } else {
-            $this->imageBackEnd->drawPathWithColor($internalPath, $fill->getInternalColor());
-        }
+		if ( $fill->inheritsExternalColor() ) {
+			$modulePath = $modulePath->append(
+				$externalPath->rotate( $rotation )->translate( $xTranslation, $yTranslation )
+			);
+		} else {
+			$this->imageBackEnd->drawPathWithColor( $externalPath, $fill->getExternalColor() );
+		}
 
-        $this->imageBackEnd->pop();
+		if ( $fill->inheritsInternalColor() ) {
+			$modulePath = $modulePath->append(
+				$internalPath->rotate( $rotation )->translate( $xTranslation, $yTranslation )
+			);
+		} else {
+			$this->imageBackEnd->drawPathWithColor( $internalPath, $fill->getInternalColor() );
+		}
 
-        return $modulePath;
-    }
+		$this->imageBackEnd->pop();
+
+		return $modulePath;
+	}
 }

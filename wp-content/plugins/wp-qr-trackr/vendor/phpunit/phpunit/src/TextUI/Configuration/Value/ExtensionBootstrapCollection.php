@@ -18,36 +18,32 @@ use IteratorAggregate;
  *
  * @psalm-immutable
  */
-final class ExtensionBootstrapCollection implements IteratorAggregate
-{
-    /**
-     * @psalm-var list<ExtensionBootstrap>
-     */
-    private readonly array $extensionBootstraps;
+final class ExtensionBootstrapCollection implements IteratorAggregate {
 
-    /**
-     * @psalm-param list<ExtensionBootstrap> $extensionBootstraps
-     */
-    public static function fromArray(array $extensionBootstraps): self
-    {
-        return new self(...$extensionBootstraps);
-    }
+	/**
+	 * @psalm-var list<ExtensionBootstrap>
+	 */
+	private readonly array $extensionBootstraps;
 
-    private function __construct(ExtensionBootstrap ...$extensionBootstraps)
-    {
-        $this->extensionBootstraps = $extensionBootstraps;
-    }
+	/**
+	 * @psalm-param list<ExtensionBootstrap> $extensionBootstraps
+	 */
+	public static function fromArray( array $extensionBootstraps ): self {
+		return new self( ...$extensionBootstraps );
+	}
 
-    /**
-     * @psalm-return list<ExtensionBootstrap>
-     */
-    public function asArray(): array
-    {
-        return $this->extensionBootstraps;
-    }
+	private function __construct( ExtensionBootstrap ...$extensionBootstraps ) {
+		$this->extensionBootstraps = $extensionBootstraps;
+	}
 
-    public function getIterator(): ExtensionBootstrapCollectionIterator
-    {
-        return new ExtensionBootstrapCollectionIterator($this);
-    }
+	/**
+	 * @psalm-return list<ExtensionBootstrap>
+	 */
+	public function asArray(): array {
+		return $this->extensionBootstraps;
+	}
+
+	public function getIterator(): ExtensionBootstrapCollectionIterator {
+		return new ExtensionBootstrapCollectionIterator( $this );
+	}
 }

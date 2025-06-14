@@ -17,37 +17,36 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MoveAttributesFromFilterWhitelistToCoverage implements Migration
-{
-    /**
-     * @throws MigrationException
-     */
-    public function migrate(DOMDocument $document): void
-    {
-        $whitelist = $document->getElementsByTagName('whitelist')->item(0);
+final class MoveAttributesFromFilterWhitelistToCoverage implements Migration {
 
-        if (!$whitelist) {
-            return;
-        }
+	/**
+	 * @throws MigrationException
+	 */
+	public function migrate( DOMDocument $document ): void {
+		$whitelist = $document->getElementsByTagName( 'whitelist' )->item( 0 );
 
-        $coverage = $document->getElementsByTagName('coverage')->item(0);
+		if ( ! $whitelist ) {
+			return;
+		}
 
-        if (!$coverage instanceof DOMElement) {
-            throw new MigrationException('Unexpected state - No coverage element');
-        }
+		$coverage = $document->getElementsByTagName( 'coverage' )->item( 0 );
 
-        $map = [
-            'addUncoveredFilesFromWhitelist'     => 'includeUncoveredFiles',
-            'processUncoveredFilesFromWhitelist' => 'processUncoveredFiles',
-        ];
+		if ( ! $coverage instanceof DOMElement ) {
+			throw new MigrationException( 'Unexpected state - No coverage element' );
+		}
 
-        foreach ($map as $old => $new) {
-            if (!$whitelist->hasAttribute($old)) {
-                continue;
-            }
+		$map = array(
+			'addUncoveredFilesFromWhitelist'     => 'includeUncoveredFiles',
+			'processUncoveredFilesFromWhitelist' => 'processUncoveredFiles',
+		);
 
-            $coverage->setAttribute($new, $whitelist->getAttribute($old));
-            $whitelist->removeAttribute($old);
-        }
-    }
+		foreach ( $map as $old => $new ) {
+			if ( ! $whitelist->hasAttribute( $old ) ) {
+				continue;
+			}
+
+			$coverage->setAttribute( $new, $whitelist->getAttribute( $old ) );
+			$whitelist->removeAttribute( $old );
+		}
+	}
 }

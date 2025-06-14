@@ -16,23 +16,20 @@ namespace PHPUnit\Framework\TestStatus;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Deprecation extends Known
-{
-    /**
-     * @psalm-assert-if-true Deprecation $this
-     */
-    public function isDeprecation(): bool
-    {
-        return true;
-    }
+final class Deprecation extends Known {
 
-    public function asInt(): int
-    {
-        return 4;
-    }
+	/**
+	 * @psalm-assert-if-true Deprecation $this
+	 */
+	public function isDeprecation(): bool {
+		return true;
+	}
 
-    public function asString(): string
-    {
-        return 'deprecation';
-    }
+	public function asInt(): int {
+		return 4;
+	}
+
+	public function asString(): string {
+		return 'deprecation';
+	}
 }

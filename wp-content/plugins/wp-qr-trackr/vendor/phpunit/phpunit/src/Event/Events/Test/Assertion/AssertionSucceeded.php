@@ -18,59 +18,53 @@ use PHPUnit\Event\Telemetry;
  *
  * @deprecated
  */
-final class AssertionSucceeded implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
-    private readonly string $value;
-    private readonly string $constraint;
-    private readonly int $count;
-    private readonly string $message;
+final class AssertionSucceeded implements Event {
 
-    public function __construct(Telemetry\Info $telemetryInfo, string $value, string $constraint, int $count, string $message)
-    {
-        $this->telemetryInfo = $telemetryInfo;
-        $this->value         = $value;
-        $this->constraint    = $constraint;
-        $this->count         = $count;
-        $this->message       = $message;
-    }
+	private readonly Telemetry\Info $telemetryInfo;
+	private readonly string $value;
+	private readonly string $constraint;
+	private readonly int $count;
+	private readonly string $message;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	public function __construct( Telemetry\Info $telemetryInfo, string $value, string $constraint, int $count, string $message ) {
+		$this->telemetryInfo = $telemetryInfo;
+		$this->value         = $value;
+		$this->constraint    = $constraint;
+		$this->count         = $count;
+		$this->message       = $message;
+	}
 
-    public function value(): string
-    {
-        return $this->value;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function count(): int
-    {
-        return $this->count;
-    }
+	public function value(): string {
+		return $this->value;
+	}
 
-    public function message(): string
-    {
-        return $this->message;
-    }
+	public function count(): int {
+		return $this->count;
+	}
 
-    public function asString(): string
-    {
-        $message = '';
+	public function message(): string {
+		return $this->message;
+	}
 
-        if (!empty($this->message)) {
-            $message = sprintf(
-                ', Message: %s',
-                $this->message,
-            );
-        }
+	public function asString(): string {
+		$message = '';
 
-        return sprintf(
-            'Assertion Succeeded (Constraint: %s, Value: %s%s)',
-            $this->constraint,
-            $this->value,
-            $message,
-        );
-    }
+		if ( ! empty( $this->message ) ) {
+			$message = sprintf(
+				', Message: %s',
+				$this->message,
+			);
+		}
+
+		return sprintf(
+			'Assertion Succeeded (Constraint: %s, Value: %s%s)',
+			$this->constraint,
+			$this->value,
+			$message,
+		);
+	}
 }

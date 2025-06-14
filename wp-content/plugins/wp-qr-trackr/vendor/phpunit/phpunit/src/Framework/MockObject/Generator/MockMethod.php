@@ -35,362 +35,352 @@ use SebastianBergmann\Type\UnknownType;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class MockMethod
-{
-    use TemplateLoader;
+final class MockMethod {
 
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+	use TemplateLoader;
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $methodName;
-    private readonly bool $cloneArguments;
-    private readonly string $modifier;
-    private readonly string $argumentsForDeclaration;
-    private readonly string $argumentsForCall;
-    private readonly Type $returnType;
-    private readonly string $reference;
-    private readonly bool $callOriginalMethod;
-    private readonly bool $static;
-    private readonly ?string $deprecation;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-var array<int, mixed>
-     */
-    private readonly array $defaultParameterValues;
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $methodName;
+	private readonly bool $cloneArguments;
+	private readonly string $modifier;
+	private readonly string $argumentsForDeclaration;
+	private readonly string $argumentsForCall;
+	private readonly Type $returnType;
+	private readonly string $reference;
+	private readonly bool $callOriginalMethod;
+	private readonly bool $static;
+	private readonly ?string $deprecation;
 
-    /**
-     * @psalm-var non-negative-int
-     */
-    private readonly int $numberOfParameters;
+	/**
+	 * @psalm-var array<int, mixed>
+	 */
+	private readonly array $defaultParameterValues;
 
-    /**
-     * @throws ReflectionException
-     * @throws RuntimeException
-     */
-    public static function fromReflection(ReflectionMethod $method, bool $callOriginalMethod, bool $cloneArguments): self
-    {
-        if ($method->isPrivate()) {
-            $modifier = 'private';
-        } elseif ($method->isProtected()) {
-            $modifier = 'protected';
-        } else {
-            $modifier = 'public';
-        }
+	/**
+	 * @psalm-var non-negative-int
+	 */
+	private readonly int $numberOfParameters;
 
-        if ($method->isStatic()) {
-            $modifier .= ' static';
-        }
+	/**
+	 * @throws ReflectionException
+	 * @throws RuntimeException
+	 */
+	public static function fromReflection( ReflectionMethod $method, bool $callOriginalMethod, bool $cloneArguments ): self {
+		if ( $method->isPrivate() ) {
+			$modifier = 'private';
+		} elseif ( $method->isProtected() ) {
+			$modifier = 'protected';
+		} else {
+			$modifier = 'public';
+		}
 
-        if ($method->returnsReference()) {
-            $reference = '&';
-        } else {
-            $reference = '';
-        }
+		if ( $method->isStatic() ) {
+			$modifier .= ' static';
+		}
 
-        $docComment = $method->getDocComment();
+		if ( $method->returnsReference() ) {
+			$reference = '&';
+		} else {
+			$reference = '';
+		}
 
-        if (is_string($docComment) &&
-            preg_match('#\*[ \t]*+@deprecated[ \t]*+(.*?)\r?+\n[ \t]*+\*(?:[ \t]*+@|/$)#s', $docComment, $deprecation)) {
-            $deprecation = trim(preg_replace('#[ \t]*\r?\n[ \t]*+\*[ \t]*+#', ' ', $deprecation[1]));
-        } else {
-            $deprecation = null;
-        }
+		$docComment = $method->getDocComment();
 
-        return new self(
-            $method->getDeclaringClass()->getName(),
-            $method->getName(),
-            $cloneArguments,
-            $modifier,
-            self::methodParametersForDeclaration($method),
-            self::methodParametersForCall($method),
-            self::methodParametersDefaultValues($method),
-            count($method->getParameters()),
-            (new ReflectionMapper)->fromReturnType($method),
-            $reference,
-            $callOriginalMethod,
-            $method->isStatic(),
-            $deprecation,
-        );
-    }
+		if ( is_string( $docComment ) &&
+			preg_match( '#\*[ \t]*+@deprecated[ \t]*+(.*?)\r?+\n[ \t]*+\*(?:[ \t]*+@|/$)#s', $docComment, $deprecation ) ) {
+			$deprecation = trim( preg_replace( '#[ \t]*\r?\n[ \t]*+\*[ \t]*+#', ' ', $deprecation[1] ) );
+		} else {
+			$deprecation = null;
+		}
 
-    /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
-     */
-    public static function fromName(string $className, string $methodName, bool $cloneArguments): self
-    {
-        return new self(
-            $className,
-            $methodName,
-            $cloneArguments,
-            'public',
-            '',
-            '',
-            [],
-            0,
-            new UnknownType,
-            '',
-            false,
-            false,
-            null,
-        );
-    }
+		return new self(
+			$method->getDeclaringClass()->getName(),
+			$method->getName(),
+			$cloneArguments,
+			$modifier,
+			self::methodParametersForDeclaration( $method ),
+			self::methodParametersForCall( $method ),
+			self::methodParametersDefaultValues( $method ),
+			count( $method->getParameters() ),
+			( new ReflectionMapper() )->fromReturnType( $method ),
+			$reference,
+			$callOriginalMethod,
+			$method->isStatic(),
+			$deprecation,
+		);
+	}
 
-    /**
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     * @psalm-param array<int, mixed> $defaultParameterValues
-     * @psalm-param non-negative-int $numberOfParameters
-     */
-    private function __construct(string $className, string $methodName, bool $cloneArguments, string $modifier, string $argumentsForDeclaration, string $argumentsForCall, array $defaultParameterValues, int $numberOfParameters, Type $returnType, string $reference, bool $callOriginalMethod, bool $static, ?string $deprecation)
-    {
-        $this->className               = $className;
-        $this->methodName              = $methodName;
-        $this->cloneArguments          = $cloneArguments;
-        $this->modifier                = $modifier;
-        $this->argumentsForDeclaration = $argumentsForDeclaration;
-        $this->argumentsForCall        = $argumentsForCall;
-        $this->defaultParameterValues  = $defaultParameterValues;
-        $this->numberOfParameters      = $numberOfParameters;
-        $this->returnType              = $returnType;
-        $this->reference               = $reference;
-        $this->callOriginalMethod      = $callOriginalMethod;
-        $this->static                  = $static;
-        $this->deprecation             = $deprecation;
-    }
+	/**
+	 * @param class-string     $className
+	 * @param non-empty-string $methodName
+	 */
+	public static function fromName( string $className, string $methodName, bool $cloneArguments ): self {
+		return new self(
+			$className,
+			$methodName,
+			$cloneArguments,
+			'public',
+			'',
+			'',
+			array(),
+			0,
+			new UnknownType(),
+			'',
+			false,
+			false,
+			null,
+		);
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function methodName(): string
-    {
-        return $this->methodName;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 * @psalm-param array<int, mixed> $defaultParameterValues
+	 * @psalm-param non-negative-int $numberOfParameters
+	 */
+	private function __construct( string $className, string $methodName, bool $cloneArguments, string $modifier, string $argumentsForDeclaration, string $argumentsForCall, array $defaultParameterValues, int $numberOfParameters, Type $returnType, string $reference, bool $callOriginalMethod, bool $static, ?string $deprecation ) {
+		$this->className               = $className;
+		$this->methodName              = $methodName;
+		$this->cloneArguments          = $cloneArguments;
+		$this->modifier                = $modifier;
+		$this->argumentsForDeclaration = $argumentsForDeclaration;
+		$this->argumentsForCall        = $argumentsForCall;
+		$this->defaultParameterValues  = $defaultParameterValues;
+		$this->numberOfParameters      = $numberOfParameters;
+		$this->returnType              = $returnType;
+		$this->reference               = $reference;
+		$this->callOriginalMethod      = $callOriginalMethod;
+		$this->static                  = $static;
+		$this->deprecation             = $deprecation;
+	}
 
-    /**
-     * @throws RuntimeException
-     */
-    public function generateCode(): string
-    {
-        if ($this->static) {
-            $templateFile = 'doubled_static_method.tpl';
-        } else {
-            $templateFile = sprintf(
-                '%s_method.tpl',
-                $this->callOriginalMethod ? 'proxied' : 'doubled',
-            );
-        }
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function methodName(): string {
+		return $this->methodName;
+	}
 
-        $deprecation  = $this->deprecation;
-        $returnResult = '';
+	/**
+	 * @throws RuntimeException
+	 */
+	public function generateCode(): string {
+		if ( $this->static ) {
+			$templateFile = 'doubled_static_method.tpl';
+		} else {
+			$templateFile = sprintf(
+				'%s_method.tpl',
+				$this->callOriginalMethod ? 'proxied' : 'doubled',
+			);
+		}
 
-        if (!$this->returnType->isNever() && !$this->returnType->isVoid()) {
-            $returnResult = <<<'EOT'
+		$deprecation  = $this->deprecation;
+		$returnResult = '';
+
+		if ( ! $this->returnType->isNever() && ! $this->returnType->isVoid() ) {
+			$returnResult = <<<'EOT'
 
 
         return $__phpunit_result;
 EOT;
-        }
+		}
 
-        if (null !== $this->deprecation) {
-            $deprecation         = "The {$this->className}::{$this->methodName} method is deprecated ({$this->deprecation}).";
-            $deprecationTemplate = $this->loadTemplate('deprecation.tpl');
+		if ( null !== $this->deprecation ) {
+			$deprecation         = "The {$this->className}::{$this->methodName} method is deprecated ({$this->deprecation}).";
+			$deprecationTemplate = $this->loadTemplate( 'deprecation.tpl' );
 
-            $deprecationTemplate->setVar(
-                [
-                    'deprecation' => var_export($deprecation, true),
-                ],
-            );
+			$deprecationTemplate->setVar(
+				array(
+					'deprecation' => var_export( $deprecation, true ),
+				),
+			);
 
-            $deprecation = $deprecationTemplate->render();
-        }
+			$deprecation = $deprecationTemplate->render();
+		}
 
-        $template = $this->loadTemplate($templateFile);
+		$template = $this->loadTemplate( $templateFile );
 
-        $argumentsCount = 0;
+		$argumentsCount = 0;
 
-        if (str_contains($this->argumentsForCall, '...')) {
-            $argumentsCount = null;
-        } elseif (!empty($this->argumentsForCall)) {
-            $argumentsCount = substr_count($this->argumentsForCall, ',') + 1;
-        }
+		if ( str_contains( $this->argumentsForCall, '...' ) ) {
+			$argumentsCount = null;
+		} elseif ( ! empty( $this->argumentsForCall ) ) {
+			$argumentsCount = substr_count( $this->argumentsForCall, ',' ) + 1;
+		}
 
-        $template->setVar(
-            [
-                'arguments_decl'     => $this->argumentsForDeclaration,
-                'arguments_call'     => $this->argumentsForCall,
-                'return_declaration' => !empty($this->returnType->asString()) ? (': ' . $this->returnType->asString()) : '',
-                'return_type'        => $this->returnType->asString(),
-                'arguments_count'    => $argumentsCount,
-                'class_name'         => $this->className,
-                'method_name'        => $this->methodName,
-                'modifier'           => $this->modifier,
-                'reference'          => $this->reference,
-                'clone_arguments'    => $this->cloneArguments ? 'true' : 'false',
-                'deprecation'        => $deprecation,
-                'return_result'      => $returnResult,
-            ],
-        );
+		$template->setVar(
+			array(
+				'arguments_decl'     => $this->argumentsForDeclaration,
+				'arguments_call'     => $this->argumentsForCall,
+				'return_declaration' => ! empty( $this->returnType->asString() ) ? ( ': ' . $this->returnType->asString() ) : '',
+				'return_type'        => $this->returnType->asString(),
+				'arguments_count'    => $argumentsCount,
+				'class_name'         => $this->className,
+				'method_name'        => $this->methodName,
+				'modifier'           => $this->modifier,
+				'reference'          => $this->reference,
+				'clone_arguments'    => $this->cloneArguments ? 'true' : 'false',
+				'deprecation'        => $deprecation,
+				'return_result'      => $returnResult,
+			),
+		);
 
-        return $template->render();
-    }
+		return $template->render();
+	}
 
-    public function returnType(): Type
-    {
-        return $this->returnType;
-    }
+	public function returnType(): Type {
+		return $this->returnType;
+	}
 
-    /**
-     * @psalm-return array<int, mixed>
-     */
-    public function defaultParameterValues(): array
-    {
-        return $this->defaultParameterValues;
-    }
+	/**
+	 * @psalm-return array<int, mixed>
+	 */
+	public function defaultParameterValues(): array {
+		return $this->defaultParameterValues;
+	}
 
-    /**
-     * @psalm-return non-negative-int
-     */
-    public function numberOfParameters(): int
-    {
-        return $this->numberOfParameters;
-    }
+	/**
+	 * @psalm-return non-negative-int
+	 */
+	public function numberOfParameters(): int {
+		return $this->numberOfParameters;
+	}
 
-    /**
-     * Returns the parameters of a function or method.
-     *
-     * @throws RuntimeException
-     */
-    private static function methodParametersForDeclaration(ReflectionMethod $method): string
-    {
-        $parameters = [];
-        $types      = (new ReflectionMapper)->fromParameterTypes($method);
+	/**
+	 * Returns the parameters of a function or method.
+	 *
+	 * @throws RuntimeException
+	 */
+	private static function methodParametersForDeclaration( ReflectionMethod $method ): string {
+		$parameters = array();
+		$types      = ( new ReflectionMapper() )->fromParameterTypes( $method );
 
-        foreach ($method->getParameters() as $i => $parameter) {
-            $name = '$' . $parameter->getName();
+		foreach ( $method->getParameters() as $i => $parameter ) {
+			$name = '$' . $parameter->getName();
 
-            /* Note: PHP extensions may use empty names for reference arguments
-             * or "..." for methods taking a variable number of arguments.
-             */
-            if ($name === '$' || $name === '$...') {
-                $name = '$arg' . $i;
-            }
+			/*
+			Note: PHP extensions may use empty names for reference arguments
+			 * or "..." for methods taking a variable number of arguments.
+			 */
+			if ( $name === '$' || $name === '$...' ) {
+				$name = '$arg' . $i;
+			}
 
-            $default         = '';
-            $reference       = '';
-            $typeDeclaration = '';
+			$default         = '';
+			$reference       = '';
+			$typeDeclaration = '';
 
-            if (!$types[$i]->type()->isUnknown()) {
-                $typeDeclaration = $types[$i]->type()->asString() . ' ';
-            }
+			if ( ! $types[ $i ]->type()->isUnknown() ) {
+				$typeDeclaration = $types[ $i ]->type()->asString() . ' ';
+			}
 
-            if ($parameter->isPassedByReference()) {
-                $reference = '&';
-            }
+			if ( $parameter->isPassedByReference() ) {
+				$reference = '&';
+			}
 
-            if ($parameter->isVariadic()) {
-                $name = '...' . $name;
-            } elseif ($parameter->isDefaultValueAvailable()) {
-                $default = ' = ' . self::exportDefaultValue($parameter);
-            } elseif ($parameter->isOptional()) {
-                $default = ' = null';
-            }
+			if ( $parameter->isVariadic() ) {
+				$name = '...' . $name;
+			} elseif ( $parameter->isDefaultValueAvailable() ) {
+				$default = ' = ' . self::exportDefaultValue( $parameter );
+			} elseif ( $parameter->isOptional() ) {
+				$default = ' = null';
+			}
 
-            $parameters[] = $typeDeclaration . $reference . $name . $default;
-        }
+			$parameters[] = $typeDeclaration . $reference . $name . $default;
+		}
 
-        return implode(', ', $parameters);
-    }
+		return implode( ', ', $parameters );
+	}
 
-    /**
-     * Returns the parameters of a function or method.
-     *
-     * @throws ReflectionException
-     */
-    private static function methodParametersForCall(ReflectionMethod $method): string
-    {
-        $parameters = [];
+	/**
+	 * Returns the parameters of a function or method.
+	 *
+	 * @throws ReflectionException
+	 */
+	private static function methodParametersForCall( ReflectionMethod $method ): string {
+		$parameters = array();
 
-        foreach ($method->getParameters() as $i => $parameter) {
-            $name = '$' . $parameter->getName();
+		foreach ( $method->getParameters() as $i => $parameter ) {
+			$name = '$' . $parameter->getName();
 
-            /* Note: PHP extensions may use empty names for reference arguments
-             * or "..." for methods taking a variable number of arguments.
-             */
-            if ($name === '$' || $name === '$...') {
-                $name = '$arg' . $i;
-            }
+			/*
+			Note: PHP extensions may use empty names for reference arguments
+			 * or "..." for methods taking a variable number of arguments.
+			 */
+			if ( $name === '$' || $name === '$...' ) {
+				$name = '$arg' . $i;
+			}
 
-            if ($parameter->isVariadic()) {
-                continue;
-            }
+			if ( $parameter->isVariadic() ) {
+				continue;
+			}
 
-            if ($parameter->isPassedByReference()) {
-                $parameters[] = '&' . $name;
-            } else {
-                $parameters[] = $name;
-            }
-        }
+			if ( $parameter->isPassedByReference() ) {
+				$parameters[] = '&' . $name;
+			} else {
+				$parameters[] = $name;
+			}
+		}
 
-        return implode(', ', $parameters);
-    }
+		return implode( ', ', $parameters );
+	}
 
-    /**
-     * @throws ReflectionException
-     */
-    private static function exportDefaultValue(ReflectionParameter $parameter): string
-    {
-        try {
-            $defaultValue = $parameter->getDefaultValue();
+	/**
+	 * @throws ReflectionException
+	 */
+	private static function exportDefaultValue( ReflectionParameter $parameter ): string {
+		try {
+			$defaultValue = $parameter->getDefaultValue();
 
-            if (!is_object($defaultValue)) {
-                return var_export($defaultValue, true);
-            }
+			if ( ! is_object( $defaultValue ) ) {
+				return var_export( $defaultValue, true );
+			}
 
-            $parameterAsString = $parameter->__toString();
+			$parameterAsString = $parameter->__toString();
 
-            return explode(
-                ' = ',
-                substr(
-                    substr(
-                        $parameterAsString,
-                        strpos($parameterAsString, '<optional> ') + strlen('<optional> '),
-                    ),
-                    0,
-                    -2,
-                ),
-            )[1];
-            // @codeCoverageIgnoreStart
-        } catch (\ReflectionException $e) {
-            throw new ReflectionException(
-                $e->getMessage(),
-                $e->getCode(),
-                $e,
-            );
-        }
-        // @codeCoverageIgnoreEnd
-    }
+			return explode(
+				' = ',
+				substr(
+					substr(
+						$parameterAsString,
+						strpos( $parameterAsString, '<optional> ' ) + strlen( '<optional> ' ),
+					),
+					0,
+					-2,
+				),
+			)[1];
+			// @codeCoverageIgnoreStart
+		} catch ( \ReflectionException $e ) {
+			throw new ReflectionException(
+				$e->getMessage(),
+				$e->getCode(),
+				$e,
+			);
+		}
+		// @codeCoverageIgnoreEnd
+	}
 
-    /**
-     * @psalm-return array<int, mixed>
-     */
-    private static function methodParametersDefaultValues(ReflectionMethod $method): array
-    {
-        $result = [];
+	/**
+	 * @psalm-return array<int, mixed>
+	 */
+	private static function methodParametersDefaultValues( ReflectionMethod $method ): array {
+		$result = array();
 
-        foreach ($method->getParameters() as $i => $parameter) {
-            if (!$parameter->isDefaultValueAvailable()) {
-                continue;
-            }
+		foreach ( $method->getParameters() as $i => $parameter ) {
+			if ( ! $parameter->isDefaultValueAvailable() ) {
+				continue;
+			}
 
-            $result[$i] = $parameter->getDefaultValue();
-        }
+			$result[ $i ] = $parameter->getDefaultValue();
+		}
 
-        return $result;
-    }
+		return $result;
+	}
 }

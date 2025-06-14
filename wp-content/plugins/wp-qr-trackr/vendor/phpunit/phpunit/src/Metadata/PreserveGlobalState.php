@@ -14,30 +14,27 @@ namespace PHPUnit\Metadata;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class PreserveGlobalState extends Metadata
-{
-    private readonly bool $enabled;
+final class PreserveGlobalState extends Metadata {
 
-    /**
-     * @psalm-param 0|1 $level
-     */
-    protected function __construct(int $level, bool $enabled)
-    {
-        parent::__construct($level);
+	private readonly bool $enabled;
 
-        $this->enabled = $enabled;
-    }
+	/**
+	 * @psalm-param 0|1 $level
+	 */
+	protected function __construct( int $level, bool $enabled ) {
+		parent::__construct( $level );
 
-    /**
-     * @psalm-assert-if-true PreserveGlobalState $this
-     */
-    public function isPreserveGlobalState(): bool
-    {
-        return true;
-    }
+		$this->enabled = $enabled;
+	}
 
-    public function enabled(): bool
-    {
-        return $this->enabled;
-    }
+	/**
+	 * @psalm-assert-if-true PreserveGlobalState $this
+	 */
+	public function isPreserveGlobalState(): bool {
+		return true;
+	}
+
+	public function enabled(): bool {
+		return $this->enabled;
+	}
 }

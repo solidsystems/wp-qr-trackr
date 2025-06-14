@@ -17,25 +17,24 @@ use SebastianBergmann\CodeCoverage\CodeCoverage;
 use SebastianBergmann\CodeCoverage\Driver\WriteOperationFailedException;
 use SebastianBergmann\CodeCoverage\Util\Filesystem;
 
-final class PHP
-{
-    public function process(CodeCoverage $coverage, ?string $target = null): string
-    {
-        $coverage->clearCache();
+final class PHP {
 
-        $buffer = "<?php
-return \unserialize(<<<'END_OF_COVERAGE_SERIALIZATION'" . PHP_EOL . serialize($coverage) . PHP_EOL . 'END_OF_COVERAGE_SERIALIZATION' . PHP_EOL . ');';
+	public function process( CodeCoverage $coverage, ?string $target = null ): string {
+		$coverage->clearCache();
 
-        if ($target !== null) {
-            if (!str_contains($target, '://')) {
-                Filesystem::createDirectory(dirname($target));
-            }
+		$buffer = "<?php
+return \unserialize(<<<'END_OF_COVERAGE_SERIALIZATION'" . PHP_EOL . serialize( $coverage ) . PHP_EOL . 'END_OF_COVERAGE_SERIALIZATION' . PHP_EOL . ');';
 
-            if (@file_put_contents($target, $buffer) === false) {
-                throw new WriteOperationFailedException($target);
-            }
-        }
+		if ( $target !== null ) {
+			if ( ! str_contains( $target, '://' ) ) {
+				Filesystem::createDirectory( dirname( $target ) );
+			}
 
-        return $buffer;
-    }
+			if ( @file_put_contents( $target, $buffer ) === false ) {
+				throw new WriteOperationFailedException( $target );
+			}
+		}
+
+		return $buffer;
+	}
 }

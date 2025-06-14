@@ -21,37 +21,36 @@ use PHPUnit\Util\VersionComparisonOperator;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract class Requirement
-{
-    private const VERSION_COMPARISON = '/(?P<operator>[<>=!]{0,2})\s*(?P<version>[\d\.-]+(dev|(RC|alpha|beta)[\d\.])?)[ \t]*\r?$/m';
+abstract class Requirement {
 
-    /**
-     * @throws InvalidVersionOperatorException
-     * @throws InvalidVersionRequirementException
-     */
-    public static function from(string $versionRequirement): self
-    {
-        try {
-            return new ConstraintRequirement(
-                (new VersionConstraintParser)->parse(
-                    $versionRequirement,
-                ),
-            );
-        } catch (UnsupportedVersionConstraintException) {
-            if (preg_match(self::VERSION_COMPARISON, $versionRequirement, $matches)) {
-                return new ComparisonRequirement(
-                    $matches['version'],
-                    new VersionComparisonOperator(
-                        !empty($matches['operator']) ? $matches['operator'] : '>=',
-                    ),
-                );
-            }
-        }
+	private const VERSION_COMPARISON = '/(?P<operator>[<>=!]{0,2})\s*(?P<version>[\d\.-]+(dev|(RC|alpha|beta)[\d\.])?)[ \t]*\r?$/m';
 
-        throw new InvalidVersionRequirementException;
-    }
+	/**
+	 * @throws InvalidVersionOperatorException
+	 * @throws InvalidVersionRequirementException
+	 */
+	public static function from( string $versionRequirement ): self {
+		try {
+			return new ConstraintRequirement(
+				( new VersionConstraintParser() )->parse(
+					$versionRequirement,
+				),
+			);
+		} catch ( UnsupportedVersionConstraintException ) {
+			if ( preg_match( self::VERSION_COMPARISON, $versionRequirement, $matches ) ) {
+				return new ComparisonRequirement(
+					$matches['version'],
+					new VersionComparisonOperator(
+						! empty( $matches['operator'] ) ? $matches['operator'] : '>=',
+					),
+				);
+			}
+		}
 
-    abstract public function isSatisfiedBy(string $version): bool;
+		throw new InvalidVersionRequirementException();
+	}
 
-    abstract public function asString(): string;
+	abstract public function isSatisfiedBy( string $version ): bool;
+
+	abstract public function asString(): string;
 }

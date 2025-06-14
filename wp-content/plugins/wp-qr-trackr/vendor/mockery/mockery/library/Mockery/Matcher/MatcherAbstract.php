@@ -14,26 +14,25 @@ namespace Mockery\Matcher;
  * @deprecated Implement \Mockery\Matcher\MatcherInterface instead of extending this class
  * @see https://github.com/mockery/mockery/pull/1338
  */
-abstract class MatcherAbstract implements MatcherInterface
-{
-    /**
-     * The expected value (or part thereof)
-     *
-     * @template TExpected
-     *
-     * @var TExpected
-     */
-    protected $_expected = null;
+abstract class MatcherAbstract implements MatcherInterface {
 
-    /**
-     * Set the expected value
-     *
-     * @template TExpected
-     *
-     * @param TExpected $expected
-     */
-    public function __construct($expected = null)
-    {
-        $this->_expected = $expected;
-    }
+	/**
+	 * The expected value (or part thereof)
+	 *
+	 * @template TExpected
+	 *
+	 * @var TExpected
+	 */
+	protected $_expected = null;
+
+	/**
+	 * Set the expected value
+	 *
+	 * @template TExpected
+	 *
+	 * @param TExpected $expected
+	 */
+	public function __construct( $expected = null ) {
+		$this->_expected = $expected;
+	}
 }

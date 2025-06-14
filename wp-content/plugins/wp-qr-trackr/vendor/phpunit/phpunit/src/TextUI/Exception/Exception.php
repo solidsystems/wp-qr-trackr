@@ -16,6 +16,6 @@ use Throwable;
  *
  * @internal This interface is not covered by the backward compatibility promise for PHPUnit
  */
-interface Exception extends Throwable
-{
+interface Exception extends Throwable {
+
 }

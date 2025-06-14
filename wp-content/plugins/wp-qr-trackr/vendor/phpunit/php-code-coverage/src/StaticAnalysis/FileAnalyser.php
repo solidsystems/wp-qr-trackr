@@ -26,35 +26,35 @@ namespace SebastianBergmann\CodeCoverage\StaticAnalysis;
  * }
  * @psalm-type LinesType = array<int, int>
  */
-interface FileAnalyser
-{
-    /**
-     * @psalm-return array<string, CodeUnitClassType>
-     */
-    public function classesIn(string $filename): array;
+interface FileAnalyser {
 
-    /**
-     * @psalm-return array<string, CodeUnitTraitType>
-     */
-    public function traitsIn(string $filename): array;
+	/**
+	 * @psalm-return array<string, CodeUnitClassType>
+	 */
+	public function classesIn( string $filename ): array;
 
-    /**
-     * @psalm-return array<string, CodeUnitFunctionType>
-     */
-    public function functionsIn(string $filename): array;
+	/**
+	 * @psalm-return array<string, CodeUnitTraitType>
+	 */
+	public function traitsIn( string $filename ): array;
 
-    /**
-     * @psalm-return LinesOfCodeType
-     */
-    public function linesOfCodeFor(string $filename): array;
+	/**
+	 * @psalm-return array<string, CodeUnitFunctionType>
+	 */
+	public function functionsIn( string $filename ): array;
 
-    /**
-     * @psalm-return LinesType
-     */
-    public function executableLinesIn(string $filename): array;
+	/**
+	 * @psalm-return LinesOfCodeType
+	 */
+	public function linesOfCodeFor( string $filename ): array;
 
-    /**
-     * @psalm-return LinesType
-     */
-    public function ignoredLinesFor(string $filename): array;
+	/**
+	 * @psalm-return LinesType
+	 */
+	public function executableLinesIn( string $filename ): array;
+
+	/**
+	 * @psalm-return LinesType
+	 */
+	public function ignoredLinesFor( string $filename ): array;
 }

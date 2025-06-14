@@ -17,87 +17,79 @@ use PHPUnit\Event\NoPreviousThrowableException;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class Throwable
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
-    private readonly string $message;
-    private readonly string $description;
-    private readonly string $stackTrace;
-    private readonly ?Throwable $previous;
+final class Throwable {
 
-    /**
-     * @psalm-param class-string $className
-     */
-    public function __construct(string $className, string $message, string $description, string $stackTrace, ?self $previous)
-    {
-        $this->className   = $className;
-        $this->message     = $message;
-        $this->description = $description;
-        $this->stackTrace  = $stackTrace;
-        $this->previous    = $previous;
-    }
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
+	private readonly string $message;
+	private readonly string $description;
+	private readonly string $stackTrace;
+	private readonly ?Throwable $previous;
 
-    /**
-     * @throws NoPreviousThrowableException
-     */
-    public function asString(): string
-    {
-        $buffer = $this->description();
+	/**
+	 * @psalm-param class-string $className
+	 */
+	public function __construct( string $className, string $message, string $description, string $stackTrace, ?self $previous ) {
+		$this->className   = $className;
+		$this->message     = $message;
+		$this->description = $description;
+		$this->stackTrace  = $stackTrace;
+		$this->previous    = $previous;
+	}
 
-        if (!empty($this->stackTrace())) {
-            $buffer .= PHP_EOL . $this->stackTrace();
-        }
+	/**
+	 * @throws NoPreviousThrowableException
+	 */
+	public function asString(): string {
+		$buffer = $this->description();
 
-        if ($this->hasPrevious()) {
-            $buffer .= PHP_EOL . 'Caused by' . PHP_EOL . $this->previous()->asString();
-        }
+		if ( ! empty( $this->stackTrace() ) ) {
+			$buffer .= PHP_EOL . $this->stackTrace();
+		}
 
-        return $buffer;
-    }
+		if ( $this->hasPrevious() ) {
+			$buffer .= PHP_EOL . 'Caused by' . PHP_EOL . $this->previous()->asString();
+		}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+		return $buffer;
+	}
 
-    public function message(): string
-    {
-        return $this->message;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
 
-    public function description(): string
-    {
-        return $this->description;
-    }
+	public function message(): string {
+		return $this->message;
+	}
 
-    public function stackTrace(): string
-    {
-        return $this->stackTrace;
-    }
+	public function description(): string {
+		return $this->description;
+	}
 
-    /**
-     * @psalm-assert-if-true !null $this->previous
-     */
-    public function hasPrevious(): bool
-    {
-        return $this->previous !== null;
-    }
+	public function stackTrace(): string {
+		return $this->stackTrace;
+	}
 
-    /**
-     * @throws NoPreviousThrowableException
-     */
-    public function previous(): self
-    {
-        if ($this->previous === null) {
-            throw new NoPreviousThrowableException;
-        }
+	/**
+	 * @psalm-assert-if-true !null $this->previous
+	 */
+	public function hasPrevious(): bool {
+		return $this->previous !== null;
+	}
 
-        return $this->previous;
-    }
+	/**
+	 * @throws NoPreviousThrowableException
+	 */
+	public function previous(): self {
+		if ( $this->previous === null ) {
+			throw new NoPreviousThrowableException();
+		}
+
+		return $this->previous;
+	}
 }

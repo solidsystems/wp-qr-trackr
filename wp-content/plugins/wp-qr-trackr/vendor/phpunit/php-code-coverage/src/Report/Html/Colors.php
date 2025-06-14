@@ -12,55 +12,47 @@ namespace SebastianBergmann\CodeCoverage\Report\Html;
 /**
  * @psalm-immutable
  */
-final class Colors
-{
-    private readonly string $successLow;
-    private readonly string $successMedium;
-    private readonly string $successHigh;
-    private readonly string $warning;
-    private readonly string $danger;
+final class Colors {
 
-    public static function default(): self
-    {
-        return new self('#dff0d8', '#c3e3b5', '#99cb84', '#fcf8e3', '#f2dede');
-    }
+	private readonly string $successLow;
+	private readonly string $successMedium;
+	private readonly string $successHigh;
+	private readonly string $warning;
+	private readonly string $danger;
 
-    public static function from(string $successLow, string $successMedium, string $successHigh, string $warning, string $danger): self
-    {
-        return new self($successLow, $successMedium, $successHigh, $warning, $danger);
-    }
+	public static function default(): self {
+		return new self( '#dff0d8', '#c3e3b5', '#99cb84', '#fcf8e3', '#f2dede' );
+	}
 
-    private function __construct(string $successLow, string $successMedium, string $successHigh, string $warning, string $danger)
-    {
-        $this->successLow    = $successLow;
-        $this->successMedium = $successMedium;
-        $this->successHigh   = $successHigh;
-        $this->warning       = $warning;
-        $this->danger        = $danger;
-    }
+	public static function from( string $successLow, string $successMedium, string $successHigh, string $warning, string $danger ): self {
+		return new self( $successLow, $successMedium, $successHigh, $warning, $danger );
+	}
 
-    public function successLow(): string
-    {
-        return $this->successLow;
-    }
+	private function __construct( string $successLow, string $successMedium, string $successHigh, string $warning, string $danger ) {
+		$this->successLow    = $successLow;
+		$this->successMedium = $successMedium;
+		$this->successHigh   = $successHigh;
+		$this->warning       = $warning;
+		$this->danger        = $danger;
+	}
 
-    public function successMedium(): string
-    {
-        return $this->successMedium;
-    }
+	public function successLow(): string {
+		return $this->successLow;
+	}
 
-    public function successHigh(): string
-    {
-        return $this->successHigh;
-    }
+	public function successMedium(): string {
+		return $this->successMedium;
+	}
 
-    public function warning(): string
-    {
-        return $this->warning;
-    }
+	public function successHigh(): string {
+		return $this->successHigh;
+	}
 
-    public function danger(): string
-    {
-        return $this->danger;
-    }
+	public function warning(): string {
+		return $this->warning;
+	}
+
+	public function danger(): string {
+		return $this->danger;
+	}
 }

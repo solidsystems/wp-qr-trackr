@@ -16,52 +16,48 @@ namespace PHPUnit\Metadata;
  *
  * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5513
  */
-final class IgnoreMethodForCodeCoverage extends Metadata
-{
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
+final class IgnoreMethodForCodeCoverage extends Metadata {
 
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $methodName;
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
 
-    /**
-     * @psalm-param 0|1 $level
-     * @psalm-param class-string $className
-     * @psalm-param non-empty-string $methodName
-     */
-    protected function __construct(int $level, string $className, string $methodName)
-    {
-        parent::__construct($level);
+	/**
+	 * @psalm-var non-empty-string
+	 */
+	private readonly string $methodName;
 
-        $this->className  = $className;
-        $this->methodName = $methodName;
-    }
+	/**
+	 * @psalm-param 0|1 $level
+	 * @psalm-param class-string $className
+	 * @psalm-param non-empty-string $methodName
+	 */
+	protected function __construct( int $level, string $className, string $methodName ) {
+		parent::__construct( $level );
 
-    /**
-     * @psalm-assert-if-true IgnoreMethodForCodeCoverage $this
-     */
-    public function isIgnoreMethodForCodeCoverage(): bool
-    {
-        return true;
-    }
+		$this->className  = $className;
+		$this->methodName = $methodName;
+	}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	/**
+	 * @psalm-assert-if-true IgnoreMethodForCodeCoverage $this
+	 */
+	public function isIgnoreMethodForCodeCoverage(): bool {
+		return true;
+	}
 
-    /**
-     * @psalm-return non-empty-string
-     */
-    public function methodName(): string
-    {
-        return $this->methodName;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
+
+	/**
+	 * @psalm-return non-empty-string
+	 */
+	public function methodName(): string {
+		return $this->methodName;
+	}
 }

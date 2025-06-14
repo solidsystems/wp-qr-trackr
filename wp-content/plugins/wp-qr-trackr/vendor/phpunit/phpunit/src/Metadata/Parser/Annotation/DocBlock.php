@@ -38,230 +38,223 @@ use ReflectionMethod;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class DocBlock
-{
-    private const REGEX_REQUIRES_VERSION            = '/@requires\s+(?P<name>PHP(?:Unit)?)\s+(?P<operator>[<>=!]{0,2})\s*(?P<version>[\d\.-]+(dev|(RC|alpha|beta)[\d\.])?)[ \t]*\r?$/m';
-    private const REGEX_REQUIRES_VERSION_CONSTRAINT = '/@requires\s+(?P<name>PHP(?:Unit)?)\s+(?P<constraint>[\d\t \-.|~^]+)[ \t]*\r?$/m';
-    private const REGEX_REQUIRES_OS                 = '/@requires\s+(?P<name>OS(?:FAMILY)?)\s+(?P<value>.+?)[ \t]*\r?$/m';
-    private const REGEX_REQUIRES_SETTING            = '/@requires\s+(?P<name>setting)\s+(?P<setting>([^ ]+?))\s*(?P<value>[\w\.-]+[\w\.]?)?[ \t]*\r?$/m';
-    private const REGEX_REQUIRES                    = '/@requires\s+(?P<name>function|extension)\s+(?P<value>([^\s<>=!]+))\s*(?P<operator>[<>=!]{0,2})\s*(?P<version>[\d\.-]+[\d\.]?)?[ \t]*\r?$/m';
-    private readonly string $docComment;
+final class DocBlock {
 
-    /**
-     * @psalm-var array<string, array<int, string>> pre-parsed annotations indexed by name and occurrence index
-     */
-    private readonly array $symbolAnnotations;
+	private const REGEX_REQUIRES_VERSION            = '/@requires\s+(?P<name>PHP(?:Unit)?)\s+(?P<operator>[<>=!]{0,2})\s*(?P<version>[\d\.-]+(dev|(RC|alpha|beta)[\d\.])?)[ \t]*\r?$/m';
+	private const REGEX_REQUIRES_VERSION_CONSTRAINT = '/@requires\s+(?P<name>PHP(?:Unit)?)\s+(?P<constraint>[\d\t \-.|~^]+)[ \t]*\r?$/m';
+	private const REGEX_REQUIRES_OS                 = '/@requires\s+(?P<name>OS(?:FAMILY)?)\s+(?P<value>.+?)[ \t]*\r?$/m';
+	private const REGEX_REQUIRES_SETTING            = '/@requires\s+(?P<name>setting)\s+(?P<setting>([^ ]+?))\s*(?P<value>[\w\.-]+[\w\.]?)?[ \t]*\r?$/m';
+	private const REGEX_REQUIRES                    = '/@requires\s+(?P<name>function|extension)\s+(?P<value>([^\s<>=!]+))\s*(?P<operator>[<>=!]{0,2})\s*(?P<version>[\d\.-]+[\d\.]?)?[ \t]*\r?$/m';
+	private readonly string $docComment;
 
-    /**
-     * @psalm-var null|(array{
-     *   __OFFSET: array<string, int>&array{__FILE: string},
-     *   setting?: array<string, string>,
-     *   extension_versions?: array<string, array{version: string, operator: string}>
-     * }&array<
-     *   string,
-     *   string|array{version: string, operator: string}|array{constraint: string}|array<int|string, string>
-     * >)
-     */
-    private ?array $parsedRequirements = null;
-    private readonly int $startLine;
-    private readonly string $fileName;
+	/**
+	 * @psalm-var array<string, array<int, string>> pre-parsed annotations indexed by name and occurrence index
+	 */
+	private readonly array $symbolAnnotations;
 
-    /**
-     * @throws AnnotationsAreNotSupportedForInternalClassesException
-     */
-    public static function ofClass(ReflectionClass $class): self
-    {
-        if ($class->isInternal()) {
-            throw new AnnotationsAreNotSupportedForInternalClassesException($class->getName());
-        }
+	/**
+	 * @psalm-var null|(array{
+	 *   __OFFSET: array<string, int>&array{__FILE: string},
+	 *   setting?: array<string, string>,
+	 *   extension_versions?: array<string, array{version: string, operator: string}>
+	 * }&array<
+	 *   string,
+	 *   string|array{version: string, operator: string}|array{constraint: string}|array<int|string, string>
+	 * >)
+	 */
+	private ?array $parsedRequirements = null;
+	private readonly int $startLine;
+	private readonly string $fileName;
 
-        return new self(
-            (string) $class->getDocComment(),
-            self::extractAnnotationsFromReflector($class),
-            $class->getStartLine(),
-            $class->getFileName(),
-        );
-    }
+	/**
+	 * @throws AnnotationsAreNotSupportedForInternalClassesException
+	 */
+	public static function ofClass( ReflectionClass $class ): self {
+		if ( $class->isInternal() ) {
+			throw new AnnotationsAreNotSupportedForInternalClassesException( $class->getName() );
+		}
 
-    /**
-     * @throws AnnotationsAreNotSupportedForInternalClassesException
-     */
-    public static function ofMethod(ReflectionMethod $method): self
-    {
-        if ($method->getDeclaringClass()->isInternal()) {
-            throw new AnnotationsAreNotSupportedForInternalClassesException($method->getDeclaringClass()->getName());
-        }
+		return new self(
+			(string) $class->getDocComment(),
+			self::extractAnnotationsFromReflector( $class ),
+			$class->getStartLine(),
+			$class->getFileName(),
+		);
+	}
 
-        return new self(
-            (string) $method->getDocComment(),
-            self::extractAnnotationsFromReflector($method),
-            $method->getStartLine(),
-            $method->getFileName(),
-        );
-    }
+	/**
+	 * @throws AnnotationsAreNotSupportedForInternalClassesException
+	 */
+	public static function ofMethod( ReflectionMethod $method ): self {
+		if ( $method->getDeclaringClass()->isInternal() ) {
+			throw new AnnotationsAreNotSupportedForInternalClassesException( $method->getDeclaringClass()->getName() );
+		}
 
-    /**
-     * Note: we do not preserve an instance of the reflection object, since it cannot be safely (de-)serialized.
-     *
-     * @param array<string, array<int, string>> $symbolAnnotations
-     */
-    private function __construct(string $docComment, array $symbolAnnotations, int $startLine, string $fileName)
-    {
-        $this->docComment        = $docComment;
-        $this->symbolAnnotations = $symbolAnnotations;
-        $this->startLine         = $startLine;
-        $this->fileName          = $fileName;
-    }
+		return new self(
+			(string) $method->getDocComment(),
+			self::extractAnnotationsFromReflector( $method ),
+			$method->getStartLine(),
+			$method->getFileName(),
+		);
+	}
 
-    /**
-     * @psalm-return array{
-     *   __OFFSET: array<string, int>&array{__FILE: string},
-     *   setting?: array<string, string>,
-     *   extension_versions?: array<string, array{version: string, operator: string}>
-     * }&array<
-     *   string,
-     *   string|array{version: string, operator: string}|array{constraint: string}|array<int|string, string>
-     * >
-     *
-     * @throws InvalidVersionRequirementException
-     */
-    public function requirements(): array
-    {
-        if ($this->parsedRequirements !== null) {
-            return $this->parsedRequirements;
-        }
+	/**
+	 * Note: we do not preserve an instance of the reflection object, since it cannot be safely (de-)serialized.
+	 *
+	 * @param array<string, array<int, string>> $symbolAnnotations
+	 */
+	private function __construct( string $docComment, array $symbolAnnotations, int $startLine, string $fileName ) {
+		$this->docComment        = $docComment;
+		$this->symbolAnnotations = $symbolAnnotations;
+		$this->startLine         = $startLine;
+		$this->fileName          = $fileName;
+	}
 
-        $offset            = $this->startLine;
-        $requires          = [];
-        $recordedSettings  = [];
-        $extensionVersions = [];
-        $recordedOffsets   = [
-            '__FILE' => realpath($this->fileName),
-        ];
+	/**
+	 * @psalm-return array{
+	 *   __OFFSET: array<string, int>&array{__FILE: string},
+	 *   setting?: array<string, string>,
+	 *   extension_versions?: array<string, array{version: string, operator: string}>
+	 * }&array<
+	 *   string,
+	 *   string|array{version: string, operator: string}|array{constraint: string}|array<int|string, string>
+	 * >
+	 *
+	 * @throws InvalidVersionRequirementException
+	 */
+	public function requirements(): array {
+		if ( $this->parsedRequirements !== null ) {
+			return $this->parsedRequirements;
+		}
 
-        // Trim docblock markers, split it into lines and rewind offset to start of docblock
-        $lines = preg_replace(['#^/\*{2}#', '#\*/$#'], '', preg_split('/\r\n|\r|\n/', $this->docComment));
-        $offset -= count($lines);
+		$offset            = $this->startLine;
+		$requires          = array();
+		$recordedSettings  = array();
+		$extensionVersions = array();
+		$recordedOffsets   = array(
+			'__FILE' => realpath( $this->fileName ),
+		);
 
-        foreach ($lines as $line) {
-            if (preg_match(self::REGEX_REQUIRES_OS, $line, $matches)) {
-                $requires[$matches['name']]        = $matches['value'];
-                $recordedOffsets[$matches['name']] = $offset;
-            }
+		// Trim docblock markers, split it into lines and rewind offset to start of docblock
+		$lines   = preg_replace( array( '#^/\*{2}#', '#\*/$#' ), '', preg_split( '/\r\n|\r|\n/', $this->docComment ) );
+		$offset -= count( $lines );
 
-            if (preg_match(self::REGEX_REQUIRES_VERSION, $line, $matches)) {
-                $requires[$matches['name']] = [
-                    'version'  => $matches['version'],
-                    'operator' => $matches['operator'],
-                ];
+		foreach ( $lines as $line ) {
+			if ( preg_match( self::REGEX_REQUIRES_OS, $line, $matches ) ) {
+				$requires[ $matches['name'] ]        = $matches['value'];
+				$recordedOffsets[ $matches['name'] ] = $offset;
+			}
 
-                $recordedOffsets[$matches['name']] = $offset;
-            }
+			if ( preg_match( self::REGEX_REQUIRES_VERSION, $line, $matches ) ) {
+				$requires[ $matches['name'] ] = array(
+					'version'  => $matches['version'],
+					'operator' => $matches['operator'],
+				);
 
-            if (preg_match(self::REGEX_REQUIRES_VERSION_CONSTRAINT, $line, $matches)) {
-                if (!empty($requires[$matches['name']])) {
-                    $offset++;
+				$recordedOffsets[ $matches['name'] ] = $offset;
+			}
 
-                    continue;
-                }
+			if ( preg_match( self::REGEX_REQUIRES_VERSION_CONSTRAINT, $line, $matches ) ) {
+				if ( ! empty( $requires[ $matches['name'] ] ) ) {
+					++$offset;
 
-                try {
-                    $versionConstraintParser = new VersionConstraintParser;
+					continue;
+				}
 
-                    $requires[$matches['name'] . '_constraint'] = [
-                        'constraint' => $versionConstraintParser->parse(trim($matches['constraint'])),
-                    ];
+				try {
+					$versionConstraintParser = new VersionConstraintParser();
 
-                    $recordedOffsets[$matches['name'] . '_constraint'] = $offset;
-                } catch (PharIoVersionException $e) {
-                    throw new InvalidVersionRequirementException(
-                        $e->getMessage(),
-                        $e->getCode(),
-                        $e,
-                    );
-                }
-            }
+					$requires[ $matches['name'] . '_constraint' ] = array(
+						'constraint' => $versionConstraintParser->parse( trim( $matches['constraint'] ) ),
+					);
 
-            if (preg_match(self::REGEX_REQUIRES_SETTING, $line, $matches)) {
-                $recordedSettings[$matches['setting']]               = $matches['value'];
-                $recordedOffsets['__SETTING_' . $matches['setting']] = $offset;
-            }
+					$recordedOffsets[ $matches['name'] . '_constraint' ] = $offset;
+				} catch ( PharIoVersionException $e ) {
+					throw new InvalidVersionRequirementException(
+						$e->getMessage(),
+						$e->getCode(),
+						$e,
+					);
+				}
+			}
 
-            if (preg_match(self::REGEX_REQUIRES, $line, $matches)) {
-                $name = $matches['name'] . 's';
+			if ( preg_match( self::REGEX_REQUIRES_SETTING, $line, $matches ) ) {
+				$recordedSettings[ $matches['setting'] ]               = $matches['value'];
+				$recordedOffsets[ '__SETTING_' . $matches['setting'] ] = $offset;
+			}
 
-                if (!isset($requires[$name])) {
-                    $requires[$name] = [];
-                }
+			if ( preg_match( self::REGEX_REQUIRES, $line, $matches ) ) {
+				$name = $matches['name'] . 's';
 
-                $requires[$name][]                                           = $matches['value'];
-                $recordedOffsets[$matches['name'] . '_' . $matches['value']] = $offset;
+				if ( ! isset( $requires[ $name ] ) ) {
+					$requires[ $name ] = array();
+				}
 
-                if ($name === 'extensions' && !empty($matches['version'])) {
-                    $extensionVersions[$matches['value']] = [
-                        'version'  => $matches['version'],
-                        'operator' => $matches['operator'],
-                    ];
-                }
-            }
+				$requires[ $name ][] = $matches['value'];
+				$recordedOffsets[ $matches['name'] . '_' . $matches['value'] ] = $offset;
 
-            $offset++;
-        }
+				if ( $name === 'extensions' && ! empty( $matches['version'] ) ) {
+					$extensionVersions[ $matches['value'] ] = array(
+						'version'  => $matches['version'],
+						'operator' => $matches['operator'],
+					);
+				}
+			}
 
-        return $this->parsedRequirements = array_merge(
-            $requires,
-            ['__OFFSET' => $recordedOffsets],
-            array_filter(
-                [
-                    'setting'            => $recordedSettings,
-                    'extension_versions' => $extensionVersions,
-                ],
-            ),
-        );
-    }
+			++$offset;
+		}
 
-    public function symbolAnnotations(): array
-    {
-        return $this->symbolAnnotations;
-    }
+		return $this->parsedRequirements = array_merge(
+			$requires,
+			array( '__OFFSET' => $recordedOffsets ),
+			array_filter(
+				array(
+					'setting'            => $recordedSettings,
+					'extension_versions' => $extensionVersions,
+				),
+			),
+		);
+	}
 
-    /**
-     * @psalm-return array<string, array<int, string>>
-     */
-    private static function parseDocBlock(string $docBlock): array
-    {
-        // Strip away the docblock header and footer to ease parsing of one line annotations
-        $docBlock    = substr($docBlock, 3, -2);
-        $annotations = [];
+	public function symbolAnnotations(): array {
+		return $this->symbolAnnotations;
+	}
 
-        if (preg_match_all('/@(?P<name>[A-Za-z_-]+)(?:[ \t]+(?P<value>.*?))?[ \t]*\r?$/m', $docBlock, $matches)) {
-            $numMatches = count($matches[0]);
+	/**
+	 * @psalm-return array<string, array<int, string>>
+	 */
+	private static function parseDocBlock( string $docBlock ): array {
+		// Strip away the docblock header and footer to ease parsing of one line annotations
+		$docBlock    = substr( $docBlock, 3, -2 );
+		$annotations = array();
 
-            for ($i = 0; $i < $numMatches; $i++) {
-                $annotations[$matches['name'][$i]][] = $matches['value'][$i];
-            }
-        }
+		if ( preg_match_all( '/@(?P<name>[A-Za-z_-]+)(?:[ \t]+(?P<value>.*?))?[ \t]*\r?$/m', $docBlock, $matches ) ) {
+			$numMatches = count( $matches[0] );
 
-        return $annotations;
-    }
+			for ( $i = 0; $i < $numMatches; $i++ ) {
+				$annotations[ $matches['name'][ $i ] ][] = $matches['value'][ $i ];
+			}
+		}
 
-    private static function extractAnnotationsFromReflector(ReflectionClass|ReflectionFunctionAbstract $reflector): array
-    {
-        $annotations = [];
+		return $annotations;
+	}
 
-        if ($reflector instanceof ReflectionClass) {
-            $annotations = array_merge(
-                $annotations,
-                ...array_map(
-                    static fn (ReflectionClass $trait): array => self::parseDocBlock((string) $trait->getDocComment()),
-                    array_values($reflector->getTraits()),
-                ),
-            );
-        }
+	private static function extractAnnotationsFromReflector( ReflectionClass|ReflectionFunctionAbstract $reflector ): array {
+		$annotations = array();
 
-        return array_merge(
-            $annotations,
-            self::parseDocBlock((string) $reflector->getDocComment()),
-        );
-    }
+		if ( $reflector instanceof ReflectionClass ) {
+			$annotations = array_merge(
+				$annotations,
+				...array_map(
+					static fn ( ReflectionClass $trait ): array => self::parseDocBlock( (string) $trait->getDocComment() ),
+					array_values( $reflector->getTraits() ),
+				),
+			);
+		}
+
+		return array_merge(
+			$annotations,
+			self::parseDocBlock( (string) $reflector->getDocComment() ),
+		);
+	}
 }

@@ -18,39 +18,37 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class RemoveEmptyFilter implements Migration
-{
-    /**
-     * @throws MigrationException
-     */
-    public function migrate(DOMDocument $document): void
-    {
-        $whitelist = $document->getElementsByTagName('whitelist')->item(0);
+final class RemoveEmptyFilter implements Migration {
 
-        if ($whitelist instanceof DOMElement) {
-            $this->ensureEmpty($whitelist);
-            $whitelist->parentNode->removeChild($whitelist);
-        }
+	/**
+	 * @throws MigrationException
+	 */
+	public function migrate( DOMDocument $document ): void {
+		$whitelist = $document->getElementsByTagName( 'whitelist' )->item( 0 );
 
-        $filter = $document->getElementsByTagName('filter')->item(0);
+		if ( $whitelist instanceof DOMElement ) {
+			$this->ensureEmpty( $whitelist );
+			$whitelist->parentNode->removeChild( $whitelist );
+		}
 
-        if ($filter instanceof DOMElement) {
-            $this->ensureEmpty($filter);
-            $filter->parentNode->removeChild($filter);
-        }
-    }
+		$filter = $document->getElementsByTagName( 'filter' )->item( 0 );
 
-    /**
-     * @throws MigrationException
-     */
-    private function ensureEmpty(DOMElement $element): void
-    {
-        if ($element->attributes->length > 0) {
-            throw new MigrationException(sprintf('%s element has unexpected attributes', $element->nodeName));
-        }
+		if ( $filter instanceof DOMElement ) {
+			$this->ensureEmpty( $filter );
+			$filter->parentNode->removeChild( $filter );
+		}
+	}
 
-        if ($element->getElementsByTagName('*')->length > 0) {
-            throw new MigrationException(sprintf('%s element has unexpected children', $element->nodeName));
-        }
-    }
+	/**
+	 * @throws MigrationException
+	 */
+	private function ensureEmpty( DOMElement $element ): void {
+		if ( $element->attributes->length > 0 ) {
+			throw new MigrationException( sprintf( '%s element has unexpected attributes', $element->nodeName ) );
+		}
+
+		if ( $element->getElementsByTagName( '*' )->length > 0 ) {
+			throw new MigrationException( sprintf( '%s element has unexpected children', $element->nodeName ) );
+		}
+	}
 }

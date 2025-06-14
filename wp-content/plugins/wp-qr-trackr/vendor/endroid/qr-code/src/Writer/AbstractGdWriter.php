@@ -18,194 +18,189 @@ use Endroid\QrCode\Writer\Result\GdResult;
 use Endroid\QrCode\Writer\Result\ResultInterface;
 use Zxing\QrReader;
 
-abstract readonly class AbstractGdWriter implements WriterInterface, ValidatingWriterInterface
-{
-    protected function getMatrix(QrCodeInterface $qrCode): MatrixInterface
-    {
-        $matrixFactory = new MatrixFactory();
+abstract readonly class AbstractGdWriter implements WriterInterface, ValidatingWriterInterface {
 
-        return $matrixFactory->create($qrCode);
-    }
+	protected function getMatrix( QrCodeInterface $qrCode ): MatrixInterface {
+		$matrixFactory = new MatrixFactory();
 
-    public function write(QrCodeInterface $qrCode, ?LogoInterface $logo = null, ?LabelInterface $label = null, array $options = []): ResultInterface
-    {
-        if (!extension_loaded('gd')) {
-            throw new \Exception('Unable to generate image: please check if the GD extension is enabled and configured correctly');
-        }
+		return $matrixFactory->create( $qrCode );
+	}
 
-        $matrix = $this->getMatrix($qrCode);
+	public function write( QrCodeInterface $qrCode, ?LogoInterface $logo = null, ?LabelInterface $label = null, array $options = array() ): ResultInterface {
+		if ( ! extension_loaded( 'gd' ) ) {
+			throw new \Exception( 'Unable to generate image: please check if the GD extension is enabled and configured correctly' );
+		}
 
-        $baseBlockSize = RoundBlockSizeMode::None === $qrCode->getRoundBlockSizeMode() ? 10 : intval($matrix->getBlockSize());
-        $baseImage = imagecreatetruecolor($matrix->getBlockCount() * $baseBlockSize, $matrix->getBlockCount() * $baseBlockSize);
+		$matrix = $this->getMatrix( $qrCode );
 
-        if (!$baseImage) {
-            throw new \Exception('Unable to generate image: please check if the GD extension is enabled and configured correctly');
-        }
+		$baseBlockSize = RoundBlockSizeMode::None === $qrCode->getRoundBlockSizeMode() ? 10 : intval( $matrix->getBlockSize() );
+		$baseImage     = imagecreatetruecolor( $matrix->getBlockCount() * $baseBlockSize, $matrix->getBlockCount() * $baseBlockSize );
 
-        /** @var int $foregroundColor */
-        $foregroundColor = imagecolorallocatealpha(
-            $baseImage,
-            $qrCode->getForegroundColor()->getRed(),
-            $qrCode->getForegroundColor()->getGreen(),
-            $qrCode->getForegroundColor()->getBlue(),
-            $qrCode->getForegroundColor()->getAlpha()
-        );
+		if ( ! $baseImage ) {
+			throw new \Exception( 'Unable to generate image: please check if the GD extension is enabled and configured correctly' );
+		}
 
-        /** @var int $transparentColor */
-        $transparentColor = imagecolorallocatealpha($baseImage, 255, 255, 255, 127);
+		/** @var int $foregroundColor */
+		$foregroundColor = imagecolorallocatealpha(
+			$baseImage,
+			$qrCode->getForegroundColor()->getRed(),
+			$qrCode->getForegroundColor()->getGreen(),
+			$qrCode->getForegroundColor()->getBlue(),
+			$qrCode->getForegroundColor()->getAlpha()
+		);
 
-        imagefill($baseImage, 0, 0, $transparentColor);
+		/** @var int $transparentColor */
+		$transparentColor = imagecolorallocatealpha( $baseImage, 255, 255, 255, 127 );
 
-        for ($rowIndex = 0; $rowIndex < $matrix->getBlockCount(); ++$rowIndex) {
-            for ($columnIndex = 0; $columnIndex < $matrix->getBlockCount(); ++$columnIndex) {
-                if (1 === $matrix->getBlockValue($rowIndex, $columnIndex)) {
-                    imagefilledrectangle(
-                        $baseImage,
-                        $columnIndex * $baseBlockSize,
-                        $rowIndex * $baseBlockSize,
-                        ($columnIndex + 1) * $baseBlockSize - 1,
-                        ($rowIndex + 1) * $baseBlockSize - 1,
-                        $foregroundColor
-                    );
-                }
-            }
-        }
+		imagefill( $baseImage, 0, 0, $transparentColor );
 
-        $targetWidth = $matrix->getOuterSize();
-        $targetHeight = $matrix->getOuterSize();
+		for ( $rowIndex = 0; $rowIndex < $matrix->getBlockCount(); ++$rowIndex ) {
+			for ( $columnIndex = 0; $columnIndex < $matrix->getBlockCount(); ++$columnIndex ) {
+				if ( 1 === $matrix->getBlockValue( $rowIndex, $columnIndex ) ) {
+					imagefilledrectangle(
+						$baseImage,
+						$columnIndex * $baseBlockSize,
+						$rowIndex * $baseBlockSize,
+						( $columnIndex + 1 ) * $baseBlockSize - 1,
+						( $rowIndex + 1 ) * $baseBlockSize - 1,
+						$foregroundColor
+					);
+				}
+			}
+		}
 
-        if ($label instanceof LabelInterface) {
-            $labelImageData = LabelImageData::createForLabel($label);
-            $targetHeight += $labelImageData->getHeight() + $label->getMargin()->getTop() + $label->getMargin()->getBottom();
-        }
+		$targetWidth  = $matrix->getOuterSize();
+		$targetHeight = $matrix->getOuterSize();
 
-        $targetImage = imagecreatetruecolor($targetWidth, $targetHeight);
+		if ( $label instanceof LabelInterface ) {
+			$labelImageData = LabelImageData::createForLabel( $label );
+			$targetHeight  += $labelImageData->getHeight() + $label->getMargin()->getTop() + $label->getMargin()->getBottom();
+		}
 
-        if (!$targetImage) {
-            throw new \Exception('Unable to generate image: please check if the GD extension is enabled and configured correctly');
-        }
+		$targetImage = imagecreatetruecolor( $targetWidth, $targetHeight );
 
-        /** @var int $backgroundColor */
-        $backgroundColor = imagecolorallocatealpha(
-            $targetImage,
-            $qrCode->getBackgroundColor()->getRed(),
-            $qrCode->getBackgroundColor()->getGreen(),
-            $qrCode->getBackgroundColor()->getBlue(),
-            $qrCode->getBackgroundColor()->getAlpha()
-        );
+		if ( ! $targetImage ) {
+			throw new \Exception( 'Unable to generate image: please check if the GD extension is enabled and configured correctly' );
+		}
 
-        imagefill($targetImage, 0, 0, $backgroundColor);
+		/** @var int $backgroundColor */
+		$backgroundColor = imagecolorallocatealpha(
+			$targetImage,
+			$qrCode->getBackgroundColor()->getRed(),
+			$qrCode->getBackgroundColor()->getGreen(),
+			$qrCode->getBackgroundColor()->getBlue(),
+			$qrCode->getBackgroundColor()->getAlpha()
+		);
 
-        imagecopyresampled(
-            $targetImage,
-            $baseImage,
-            $matrix->getMarginLeft(),
-            $matrix->getMarginLeft(),
-            0,
-            0,
-            $matrix->getInnerSize(),
-            $matrix->getInnerSize(),
-            imagesx($baseImage),
-            imagesy($baseImage)
-        );
+		imagefill( $targetImage, 0, 0, $backgroundColor );
 
-        if ($qrCode->getBackgroundColor()->getAlpha() > 0) {
-            imagesavealpha($targetImage, true);
-        }
+		imagecopyresampled(
+			$targetImage,
+			$baseImage,
+			$matrix->getMarginLeft(),
+			$matrix->getMarginLeft(),
+			0,
+			0,
+			$matrix->getInnerSize(),
+			$matrix->getInnerSize(),
+			imagesx( $baseImage ),
+			imagesy( $baseImage )
+		);
 
-        $result = new GdResult($matrix, $targetImage);
+		if ( $qrCode->getBackgroundColor()->getAlpha() > 0 ) {
+			imagesavealpha( $targetImage, true );
+		}
 
-        if ($logo instanceof LogoInterface) {
-            $result = $this->addLogo($logo, $result);
-        }
+		$result = new GdResult( $matrix, $targetImage );
 
-        if ($label instanceof LabelInterface) {
-            $result = $this->addLabel($label, $result);
-        }
+		if ( $logo instanceof LogoInterface ) {
+			$result = $this->addLogo( $logo, $result );
+		}
 
-        return $result;
-    }
+		if ( $label instanceof LabelInterface ) {
+			$result = $this->addLabel( $label, $result );
+		}
 
-    private function addLogo(LogoInterface $logo, GdResult $result): GdResult
-    {
-        $logoImageData = LogoImageData::createForLogo($logo);
+		return $result;
+	}
 
-        if ('image/svg+xml' === $logoImageData->getMimeType()) {
-            throw new \Exception('PNG Writer does not support SVG logo');
-        }
+	private function addLogo( LogoInterface $logo, GdResult $result ): GdResult {
+		$logoImageData = LogoImageData::createForLogo( $logo );
 
-        $targetImage = $result->getImage();
-        $matrix = $result->getMatrix();
+		if ( 'image/svg+xml' === $logoImageData->getMimeType() ) {
+			throw new \Exception( 'PNG Writer does not support SVG logo' );
+		}
 
-        if ($logoImageData->getPunchoutBackground()) {
-            /** @var int $transparent */
-            $transparent = imagecolorallocatealpha($targetImage, 255, 255, 255, 127);
-            imagealphablending($targetImage, false);
-            $xOffsetStart = intval($matrix->getOuterSize() / 2 - $logoImageData->getWidth() / 2);
-            $yOffsetStart = intval($matrix->getOuterSize() / 2 - $logoImageData->getHeight() / 2);
-            for ($xOffset = $xOffsetStart; $xOffset < $xOffsetStart + $logoImageData->getWidth(); ++$xOffset) {
-                for ($yOffset = $yOffsetStart; $yOffset < $yOffsetStart + $logoImageData->getHeight(); ++$yOffset) {
-                    imagesetpixel($targetImage, $xOffset, $yOffset, $transparent);
-                }
-            }
-        }
+		$targetImage = $result->getImage();
+		$matrix      = $result->getMatrix();
 
-        imagecopyresampled(
-            $targetImage,
-            $logoImageData->getImage(),
-            intval($matrix->getOuterSize() / 2 - $logoImageData->getWidth() / 2),
-            intval($matrix->getOuterSize() / 2 - $logoImageData->getHeight() / 2),
-            0,
-            0,
-            $logoImageData->getWidth(),
-            $logoImageData->getHeight(),
-            imagesx($logoImageData->getImage()),
-            imagesy($logoImageData->getImage())
-        );
+		if ( $logoImageData->getPunchoutBackground() ) {
+			/** @var int $transparent */
+			$transparent = imagecolorallocatealpha( $targetImage, 255, 255, 255, 127 );
+			imagealphablending( $targetImage, false );
+			$xOffsetStart = intval( $matrix->getOuterSize() / 2 - $logoImageData->getWidth() / 2 );
+			$yOffsetStart = intval( $matrix->getOuterSize() / 2 - $logoImageData->getHeight() / 2 );
+			for ( $xOffset = $xOffsetStart; $xOffset < $xOffsetStart + $logoImageData->getWidth(); ++$xOffset ) {
+				for ( $yOffset = $yOffsetStart; $yOffset < $yOffsetStart + $logoImageData->getHeight(); ++$yOffset ) {
+					imagesetpixel( $targetImage, $xOffset, $yOffset, $transparent );
+				}
+			}
+		}
 
-        return new GdResult($matrix, $targetImage);
-    }
+		imagecopyresampled(
+			$targetImage,
+			$logoImageData->getImage(),
+			intval( $matrix->getOuterSize() / 2 - $logoImageData->getWidth() / 2 ),
+			intval( $matrix->getOuterSize() / 2 - $logoImageData->getHeight() / 2 ),
+			0,
+			0,
+			$logoImageData->getWidth(),
+			$logoImageData->getHeight(),
+			imagesx( $logoImageData->getImage() ),
+			imagesy( $logoImageData->getImage() )
+		);
 
-    private function addLabel(LabelInterface $label, GdResult $result): GdResult
-    {
-        $targetImage = $result->getImage();
+		return new GdResult( $matrix, $targetImage );
+	}
 
-        $labelImageData = LabelImageData::createForLabel($label);
+	private function addLabel( LabelInterface $label, GdResult $result ): GdResult {
+		$targetImage = $result->getImage();
 
-        /** @var int $textColor */
-        $textColor = imagecolorallocatealpha(
-            $targetImage,
-            $label->getTextColor()->getRed(),
-            $label->getTextColor()->getGreen(),
-            $label->getTextColor()->getBlue(),
-            $label->getTextColor()->getAlpha()
-        );
+		$labelImageData = LabelImageData::createForLabel( $label );
 
-        $x = intval(imagesx($targetImage) / 2 - $labelImageData->getWidth() / 2);
-        $y = imagesy($targetImage) - $label->getMargin()->getBottom();
+		/** @var int $textColor */
+		$textColor = imagecolorallocatealpha(
+			$targetImage,
+			$label->getTextColor()->getRed(),
+			$label->getTextColor()->getGreen(),
+			$label->getTextColor()->getBlue(),
+			$label->getTextColor()->getAlpha()
+		);
 
-        if (LabelAlignment::Left === $label->getAlignment()) {
-            $x = $label->getMargin()->getLeft();
-        } elseif (LabelAlignment::Right === $label->getAlignment()) {
-            $x = imagesx($targetImage) - $labelImageData->getWidth() - $label->getMargin()->getRight();
-        }
+		$x = intval( imagesx( $targetImage ) / 2 - $labelImageData->getWidth() / 2 );
+		$y = imagesy( $targetImage ) - $label->getMargin()->getBottom();
 
-        imagettftext($targetImage, $label->getFont()->getSize(), 0, $x, $y, $textColor, $label->getFont()->getPath(), $label->getText());
+		if ( LabelAlignment::Left === $label->getAlignment() ) {
+			$x = $label->getMargin()->getLeft();
+		} elseif ( LabelAlignment::Right === $label->getAlignment() ) {
+			$x = imagesx( $targetImage ) - $labelImageData->getWidth() - $label->getMargin()->getRight();
+		}
 
-        return new GdResult($result->getMatrix(), $targetImage);
-    }
+		imagettftext( $targetImage, $label->getFont()->getSize(), 0, $x, $y, $textColor, $label->getFont()->getPath(), $label->getText() );
 
-    public function validateResult(ResultInterface $result, string $expectedData): void
-    {
-        $string = $result->getString();
+		return new GdResult( $result->getMatrix(), $targetImage );
+	}
 
-        if (!class_exists(QrReader::class)) {
-            throw ValidationException::createForMissingPackage('khanamiryan/qrcode-detector-decoder');
-        }
+	public function validateResult( ResultInterface $result, string $expectedData ): void {
+		$string = $result->getString();
 
-        $reader = new QrReader($string, QrReader::SOURCE_TYPE_BLOB);
-        if ($reader->text() !== $expectedData) {
-            throw ValidationException::createForInvalidData($expectedData, strval($reader->text()));
-        }
-    }
+		if ( ! class_exists( QrReader::class ) ) {
+			throw ValidationException::createForMissingPackage( 'khanamiryan/qrcode-detector-decoder' );
+		}
+
+		$reader = new QrReader( $string, QrReader::SOURCE_TYPE_BLOB );
+		if ( $reader->text() !== $expectedData ) {
+			throw ValidationException::createForInvalidData( $expectedData, strval( $reader->text() ) );
+		}
+	}
 }

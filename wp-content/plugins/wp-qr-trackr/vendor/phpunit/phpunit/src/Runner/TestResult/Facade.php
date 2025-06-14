@@ -19,87 +19,83 @@ use PHPUnit\TextUI\Configuration\Registry as ConfigurationRegistry;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class Facade
-{
-    private static ?Collector $collector = null;
+final class Facade {
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
-    public static function init(): void
-    {
-        self::collector();
-    }
+	private static ?Collector $collector = null;
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
-    public static function result(): TestResult
-    {
-        return self::collector()->result();
-    }
+	/**
+	 * @throws EventFacadeIsSealedException
+	 * @throws UnknownSubscriberTypeException
+	 */
+	public static function init(): void {
+		self::collector();
+	}
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
-    public static function shouldStop(): bool
-    {
-        $configuration = ConfigurationRegistry::get();
-        $collector     = self::collector();
+	/**
+	 * @throws EventFacadeIsSealedException
+	 * @throws UnknownSubscriberTypeException
+	 */
+	public static function result(): TestResult {
+		return self::collector()->result();
+	}
 
-        if (($configuration->stopOnDefect() || $configuration->stopOnError()) && $collector->hasErroredTests()) {
-            return true;
-        }
+	/**
+	 * @throws EventFacadeIsSealedException
+	 * @throws UnknownSubscriberTypeException
+	 */
+	public static function shouldStop(): bool {
+		$configuration = ConfigurationRegistry::get();
+		$collector     = self::collector();
 
-        if (($configuration->stopOnDefect() || $configuration->stopOnFailure()) && $collector->hasFailedTests()) {
-            return true;
-        }
+		if ( ( $configuration->stopOnDefect() || $configuration->stopOnError() ) && $collector->hasErroredTests() ) {
+			return true;
+		}
 
-        if (($configuration->stopOnDefect() || $configuration->stopOnWarning()) && $collector->hasWarnings()) {
-            return true;
-        }
+		if ( ( $configuration->stopOnDefect() || $configuration->stopOnFailure() ) && $collector->hasFailedTests() ) {
+			return true;
+		}
 
-        if (($configuration->stopOnDefect() || $configuration->stopOnRisky()) && $collector->hasRiskyTests()) {
-            return true;
-        }
+		if ( ( $configuration->stopOnDefect() || $configuration->stopOnWarning() ) && $collector->hasWarnings() ) {
+			return true;
+		}
 
-        if ($configuration->stopOnDeprecation() && $collector->hasDeprecations()) {
-            return true;
-        }
+		if ( ( $configuration->stopOnDefect() || $configuration->stopOnRisky() ) && $collector->hasRiskyTests() ) {
+			return true;
+		}
 
-        if ($configuration->stopOnNotice() && $collector->hasNotices()) {
-            return true;
-        }
+		if ( $configuration->stopOnDeprecation() && $collector->hasDeprecations() ) {
+			return true;
+		}
 
-        if ($configuration->stopOnIncomplete() && $collector->hasIncompleteTests()) {
-            return true;
-        }
+		if ( $configuration->stopOnNotice() && $collector->hasNotices() ) {
+			return true;
+		}
 
-        if ($configuration->stopOnSkipped() && $collector->hasSkippedTests()) {
-            return true;
-        }
+		if ( $configuration->stopOnIncomplete() && $collector->hasIncompleteTests() ) {
+			return true;
+		}
 
-        return false;
-    }
+		if ( $configuration->stopOnSkipped() && $collector->hasSkippedTests() ) {
+			return true;
+		}
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
-    private static function collector(): Collector
-    {
-        if (self::$collector === null) {
-            $configuration = ConfigurationRegistry::get();
+		return false;
+	}
 
-            self::$collector = new Collector(
-                EventFacade::instance(),
-                $configuration->source(),
-            );
-        }
+	/**
+	 * @throws EventFacadeIsSealedException
+	 * @throws UnknownSubscriberTypeException
+	 */
+	private static function collector(): Collector {
+		if ( self::$collector === null ) {
+			$configuration = ConfigurationRegistry::get();
 
-        return self::$collector;
-    }
+			self::$collector = new Collector(
+				EventFacade::instance(),
+				$configuration->source(),
+			);
+		}
+
+		return self::$collector;
+	}
 }

@@ -19,46 +19,39 @@ use Iterator;
  *
  * @template-implements Iterator<int, FilterDirectory>
  */
-final class FilterDirectoryCollectionIterator implements Countable, Iterator
-{
-    /**
-     * @psalm-var list<FilterDirectory>
-     */
-    private readonly array $directories;
-    private int $position = 0;
+final class FilterDirectoryCollectionIterator implements Countable, Iterator {
 
-    public function __construct(FilterDirectoryCollection $directories)
-    {
-        $this->directories = $directories->asArray();
-    }
+	/**
+	 * @psalm-var list<FilterDirectory>
+	 */
+	private readonly array $directories;
+	private int $position = 0;
 
-    public function count(): int
-    {
-        return iterator_count($this);
-    }
+	public function __construct( FilterDirectoryCollection $directories ) {
+		$this->directories = $directories->asArray();
+	}
 
-    public function rewind(): void
-    {
-        $this->position = 0;
-    }
+	public function count(): int {
+		return iterator_count( $this );
+	}
 
-    public function valid(): bool
-    {
-        return $this->position < count($this->directories);
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function key(): int
-    {
-        return $this->position;
-    }
+	public function valid(): bool {
+		return $this->position < count( $this->directories );
+	}
 
-    public function current(): FilterDirectory
-    {
-        return $this->directories[$this->position];
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function next(): void
-    {
-        $this->position++;
-    }
+	public function current(): FilterDirectory {
+		return $this->directories[ $this->position ];
+	}
+
+	public function next(): void {
+		++$this->position;
+	}
 }

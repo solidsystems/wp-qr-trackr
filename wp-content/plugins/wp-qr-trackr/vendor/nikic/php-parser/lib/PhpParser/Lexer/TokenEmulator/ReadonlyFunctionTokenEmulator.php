@@ -12,20 +12,20 @@ use PhpParser\PhpVersion;
  * PHP 8.1 ReadonlyTokenEmulator.
  */
 class ReadonlyFunctionTokenEmulator extends KeywordEmulator {
-    public function getKeywordString(): string {
-        return 'readonly';
-    }
+	public function getKeywordString(): string {
+		return 'readonly';
+	}
 
-    public function getKeywordToken(): int {
-        return \T_READONLY;
-    }
+	public function getKeywordToken(): int {
+		return \T_READONLY;
+	}
 
-    public function getPhpVersion(): PhpVersion {
-        return PhpVersion::fromComponents(8, 2);
-    }
+	public function getPhpVersion(): PhpVersion {
+		return PhpVersion::fromComponents( 8, 2 );
+	}
 
-    public function reverseEmulate(string $code, array $tokens): array {
-        // Don't bother
-        return $tokens;
-    }
+	public function reverseEmulate( string $code, array $tokens ): array {
+		// Don't bother
+		return $tokens;
+	}
 }

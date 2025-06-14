@@ -12,13 +12,12 @@ namespace SebastianBergmann\CodeUnit;
 /**
  * @psalm-immutable
  */
-final class ClassUnit extends CodeUnit
-{
-    /**
-     * @psalm-assert-if-true ClassUnit $this
-     */
-    public function isClass(): bool
-    {
-        return true;
-    }
+final class ClassUnit extends CodeUnit {
+
+	/**
+	 * @psalm-assert-if-true ClassUnit $this
+	 */
+	public function isClass(): bool {
+		return true;
+	}
 }

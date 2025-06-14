@@ -23,19 +23,17 @@ use SebastianBergmann\Comparator\ComparisonFailure;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class ExpectationFailedException extends AssertionFailedError
-{
-    protected ?ComparisonFailure $comparisonFailure = null;
+final class ExpectationFailedException extends AssertionFailedError {
 
-    public function __construct(string $message, ?ComparisonFailure $comparisonFailure = null, ?Exception $previous = null)
-    {
-        $this->comparisonFailure = $comparisonFailure;
+	protected ?ComparisonFailure $comparisonFailure = null;
 
-        parent::__construct($message, 0, $previous);
-    }
+	public function __construct( string $message, ?ComparisonFailure $comparisonFailure = null, ?Exception $previous = null ) {
+		$this->comparisonFailure = $comparisonFailure;
 
-    public function getComparisonFailure(): ?ComparisonFailure
-    {
-        return $this->comparisonFailure;
-    }
+		parent::__construct( $message, 0, $previous );
+	}
+
+	public function getComparisonFailure(): ?ComparisonFailure {
+		return $this->comparisonFailure;
+	}
 }

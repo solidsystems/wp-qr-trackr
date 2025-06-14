@@ -11,42 +11,41 @@ namespace SebastianBergmann\Diff\Output;
 
 use function count;
 
-abstract class AbstractChunkOutputBuilder implements DiffOutputBuilderInterface
-{
-    /**
-     * Takes input of the diff array and returns the common parts.
-     * Iterates through diff line by line.
-     */
-    protected function getCommonChunks(array $diff, int $lineThreshold = 5): array
-    {
-        $diffSize     = count($diff);
-        $capturing    = false;
-        $chunkStart   = 0;
-        $chunkSize    = 0;
-        $commonChunks = [];
+abstract class AbstractChunkOutputBuilder implements DiffOutputBuilderInterface {
 
-        for ($i = 0; $i < $diffSize; $i++) {
-            if ($diff[$i][1] === 0 /* OLD */) {
-                if ($capturing === false) {
-                    $capturing  = true;
-                    $chunkStart = $i;
-                    $chunkSize  = 0;
-                } else {
-                    $chunkSize++;
-                }
-            } elseif ($capturing !== false) {
-                if ($chunkSize >= $lineThreshold) {
-                    $commonChunks[$chunkStart] = $chunkStart + $chunkSize;
-                }
+	/**
+	 * Takes input of the diff array and returns the common parts.
+	 * Iterates through diff line by line.
+	 */
+	protected function getCommonChunks( array $diff, int $lineThreshold = 5 ): array {
+		$diffSize     = count( $diff );
+		$capturing    = false;
+		$chunkStart   = 0;
+		$chunkSize    = 0;
+		$commonChunks = array();
 
-                $capturing = false;
-            }
-        }
+		for ( $i = 0; $i < $diffSize; $i++ ) {
+			if ( $diff[ $i ][1] === 0 /* OLD */ ) {
+				if ( $capturing === false ) {
+					$capturing  = true;
+					$chunkStart = $i;
+					$chunkSize  = 0;
+				} else {
+					++$chunkSize;
+				}
+			} elseif ( $capturing !== false ) {
+				if ( $chunkSize >= $lineThreshold ) {
+					$commonChunks[ $chunkStart ] = $chunkStart + $chunkSize;
+				}
 
-        if ($capturing !== false && $chunkSize >= $lineThreshold) {
-            $commonChunks[$chunkStart] = $chunkStart + $chunkSize;
-        }
+				$capturing = false;
+			}
+		}
 
-        return $commonChunks;
-    }
+		if ( $capturing !== false && $chunkSize >= $lineThreshold ) {
+			$commonChunks[ $chunkStart ] = $chunkStart + $chunkSize;
+		}
+
+		return $commonChunks;
+	}
 }

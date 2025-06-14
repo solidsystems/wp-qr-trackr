@@ -2,7 +2,7 @@
 namespace Hamcrest\Core;
 
 /*
- Copyright (c) 2009 hamcrest.org
+Copyright (c) 2009 hamcrest.org
  */
 use Hamcrest\Description;
 use Hamcrest\FeatureMatcher;
@@ -12,45 +12,41 @@ use Hamcrest\Util;
 /**
  * Matches if array size satisfies a nested matcher.
  */
-class HasToString extends FeatureMatcher
-{
+class HasToString extends FeatureMatcher {
 
-    public function __construct(Matcher $toStringMatcher)
-    {
-        parent::__construct(
-            self::TYPE_OBJECT,
-            null,
-            $toStringMatcher,
-            'an object with toString()',
-            'toString()'
-        );
-    }
 
-    public function matchesSafelyWithDiagnosticDescription($actual, Description $mismatchDescription)
-    {
-        if (method_exists($actual, 'toString') || method_exists($actual, '__toString')) {
-            return parent::matchesSafelyWithDiagnosticDescription($actual, $mismatchDescription);
-        }
+	public function __construct( Matcher $toStringMatcher ) {
+		parent::__construct(
+			self::TYPE_OBJECT,
+			null,
+			$toStringMatcher,
+			'an object with toString()',
+			'toString()'
+		);
+	}
 
-        return false;
-    }
+	public function matchesSafelyWithDiagnosticDescription( $actual, Description $mismatchDescription ) {
+		if ( method_exists( $actual, 'toString' ) || method_exists( $actual, '__toString' ) ) {
+			return parent::matchesSafelyWithDiagnosticDescription( $actual, $mismatchDescription );
+		}
 
-    protected function featureValueOf($actual)
-    {
-        if (method_exists($actual, 'toString')) {
-            return $actual->toString();
-        }
+		return false;
+	}
 
-        return (string) $actual;
-    }
+	protected function featureValueOf( $actual ) {
+		if ( method_exists( $actual, 'toString' ) ) {
+			return $actual->toString();
+		}
 
-    /**
-     * Does array size satisfy a given matcher?
-     *
-     * @factory
-     */
-    public static function hasToString($matcher)
-    {
-        return new self(Util::wrapValueWithIsEqual($matcher));
-    }
+		return (string) $actual;
+	}
+
+	/**
+	 * Does array size satisfy a given matcher?
+	 *
+	 * @factory
+	 */
+	public static function hasToString( $matcher ) {
+		return new self( Util::wrapValueWithIsEqual( $matcher ) );
+	}
 }

@@ -15,24 +15,21 @@ use PHPUnit\Framework\TestListener as PHPUnitTestListener;
 use PHPUnit\Framework\TestListenerDefaultImplementation;
 use PHPUnit\Framework\TestSuite;
 
-class TestListener implements PHPUnitTestListener
-{
-    use TestListenerDefaultImplementation;
+class TestListener implements PHPUnitTestListener {
 
-    private $trait;
+	use TestListenerDefaultImplementation;
 
-    public function __construct()
-    {
-        $this->trait = new TestListenerTrait();
-    }
+	private $trait;
 
-    public function endTest(Test $test, float $time): void
-    {
-        $this->trait->endTest($test, $time);
-    }
+	public function __construct() {
+		$this->trait = new TestListenerTrait();
+	}
 
-    public function startTestSuite(TestSuite $suite): void
-    {
-        $this->trait->startTestSuite();
-    }
+	public function endTest( Test $test, float $time ): void {
+		$this->trait->endTest( $test, $time );
+	}
+
+	public function startTestSuite( TestSuite $suite ): void {
+		$this->trait->startTestSuite();
+	}
 }

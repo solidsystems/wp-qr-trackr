@@ -11,39 +11,36 @@ namespace SebastianBergmann\CodeCoverage;
 
 use RuntimeException;
 
-final class UnintentionallyCoveredCodeException extends RuntimeException implements Exception
-{
-    /**
-     * @var list<string>
-     */
-    private readonly array $unintentionallyCoveredUnits;
+final class UnintentionallyCoveredCodeException extends RuntimeException implements Exception {
 
-    /**
-     * @param list<string> $unintentionallyCoveredUnits
-     */
-    public function __construct(array $unintentionallyCoveredUnits)
-    {
-        $this->unintentionallyCoveredUnits = $unintentionallyCoveredUnits;
+	/**
+	 * @var list<string>
+	 */
+	private readonly array $unintentionallyCoveredUnits;
 
-        parent::__construct($this->toString());
-    }
+	/**
+	 * @param list<string> $unintentionallyCoveredUnits
+	 */
+	public function __construct( array $unintentionallyCoveredUnits ) {
+		$this->unintentionallyCoveredUnits = $unintentionallyCoveredUnits;
 
-    /**
-     * @return list<string>
-     */
-    public function getUnintentionallyCoveredUnits(): array
-    {
-        return $this->unintentionallyCoveredUnits;
-    }
+		parent::__construct( $this->toString() );
+	}
 
-    private function toString(): string
-    {
-        $message = '';
+	/**
+	 * @return list<string>
+	 */
+	public function getUnintentionallyCoveredUnits(): array {
+		return $this->unintentionallyCoveredUnits;
+	}
 
-        foreach ($this->unintentionallyCoveredUnits as $unit) {
-            $message .= '- ' . $unit . "\n";
-        }
+	private function toString(): string {
+		$message = '';
 
-        return $message;
-    }
+		foreach ( $this->unintentionallyCoveredUnits as $unit ) {
+			$message .= '- ' . $unit . "\n";
+		}
+
+		return $message;
+	}
 }

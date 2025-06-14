@@ -11,13 +11,12 @@ use Endroid\QrCode\QrCodeInterface;
 use Endroid\QrCode\Writer\Result\ConsoleResult;
 use Endroid\QrCode\Writer\Result\ResultInterface;
 
-final readonly class ConsoleWriter implements WriterInterface
-{
-    public function write(QrCodeInterface $qrCode, ?LogoInterface $logo = null, ?LabelInterface $label = null, $options = []): ResultInterface
-    {
-        $matrixFactory = new MatrixFactory();
-        $matrix = $matrixFactory->create($qrCode);
+final readonly class ConsoleWriter implements WriterInterface {
 
-        return new ConsoleResult($matrix, $qrCode->getForegroundColor(), $qrCode->getBackgroundColor());
-    }
+	public function write( QrCodeInterface $qrCode, ?LogoInterface $logo = null, ?LabelInterface $label = null, $options = array() ): ResultInterface {
+		$matrixFactory = new MatrixFactory();
+		$matrix        = $matrixFactory->create( $qrCode );
+
+		return new ConsoleResult( $matrix, $qrCode->getForegroundColor(), $qrCode->getBackgroundColor() );
+	}
 }

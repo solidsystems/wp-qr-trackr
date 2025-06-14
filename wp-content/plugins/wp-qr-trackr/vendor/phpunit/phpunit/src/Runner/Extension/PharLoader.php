@@ -30,121 +30,119 @@ use Throwable;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class PharLoader
-{
-    /**
-     * @psalm-param non-empty-string $directory
-     *
-     * @psalm-return list<string>
-     */
-    public function loadPharExtensionsInDirectory(string $directory): array
-    {
-        $pharExtensionLoaded = extension_loaded('phar');
-        $loadedExtensions    = [];
+final class PharLoader {
 
-        foreach ((new FileIteratorFacade)->getFilesAsArray($directory, '.phar') as $file) {
-            if (!$pharExtensionLoaded) {
-                Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
-                    sprintf(
-                        'Cannot load extension from %s because the PHAR extension is not available',
-                        $file,
-                    ),
-                );
+	/**
+	 * @psalm-param non-empty-string $directory
+	 *
+	 * @psalm-return list<string>
+	 */
+	public function loadPharExtensionsInDirectory( string $directory ): array {
+		$pharExtensionLoaded = extension_loaded( 'phar' );
+		$loadedExtensions    = array();
 
-                continue;
-            }
+		foreach ( ( new FileIteratorFacade() )->getFilesAsArray( $directory, '.phar' ) as $file ) {
+			if ( ! $pharExtensionLoaded ) {
+				Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
+					sprintf(
+						'Cannot load extension from %s because the PHAR extension is not available',
+						$file,
+					),
+				);
 
-            if (!is_file('phar://' . $file . '/manifest.xml')) {
-                Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
-                    sprintf(
-                        '%s is not an extension for PHPUnit',
-                        $file,
-                    ),
-                );
+				continue;
+			}
 
-                continue;
-            }
+			if ( ! is_file( 'phar://' . $file . '/manifest.xml' ) ) {
+				Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
+					sprintf(
+						'%s is not an extension for PHPUnit',
+						$file,
+					),
+				);
 
-            try {
-                $applicationName = new ApplicationName('phpunit/phpunit');
-                $version         = new PharIoVersion($this->phpunitVersion());
-                $manifest        = ManifestLoader::fromFile('phar://' . $file . '/manifest.xml');
+				continue;
+			}
 
-                if (!$manifest->isExtensionFor($applicationName)) {
-                    Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
-                        sprintf(
-                            '%s is not an extension for PHPUnit',
-                            $file,
-                        ),
-                    );
+			try {
+				$applicationName = new ApplicationName( 'phpunit/phpunit' );
+				$version         = new PharIoVersion( $this->phpunitVersion() );
+				$manifest        = ManifestLoader::fromFile( 'phar://' . $file . '/manifest.xml' );
 
-                    continue;
-                }
+				if ( ! $manifest->isExtensionFor( $applicationName ) ) {
+					Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
+						sprintf(
+							'%s is not an extension for PHPUnit',
+							$file,
+						),
+					);
 
-                if (!$manifest->isExtensionFor($applicationName, $version)) {
-                    Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
-                        sprintf(
-                            '%s is not compatible with PHPUnit %s',
-                            $file,
-                            Version::series(),
-                        ),
-                    );
+					continue;
+				}
 
-                    continue;
-                }
-            } catch (ManifestException $e) {
-                Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
-                    sprintf(
-                        'Cannot load extension from %s: %s',
-                        $file,
-                        $e->getMessage(),
-                    ),
-                );
+				if ( ! $manifest->isExtensionFor( $applicationName, $version ) ) {
+					Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
+						sprintf(
+							'%s is not compatible with PHPUnit %s',
+							$file,
+							Version::series(),
+						),
+					);
 
-                continue;
-            }
+					continue;
+				}
+			} catch ( ManifestException $e ) {
+				Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
+					sprintf(
+						'Cannot load extension from %s: %s',
+						$file,
+						$e->getMessage(),
+					),
+				);
 
-            try {
-                /** @psalm-suppress UnresolvableInclude */
-                @require $file;
-            } catch (Throwable $t) {
-                Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
-                    sprintf(
-                        'Cannot load extension from %s: %s',
-                        $file,
-                        $t->getMessage(),
-                    ),
-                );
+				continue;
+			}
 
-                continue;
-            }
+			try {
+				/** @psalm-suppress UnresolvableInclude */
+				@require $file;
+			} catch ( Throwable $t ) {
+				Event\Facade::emitter()->testRunnerTriggeredPhpunitWarning(
+					sprintf(
+						'Cannot load extension from %s: %s',
+						$file,
+						$t->getMessage(),
+					),
+				);
 
-            $loadedExtensions[] = $manifest->getName()->asString() . ' ' . $manifest->getVersion()->getVersionString();
+				continue;
+			}
 
-            Event\Facade::emitter()->testRunnerLoadedExtensionFromPhar(
-                $file,
-                $manifest->getName()->asString(),
-                $manifest->getVersion()->getVersionString(),
-            );
-        }
+			$loadedExtensions[] = $manifest->getName()->asString() . ' ' . $manifest->getVersion()->getVersionString();
 
-        return $loadedExtensions;
-    }
+			Event\Facade::emitter()->testRunnerLoadedExtensionFromPhar(
+				$file,
+				$manifest->getName()->asString(),
+				$manifest->getVersion()->getVersionString(),
+			);
+		}
 
-    private function phpunitVersion(): string
-    {
-        $version = Version::id();
+		return $loadedExtensions;
+	}
 
-        if (!str_contains($version, '-')) {
-            return $version;
-        }
+	private function phpunitVersion(): string {
+		$version = Version::id();
 
-        $parts = explode('.', explode('-', $version)[0]);
+		if ( ! str_contains( $version, '-' ) ) {
+			return $version;
+		}
 
-        if (count($parts) === 2) {
-            $parts[] = 0;
-        }
+		$parts = explode( '.', explode( '-', $version )[0] );
 
-        return implode('.', $parts);
-    }
+		if ( count( $parts ) === 2 ) {
+			$parts[] = 0;
+		}
+
+		return implode( '.', $parts );
+	}
 }

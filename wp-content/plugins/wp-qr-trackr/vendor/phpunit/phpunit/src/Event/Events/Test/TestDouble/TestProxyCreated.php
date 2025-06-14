@@ -18,49 +18,44 @@ use PHPUnit\Event\Telemetry;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final class TestProxyCreated implements Event
-{
-    private readonly Telemetry\Info $telemetryInfo;
+final class TestProxyCreated implements Event {
 
-    /**
-     * @psalm-var class-string
-     */
-    private readonly string $className;
-    private readonly string $constructorArguments;
+	private readonly Telemetry\Info $telemetryInfo;
 
-    /**
-     * @psalm-param class-string $className
-     */
-    public function __construct(Telemetry\Info $telemetryInfo, string $className, string $constructorArguments)
-    {
-        $this->telemetryInfo        = $telemetryInfo;
-        $this->className            = $className;
-        $this->constructorArguments = $constructorArguments;
-    }
+	/**
+	 * @psalm-var class-string
+	 */
+	private readonly string $className;
+	private readonly string $constructorArguments;
 
-    public function telemetryInfo(): Telemetry\Info
-    {
-        return $this->telemetryInfo;
-    }
+	/**
+	 * @psalm-param class-string $className
+	 */
+	public function __construct( Telemetry\Info $telemetryInfo, string $className, string $constructorArguments ) {
+		$this->telemetryInfo        = $telemetryInfo;
+		$this->className            = $className;
+		$this->constructorArguments = $constructorArguments;
+	}
 
-    /**
-     * @psalm-return class-string
-     */
-    public function className(): string
-    {
-        return $this->className;
-    }
+	public function telemetryInfo(): Telemetry\Info {
+		return $this->telemetryInfo;
+	}
 
-    public function constructorArguments(): string
-    {
-        return $this->constructorArguments;
-    }
+	/**
+	 * @psalm-return class-string
+	 */
+	public function className(): string {
+		return $this->className;
+	}
 
-    public function asString(): string
-    {
-        return sprintf(
-            'Test Proxy Created (%s)',
-            $this->className,
-        );
-    }
+	public function constructorArguments(): string {
+		return $this->constructorArguments;
+	}
+
+	public function asString(): string {
+		return sprintf(
+			'Test Proxy Created (%s)',
+			$this->className,
+		);
+	}
 }

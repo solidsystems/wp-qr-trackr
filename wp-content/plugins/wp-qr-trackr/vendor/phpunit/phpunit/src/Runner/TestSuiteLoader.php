@@ -26,118 +26,115 @@ use ReflectionClass;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final class TestSuiteLoader
-{
-    /**
-     * @psalm-var list<class-string>
-     */
-    private static array $declaredClasses = [];
+final class TestSuiteLoader {
 
-    /**
-     * @psalm-var array<non-empty-string, list<class-string>>
-     */
-    private static array $fileToClassesMap = [];
+	/**
+	 * @psalm-var list<class-string>
+	 */
+	private static array $declaredClasses = array();
 
-    /**
-     * @throws Exception
-     */
-    public function load(string $suiteClassFile): ReflectionClass
-    {
-        $suiteClassFile = realpath($suiteClassFile);
-        $suiteClassName = $this->classNameFromFileName($suiteClassFile);
-        $loadedClasses  = $this->loadSuiteClassFile($suiteClassFile);
+	/**
+	 * @psalm-var array<non-empty-string, list<class-string>>
+	 */
+	private static array $fileToClassesMap = array();
 
-        foreach ($loadedClasses as $className) {
-            /** @noinspection PhpUnhandledExceptionInspection */
-            $class = new ReflectionClass($className);
+	/**
+	 * @throws Exception
+	 */
+	public function load( string $suiteClassFile ): ReflectionClass {
+		$suiteClassFile = realpath( $suiteClassFile );
+		$suiteClassName = $this->classNameFromFileName( $suiteClassFile );
+		$loadedClasses  = $this->loadSuiteClassFile( $suiteClassFile );
 
-            if ($class->isAnonymous()) {
-                continue;
-            }
+		foreach ( $loadedClasses as $className ) {
+			/** @noinspection PhpUnhandledExceptionInspection */
+			$class = new ReflectionClass( $className );
 
-            if ($class->getFileName() !== $suiteClassFile) {
-                continue;
-            }
+			if ( $class->isAnonymous() ) {
+				continue;
+			}
 
-            if (!$class->isSubclassOf(TestCase::class)) {
-                continue;
-            }
+			if ( $class->getFileName() !== $suiteClassFile ) {
+				continue;
+			}
 
-            if (!str_ends_with(strtolower($class->getShortName()), strtolower($suiteClassName))) {
-                continue;
-            }
+			if ( ! $class->isSubclassOf( TestCase::class ) ) {
+				continue;
+			}
 
-            if (!$class->isAbstract()) {
-                return $class;
-            }
+			if ( ! str_ends_with( strtolower( $class->getShortName() ), strtolower( $suiteClassName ) ) ) {
+				continue;
+			}
 
-            $e = new ClassIsAbstractException($class->getName(), $suiteClassFile);
-        }
+			if ( ! $class->isAbstract() ) {
+				return $class;
+			}
 
-        if (isset($e)) {
-            throw $e;
-        }
+			$e = new ClassIsAbstractException( $class->getName(), $suiteClassFile );
+		}
 
-        foreach ($loadedClasses as $className) {
-            if (str_ends_with(strtolower($className), strtolower($suiteClassName))) {
-                throw new ClassDoesNotExtendTestCaseException($className, $suiteClassFile);
-            }
-        }
+		if ( isset( $e ) ) {
+			throw $e;
+		}
 
-        throw new ClassCannotBeFoundException($suiteClassName, $suiteClassFile);
-    }
+		foreach ( $loadedClasses as $className ) {
+			if ( str_ends_with( strtolower( $className ), strtolower( $suiteClassName ) ) ) {
+				throw new ClassDoesNotExtendTestCaseException( $className, $suiteClassFile );
+			}
+		}
 
-    private function classNameFromFileName(string $suiteClassFile): string
-    {
-        $className = basename($suiteClassFile, '.php');
-        $dotPos    = strpos($className, '.');
+		throw new ClassCannotBeFoundException( $suiteClassName, $suiteClassFile );
+	}
 
-        if ($dotPos !== false) {
-            $className = substr($className, 0, $dotPos);
-        }
+	private function classNameFromFileName( string $suiteClassFile ): string {
+		$className = basename( $suiteClassFile, '.php' );
+		$dotPos    = strpos( $className, '.' );
 
-        return $className;
-    }
+		if ( $dotPos !== false ) {
+			$className = substr( $className, 0, $dotPos );
+		}
 
-    /**
-     * @psalm-return list<class-string>
-     */
-    private function loadSuiteClassFile(string $suiteClassFile): array
-    {
-        if (isset(self::$fileToClassesMap[$suiteClassFile])) {
-            return self::$fileToClassesMap[$suiteClassFile];
-        }
+		return $className;
+	}
 
-        if (empty(self::$declaredClasses)) {
-            self::$declaredClasses = get_declared_classes();
-        }
+	/**
+	 * @psalm-return list<class-string>
+	 */
+	private function loadSuiteClassFile( string $suiteClassFile ): array {
+		if ( isset( self::$fileToClassesMap[ $suiteClassFile ] ) ) {
+			return self::$fileToClassesMap[ $suiteClassFile ];
+		}
 
-        require_once $suiteClassFile;
+		if ( empty( self::$declaredClasses ) ) {
+			self::$declaredClasses = get_declared_classes();
+		}
 
-        $loadedClasses = array_values(
-            array_diff(
-                get_declared_classes(),
-                self::$declaredClasses,
-            ),
-        );
+		require_once $suiteClassFile;
 
-        foreach ($loadedClasses as $loadedClass) {
-            /** @noinspection PhpUnhandledExceptionInspection */
-            $class = new ReflectionClass($loadedClass);
+		$loadedClasses = array_values(
+			array_diff(
+				get_declared_classes(),
+				self::$declaredClasses,
+			),
+		);
 
-            if (!isset(self::$fileToClassesMap[$class->getFileName()])) {
-                self::$fileToClassesMap[$class->getFileName()] = [];
-            }
+		foreach ( $loadedClasses as $loadedClass ) {
+			/** @noinspection PhpUnhandledExceptionInspection */
+			$class = new ReflectionClass( $loadedClass );
 
-            self::$fileToClassesMap[$class->getFileName()][] = $class->getName();
-        }
+			if ( ! isset( self::$fileToClassesMap[ $class->getFileName() ] ) ) {
+				self::$fileToClassesMap[ $class->getFileName() ] = array();
+			}
 
-        self::$declaredClasses = get_declared_classes();
+			self::$fileToClassesMap[ $class->getFileName() ][] = $class->getName();
+		}
 
-        if (empty($loadedClasses)) {
-            return self::$declaredClasses;
-        }
+		self::$declaredClasses = get_declared_classes();
 
-        return $loadedClasses;
-    }
+		if ( empty( $loadedClasses ) ) {
+			return self::$declaredClasses;
+		}
+
+		return $loadedClasses;
+	}
 }

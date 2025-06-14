@@ -12,22 +12,20 @@ namespace Mockery\Matcher;
 
 use function count;
 
-class NoArgs extends MatcherAbstract implements ArgumentListMatcher
-{
-    public function __toString()
-    {
-        return '<No Arguments>';
-    }
+class NoArgs extends MatcherAbstract implements ArgumentListMatcher {
 
-    /**
-     * @template TMixed
-     *
-     * @param TMixed $actual
-     *
-     * @return bool
-     */
-    public function match(&$actual)
-    {
-        return count($actual) === 0;
-    }
+	public function __toString() {
+		return '<No Arguments>';
+	}
+
+	/**
+	 * @template TMixed
+	 *
+	 * @param TMixed $actual
+	 *
+	 * @return bool
+	 */
+	public function match( &$actual ) {
+		return count( $actual ) === 0;
+	}
 }

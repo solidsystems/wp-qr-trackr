@@ -39,209 +39,200 @@ use SebastianBergmann\LinesOfCode\LineCountingVisitor;
  * @psalm-import-type LinesOfCodeType from \SebastianBergmann\CodeCoverage\StaticAnalysis\FileAnalyser
  * @psalm-import-type LinesType from \SebastianBergmann\CodeCoverage\StaticAnalysis\FileAnalyser
  */
-final class ParsingFileAnalyser implements FileAnalyser
-{
-    /**
-     * @psalm-var array<string, array<string, CodeUnitClassType>>
-     */
-    private array $classes = [];
+final class ParsingFileAnalyser implements FileAnalyser {
 
-    /**
-     * @psalm-var array<string, array<string, CodeUnitTraitType>>
-     */
-    private array $traits = [];
+	/**
+	 * @psalm-var array<string, array<string, CodeUnitClassType>>
+	 */
+	private array $classes = array();
 
-    /**
-     * @psalm-var array<string, array<string, CodeUnitFunctionType>>
-     */
-    private array $functions = [];
+	/**
+	 * @psalm-var array<string, array<string, CodeUnitTraitType>>
+	 */
+	private array $traits = array();
 
-    /**
-     * @var array<string, LinesOfCodeType>
-     */
-    private array $linesOfCode = [];
+	/**
+	 * @psalm-var array<string, array<string, CodeUnitFunctionType>>
+	 */
+	private array $functions = array();
 
-    /**
-     * @var array<string, LinesType>
-     */
-    private array $ignoredLines = [];
+	/**
+	 * @var array<string, LinesOfCodeType>
+	 */
+	private array $linesOfCode = array();
 
-    /**
-     * @var array<string, LinesType>
-     */
-    private array $executableLines = [];
-    private readonly bool $useAnnotationsForIgnoringCode;
-    private readonly bool $ignoreDeprecatedCode;
+	/**
+	 * @var array<string, LinesType>
+	 */
+	private array $ignoredLines = array();
 
-    public function __construct(bool $useAnnotationsForIgnoringCode, bool $ignoreDeprecatedCode)
-    {
-        $this->useAnnotationsForIgnoringCode = $useAnnotationsForIgnoringCode;
-        $this->ignoreDeprecatedCode          = $ignoreDeprecatedCode;
-    }
+	/**
+	 * @var array<string, LinesType>
+	 */
+	private array $executableLines = array();
+	private readonly bool $useAnnotationsForIgnoringCode;
+	private readonly bool $ignoreDeprecatedCode;
 
-    public function classesIn(string $filename): array
-    {
-        $this->analyse($filename);
+	public function __construct( bool $useAnnotationsForIgnoringCode, bool $ignoreDeprecatedCode ) {
+		$this->useAnnotationsForIgnoringCode = $useAnnotationsForIgnoringCode;
+		$this->ignoreDeprecatedCode          = $ignoreDeprecatedCode;
+	}
 
-        return $this->classes[$filename];
-    }
+	public function classesIn( string $filename ): array {
+		$this->analyse( $filename );
 
-    public function traitsIn(string $filename): array
-    {
-        $this->analyse($filename);
+		return $this->classes[ $filename ];
+	}
 
-        return $this->traits[$filename];
-    }
+	public function traitsIn( string $filename ): array {
+		$this->analyse( $filename );
 
-    public function functionsIn(string $filename): array
-    {
-        $this->analyse($filename);
+		return $this->traits[ $filename ];
+	}
 
-        return $this->functions[$filename];
-    }
+	public function functionsIn( string $filename ): array {
+		$this->analyse( $filename );
 
-    public function linesOfCodeFor(string $filename): array
-    {
-        $this->analyse($filename);
+		return $this->functions[ $filename ];
+	}
 
-        return $this->linesOfCode[$filename];
-    }
+	public function linesOfCodeFor( string $filename ): array {
+		$this->analyse( $filename );
 
-    public function executableLinesIn(string $filename): array
-    {
-        $this->analyse($filename);
+		return $this->linesOfCode[ $filename ];
+	}
 
-        return $this->executableLines[$filename];
-    }
+	public function executableLinesIn( string $filename ): array {
+		$this->analyse( $filename );
 
-    public function ignoredLinesFor(string $filename): array
-    {
-        $this->analyse($filename);
+		return $this->executableLines[ $filename ];
+	}
 
-        return $this->ignoredLines[$filename];
-    }
+	public function ignoredLinesFor( string $filename ): array {
+		$this->analyse( $filename );
 
-    /**
-     * @throws ParserException
-     */
-    private function analyse(string $filename): void
-    {
-        if (isset($this->classes[$filename])) {
-            return;
-        }
+		return $this->ignoredLines[ $filename ];
+	}
 
-        $source      = file_get_contents($filename);
-        $linesOfCode = max(substr_count($source, "\n") + 1, substr_count($source, "\r") + 1);
+	/**
+	 * @throws ParserException
+	 */
+	private function analyse( string $filename ): void {
+		if ( isset( $this->classes[ $filename ] ) ) {
+			return;
+		}
 
-        if ($linesOfCode === 0 && !empty($source)) {
-            $linesOfCode = 1;
-        }
+		$source      = file_get_contents( $filename );
+		$linesOfCode = max( substr_count( $source, "\n" ) + 1, substr_count( $source, "\r" ) + 1 );
 
-        assert($linesOfCode > 0);
+		if ( $linesOfCode === 0 && ! empty( $source ) ) {
+			$linesOfCode = 1;
+		}
 
-        $parser = (new ParserFactory)->createForHostVersion();
+		assert( $linesOfCode > 0 );
 
-        try {
-            $nodes = $parser->parse($source);
+		$parser = ( new ParserFactory() )->createForHostVersion();
 
-            assert($nodes !== null);
+		try {
+			$nodes = $parser->parse( $source );
 
-            $traverser                     = new NodeTraverser;
-            $codeUnitFindingVisitor        = new CodeUnitFindingVisitor;
-            $lineCountingVisitor           = new LineCountingVisitor($linesOfCode);
-            $ignoredLinesFindingVisitor    = new IgnoredLinesFindingVisitor($this->useAnnotationsForIgnoringCode, $this->ignoreDeprecatedCode);
-            $executableLinesFindingVisitor = new ExecutableLinesFindingVisitor($source);
+			assert( $nodes !== null );
 
-            $traverser->addVisitor(new NameResolver);
-            $traverser->addVisitor(new ParentConnectingVisitor);
-            $traverser->addVisitor($codeUnitFindingVisitor);
-            $traverser->addVisitor($lineCountingVisitor);
-            $traverser->addVisitor($ignoredLinesFindingVisitor);
-            $traverser->addVisitor($executableLinesFindingVisitor);
+			$traverser                     = new NodeTraverser();
+			$codeUnitFindingVisitor        = new CodeUnitFindingVisitor();
+			$lineCountingVisitor           = new LineCountingVisitor( $linesOfCode );
+			$ignoredLinesFindingVisitor    = new IgnoredLinesFindingVisitor( $this->useAnnotationsForIgnoringCode, $this->ignoreDeprecatedCode );
+			$executableLinesFindingVisitor = new ExecutableLinesFindingVisitor( $source );
 
-            /* @noinspection UnusedFunctionResultInspection */
-            $traverser->traverse($nodes);
-            // @codeCoverageIgnoreStart
-        } catch (Error $error) {
-            throw new ParserException(
-                sprintf(
-                    'Cannot parse %s: %s',
-                    $filename,
-                    $error->getMessage(),
-                ),
-                $error->getCode(),
-                $error,
-            );
-        }
-        // @codeCoverageIgnoreEnd
+			$traverser->addVisitor( new NameResolver() );
+			$traverser->addVisitor( new ParentConnectingVisitor() );
+			$traverser->addVisitor( $codeUnitFindingVisitor );
+			$traverser->addVisitor( $lineCountingVisitor );
+			$traverser->addVisitor( $ignoredLinesFindingVisitor );
+			$traverser->addVisitor( $executableLinesFindingVisitor );
 
-        $this->classes[$filename]         = $codeUnitFindingVisitor->classes();
-        $this->traits[$filename]          = $codeUnitFindingVisitor->traits();
-        $this->functions[$filename]       = $codeUnitFindingVisitor->functions();
-        $this->executableLines[$filename] = $executableLinesFindingVisitor->executableLinesGroupedByBranch();
-        $this->ignoredLines[$filename]    = [];
+			/* @noinspection UnusedFunctionResultInspection */
+			$traverser->traverse( $nodes );
+			// @codeCoverageIgnoreStart
+		} catch ( Error $error ) {
+			throw new ParserException(
+				sprintf(
+					'Cannot parse %s: %s',
+					$filename,
+					$error->getMessage(),
+				),
+				$error->getCode(),
+				$error,
+			);
+		}
+		// @codeCoverageIgnoreEnd
 
-        $this->findLinesIgnoredByLineBasedAnnotations($filename, $source, $this->useAnnotationsForIgnoringCode);
+		$this->classes[ $filename ]         = $codeUnitFindingVisitor->classes();
+		$this->traits[ $filename ]          = $codeUnitFindingVisitor->traits();
+		$this->functions[ $filename ]       = $codeUnitFindingVisitor->functions();
+		$this->executableLines[ $filename ] = $executableLinesFindingVisitor->executableLinesGroupedByBranch();
+		$this->ignoredLines[ $filename ]    = array();
 
-        $this->ignoredLines[$filename] = array_unique(
-            array_merge(
-                $this->ignoredLines[$filename],
-                $ignoredLinesFindingVisitor->ignoredLines(),
-            ),
-        );
+		$this->findLinesIgnoredByLineBasedAnnotations( $filename, $source, $this->useAnnotationsForIgnoringCode );
 
-        sort($this->ignoredLines[$filename]);
+		$this->ignoredLines[ $filename ] = array_unique(
+			array_merge(
+				$this->ignoredLines[ $filename ],
+				$ignoredLinesFindingVisitor->ignoredLines(),
+			),
+		);
 
-        $result = $lineCountingVisitor->result();
+		sort( $this->ignoredLines[ $filename ] );
 
-        $this->linesOfCode[$filename] = [
-            'linesOfCode'           => $result->linesOfCode(),
-            'commentLinesOfCode'    => $result->commentLinesOfCode(),
-            'nonCommentLinesOfCode' => $result->nonCommentLinesOfCode(),
-        ];
-    }
+		$result = $lineCountingVisitor->result();
 
-    private function findLinesIgnoredByLineBasedAnnotations(string $filename, string $source, bool $useAnnotationsForIgnoringCode): void
-    {
-        if (!$useAnnotationsForIgnoringCode) {
-            return;
-        }
+		$this->linesOfCode[ $filename ] = array(
+			'linesOfCode'           => $result->linesOfCode(),
+			'commentLinesOfCode'    => $result->commentLinesOfCode(),
+			'nonCommentLinesOfCode' => $result->nonCommentLinesOfCode(),
+		);
+	}
 
-        $start = false;
+	private function findLinesIgnoredByLineBasedAnnotations( string $filename, string $source, bool $useAnnotationsForIgnoringCode ): void {
+		if ( ! $useAnnotationsForIgnoringCode ) {
+			return;
+		}
 
-        foreach (token_get_all($source) as $token) {
-            if (!is_array($token) ||
-                !(T_COMMENT === $token[0] || T_DOC_COMMENT === $token[0])) {
-                continue;
-            }
+		$start = false;
 
-            $comment = trim($token[1]);
+		foreach ( token_get_all( $source ) as $token ) {
+			if ( ! is_array( $token ) ||
+				! ( T_COMMENT === $token[0] || T_DOC_COMMENT === $token[0] ) ) {
+				continue;
+			}
 
-            if ($comment === '// @codeCoverageIgnore' ||
-                $comment === '//@codeCoverageIgnore') {
-                $this->ignoredLines[$filename][] = $token[2];
+			$comment = trim( $token[1] );
 
-                continue;
-            }
+			if ( $comment === '// @codeCoverageIgnore' ||
+				$comment === '//@codeCoverageIgnore' ) {
+				$this->ignoredLines[ $filename ][] = $token[2];
 
-            if ($comment === '// @codeCoverageIgnoreStart' ||
-                $comment === '//@codeCoverageIgnoreStart') {
-                $start = $token[2];
+				continue;
+			}
 
-                continue;
-            }
+			if ( $comment === '// @codeCoverageIgnoreStart' ||
+				$comment === '//@codeCoverageIgnoreStart' ) {
+				$start = $token[2];
 
-            if ($comment === '// @codeCoverageIgnoreEnd' ||
-                $comment === '//@codeCoverageIgnoreEnd') {
-                if (false === $start) {
-                    $start = $token[2];
-                }
+				continue;
+			}
 
-                $this->ignoredLines[$filename] = array_merge(
-                    $this->ignoredLines[$filename],
-                    range($start, $token[2]),
-                );
-            }
-        }
-    }
+			if ( $comment === '// @codeCoverageIgnoreEnd' ||
+				$comment === '//@codeCoverageIgnoreEnd' ) {
+				if ( false === $start ) {
+					$start = $token[2];
+				}
+
+				$this->ignoredLines[ $filename ] = array_merge(
+					$this->ignoredLines[ $filename ],
+					range( $start, $token[2] ),
+				);
+			}
+		}
+	}
 }

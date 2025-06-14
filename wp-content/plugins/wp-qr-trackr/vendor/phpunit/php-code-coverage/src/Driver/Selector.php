@@ -14,49 +14,47 @@ use SebastianBergmann\CodeCoverage\NoCodeCoverageDriverAvailableException;
 use SebastianBergmann\CodeCoverage\NoCodeCoverageDriverWithPathCoverageSupportAvailableException;
 use SebastianBergmann\Environment\Runtime;
 
-final class Selector
-{
-    /**
-     * @throws NoCodeCoverageDriverAvailableException
-     * @throws PcovNotAvailableException
-     * @throws XdebugNotAvailableException
-     * @throws XdebugNotEnabledException
-     */
-    public function forLineCoverage(Filter $filter): Driver
-    {
-        $runtime = new Runtime;
+final class Selector {
 
-        if ($runtime->hasPCOV()) {
-            return new PcovDriver($filter);
-        }
+	/**
+	 * @throws NoCodeCoverageDriverAvailableException
+	 * @throws PcovNotAvailableException
+	 * @throws XdebugNotAvailableException
+	 * @throws XdebugNotEnabledException
+	 */
+	public function forLineCoverage( Filter $filter ): Driver {
+		$runtime = new Runtime();
 
-        if ($runtime->hasXdebug()) {
-            $driver = new XdebugDriver($filter);
+		if ( $runtime->hasPCOV() ) {
+			return new PcovDriver( $filter );
+		}
 
-            $driver->enableDeadCodeDetection();
+		if ( $runtime->hasXdebug() ) {
+			$driver = new XdebugDriver( $filter );
 
-            return $driver;
-        }
+			$driver->enableDeadCodeDetection();
 
-        throw new NoCodeCoverageDriverAvailableException;
-    }
+			return $driver;
+		}
 
-    /**
-     * @throws NoCodeCoverageDriverWithPathCoverageSupportAvailableException
-     * @throws XdebugNotAvailableException
-     * @throws XdebugNotEnabledException
-     */
-    public function forLineAndPathCoverage(Filter $filter): Driver
-    {
-        if ((new Runtime)->hasXdebug()) {
-            $driver = new XdebugDriver($filter);
+		throw new NoCodeCoverageDriverAvailableException();
+	}
 
-            $driver->enableDeadCodeDetection();
-            $driver->enableBranchAndPathCoverage();
+	/**
+	 * @throws NoCodeCoverageDriverWithPathCoverageSupportAvailableException
+	 * @throws XdebugNotAvailableException
+	 * @throws XdebugNotEnabledException
+	 */
+	public function forLineAndPathCoverage( Filter $filter ): Driver {
+		if ( ( new Runtime() )->hasXdebug() ) {
+			$driver = new XdebugDriver( $filter );
 
-            return $driver;
-        }
+			$driver->enableDeadCodeDetection();
+			$driver->enableBranchAndPathCoverage();
 
-        throw new NoCodeCoverageDriverWithPathCoverageSupportAvailableException;
-    }
+			return $driver;
+		}
+
+		throw new NoCodeCoverageDriverWithPathCoverageSupportAvailableException();
+	}
 }

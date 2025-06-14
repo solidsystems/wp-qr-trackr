@@ -20,44 +20,42 @@ use SebastianBergmann\RecursionContext\Context;
  *
  * @deprecated
  */
-final class Exporter
-{
-    public static function export(mixed $value, bool $exportObjects = false): string
-    {
-        if (self::isExportable($value) || $exportObjects) {
-            return (new \SebastianBergmann\Exporter\Exporter)->export($value);
-        }
+final class Exporter {
 
-        return '{enable export of objects to see this value}';
-    }
+	public static function export( mixed $value, bool $exportObjects = false ): string {
+		if ( self::isExportable( $value ) || $exportObjects ) {
+			return ( new \SebastianBergmann\Exporter\Exporter() )->export( $value );
+		}
 
-    private static function isExportable(mixed &$value, ?Context $context = null): bool
-    {
-        if (is_scalar($value) || $value === null) {
-            return true;
-        }
+		return '{enable export of objects to see this value}';
+	}
 
-        if (!is_array($value)) {
-            return false;
-        }
+	private static function isExportable( mixed &$value, ?Context $context = null ): bool {
+		if ( is_scalar( $value ) || $value === null ) {
+			return true;
+		}
 
-        if (!$context) {
-            $context = new Context;
-        }
+		if ( ! is_array( $value ) ) {
+			return false;
+		}
 
-        if ($context->contains($value) !== false) {
-            return true;
-        }
+		if ( ! $context ) {
+			$context = new Context();
+		}
 
-        $array = $value;
-        $context->add($value);
+		if ( $context->contains( $value ) !== false ) {
+			return true;
+		}
 
-        foreach ($array as &$_value) {
-            if (!self::isExportable($_value, $context)) {
-                return false;
-            }
-        }
+		$array = $value;
+		$context->add( $value );
 
-        return true;
-    }
+		foreach ( $array as &$_value ) {
+			if ( ! self::isExportable( $_value, $context ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

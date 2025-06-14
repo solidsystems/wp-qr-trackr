@@ -19,63 +19,60 @@ use DOMXPath;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract class LogToReportMigration implements Migration
-{
-    /**
-     * @throws MigrationException
-     */
-    public function migrate(DOMDocument $document): void
-    {
-        $coverage = $document->getElementsByTagName('coverage')->item(0);
+abstract class LogToReportMigration implements Migration {
 
-        if (!$coverage instanceof DOMElement) {
-            throw new MigrationException('Unexpected state - No coverage element');
-        }
+	/**
+	 * @throws MigrationException
+	 */
+	public function migrate( DOMDocument $document ): void {
+		$coverage = $document->getElementsByTagName( 'coverage' )->item( 0 );
 
-        $logNode = $this->findLogNode($document);
+		if ( ! $coverage instanceof DOMElement ) {
+			throw new MigrationException( 'Unexpected state - No coverage element' );
+		}
 
-        if ($logNode === null) {
-            return;
-        }
+		$logNode = $this->findLogNode( $document );
 
-        $reportChild = $this->toReportFormat($logNode);
+		if ( $logNode === null ) {
+			return;
+		}
 
-        $report = $coverage->getElementsByTagName('report')->item(0);
+		$reportChild = $this->toReportFormat( $logNode );
 
-        if ($report === null) {
-            $report = $coverage->appendChild($document->createElement('report'));
-        }
+		$report = $coverage->getElementsByTagName( 'report' )->item( 0 );
 
-        $report->appendChild($reportChild);
-        $logNode->parentNode->removeChild($logNode);
-    }
+		if ( $report === null ) {
+			$report = $coverage->appendChild( $document->createElement( 'report' ) );
+		}
 
-    protected function migrateAttributes(DOMElement $src, DOMElement $dest, array $attributes): void
-    {
-        foreach ($attributes as $attr) {
-            if (!$src->hasAttribute($attr)) {
-                continue;
-            }
+		$report->appendChild( $reportChild );
+		$logNode->parentNode->removeChild( $logNode );
+	}
 
-            $dest->setAttribute($attr, $src->getAttribute($attr));
-            $src->removeAttribute($attr);
-        }
-    }
+	protected function migrateAttributes( DOMElement $src, DOMElement $dest, array $attributes ): void {
+		foreach ( $attributes as $attr ) {
+			if ( ! $src->hasAttribute( $attr ) ) {
+				continue;
+			}
 
-    abstract protected function forType(): string;
+			$dest->setAttribute( $attr, $src->getAttribute( $attr ) );
+			$src->removeAttribute( $attr );
+		}
+	}
 
-    abstract protected function toReportFormat(DOMElement $logNode): DOMElement;
+	abstract protected function forType(): string;
 
-    private function findLogNode(DOMDocument $document): ?DOMElement
-    {
-        $logNode = (new DOMXPath($document))->query(
-            sprintf('//logging/log[@type="%s"]', $this->forType()),
-        )->item(0);
+	abstract protected function toReportFormat( DOMElement $logNode ): DOMElement;
 
-        if (!$logNode instanceof DOMElement) {
-            return null;
-        }
+	private function findLogNode( DOMDocument $document ): ?DOMElement {
+		$logNode = ( new DOMXPath( $document ) )->query(
+			sprintf( '//logging/log[@type="%s"]', $this->forType() ),
+		)->item( 0 );
 
-        return $logNode;
-    }
+		if ( ! $logNode instanceof DOMElement ) {
+			return null;
+		}
+
+		return $logNode;
+	}
 }

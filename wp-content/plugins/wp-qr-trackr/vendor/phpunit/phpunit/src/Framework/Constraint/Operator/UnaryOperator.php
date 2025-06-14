@@ -14,115 +14,107 @@ use function count;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract class UnaryOperator extends Operator
-{
-    private readonly Constraint $constraint;
+abstract class UnaryOperator extends Operator {
 
-    public function __construct(mixed $constraint)
-    {
-        $this->constraint = $this->checkConstraint($constraint);
-    }
+	private readonly Constraint $constraint;
 
-    /**
-     * Returns the number of operands (constraints).
-     */
-    public function arity(): int
-    {
-        return 1;
-    }
+	public function __construct( mixed $constraint ) {
+		$this->constraint = $this->checkConstraint( $constraint );
+	}
 
-    /**
-     * Returns a string representation of the constraint.
-     */
-    public function toString(): string
-    {
-        $reduced = $this->reduce();
+	/**
+	 * Returns the number of operands (constraints).
+	 */
+	public function arity(): int {
+		return 1;
+	}
 
-        if ($reduced !== $this) {
-            return $reduced->toString();
-        }
+	/**
+	 * Returns a string representation of the constraint.
+	 */
+	public function toString(): string {
+		$reduced = $this->reduce();
 
-        $constraint = $this->constraint->reduce();
+		if ( $reduced !== $this ) {
+			return $reduced->toString();
+		}
 
-        if ($this->constraintNeedsParentheses($constraint)) {
-            return $this->operator() . '( ' . $constraint->toString() . ' )';
-        }
+		$constraint = $this->constraint->reduce();
 
-        $string = $constraint->toStringInContext($this, 0);
+		if ( $this->constraintNeedsParentheses( $constraint ) ) {
+			return $this->operator() . '( ' . $constraint->toString() . ' )';
+		}
 
-        if ($string === '') {
-            return $this->transformString($constraint->toString());
-        }
+		$string = $constraint->toStringInContext( $this, 0 );
 
-        return $string;
-    }
+		if ( $string === '' ) {
+			return $this->transformString( $constraint->toString() );
+		}
 
-    /**
-     * Counts the number of constraint elements.
-     */
-    public function count(): int
-    {
-        return count($this->constraint);
-    }
+		return $string;
+	}
 
-    /**
-     * Returns the description of the failure.
-     *
-     * The beginning of failure messages is "Failed asserting that" in most
-     * cases. This method should return the second part of that sentence.
-     */
-    protected function failureDescription(mixed $other): string
-    {
-        $reduced = $this->reduce();
+	/**
+	 * Counts the number of constraint elements.
+	 */
+	public function count(): int {
+		return count( $this->constraint );
+	}
 
-        if ($reduced !== $this) {
-            return $reduced->failureDescription($other);
-        }
+	/**
+	 * Returns the description of the failure.
+	 *
+	 * The beginning of failure messages is "Failed asserting that" in most
+	 * cases. This method should return the second part of that sentence.
+	 */
+	protected function failureDescription( mixed $other ): string {
+		$reduced = $this->reduce();
 
-        $constraint = $this->constraint->reduce();
+		if ( $reduced !== $this ) {
+			return $reduced->failureDescription( $other );
+		}
 
-        if ($this->constraintNeedsParentheses($constraint)) {
-            return $this->operator() . '( ' . $constraint->failureDescription($other) . ' )';
-        }
+		$constraint = $this->constraint->reduce();
 
-        $string = $constraint->failureDescriptionInContext($this, 0, $other);
+		if ( $this->constraintNeedsParentheses( $constraint ) ) {
+			return $this->operator() . '( ' . $constraint->failureDescription( $other ) . ' )';
+		}
 
-        if ($string === '') {
-            return $this->transformString($constraint->failureDescription($other));
-        }
+		$string = $constraint->failureDescriptionInContext( $this, 0, $other );
 
-        return $string;
-    }
+		if ( $string === '' ) {
+			return $this->transformString( $constraint->failureDescription( $other ) );
+		}
 
-    /**
-     * Transforms string returned by the member constraint's toString() or
-     * failureDescription() such that it reflects constraint's participation in
-     * this expression.
-     *
-     * The method may be overwritten in a subclass to apply default
-     * transformation in case the operand constraint does not provide its own
-     * custom strings via toStringInContext() or failureDescriptionInContext().
-     */
-    protected function transformString(string $string): string
-    {
-        return $string;
-    }
+		return $string;
+	}
 
-    /**
-     * Provides access to $this->constraint for subclasses.
-     */
-    final protected function constraint(): Constraint
-    {
-        return $this->constraint;
-    }
+	/**
+	 * Transforms string returned by the member constraint's toString() or
+	 * failureDescription() such that it reflects constraint's participation in
+	 * this expression.
+	 *
+	 * The method may be overwritten in a subclass to apply default
+	 * transformation in case the operand constraint does not provide its own
+	 * custom strings via toStringInContext() or failureDescriptionInContext().
+	 */
+	protected function transformString( string $string ): string {
+		return $string;
+	}
 
-    /**
-     * Returns true if the $constraint needs to be wrapped with parentheses.
-     */
-    protected function constraintNeedsParentheses(Constraint $constraint): bool
-    {
-        $constraint = $constraint->reduce();
+	/**
+	 * Provides access to $this->constraint for subclasses.
+	 */
+	final protected function constraint(): Constraint {
+		return $this->constraint;
+	}
 
-        return $constraint instanceof self || parent::constraintNeedsParentheses($constraint);
-    }
+	/**
+	 * Returns true if the $constraint needs to be wrapped with parentheses.
+	 */
+	protected function constraintNeedsParentheses( Constraint $constraint ): bool {
+		$constraint = $constraint->reduce();
+
+		return $constraint instanceof self || parent::constraintNeedsParentheses( $constraint );
+	}
 }

@@ -1,4 +1,4 @@
-<?php # -*- coding: utf-8 -*-
+<?php // -*- coding: utf-8 -*-
 /*
  * This file is part of the BrainMonkey package.
  *
@@ -10,78 +10,72 @@
 
 namespace Brain\Monkey\Name\Exception;
 
-
 /**
  * @author  Giuseppe Mazzapica <giuseppe.mazzapica@gmail.com>
  * @package BrainMonkey
  * @license http://opensource.org/licenses/MIT MIT
  */
-class InvalidName extends Exception
-{
+class InvalidName extends Exception {
 
-    const CODE_FOR_FUNCTION = 1;
-    const CODE_FOR_CLASS    = 2;
-    const CODE_FOR_METHOD   = 3;
 
-    /**
-     * @param string $function
-     * @return \Brain\Monkey\Name\Exception\InvalidName
-     */
-    public static function forFunction($function)
-    {
-        return self::createFor($function, self::CODE_FOR_FUNCTION);
-    }
+	const CODE_FOR_FUNCTION = 1;
+	const CODE_FOR_CLASS    = 2;
+	const CODE_FOR_METHOD   = 3;
 
-    /**
-     * @param string $class
-     * @return \Brain\Monkey\Name\Exception\InvalidName
-     */
-    public static function forClass($class)
-    {
-        return self::createFor($class, self::CODE_FOR_CLASS);
-    }
+	/**
+	 * @param string $function
+	 * @return \Brain\Monkey\Name\Exception\InvalidName
+	 */
+	public static function forFunction( $function ) {
+		return self::createFor( $function, self::CODE_FOR_FUNCTION );
+	}
 
-    /**
-     * @param string $function
-     * @return \Brain\Monkey\Name\Exception\InvalidName
-     */
-    public static function forMethod($function)
-    {
-        return self::createFor($function, self::CODE_FOR_METHOD);
-    }
+	/**
+	 * @param string $class
+	 * @return \Brain\Monkey\Name\Exception\InvalidName
+	 */
+	public static function forClass( $class ) {
+		return self::createFor( $class, self::CODE_FOR_CLASS );
+	}
 
-    /**
-     * @param mixed $thing
-     * @param int   $code
-     * @return static
-     */
-    private static function createFor($thing, $code)
-    {
-        switch ($code) {
-            case self::CODE_FOR_CLASS:
-                $type = 'class';
-                break;
-            case self::CODE_FOR_METHOD:
-                $type = 'class method';
-                break;
-            case self::CODE_FOR_FUNCTION:
-            default:
-                $type = 'function';
-                break;
-        }
+	/**
+	 * @param string $function
+	 * @return \Brain\Monkey\Name\Exception\InvalidName
+	 */
+	public static function forMethod( $function ) {
+		return self::createFor( $function, self::CODE_FOR_METHOD );
+	}
 
-        switch (true) {
-            case is_string($thing):
-                $name = "'{$thing}'";
-                break;
-            case is_object($thing):
-                $name = 'An instance of '.get_class($thing);
-                break;
-            default:
-                $name = 'A variable of type '.gettype($thing);
-        }
+	/**
+	 * @param mixed $thing
+	 * @param int   $code
+	 * @return static
+	 */
+	private static function createFor( $thing, $code ) {
+		switch ( $code ) {
+			case self::CODE_FOR_CLASS:
+				$type = 'class';
+				break;
+			case self::CODE_FOR_METHOD:
+				$type = 'class method';
+				break;
+			case self::CODE_FOR_FUNCTION:
+			default:
+				$type = 'function';
+				break;
+		}
 
-        return new static(sprintf('%s is not a valid %s name.', $name, $type), $code);
-    }
+		switch ( true ) {
+			case is_string( $thing ):
+				$name = "'{$thing}'";
+				break;
+			case is_object( $thing ):
+				$name = 'An instance of ' . get_class( $thing );
+				break;
+			default:
+				$name = 'A variable of type ' . gettype( $thing );
+		}
 
+		return new static( sprintf( '%s is not a valid %s name.', $name, $type ), $code );
+	}
 }
