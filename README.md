@@ -363,3 +363,17 @@ For more details, see the sample workflow files in `.github/workflows/` or consu
 ## Codegen Remediation Tracking
 
 See [CODEGEN-REMEDIATION-TRACKING.md](CODEGEN-REMEDIATION-TRACKING.md) for a checklist and solutions to issues introduced by automated code generation and remediation tools.
+
+## Debug Logging
+
+Debug logging for QR Trackr can be enabled in three ways (in order of precedence):
+
+1. **Environment Variable:**
+   - Set `QR_TRACKR_DEBUG=1` (or `true`, `on`, `yes`) in your local `.env` file or environment.
+   - In CI/CD (e.g., GitHub Actions), set `QR_TRACKR_DEBUG` as a secret or environment variable.
+2. **WordPress Option:**
+   - Enable debug mode via the plugin's admin UI (Debug submenu).
+3. **Default:**
+   - If neither is set, debug logging is off.
+
+When enabled, debug logs are written to the PHP error log. Logs include activation, DB operations, AJAX, QR generation, redirects, and error events.
