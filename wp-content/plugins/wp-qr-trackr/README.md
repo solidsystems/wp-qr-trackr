@@ -90,6 +90,28 @@ yarn lint
   - Add Composer scripts for common tasks (e.g., `composer phpcs`).
   - This approach is portable, standards-compliant, and works everywhere.
 
+## Testing & Linting
+
+- **Install dependencies:**
+  ```sh
+  composer install
+  ```
+- **Run PHPCS (WordPress Coding Standards):**
+  ```sh
+  composer phpcs
+  ```
+  This uses the local config and works on Mac, Linux, and CI. No global PHPCS install is needed.
+- **Run JS linting:**
+  ```sh
+  yarn lint
+  ```
+- **Run CSS linting:**
+  ```sh
+  yarn stylelint
+  ```
+
+See the 'Best Way to Do Things Philosophy' section for more on why this approach is used.
+
 ---
 
 For support or feature requests, open an issue or PR. 
