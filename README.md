@@ -460,3 +460,18 @@ This configuration is required for Brain Monkey to mock `class_exists`.
 - All test and CI/CD workflows are documented and up to date.
 
 For more details, see inline comments in `bootstrap.php`, `PluginTest.php`, and the `includes/` modules.
+
+## 🛡️ Enforced Coding Standards (.cursorrules)
+
+This project uses a `.cursorrules` file to enforce strict WordPress plugin development standards for all contributors. These rules are automatically checked by pre-commit hooks, CI/CD, and PR reviewers. All code must comply with these standards before merging:
+
+- **Input Sanitization:** All user input (e.g., `$_POST`, `$_GET`, `$_SERVER`) must be sanitized using `wp_unslash()` and the appropriate WordPress sanitization function (`sanitize_text_field`, `esc_url_raw`, `intval`, etc.) before use. Never use raw superglobals in business logic or output.
+- **Output Escaping:** All output (HTML, attributes, URLs, translations, etc.) must be escaped using `esc_html()`, `esc_url()`, `esc_attr()`, or similar before rendering to the browser.
+- **Yoda Conditions:** All conditionals must use Yoda conditions and strict comparison (`===`, `!==`) where possible.
+- **Comment Punctuation:** All inline comments must end in a period, exclamation mark, or question mark.
+- **Docblocks:** All functions, classes, and files must have complete docblocks describing their purpose, parameters, and return values.
+- **WordPress Standards:** Use `gmdate()` instead of `date()` for timezone safety. Use `wp_json_encode()` instead of `json_encode()` for outputting JSON. Add PHPCS ignore comments for direct DB calls or debug-only `error_log()` only if absolutely necessary and document why. All enqueued assets must have resource versioning for cache busting.
+- **PHPCS & CI/CD:** All code must pass PHPCS with the project `.phpcs.xml` and all CI/CD checks in GitHub Actions before merging.
+- **Review & Automation:** PR reviewers and automated tools/pre-commit hooks must enforce these rules before approving or merging.
+
+See the `.cursorrules` file for the authoritative list. These standards help ensure security, maintainability, and WordPress best practices across the codebase.
