@@ -408,3 +408,12 @@ Debug logging for QR Trackr can be enabled in three ways (in order of precedence
    - If neither is set, debug logging is off.
 
 When enabled, debug logs are written to the PHP error log. Logs include activation, DB operations, AJAX, QR generation, redirects, and error events.
+
+## CI/CD and Environment Notes
+
+- **PHP 8.1 Compatibility:**
+  - During development, GitHub Actions CI/CD used PHP 8.1 for linting and testing. This surfaced issues with plugin-level `composer.json` and `composer.lock` files that referenced dependencies (like `endroid/qr-code` 6.x) incompatible with PHP 8.1. Cleaning up these files and relying solely on the project root Composer files resolved the issue.
+
+- **GitHub Actions vs. Local:**
+  - GitHub Actions may apply additional filters, checks, or environment constraints that are not present in local development. For example, CI/CD may lint or test files in ways not covered by local scripts, or enforce stricter dependency resolution.
+  - This acts as a 'belt and suspenders' approach: pre-commit hooks catch most issues before code is pushed, while CI/CD provides a final, independent verification before merge.
