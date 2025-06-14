@@ -24,11 +24,13 @@ jobs:
       - name: PHP_CodeSniffer (WordPress)
         run: |
           composer global require "squizlabs/php_codesniffer=*"
-          phpcs --standard=phpcs.xml --report=full wp-content/plugins/wp-qr-trackr
+          cd wp-content/plugins/wp-qr-trackr
+          phpcs --standard=phpcs.xml --report=full .
       - name: PHP_CodeSniffer (Tests Only)
         run: |
           composer global require "squizlabs/php_codesniffer=*"
-          phpcs --standard=phpcs.xml --report=full wp-content/plugins/wp-qr-trackr/tests
+          cd wp-content/plugins/wp-qr-trackr
+          phpcs --standard=phpcs.xml --report=full tests
 
   lint-js:
     name: JS Lint
