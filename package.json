@@ -3,6 +3,7 @@
     "husky": "^9.1.7"
   },
   "scripts": {
-    "setup:ci": "yarn install && npx husky install"
+    "setup:ci": "yarn install && npx husky install",
+    "lint": "cd wp-content/plugins/wp-qr-trackr && yarn lint"
   }
 }

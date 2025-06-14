@@ -7,8 +7,8 @@ if [ -n "$STAGED_PHP" ]; then
   ./wp-content/plugins/wp-qr-trackr/vendor/bin/phpcs --standard=.phpcs.xml $STAGED_PHP
 fi
 
-# Staged JS files
-STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.js$' | grep 'wp-content/plugins/wp-qr-trackr' || true)
+# Staged JS files (exclude config)
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.js$' | grep 'wp-content/plugins/wp-qr-trackr' | grep -v 'eslint.config.js' || true)
 if [ -n "$STAGED_JS" ]; then
   yarn lint $STAGED_JS
 fi

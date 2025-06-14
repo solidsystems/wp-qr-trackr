@@ -67,6 +67,12 @@ To add a new feature:
 yarn lint
 ```
 
+## Final Few Items
+
+- Pre-commit hooks now only lint staged JS files in the plugin directory, excluding config files like `eslint.config.js` for robust, standards-compliant workflow.
+- The root `lint` script delegates to the plugin's lint script, ensuring Husky and CI both use the correct config and ignore patterns.
+- All linting, formatting, and standards checks run automatically before commit, with no need for skip flags.
+
 ---
 
 For support or feature requests, open an issue or PR. 
