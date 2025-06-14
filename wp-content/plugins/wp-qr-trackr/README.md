@@ -73,6 +73,14 @@ yarn lint
 - The root `lint` script delegates to the plugin's lint script, ensuring Husky and CI both use the correct config and ignore patterns.
 - All linting, formatting, and standards checks run automatically before commit, with no need for skip flags.
 
+## PR Summary (June 2024)
+
+- Fixed ESLint config to use flat config ignores and updated lint scripts for standards compliance.
+- Updated pre-commit hook to only lint staged JS source files, excluding config files, for robust and standards-compliant workflow.
+- Moved Composer install/audit steps in CI to the project root, preventing failures due to missing composer.json in the plugin directory.
+- Updated workflow for TODO index to use CI_GITHUB_TOKEN for authenticated pushes, resolving push errors in CI.
+- All changes are documented in the README and tracking files, and the workflow is now robust, standards-compliant, and future-proof.
+
 ---
 
 For support or feature requests, open an issue or PR. 
