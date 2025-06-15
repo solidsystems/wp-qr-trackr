@@ -1,0 +1,34 @@
+name: Auto Push Detached HEAD
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'TODO.md'
+
+jobs:
+  auto-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect detached HEAD and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          BRANCH_NAME=$(git symbolic-ref --short -q HEAD || true)
+          if [ -z "$BRANCH_NAME" ]; then
+            # Detached HEAD, create a branch and push
+            AUTO_BRANCH="auto-push-$(date +%Y%m%d%H%M%S)"
+            git checkout -b "$AUTO_BRANCH"
+            git push origin "$AUTO_BRANCH"
+            echo "::notice ::Pushed detached HEAD as $AUTO_BRANCH"
+          else
+            # On a branch, just push
+            git push origin "$BRANCH_NAME"
+            echo "::notice ::Pushed branch $BRANCH_NAME"
+          fi 

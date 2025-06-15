@@ -138,6 +138,19 @@ This project enforces all CI checks locally before you can commit:
   - Ensure `.husky/pre-commit` exists and is executable.
   - Re-run `yarn setup:ci` if needed.
 
+### Automated Push for Detached HEAD States (GitHub Actions)
+
+This project includes a GitHub Actions workflow that ensures commits made in a detached HEAD state (such as by CI/CD or automation scripts) are never lost:
+
+- **What it does:**
+  - If the workflow detects a detached HEAD, it creates a new branch from the current commit and pushes it to the remote (with a timestamped name).
+  - If on a branch, it simply pushes the current branch as usual.
+- **When it runs:**
+  - Automatically on changes to `TODO.md` (or can be triggered manually via the Actions tab).
+- **Why:**
+  - This prevents CI/CD or automation jobs from failing to push updates (such as automated TODO index updates) due to detached HEAD errors, and ensures all changes are safely pushed and visible in the repository.
+- **See:** `.github/workflows/auto-push-detached-head.yml` for implementation details.
+
 ### Critical fixes found in project cleanup to enable precommit hooks
 
 During the project cleanup to enable strict pre-commit hooks and pass all CI/CD checks, the following critical security and code quality fixes were applied across the codebase:
