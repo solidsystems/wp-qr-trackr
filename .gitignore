@@ -49,3 +49,4 @@ wp-config.php
 
 .phpunit.result.cache
 .phpunit.cache/
+node_modules

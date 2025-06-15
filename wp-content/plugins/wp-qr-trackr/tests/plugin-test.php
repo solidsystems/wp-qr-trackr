@@ -6,6 +6,7 @@
  * Unit tests for plugin-level QR Trackr functions.
  *
  * @package QR_Trackr
+ 
  */
 
 if ( ! defined( 'QR_TRACKR_PLUGIN_DIR' ) ) {
@@ -23,9 +24,9 @@ if ( ! class_exists( 'QRcode' ) ) {
 	 * Mock QRcode class for QR Trackr tests.
 	 *
 	 * Provides a mock implementation of the QRcode class for testing purposes.
-	 *
+
 	 * @package QR_Trackr\Tests
-	 *
+
 	 * phpcs:ignore WordPress.Files.OneObjectStructurePerFile.MultipleFound -- Test file contains both mock and test classes for PHPUnit compatibility.
 	 */
 	class QRcode {
