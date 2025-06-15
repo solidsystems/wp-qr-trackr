@@ -20,7 +20,7 @@ function qr_trackr_ajax_get_stats() {
 	check_ajax_referer( 'qr_trackr_stats_nonce', 'security' );
 	global $wpdb;
 	$table = $wpdb->prefix . 'qr_trackr_scans'; // Safe table name.
-	
+
 	// Get total scans with caching.
 	$cache_key = 'qr_trackr_total_scans';
 	$total     = wp_cache_get( $cache_key );
