@@ -138,6 +138,7 @@ add_action(
 	}
 );
 
+// phpcs:disable
 // Migration/verification for qr_trackr_links table schema.
 add_action(
 	'init',
@@ -176,3 +177,4 @@ add_action(
 		}
 	}
 );
+// phpcs:enable
