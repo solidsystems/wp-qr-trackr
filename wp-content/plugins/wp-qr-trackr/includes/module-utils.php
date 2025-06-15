@@ -61,6 +61,7 @@ function qr_trackr_get_most_recent_tracking_link( $post_id ) {
 	if ( $link ) {
 		return $link;
 	}
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query is required for plugin logic and is cached above.
 	$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE post_id = %d ORDER BY created_at DESC LIMIT 1', $links_table, $post_id ) );
 	if ( $link ) {
 		wp_cache_set( $cache_key, $link );
@@ -77,7 +78,14 @@ function qr_trackr_get_most_recent_tracking_link( $post_id ) {
 function qr_trackr_render_qr_list_html( $post_id ) {
 	global $wpdb;
 	$links_table = $wpdb->prefix . 'qr_trackr_links';
-	$links       = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %s WHERE post_id = %d ORDER BY created_at DESC', $links_table, $post_id ) );
+	// Short-term cache for admin table rendering (1 minute).
+	$cache_key = 'qr_trackr_links_list_' . $post_id;
+	$links     = wp_cache_get( $cache_key );
+	if ( false === $links ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query is required for admin table rendering, short-term cache added.
+		$links = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %s WHERE post_id = %d ORDER BY created_at DESC', $links_table, $post_id ) );
+		wp_cache_set( $cache_key, $links, '', 60 ); // Cache for 1 minute.
+	}
 	if ( ! $links ) {
 		return '<div class="qr-trackr-list"><p>No QR codes found.</p></div>';
 	}
@@ -113,8 +121,8 @@ add_action(
 	 */
 	function ( $post_id ) {
 		if ( isset( $_POST['qr_trackr_dest_nonce'], $_POST['qr_trackr_dest_url'], $_POST['qr_trackr_link_id'] ) ) {
-			$nonce = isset( $_POST['qr_trackr_dest_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_dest_nonce'] ) ) : '';
-			$link_id = isset( $_POST['qr_trackr_link_id'] ) ? intval( wp_unslash( $_POST['qr_trackr_link_id'] ) ) : 0;
+			$nonce    = isset( $_POST['qr_trackr_dest_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_dest_nonce'] ) ) : '';
+			$link_id  = isset( $_POST['qr_trackr_link_id'] ) ? intval( wp_unslash( $_POST['qr_trackr_link_id'] ) ) : 0;
 			$dest_url = isset( $_POST['qr_trackr_dest_url'] ) ? esc_url_raw( wp_unslash( $_POST['qr_trackr_dest_url'] ) ) : '';
 			if ( ! wp_verify_nonce( $nonce, 'qr_trackr_update_dest_' . $post_id ) ) {
 				return;
@@ -124,6 +132,7 @@ add_action(
 			}
 			global $wpdb;
 			$links_table = $wpdb->prefix . 'qr_trackr_links';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Update is required for plugin logic.
 			$wpdb->update( $links_table, array( 'destination_url' => $dest_url ), array( 'id' => $link_id ) );
 		}
 	}
@@ -140,22 +149,25 @@ add_action(
 	function () {
 		global $wpdb;
 		$links_table = $wpdb->prefix . 'qr_trackr_links';
-		$columns     = $wpdb->get_results( $wpdb->prepare( 'SHOW COLUMNS FROM %s', $links_table ), ARRAY_A );
-		$expected    = array( 'id', 'post_id', 'destination_url', 'created_at', 'updated_at' );
-		$actual      = array_map(
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema check is required for plugin migration logic.
+		$columns  = $wpdb->get_results( $wpdb->prepare( 'SHOW COLUMNS FROM %s', $links_table ), ARRAY_A );
+		$expected = array( 'id', 'post_id', 'destination_url', 'created_at', 'updated_at' );
+		$actual   = array_map(
 			function ( $col ) {
 				return $col['Field'];
 			},
 			$columns
 		);
-		$missing     = array_diff( $expected, $actual );
+		$missing  = array_diff( $expected, $actual );
 		if ( $missing ) {
 			qr_trackr_debug_log( 'Migration: Missing columns in qr_trackr_links', $missing );
 			if ( in_array( 'created_at', $missing, true ) ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema change is required for plugin migration logic.
 				$wpdb->query( $wpdb->prepare( 'ALTER TABLE %s ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP', $links_table ) );
 				qr_trackr_debug_log( 'Migration: Added created_at column.' );
 			}
 			if ( in_array( 'updated_at', $missing, true ) ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema change is required for plugin migration logic.
 				$wpdb->query( $wpdb->prepare( 'ALTER TABLE %s ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', $links_table ) );
 				qr_trackr_debug_log( 'Migration: Added updated_at column.' );
 			}
