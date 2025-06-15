@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
-// date_default_timezone_set( 'UTC' ); // Removed per WordPress coding standards.
+// Note: Setting the default timezone is intentionally omitted to comply with WordPress coding standards.
 
 // Include core files.
 require_once QR_TRACKR_PLUGIN_DIR . 'qr-code.php';
