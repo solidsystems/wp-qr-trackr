@@ -23,7 +23,7 @@ function qr_trackr_ajax_get_stats() {
 	
 	// Get total scans with caching.
 	$cache_key = 'qr_trackr_total_scans';
-	$total = wp_cache_get( $cache_key );
+	$total     = wp_cache_get( $cache_key );
 	if ( false === $total ) {
 		$total = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM `%s`', $table ) );
 		wp_cache_set( $cache_key, $total, '', 300 ); // Cache for 5 minutes.
@@ -60,7 +60,7 @@ add_action(
 	 *
 	 * @return void
 	 */
-	function() {
+	function () {
 		$post_id = intval( wp_unslash( $_POST['post_id'] ?? 0 ) );
 		$nonce   = isset( $_POST['qr_trackr_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_new_qr_nonce'] ) ) : '';
 		qr_trackr_debug_log( 'AJAX: Create QR called', array( 'post_id' => $post_id ) );
