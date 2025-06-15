@@ -649,6 +649,7 @@ This process highlighted several important aspects of modern development:
    - What seemed like "one commit away" required multiple iterations
    - Each fix revealed new dependencies and requirements
    - Continuous testing in both environments was essential
+   - The "it broke differently" phase is a natural part of the process, indicating progress in understanding the system
 
 4. **Documentation Importance**
    - Clear documentation of the alignment process is crucial

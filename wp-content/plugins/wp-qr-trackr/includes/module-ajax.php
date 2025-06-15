@@ -53,7 +53,7 @@ add_action(
 	 *
 	 * @return void
 	 */
-	function () {
+	function() {
 		$post_id = intval( wp_unslash( $_POST['post_id'] ?? 0 ) );
 		$nonce   = isset( $_POST['qr_trackr_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_new_qr_nonce'] ) ) : '';
 		qr_trackr_debug_log( 'AJAX: Create QR called', array( 'post_id' => $post_id ) );

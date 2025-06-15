@@ -1081,7 +1081,7 @@ stylelint-config-standard@^38.0.0:
   dependencies:
     stylelint-config-recommended "^16.0.0"
 
-stylelint@^16.3.1:
+stylelint@^16.20.0:
   version "16.20.0"
   resolved "https://registry.yarnpkg.com/stylelint/-/stylelint-16.20.0.tgz#ec9eeddd49c20bbc397473505e63ad22f1639228"
   integrity sha512-B5Myu9WRxrgKuLs3YyUXLP2H0mrbejwNxPmyADlACWwFsrL8Bmor/nTSh4OMae5sHjOz6gkSeccQH34gM4/nAw==
