@@ -716,3 +716,4 @@ During code review and PHPCS compliance work, the Cursor assistant specifically 
 - All changes must be made on a feature branch and submitted via PR
 - Documentation and tests are required for all new features
 - Use the provided project plans and automation scripts for team/project management
+- **PHPCS and Schema Migrations:** If you must use direct database calls for schema changes, wrap the relevant code with `// phpcs:disable` and `// phpcs:enable` to suppress warnings. Always include a comment explaining why this is necessary, as this approach is accepted but may be debated among experienced WordPress developers.
