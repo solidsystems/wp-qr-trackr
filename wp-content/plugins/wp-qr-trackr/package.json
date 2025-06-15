@@ -2,6 +2,7 @@
   "name": "wp-qr-trackr-plugin",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "lint": "eslint \"**/*.js\" --ignore-pattern .eslintrc.js",
     "stylelint": "stylelint \"**/*.css\"",
