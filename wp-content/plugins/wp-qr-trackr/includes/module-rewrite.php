@@ -48,7 +48,17 @@ function qr_trackr_template_redirect() {
 		qr_trackr_debug_log( 'Handling QR Trackr redirect', $redirect_id );
 		global $wpdb;
 		$table = $wpdb->prefix . 'qr_trackr_links';
-		$link  = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE id = %d', $table, $redirect_id ) );
+
+		// Get link with caching.
+		$cache_key = 'qr_trackr_link_' . $redirect_id;
+		$link      = wp_cache_get( $cache_key );
+		if ( false === $link ) {
+			$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE id = %d', $table, $redirect_id ) );
+			if ( false !== $link && $link ) {
+				wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
+			}
+		}
+
 		if ( false !== $link && $link ) {
 			qr_trackr_debug_log(
 				'Found link for redirect',

@@ -119,12 +119,25 @@ function qr_trackr_admin_individual() {
 	echo '<div class="wrap"><h1>QR Trackr Stats</h1>';
 	global $wpdb;
 	$scans_table = $wpdb->prefix . 'qr_trackr_scans'; // Safe table name.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin stats, safe table name, not user input, and not performance critical.
-	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix and static string.
-	$total_scans = $wpdb->get_var( "SELECT COUNT(*) FROM `{$scans_table}`" );
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin stats, safe table name, not user input, and not performance critical.
-	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix and static string.
-	$most_popular      = $wpdb->get_row( "SELECT post_id, COUNT(*) as scan_count FROM `{$scans_table}` GROUP BY post_id ORDER BY scan_count DESC LIMIT 1" );
+
+	// Get total scans with caching.
+	$total_scans = wp_cache_get( 'qr_trackr_total_scans' );
+	if ( false === $total_scans ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin stats, safe table name, not user input, and not performance critical.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix and static string.
+		$total_scans = $wpdb->get_var( "SELECT COUNT(*) FROM `{$scans_table}`" );
+		wp_cache_set( 'qr_trackr_total_scans', $total_scans, '', 300 ); // Cache for 5 minutes.
+	}
+
+	// Get most popular with caching.
+	$most_popular = wp_cache_get( 'qr_trackr_most_popular' );
+	if ( false === $most_popular ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin stats, safe table name, not user input, and not performance critical.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix and static string.
+		$most_popular = $wpdb->get_row( "SELECT post_id, COUNT(*) as scan_count FROM `{$scans_table}` GROUP BY post_id ORDER BY scan_count DESC LIMIT 1" );
+		wp_cache_set( 'qr_trackr_most_popular', $most_popular, '', 300 ); // Cache for 5 minutes.
+	}
+
 	$most_popular_post = $most_popular ? get_post( $most_popular->post_id ) : null;
 	echo '<div style="margin-bottom:2em; background:#fafafa; padding:1em; border:1px solid #eee; max-width:600px;">';
 	echo '<strong>Total QR Scans:</strong> ' . intval( $total_scans ) . '<br>';
@@ -240,9 +253,16 @@ function qr_trackr_column_content( $column, $post_id ) {
 	if ( 'qr_trackr_scans' === $column ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'qr_trackr_scans'; // Safe table name.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin column, safe table name, not user input, not performance critical.
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix and static string.
-		$count = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table}` WHERE post_id = " . intval( $post_id ) );
+
+		// Get scan count with caching.
+		$cache_key = 'qr_trackr_scans_' . $post_id;
+		$count     = wp_cache_get( $cache_key );
+		if ( false === $count ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Admin column, safe table name, not user input, not performance critical.
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix and static string.
+			$count = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table}` WHERE post_id = " . intval( $post_id ) );
+			wp_cache_set( $cache_key, $count, '', 300 ); // Cache for 5 minutes.
+		}
 		echo intval( $count );
 	}
 }
