@@ -37,8 +37,8 @@ fi
 
 BUMP_TYPE="$1"
 
-# Extract current version from plugin file (assumes Version: x.y.z in header)
-CURRENT_VERSION=$(grep -E '^\s*\*?\s*Version:\s*[0-9]+\.[0-9]+\.[0-9]+' "$PLUGIN_FILE" | head -1 | sed -E 's/.*Version:\s*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+# Extract current version from plugin file
+CURRENT_VERSION=$(grep "Version:" "$PLUGIN_FILE" | head -1 | sed 's/.*Version: *//' | sed 's/ .*//')
 if [ -z "$CURRENT_VERSION" ]; then
   echo "Error: Could not find current version in $PLUGIN_FILE"
   exit 1
@@ -77,7 +77,7 @@ else
 fi
 
 # Update version in plugin file
-sed -i.bak -E "s/(Version:\s*)[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+[0-9]+)?/\1$NEW_VERSION/" "$PLUGIN_FILE"
+sed -i.bak "s/Version: $CURRENT_VERSION/Version: $NEW_VERSION/" "$PLUGIN_FILE"
 rm "$PLUGIN_FILE.bak"
 
 echo "Bumped version: $CURRENT_VERSION -> $NEW_VERSION"
