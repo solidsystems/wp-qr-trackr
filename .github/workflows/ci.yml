@@ -138,7 +138,7 @@ jobs:
           mysql -h 127.0.0.1 -u root -proot -e "DROP DATABASE IF EXISTS wordpress_test; CREATE DATABASE wordpress_test;"
       - name: Set up WordPress
         run: |
-          wp core download --version=latest --path=wp
+          wp core download --version=6.4.3 --path=wp
           wp config create --dbname=wordpress_test --dbuser=root --dbpass=root --dbhost=127.0.0.1 --path=wp
           wp db create --skip-check --path=wp
         shell: /usr/bin/bash -e {0}
