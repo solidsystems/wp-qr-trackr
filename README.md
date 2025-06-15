@@ -672,3 +672,7 @@ This process highlighted several important aspects of modern development:
    - Regular testing in both local and CI environments
    - Clear documentation of tool configurations
    - Version control of all configuration files
+
+## Caching and PHPCS Workflow Improvements
+
+During code review and PHPCS compliance work, the Cursor assistant specifically asked if a short-term cache should be added to the admin table rendering workflow (e.g., in `qr_trackr_render_qr_list_html`). This approach was chosen to make the codebase more robust and to reduce the number of explicit PHPCS ignore comments required for direct database calls. By caching the results of frequent queries for a short period (e.g., 1 minute), we improve performance and maintainability while adhering to WordPress coding standards and best practices.
