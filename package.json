@@ -6,9 +6,9 @@
     "stylelint-config-standard": "^38.0.0"
   },
   "scripts": {
-    "setup:ci": "yarn install && yarn husky install",
+    "setup:ci": "yarn install",
     "lint": "cd wp-content/plugins/wp-qr-trackr && yarn lint",
     "stylelint": "cd wp-content/plugins/wp-qr-trackr && yarn stylelint",
-    "prepare": "husky install"
+    "postinstall": "husky"
   }
 }
