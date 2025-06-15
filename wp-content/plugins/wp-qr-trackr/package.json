@@ -9,12 +9,18 @@
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@playwright/test": "^1.43.0",
     "@wordpress/eslint-plugin": "^17.0.0",
     "@wordpress/scripts": "^27.0.0",
+    "@wordpress/stylelint-config": "^21.0.0",
     "eslint": "^8.57.0",
     "husky": "^9.1.7",
-    "stylelint": "^16.3.1",
+    "prettier": "^3.2.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "stylelint": "^14.2.0",
     "stylelint-config-standard": "^38.0.0",
-    "@wordpress/stylelint-config": "^21.0.0"
+    "typescript": "^5.4.2"
   }
 }
