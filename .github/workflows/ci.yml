@@ -2,49 +2,68 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main, develop ]
   pull_request:
-    branches: [main]
+    branches: [ main, develop ]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          php-version: '8.3'
           coverage: none
-          tools: composer:v2, phpcs, phpstan
-
+          tools: composer:v2
       - name: Install dependencies
-        run: |
-          composer install --prefer-dist --no-progress
-          composer require --dev squizlabs/php_codesniffer wp-coding-standards/wpcs phpstan/phpstan
-
+        run: composer install --prefer-dist --no-progress
       - name: Run PHPCS
-        run: |
-          ./vendor/bin/phpcs --standard=.phpcs.xml wp-content/plugins/wp-qr-trackr/
-
-      - name: Run PHPStan
-        run: |
-          ./vendor/bin/phpstan analyse wp-content/plugins/wp-qr-trackr/ --level=5
-
-      - name: Run WordPress Security Scanner
-        run: |
-          composer require --dev wp-cli/wp-cli-bundle
-          ./vendor/bin/wp plugin verify-checksums wp-qr-trackr
-          ./vendor/bin/wp plugin check wp-qr-trackr
-
+        run: ./vendor/bin/phpcs --standard=.phpcs.xml wp-content/plugins/wp-qr-trackr/
       - name: Run ESLint
-        run: |
-          yarn install
-          yarn lint
-
+        run: yarn install && yarn lint
       - name: Run Stylelint
+        run: yarn stylelint
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: xdebug
+          tools: composer:v2
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      - name: Set up WordPress
         run: |
-          yarn stylelint
+          wp core download --version=6.4.3 --path=wp
+          wp config create --dbname=wordpress_test --dbuser=root --dbpass=root --dbhost=127.0.0.1 --path=wp
+          wp db create --skip-check --path=wp
+        shell: /usr/bin/bash -e {0}
+        env:
+          COMPOSER_PROCESS_TIMEOUT: 0
+          COMPOSER_NO_INTERACTION: 1
+          COMPOSER_NO_AUDIT: 1
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit --configuration=wp-content/plugins/wp-qr-trackr/phpunit.xml --coverage-clover=wp-content/plugins/wp-qr-trackr/coverage.xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./wp-content/plugins/wp-qr-trackr/coverage.xml
+          fail_ci_if_error: true
 
   lint-php:
     name: PHP Lint & Standards
@@ -103,56 +122,6 @@ jobs:
       - name: Run Stylelint
         run: yarn stylelint
         working-directory: wp-content/plugins/wp-qr-trackr
-
-  test-phpunit:
-    name: PHPUnit Tests
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        php-version: [8.4]
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: wordpress_test
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php-version }}
-          extensions: mbstring, intl, xdebug
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
-      - name: Install WP-CLI
-        run: |
-          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-          chmod +x wp-cli.phar
-          sudo mv wp-cli.phar /usr/local/bin/wp
-      - name: Ensure clean test database
-        run: |
-          mysql -h 127.0.0.1 -u root -proot -e "DROP DATABASE IF EXISTS wordpress_test; CREATE DATABASE wordpress_test;"
-      - name: Set up WordPress
-        run: |
-          wp core download --version=6.4.3 --path=wp
-          wp config create --dbname=wordpress_test --dbuser=root --dbpass=root --dbhost=127.0.0.1 --path=wp
-          wp db create --skip-check --path=wp
-        shell: /usr/bin/bash -e {0}
-        env:
-          COMPOSER_PROCESS_TIMEOUT: 0
-          COMPOSER_NO_INTERACTION: 1
-          COMPOSER_NO_AUDIT: 1
-      - name: Run PHPUnit
-        run: ./vendor/bin/phpunit --configuration=wp-content/plugins/wp-qr-trackr/phpunit.xml --coverage-clover=wp-content/plugins/wp-qr-trackr/coverage.xml
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./wp-content/plugins/wp-qr-trackr/coverage.xml
-        continue-on-error: true
 
   audit-deps:
     name: Dependency Audit
