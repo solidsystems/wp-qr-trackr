@@ -12,8 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Use PHP QR Code library (https://github.com/kazuhikoarase/qrcode-generator/tree/master/php)
-// For now, use a simple implementation or placeholder function
+// Use PHP QR Code library (https://github.com/kazuhikoarase/qrcode-generator/tree/master/php).
+// For now, use a simple implementation or placeholder function.
+// Pro plugin can add more via filter.
+// Use utility to get or create tracking link.
+// Allow custom shape generation via filter.
 
 require_once QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
 use Endroid\QrCode\QrCode;
@@ -31,7 +34,7 @@ use Endroid\QrCode\RoundBlockSizeMode;
 function qr_trackr_get_available_shapes() {
 	$shapes = array(
 		'standard' => __( 'Standard', 'qr-trackr' ),
-		// Pro plugin can add more via filter
+		// Pro plugin can add more via filter.
 	);
 	return apply_filters( 'qr_trackr_qr_shapes', $shapes );
 }
@@ -47,7 +50,7 @@ function qr_trackr_get_available_shapes() {
  */
 function qr_trackr_generate_qr_image( $url, $size = 300, $post_id = null, $shape = 'standard' ) {
 	if ( null !== $post_id && $post_id ) {
-		// Use utility to get or create tracking link
+		// Use utility to get or create tracking link.
 		$link = function_exists( 'qr_trackr_get_or_create_tracking_link' ) ? qr_trackr_get_or_create_tracking_link( $post_id ) : null;
 		if ( null !== $link && $link ) {
 			$home = home_url();
@@ -87,7 +90,7 @@ function qr_trackr_generate_qr_image( $url, $size = 300, $post_id = null, $shape
 			$result = $writer->write( $qr );
 			$wp_filesystem->put_contents( $filepath, $result->getString(), FS_CHMOD_FILE );
 		} else {
-			// Allow custom shape generation via filter
+			// Allow custom shape generation via filter.
 			$custom = apply_filters( 'qr_trackr_generate_custom_shape', null, $url, $size, $shape, $filepath );
 			if ( null === $custom ) {
 				$qr     = new QrCode(

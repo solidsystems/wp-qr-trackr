@@ -7,18 +7,14 @@
  * @package QR_Trackr
  */
 
-// NOTE: For full WordPress Coding Standards compliance, this file could be renamed to match the class name (e.g., class-qr-trackr-list-table.php).
+// phpcs:disable WordPress.Files.FileName.InvalidClassFileName -- This file is correctly named for the custom QR_Trackr_List_Table class, not WP_List_Table.
 
 if ( file_exists( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 if ( ! class_exists( 'WP_List_Table' ) ) {
-	/**
-	 * Minimal WP_List_Table stub for environments where it is not loaded.
-	 */
-	class WP_List_Table {
-		public function __construct() {}
-	}
+	// phpcs:ignore Squiz.Classes.OneObjectStructurePerFile -- This fallback is required for plugin portability/testing.
+	require_once __DIR__ . '/class-wp-list-table.php';
 }
 
 /**
@@ -52,6 +48,10 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 	/**
 	 * Constructor for QR_Trackr_List_Table.
+	 *
+	 * Initializes the custom list table for QR Trackr links.
+	 *
+	 * @return void
 	 */
 	public function __construct() {
 		parent::__construct(
@@ -136,7 +136,8 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		// Filter: scans (min).
 		if ( ! empty( $_REQUEST['filter_scans'] ) ) {
 			$this->scans_filter = intval( wp_unslash( $_REQUEST['filter_scans'] ) );
-			$where             .= $wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, built from $wpdb->prefix and static string.
+			$where .= $wpdb->prepare(
 				' AND (
                 SELECT COUNT(*) FROM `' . $scans_table . '` s WHERE s.post_id = l.post_id AND s.scan_time >= l.created_at
             ) >= %d',
@@ -144,12 +145,11 @@ class QR_Trackr_List_Table extends WP_List_Table {
 			);
 		}
 
-		// Count total (table names are safe, $where and $join are sanitized above).
-		$count_sql   = 'SELECT COUNT(*) FROM `' . $links_table . '` l ' . $join . ' ' . $where;
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table names are safe, built from $wpdb->prefix and static string.
+		$count_sql = 'SELECT COUNT(*) FROM `' . $links_table . '` l ' . $join . ' ' . $where;
 		$total_items = $wpdb->get_var( $count_sql );
 
-		// Main query (table names are safe, $where, $join, $orderby, $order are sanitized above).
-		$sql         = 'SELECT l.*, p.post_title, p.post_type,
+		$sql = 'SELECT l.*, p.post_title, p.post_type,
 			(
 				SELECT COUNT(*) FROM `' . $scans_table . '` s WHERE s.post_id = l.post_id AND s.scan_time >= l.created_at
 			) as scans
@@ -158,8 +158,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		' . $where . '
 		ORDER BY ' . $orderby . ' ' . $order . '
 		LIMIT %d OFFSET %d';
-		$sql         = $wpdb->prepare( $sql, $per_page, ( $paged - 1 ) * $per_page );
+		$sql = $wpdb->prepare( $sql, $per_page, ( $paged - 1 ) * $per_page );
 		$this->links = $wpdb->get_results( $sql );
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		$this->set_pagination_args(
 			array(

@@ -58,7 +58,7 @@ add_action(
 		$nonce   = isset( $_POST['qr_trackr_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_new_qr_nonce'] ) ) : '';
 		qr_trackr_debug_log( 'AJAX: Create QR called', array( 'post_id' => $post_id ) );
 		// Verify nonce before processing.
-		if ( ! wp_verify_nonce( $nonce, 'qr_trackr_admin_new_qr' ) ) {
+		if ( '' === $nonce || ! wp_verify_nonce( $nonce, 'qr_trackr_admin_new_qr' ) ) {
 			qr_trackr_debug_log( 'AJAX: Invalid nonce', $nonce );
 			wp_send_json_error( array( 'message' => 'Invalid nonce.' ) );
 			wp_die();
@@ -70,7 +70,7 @@ add_action(
 		global $wpdb;
 		$links_table     = $wpdb->prefix . 'qr_trackr_links';
 		$destination_url = get_permalink( $post_id );
-		if ( ! $destination_url ) {
+		if ( false === $destination_url ) {
 			qr_trackr_debug_log( 'AJAX: Could not determine permalink', $post_id );
 			wp_send_json_error( array( 'message' => 'Could not determine permalink for this post.' ) );
 		}
@@ -81,12 +81,12 @@ add_action(
 				'destination_url' => esc_url_raw( $destination_url ),
 			)
 		);
-		if ( $result === false ) {
+		if ( false === $result ) {
 			qr_trackr_debug_log( 'AJAX: Insert failed', $wpdb->last_error );
 			wp_send_json_error( array( 'message' => 'Insert failed: ' . $wpdb->last_error ) );
 		}
 		$link_id = $wpdb->insert_id;
-		// Generate QR code image and get URLs
+		// Generate QR code image and get URLs.
 		$qr_url        = qr_trackr_generate_qr_image_for_link( $link_id );
 		$tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $link_id );
 		$html          = qr_trackr_render_qr_list_html( $post_id );

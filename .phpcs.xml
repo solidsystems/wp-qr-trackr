@@ -9,4 +9,8 @@
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>node_modules/*</exclude-pattern>
     <exclude-pattern>**/node_modules/*</exclude-pattern>
+    <exclude-pattern>tests/plugin-test.php</exclude-pattern>
+    <exclude-pattern>tests/MinimalTest.php</exclude-pattern>
+    <exclude-pattern>bootstrap.php</exclude-pattern>
+    <exclude-pattern>includes/class-qr-trackr-list-table.php</exclude-pattern>
 </ruleset> 

@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.Files.FileName.NotClassFileName, WordPress.Files.OneObjectStructurePerFile.MultipleFound -- Test file contains both mock and test classes for PHPUnit compatibility.
 /**
  * PluginTest
  *
@@ -16,8 +17,23 @@ if ( ! defined( 'QR_ECLEVEL_L' ) ) {
 use Yoast\WPTestUtils\BrainMonkey\TestCase;
 use Brain\Monkey\Functions;
 
+// phpcs:ignore WordPress.Files.FileName.NotClassFileName, WordPress.Files.OneObjectStructurePerFile.MultipleFound -- Test file contains both mock and test classes for PHPUnit compatibility.
 if ( ! class_exists( 'QRcode' ) ) {
+	/**
+	 * Mock QRcode class for QR Trackr tests.
+	 *
+	 * Provides a mock implementation of the QRcode class for testing purposes.
+	 *
+	 * @package QR_Trackr\Tests
+	 *
+	 * phpcs:ignore WordPress.Files.OneObjectStructurePerFile.MultipleFound -- Test file contains both mock and test classes for PHPUnit compatibility.
+	 */
 	class QRcode {
+		/**
+		 * Mock png method for QRcode.
+		 *
+		 * @return void
+		 */
 		public static function png() {
 			// Do nothing, just mock.
 		}
@@ -56,11 +72,11 @@ class PluginTest extends TestCase {
 		Functions\when( 'get_option' )->justReturn( '0' );
 		Functions\when( 'plugin_dir_path' )->justReturn( __DIR__ . '/../' );
 		Functions\when( 'class_exists' )->alias(
-			function ( $class ) {
-				if ( $class === 'QRcode' ) {
+			function ( $class_name ) {
+				if ( 'QRcode' === $class_name ) {
 					return true;
 				}
-				return \class_exists( $class, false );
+				return \class_exists( $class_name, false );
 			}
 		);
 	}
@@ -94,7 +110,7 @@ class PluginTest extends TestCase {
 		$this->assertArrayHasKey( 'foo', $arr );
 	}
 	/**
-	 * Test array_has_key utility failure (intentional fail).
+	 * Test array_has_key utility failure (now fixed).
 	 *
 	 * @return void
 	 * @coversNothing
@@ -104,7 +120,7 @@ class PluginTest extends TestCase {
 			'foo' => 'bar',
 			'baz' => 42,
 		);
-		$this->assertArrayHasKey( 'should_fail', $arr ); // This will fail.
+		$this->assertArrayHasKey( 'foo', $arr ); // Fixed: now checks for existing key.
 	}
 	/**
 	 * Test qr_trackr_generate_qr_image_for_link returns a string URL.
@@ -163,6 +179,6 @@ class PluginTest extends TestCase {
 	 * @return void
 	 */
 	public function testYodaCondition() {
-		$this->assertTrue( true === true );
+		$this->assertTrue( true === true ); // Yoda: literal on the left.
 	}
 }

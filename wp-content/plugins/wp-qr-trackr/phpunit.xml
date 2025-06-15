@@ -11,4 +11,18 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    
+    <source>
+        <include>
+            <directory suffix=".php">includes</directory>
+            <file>wp-qr-trackr.php</file>
+            <file>qr-code.php</file>
+            <file>qr-trackr.php</file>
+        </include>
+        <exclude>
+            <directory>vendor</directory>
+            <directory>node_modules</directory>
+            <directory>tests</directory>
+        </exclude>
+    </source>
 </phpunit>

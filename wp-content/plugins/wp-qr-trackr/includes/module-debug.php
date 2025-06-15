@@ -19,11 +19,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 function qr_trackr_is_debug_enabled() {
 	// 1. Check environment variable (local or CI/CD)
 	$env = getenv( 'QR_TRACKR_DEBUG' );
-	if ( $env !== false && in_array( strtolower( $env ), array( '1', 'true', 'on', 'yes' ), true ) ) {
+	if ( false !== $env && in_array( strtolower( $env ), array( '1', 'true', 'on', 'yes' ), true ) ) {
 		return true;
 	}
 	// 2. Check GitHub Actions secret (if running in CI)
-	if ( getenv( 'GITHUB_ACTIONS' ) === 'true' && getenv( 'QR_TRACKR_DEBUG' ) ) {
+	if ( 'true' === getenv( 'GITHUB_ACTIONS' ) && getenv( 'QR_TRACKR_DEBUG' ) ) {
 		return true;
 	}
 	// 3. Fallback to WP option (UI toggle)
