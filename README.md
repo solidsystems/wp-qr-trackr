@@ -676,3 +676,43 @@ This process highlighted several important aspects of modern development:
 ## Caching and PHPCS Workflow Improvements
 
 During code review and PHPCS compliance work, the Cursor assistant specifically asked if a short-term cache should be added to the admin table rendering workflow (e.g., in `qr_trackr_render_qr_list_html`). This approach was chosen to make the codebase more robust and to reduce the number of explicit PHPCS ignore comments required for direct database calls. By caching the results of frequent queries for a short period (e.g., 1 minute), we improve performance and maintainability while adhering to WordPress coding standards and best practices.
+
+## Known Issues & TODOs
+
+### Git Workflow Issues
+- **Detached HEAD State**: When running automated scripts or CI/CD jobs, you may encounter a "detached HEAD" error when trying to push changes. This happens because the script is not on a specific branch. To resolve:
+  1. Check out the correct branch: `git checkout docs/harmonize-readme`
+  2. Merge or rebase your changes: `git merge <commit-hash>`
+  3. Push to the branch: `git push origin docs/harmonize-readme`
+  - See `.github/workflows/auto-push-detached-head.yml` for automated handling of this issue.
+
+### Planned Improvements
+- **CI/CD & Automation**
+  - Add notifications to CI workflow (Slack, email, GitHub status checks)
+  - Enforce minimum code coverage in CI
+  - Further customize CI workflow (parallel jobs, artifact uploads, deployment steps)
+
+- **Admin UI & Analytics**
+  - Redesign Admin Dashboard with consistent visual language
+  - Implement responsive & accessible design
+  - Add at-a-glance performance overview
+  - Create sortable & searchable QR code table
+  - Add visual indicators for performance
+  - Implement shortcode for QR code generation
+  - Add frontend QR code analytics (optional)
+  - Add bulk actions for QR codes
+  - Improve admin notices & feedback
+
+- **Documentation & Architecture**
+  - Expand `ARCHITECTURE.md` with:
+    - Sequence diagrams for key flows
+    - Deployment notes
+    - Integration points
+    - Security and scaling considerations
+  - Keep architecture documentation up to date
+
+### Contributing
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines
+- All changes must be made on a feature branch and submitted via PR
+- Documentation and tests are required for all new features
+- Use the provided project plans and automation scripts for team/project management
