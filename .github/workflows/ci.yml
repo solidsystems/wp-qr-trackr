@@ -47,6 +47,11 @@ jobs:
           tools: composer:v2
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
+      - name: Install WP-CLI
+        run: |
+          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
       - name: Set up WordPress
         run: |
           wp core download --version=6.4.3 --path=wp
