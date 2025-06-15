@@ -11,6 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Load the list table class.
+require_once QR_TRACKR_PLUGIN_DIR . 'includes/class-qr-trackr-list-table.php';
+
 // Register admin menu and submenus.
 add_action(
 	'admin_menu',
