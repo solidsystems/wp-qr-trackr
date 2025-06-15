@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint \"**/*.js\" --ignore-pattern .eslintrc.js",
     "stylelint": "stylelint \"**/*.css\"",
-    "prepare": "husky install"
+    "postinstall": "husky"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
