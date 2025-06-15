@@ -1,5 +1,7 @@
 /**
  * ESLint configuration for QR Trackr plugin.
+ *
+ * @package QR_Trackr
  */
 
 export default [
