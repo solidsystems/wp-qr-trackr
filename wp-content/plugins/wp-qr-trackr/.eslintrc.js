@@ -7,7 +7,7 @@ module.exports = {
 	env: {
 		browser: true,
 		jquery: true,
-		es6: true,
+		es2021: true,
 	},
 	globals: {
 		wp: true,
@@ -22,7 +22,7 @@ module.exports = {
 	},
 	parserOptions: {
 		requireConfigFile: false,
-		ecmaVersion: 2022,
+		ecmaVersion: 2021,
 		sourceType: 'module',
 	},
 }; 
