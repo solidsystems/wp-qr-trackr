@@ -7,4 +7,6 @@
     <exclude-pattern>coverage/_js/*.js</exclude-pattern>
     <exclude-pattern>coverage/_css/*.css</exclude-pattern>
     <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>node_modules/*</exclude-pattern>
+    <exclude-pattern>**/node_modules/*</exclude-pattern>
 </ruleset> 
