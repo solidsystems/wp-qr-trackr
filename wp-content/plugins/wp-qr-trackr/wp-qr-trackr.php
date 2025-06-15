@@ -1,20 +1,15 @@
 <?php
 /**
  * Plugin Name: QR Trackr
- * Plugin URI: https://github.com/michaelerps/wp-qr-trackr
- * Description: A WordPress plugin for tracking QR code scans and managing QR code campaigns.
- * Version: ..1
- * Requires at least: 6.0
- * Requires PHP: 8.0
- * Author: Michael Erps
- * Author URI: https://github.com/michaelerps
+ * Plugin URI: https://github.com/solidsystems/wp-qr-trackr
+ * Description: A WordPress plugin for tracking QR code scans and generating QR codes for posts and pages.
+ * Version: 1.0.2
+ * Author: Solid Systems
+ * Author URI: https://solidsystems.co
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: wp-qr-trackr
+ * Text Domain: qr-trackr
  * Domain Path: /languages
- * Update URI: https://github.com/michaelerps/wp-qr-trackr
- *
- * @package QR_Trackr
  */
 
 // Exit if accessed directly.
@@ -46,6 +41,20 @@ if ( ! function_exists( 'qr_trackr_debug_log' ) ) {
 }
 
 /**
+ * Load plugin text domain.
+ *
+ * @return void
+ */
+function qr_trackr_load_textdomain() {
+	load_plugin_textdomain(
+		'qr-trackr',
+		false,
+		dirname( plugin_basename( __FILE__ ) ) . '/languages'
+	);
+}
+add_action( 'init', 'qr_trackr_load_textdomain' );
+
+/**
  * Bootstrap the plugin.
  *
  * @return void
@@ -69,7 +78,6 @@ function qr_trackr_bootstrap() {
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-admin.php';
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-ajax.php';
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-rewrite.php';
-	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-utility.php';
 }
 
 // Initialize plugin.
