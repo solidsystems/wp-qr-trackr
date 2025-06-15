@@ -162,12 +162,12 @@ add_action(
 		if ( $missing ) {
 			qr_trackr_debug_log( 'Migration: Missing columns in qr_trackr_links', $missing );
 			if ( in_array( 'created_at', $missing, true ) ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema change is required for plugin migration logic.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema change is required for plugin migration logic; caching is not applicable.
 				$wpdb->query( $wpdb->prepare( 'ALTER TABLE %s ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP', $links_table ) );
 				qr_trackr_debug_log( 'Migration: Added created_at column.' );
 			}
 			if ( in_array( 'updated_at', $missing, true ) ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema change is required for plugin migration logic.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema change is required for plugin migration logic; caching is not applicable.
 				$wpdb->query( $wpdb->prepare( 'ALTER TABLE %s ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP', $links_table ) );
 				qr_trackr_debug_log( 'Migration: Added updated_at column.' );
 			}
