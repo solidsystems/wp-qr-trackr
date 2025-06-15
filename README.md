@@ -720,5 +720,4 @@ During code review and PHPCS compliance work, the Cursor assistant specifically 
 
 ## Stuff To Do After It's Done
 
-- **Review and merge [PR #11](https://github.com/solidsystems/wp-qr-trackr/pull/11):**
-  - This PR improves the build script, automates the release process, and updates the changelog and plugin version. Now that CI is passing for dev tooling, it should be reviewed and merged to finalize the release workflow improvements.
+- **PR #11 has been merged:** The build script and release process improvements have been completed. The automated release workflow is now in place, ensuring robust and repeatable releases.
