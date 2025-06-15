@@ -56,7 +56,7 @@ jobs:
         run: |
           wp core download --version=6.4.3 --path=wp
           wp config create --dbname=wordpress_test --dbuser=root --dbpass=root --dbhost=127.0.0.1 --path=wp
-          wp db create --skip-check --path=wp
+          wp db create --path=wp || true
         shell: /usr/bin/bash -e {0}
         env:
           COMPOSER_PROCESS_TIMEOUT: 0
