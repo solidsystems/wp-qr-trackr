@@ -86,3 +86,72 @@ if ( function_exists( 'add_action' ) ) {
 
 // Debug admin footer output.
 // ... (move admin_footer debug output here).
+
+/**
+ * QR Trackr Debug Module
+ *
+ * @package QR_Trackr
+ */
+
+/**
+ * Get the debug log file path.
+ *
+ * @return string The path to the debug log file.
+ */
+function qr_trackr_get_debug_log_path() {
+	return QR_TRACKR_PLUGIN_DIR . 'debug.log';
+}
+
+/**
+ * Clear the debug log file.
+ *
+ * @return bool True if the log was cleared successfully, false otherwise.
+ */
+function qr_trackr_clear_debug_log() {
+	$log_file = qr_trackr_get_debug_log_path();
+	if ( file_exists( $log_file ) ) {
+		return unlink( $log_file );
+	}
+	return true;
+}
+
+/**
+ * Get the debug log contents.
+ *
+ * @return string The contents of the debug log file.
+ */
+function qr_trackr_get_debug_log() {
+	$log_file = qr_trackr_get_debug_log_path();
+	if ( file_exists( $log_file ) ) {
+		return file_get_contents( $log_file );
+	}
+	return '';
+}
+
+/**
+ * Add debug settings page to the QR Trackr menu.
+ */
+function qr_trackr_debug_settings_page() {
+	// Clear log if requested.
+	if ( isset( $_POST['clear_log'] ) && check_admin_referer( 'qr_trackr_clear_log' ) ) {
+		qr_trackr_clear_debug_log();
+		echo '<div class="notice notice-success"><p>' . esc_html__( 'Debug log cleared.', 'qr-trackr' ) . '</p></div>';
+	}
+
+	// Get log contents.
+	$log_contents = qr_trackr_get_debug_log();
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'QR Trackr Debug Log', 'qr-trackr' ); ?></h1>
+		<form method="post">
+			<?php wp_nonce_field( 'qr_trackr_clear_log' ); ?>
+			<p>
+				<input type="submit" name="clear_log" class="button" value="<?php esc_attr_e( 'Clear Log', 'qr-trackr' ); ?>">
+			</p>
+		</form>
+		<div class="debug-log-container" style="background: #fff; padding: 20px; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
+			<pre style="margin: 0; white-space: pre-wrap;"><?php echo esc_html( $log_contents ); ?></pre>
+		</div>
+	</div>
+	<?php
+}
