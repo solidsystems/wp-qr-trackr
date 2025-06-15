@@ -13,45 +13,45 @@ namespace PharIo\Manifest;
 use function sprintf;
 
 class Author {
-    /** @var string */
-    private $name;
+	/** @var string */
+	private $name;
 
-    /** @var null|Email */
-    private $email;
+	/** @var null|Email */
+	private $email;
 
-    public function __construct(string $name, ?Email $email = null) {
-        $this->name  = $name;
-        $this->email = $email;
-    }
+	public function __construct( string $name, ?Email $email = null ) {
+		$this->name  = $name;
+		$this->email = $email;
+	}
 
-    public function asString(): string {
-        if (!$this->hasEmail()) {
-            return $this->name;
-        }
+	public function asString(): string {
+		if ( ! $this->hasEmail() ) {
+			return $this->name;
+		}
 
-        return sprintf(
-            '%s <%s>',
-            $this->name,
-            $this->email->asString()
-        );
-    }
+		return sprintf(
+			'%s <%s>',
+			$this->name,
+			$this->email->asString()
+		);
+	}
 
-    public function getName(): string {
-        return $this->name;
-    }
+	public function getName(): string {
+		return $this->name;
+	}
 
-    /**
-     * @psalm-assert-if-true Email $this->email
-     */
-    public function hasEmail(): bool {
-        return $this->email !== null;
-    }
+	/**
+	 * @psalm-assert-if-true Email $this->email
+	 */
+	public function hasEmail(): bool {
+		return $this->email !== null;
+	}
 
-    public function getEmail(): Email {
-        if (!$this->hasEmail()) {
-            throw new NoEmailAddressException();
-        }
+	public function getEmail(): Email {
+		if ( ! $this->hasEmail() ) {
+			throw new NoEmailAddressException();
+		}
 
-        return $this->email;
-    }
+		return $this->email;
+	}
 }

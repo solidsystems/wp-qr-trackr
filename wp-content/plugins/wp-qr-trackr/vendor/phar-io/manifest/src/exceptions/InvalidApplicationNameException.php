@@ -13,5 +13,5 @@ namespace PharIo\Manifest;
 use InvalidArgumentException;
 
 class InvalidApplicationNameException extends InvalidArgumentException implements Exception {
-    public const InvalidFormat = 2;
+	public const InvalidFormat = 2;
 }

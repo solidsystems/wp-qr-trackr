@@ -14,7 +14,6 @@ use function sprintf;
 use function str_contains;
 use function str_repeat;
 use function strlen;
-use PHPUnit\Event\EventFacadeIsSealedException;
 use PHPUnit\Event\Facade;
 use PHPUnit\Event\Test\DeprecationTriggered;
 use PHPUnit\Event\Test\Errored;
@@ -25,7 +24,6 @@ use PHPUnit\Event\Test\PhpNoticeTriggered;
 use PHPUnit\Event\Test\PhpWarningTriggered;
 use PHPUnit\Event\Test\WarningTriggered;
 use PHPUnit\Event\TestRunner\ExecutionStarted;
-use PHPUnit\Event\UnknownSubscriberTypeException;
 use PHPUnit\Framework\TestStatus\TestStatus;
 use PHPUnit\TextUI\Configuration\Source;
 use PHPUnit\TextUI\Configuration\SourceFilter;
@@ -51,10 +49,6 @@ final class ProgressPrinter
     private ?TestStatus $status     = null;
     private bool $prepared          = false;
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
     public function __construct(Printer $printer, Facade $facade, bool $colors, int $numberOfColumns, Source $source)
     {
         $this->printer         = $printer;
@@ -141,8 +135,16 @@ final class ProgressPrinter
             return;
         }
 
-        if ($this->source->restrictDeprecations() &&
-            !SourceFilter::instance()->includes($event->file())) {
+        if ($this->source->ignoreSelfDeprecations() &&
+            ($event->trigger()->isTest() || $event->trigger()->isSelf())) {
+            return;
+        }
+
+        if ($this->source->ignoreDirectDeprecations() && $event->trigger()->isDirect()) {
+            return;
+        }
+
+        if ($this->source->ignoreIndirectDeprecations() && $event->trigger()->isIndirect()) {
             return;
         }
 
@@ -159,8 +161,16 @@ final class ProgressPrinter
             return;
         }
 
-        if ($this->source->restrictDeprecations() &&
-            !SourceFilter::instance()->includes($event->file())) {
+        if ($this->source->ignoreSelfDeprecations() &&
+            ($event->trigger()->isTest() || $event->trigger()->isSelf())) {
+            return;
+        }
+
+        if ($this->source->ignoreDirectDeprecations() && $event->trigger()->isDirect()) {
+            return;
+        }
+
+        if ($this->source->ignoreIndirectDeprecations() && $event->trigger()->isIndirect()) {
             return;
         }
 
@@ -280,10 +290,6 @@ final class ProgressPrinter
         $this->prepared = false;
     }
 
-    /**
-     * @throws EventFacadeIsSealedException
-     * @throws UnknownSubscriberTypeException
-     */
     private function registerSubscribers(Facade $facade): void
     {
         $facade->registerSubscribers(

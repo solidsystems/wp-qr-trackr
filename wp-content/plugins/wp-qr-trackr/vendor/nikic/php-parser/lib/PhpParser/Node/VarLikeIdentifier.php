@@ -10,7 +10,7 @@ namespace PhpParser\Node;
  * lookups are also formatted as variables.
  */
 class VarLikeIdentifier extends Identifier {
-    public function getType(): string {
-        return 'VarLikeIdentifier';
-    }
+	public function getType(): string {
+		return 'VarLikeIdentifier';
+	}
 }

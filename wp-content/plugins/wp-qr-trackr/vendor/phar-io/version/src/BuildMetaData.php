@@ -11,18 +11,18 @@ namespace PharIo\Version;
 
 class BuildMetaData {
 
-    /** @var string */
-    private $value;
+	/** @var string */
+	private $value;
 
-    public function __construct(string $value) {
-        $this->value = $value;
-    }
+	public function __construct( string $value ) {
+		$this->value = $value;
+	}
 
-    public function asString(): string {
-        return $this->value;
-    }
+	public function asString(): string {
+		return $this->value;
+	}
 
-    public function equals(BuildMetaData $other): bool {
-        return $this->asString() === $other->asString();
-    }
+	public function equals( BuildMetaData $other ): bool {
+		return $this->asString() === $other->asString();
+	}
 }

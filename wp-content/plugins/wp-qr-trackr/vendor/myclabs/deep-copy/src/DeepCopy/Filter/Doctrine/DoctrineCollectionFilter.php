@@ -8,26 +8,25 @@ use DeepCopy\Reflection\ReflectionHelper;
 /**
  * @final
  */
-class DoctrineCollectionFilter implements Filter
-{
-    /**
-     * Copies the object property doctrine collection.
-     *
-     * {@inheritdoc}
-     */
-    public function apply($object, $property, $objectCopier)
-    {
-        $reflectionProperty = ReflectionHelper::getProperty($object, $property);
+class DoctrineCollectionFilter implements Filter {
 
-        $reflectionProperty->setAccessible(true);
-        $oldCollection = $reflectionProperty->getValue($object);
+	/**
+	 * Copies the object property doctrine collection.
+	 *
+	 * {@inheritdoc}
+	 */
+	public function apply( $object, $property, $objectCopier ) {
+		$reflectionProperty = ReflectionHelper::getProperty( $object, $property );
 
-        $newCollection = $oldCollection->map(
-            function ($item) use ($objectCopier) {
-                return $objectCopier($item);
-            }
-        );
+		$reflectionProperty->setAccessible( true );
+		$oldCollection = $reflectionProperty->getValue( $object );
 
-        $reflectionProperty->setValue($object, $newCollection);
-    }
+		$newCollection = $oldCollection->map(
+			function ( $item ) use ( $objectCopier ) {
+				return $objectCopier( $item );
+			}
+		);
+
+		$reflectionProperty->setValue( $object, $newCollection );
+	}
 }

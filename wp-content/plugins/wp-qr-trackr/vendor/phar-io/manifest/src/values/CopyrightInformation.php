@@ -11,22 +11,22 @@
 namespace PharIo\Manifest;
 
 class CopyrightInformation {
-    /** @var AuthorCollection */
-    private $authors;
+	/** @var AuthorCollection */
+	private $authors;
 
-    /** @var License */
-    private $license;
+	/** @var License */
+	private $license;
 
-    public function __construct(AuthorCollection $authors, License $license) {
-        $this->authors = $authors;
-        $this->license = $license;
-    }
+	public function __construct( AuthorCollection $authors, License $license ) {
+		$this->authors = $authors;
+		$this->license = $license;
+	}
 
-    public function getAuthors(): AuthorCollection {
-        return $this->authors;
-    }
+	public function getAuthors(): AuthorCollection {
+		return $this->authors;
+	}
 
-    public function getLicense(): License {
-        return $this->license;
-    }
+	public function getLicense(): License {
+		return $this->license;
+	}
 }

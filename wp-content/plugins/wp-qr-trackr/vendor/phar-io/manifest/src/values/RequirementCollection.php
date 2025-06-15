@@ -16,25 +16,25 @@ use function count;
 
 /** @template-implements IteratorAggregate<int,Requirement> */
 class RequirementCollection implements Countable, IteratorAggregate {
-    /** @var Requirement[] */
-    private $requirements = [];
+	/** @var Requirement[] */
+	private $requirements = array();
 
-    public function add(Requirement $requirement): void {
-        $this->requirements[] = $requirement;
-    }
+	public function add( Requirement $requirement ): void {
+		$this->requirements[] = $requirement;
+	}
 
-    /**
-     * @return Requirement[]
-     */
-    public function getRequirements(): array {
-        return $this->requirements;
-    }
+	/**
+	 * @return Requirement[]
+	 */
+	public function getRequirements(): array {
+		return $this->requirements;
+	}
 
-    public function count(): int {
-        return count($this->requirements);
-    }
+	public function count(): int {
+		return count( $this->requirements );
+	}
 
-    public function getIterator(): RequirementCollectionIterator {
-        return new RequirementCollectionIterator($this);
-    }
+	public function getIterator(): RequirementCollectionIterator {
+		return new RequirementCollectionIterator( $this );
+	}
 }

@@ -11,9 +11,9 @@
 namespace PharIo\Manifest;
 
 class ExtElementCollection extends ElementCollection {
-    public function current(): ExtElement {
-        return new ExtElement(
-            $this->getCurrentElement()
-        );
-    }
+	public function current(): ExtElement {
+		return new ExtElement(
+			$this->getCurrentElement()
+		);
+	}
 }

@@ -20,7 +20,7 @@
   text-align: left;
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .qr-trackr-stats-table th,
   .qr-trackr-stats-table td {
     font-size: 0.95em;

@@ -6,8 +6,8 @@ use PhpParser\Node\InterpolatedStringPart;
 
 require __DIR__ . '/../InterpolatedStringPart.php';
 
-if (false) {
-    // For classmap-authoritative support.
-    class EncapsedStringPart extends InterpolatedStringPart {
-    }
+if ( false ) {
+	// For classmap-authoritative support.
+	class EncapsedStringPart extends InterpolatedStringPart {
+	}
 }

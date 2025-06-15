@@ -5,23 +5,23 @@ namespace PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar;
 
 abstract class MagicConst extends Scalar {
-    /**
-     * Constructs a magic constant node.
-     *
-     * @param array<string, mixed> $attributes Additional attributes
-     */
-    public function __construct(array $attributes = []) {
-        $this->attributes = $attributes;
-    }
+	/**
+	 * Constructs a magic constant node.
+	 *
+	 * @param array<string, mixed> $attributes Additional attributes
+	 */
+	public function __construct( array $attributes = array() ) {
+		$this->attributes = $attributes;
+	}
 
-    public function getSubNodeNames(): array {
-        return [];
-    }
+	public function getSubNodeNames(): array {
+		return array();
+	}
 
-    /**
-     * Get name of magic constant.
-     *
-     * @return string Name of magic constant
-     */
-    abstract public function getName(): string;
+	/**
+	 * Get name of magic constant.
+	 *
+	 * @return string Name of magic constant
+	 */
+	abstract public function getName(): string;
 }

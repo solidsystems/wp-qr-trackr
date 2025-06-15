@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
-         cacheDirectory=".phpunit.cache"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
+         bootstrap="bootstrap.php"
          executionOrder="depends,defects"
-         requireCoverageMetadata="true"
-         beStrictAboutCoverageMetadata="true"
          beStrictAboutOutputDuringTests="true"
-         displayDetailsOnPhpunitDeprecations="true"
-         failOnPhpunitDeprecation="true"
          failOnRisky="true"
          failOnWarning="true">
     <testsuites>
@@ -16,12 +11,18 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
-
-    <source restrictDeprecations="true" restrictNotices="true" restrictWarnings="true">
+    
+    <source>
         <include>
-            <file>qr-trackr.php</file>
+            <directory suffix=".php">includes</directory>
+            <file>wp-qr-trackr.php</file>
             <file>qr-code.php</file>
-            <directory>includes</directory>
+            <file>qr-trackr.php</file>
         </include>
+        <exclude>
+            <directory>vendor</directory>
+            <directory>node_modules</directory>
+            <directory>tests</directory>
+        </exclude>
     </source>
 </phpunit>

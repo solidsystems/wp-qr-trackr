@@ -29,5 +29,22 @@ services:
     env_file:
       - .env
 
+  ci-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    depends_on:
+      - db
+    volumes:
+      - ./wp-content/plugins:/var/www/html/wp-content/plugins
+      - ./ci.sh:/ci.sh
+    working_dir: /var/www/html/wp-content/plugins/wp-qr-trackr
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+    entrypoint: ["/bin/bash", "/ci.sh"]
+
 volumes:
   db_data: 

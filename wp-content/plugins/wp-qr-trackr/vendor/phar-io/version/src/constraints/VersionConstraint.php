@@ -10,7 +10,7 @@
 namespace PharIo\Version;
 
 interface VersionConstraint {
-    public function complies(Version $version): bool;
+	public function complies( Version $version ): bool;
 
-    public function asString(): string;
+	public function asString(): string;
 }

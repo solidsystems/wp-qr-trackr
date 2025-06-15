@@ -1,0 +1,38 @@
+# Exclude everything except production plugin files for WordPress.org release
+
+# Node, Composer, and vendor
+node_modules/
+vendor/
+composer.json
+composer.lock
+package.json
+yarn.lock
+tsconfig.json
+
+# Tests
+phpunit.xml
+tests/
+*.test.php
+*.spec.js
+coverage/
+
+# CI/CD and scripts
+.github/
+scripts/
+Dockerfile
+docker-compose.yml
+
+# Project plans, docs, and meta
+README.md
+CONTRIBUTING.md
+PROJECT_PLAN*.md
+TODO.md
+.cursorrules
+.env*
+
+# Mac/OSX and editor files
+.DS_Store
+*.swp
+*.swo
+
+# Exclude anything else not needed for production 

@@ -3,25 +3,25 @@
 namespace PhpParser\Node;
 
 class IntersectionType extends ComplexType {
-    /** @var (Identifier|Name)[] Types */
-    public array $types;
+	/** @var (Identifier|Name)[] Types */
+	public array $types;
 
-    /**
-     * Constructs an intersection type.
-     *
-     * @param (Identifier|Name)[] $types Types
-     * @param array<string, mixed> $attributes Additional attributes
-     */
-    public function __construct(array $types, array $attributes = []) {
-        $this->attributes = $attributes;
-        $this->types = $types;
-    }
+	/**
+	 * Constructs an intersection type.
+	 *
+	 * @param (Identifier|Name)[]  $types Types
+	 * @param array<string, mixed> $attributes Additional attributes
+	 */
+	public function __construct( array $types, array $attributes = array() ) {
+		$this->attributes = $attributes;
+		$this->types      = $types;
+	}
 
-    public function getSubNodeNames(): array {
-        return ['types'];
-    }
+	public function getSubNodeNames(): array {
+		return array( 'types' );
+	}
 
-    public function getType(): string {
-        return 'IntersectionType';
-    }
+	public function getType(): string {
+		return 'IntersectionType';
+	}
 }

@@ -5,25 +5,25 @@ namespace PhpParser\Node\Expr;
 use PhpParser\Node\Expr;
 
 class Isset_ extends Expr {
-    /** @var Expr[] Variables */
-    public array $vars;
+	/** @var Expr[] Variables */
+	public array $vars;
 
-    /**
-     * Constructs an array node.
-     *
-     * @param Expr[] $vars Variables
-     * @param array<string, mixed> $attributes Additional attributes
-     */
-    public function __construct(array $vars, array $attributes = []) {
-        $this->attributes = $attributes;
-        $this->vars = $vars;
-    }
+	/**
+	 * Constructs an array node.
+	 *
+	 * @param Expr[]               $vars Variables
+	 * @param array<string, mixed> $attributes Additional attributes
+	 */
+	public function __construct( array $vars, array $attributes = array() ) {
+		$this->attributes = $attributes;
+		$this->vars       = $vars;
+	}
 
-    public function getSubNodeNames(): array {
-        return ['vars'];
-    }
+	public function getSubNodeNames(): array {
+		return array( 'vars' );
+	}
 
-    public function getType(): string {
-        return 'Expr_Isset';
-    }
+	public function getType(): string {
+		return 'Expr_Isset';
+	}
 }

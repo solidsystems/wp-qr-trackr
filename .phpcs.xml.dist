@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Plugin Coding Standards">
+    <description>WordPress Coding Standards for this plugin, ignoring vendor, node_modules, and coverage directories.</description>
+    <rule ref="WordPress" />
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>node_modules/*</exclude-pattern>
+    <exclude-pattern>coverage/*</exclude-pattern>
+</ruleset> 

@@ -17,35 +17,35 @@ use function count;
  * With <code>$weakReferences=true</code> the attribute name is "weak_parent" instead.
  */
 final class ParentConnectingVisitor extends NodeVisitorAbstract {
-    /**
-     * @var Node[]
-     */
-    private array $stack = [];
+	/**
+	 * @var Node[]
+	 */
+	private array $stack = array();
 
-    private bool $weakReferences;
+	private bool $weakReferences;
 
-    public function __construct(bool $weakReferences = false) {
-        $this->weakReferences = $weakReferences;
-    }
+	public function __construct( bool $weakReferences = false ) {
+		$this->weakReferences = $weakReferences;
+	}
 
-    public function beforeTraverse(array $nodes) {
-        $this->stack = [];
-    }
+	public function beforeTraverse( array $nodes ) {
+		$this->stack = array();
+	}
 
-    public function enterNode(Node $node) {
-        if (!empty($this->stack)) {
-            $parent = $this->stack[count($this->stack) - 1];
-            if ($this->weakReferences) {
-                $node->setAttribute('weak_parent', \WeakReference::create($parent));
-            } else {
-                $node->setAttribute('parent', $parent);
-            }
-        }
+	public function enterNode( Node $node ) {
+		if ( ! empty( $this->stack ) ) {
+			$parent = $this->stack[ count( $this->stack ) - 1 ];
+			if ( $this->weakReferences ) {
+				$node->setAttribute( 'weak_parent', \WeakReference::create( $parent ) );
+			} else {
+				$node->setAttribute( 'parent', $parent );
+			}
+		}
 
-        $this->stack[] = $node;
-    }
+		$this->stack[] = $node;
+	}
 
-    public function leaveNode(Node $node) {
-        array_pop($this->stack);
-    }
+	public function leaveNode( Node $node ) {
+		array_pop( $this->stack );
+	}
 }

@@ -11,7 +11,7 @@
 namespace PharIo\Manifest;
 
 class Library extends Type {
-    public function isLibrary(): bool {
-        return true;
-    }
+	public function isLibrary(): bool {
+		return true;
+	}
 }

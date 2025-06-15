@@ -9,139 +9,143 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt;
 
 class Method extends FunctionLike {
-    protected string $name;
+	protected string $name;
 
-    protected int $flags = 0;
+	protected int $flags = 0;
 
-    /** @var list<Stmt>|null */
-    protected ?array $stmts = [];
+	/** @var list<Stmt>|null */
+	protected ?array $stmts = array();
 
-    /** @var list<Node\AttributeGroup> */
-    protected array $attributeGroups = [];
+	/** @var list<Node\AttributeGroup> */
+	protected array $attributeGroups = array();
 
-    /**
-     * Creates a method builder.
-     *
-     * @param string $name Name of the method
-     */
-    public function __construct(string $name) {
-        $this->name = $name;
-    }
+	/**
+	 * Creates a method builder.
+	 *
+	 * @param string $name Name of the method
+	 */
+	public function __construct( string $name ) {
+		$this->name = $name;
+	}
 
-    /**
-     * Makes the method public.
-     *
-     * @return $this The builder instance (for fluid interface)
-     */
-    public function makePublic() {
-        $this->flags = BuilderHelpers::addModifier($this->flags, Modifiers::PUBLIC);
+	/**
+	 * Makes the method public.
+	 *
+	 * @return $this The builder instance (for fluid interface)
+	 */
+	public function makePublic() {
+		$this->flags = BuilderHelpers::addModifier( $this->flags, Modifiers::PUBLIC );
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Makes the method protected.
-     *
-     * @return $this The builder instance (for fluid interface)
-     */
-    public function makeProtected() {
-        $this->flags = BuilderHelpers::addModifier($this->flags, Modifiers::PROTECTED);
+	/**
+	 * Makes the method protected.
+	 *
+	 * @return $this The builder instance (for fluid interface)
+	 */
+	public function makeProtected() {
+		$this->flags = BuilderHelpers::addModifier( $this->flags, Modifiers::PROTECTED );
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Makes the method private.
-     *
-     * @return $this The builder instance (for fluid interface)
-     */
-    public function makePrivate() {
-        $this->flags = BuilderHelpers::addModifier($this->flags, Modifiers::PRIVATE);
+	/**
+	 * Makes the method private.
+	 *
+	 * @return $this The builder instance (for fluid interface)
+	 */
+	public function makePrivate() {
+		$this->flags = BuilderHelpers::addModifier( $this->flags, Modifiers::PRIVATE );
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Makes the method static.
-     *
-     * @return $this The builder instance (for fluid interface)
-     */
-    public function makeStatic() {
-        $this->flags = BuilderHelpers::addModifier($this->flags, Modifiers::STATIC);
+	/**
+	 * Makes the method static.
+	 *
+	 * @return $this The builder instance (for fluid interface)
+	 */
+	public function makeStatic() {
+		$this->flags = BuilderHelpers::addModifier( $this->flags, Modifiers::STATIC );
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Makes the method abstract.
-     *
-     * @return $this The builder instance (for fluid interface)
-     */
-    public function makeAbstract() {
-        if (!empty($this->stmts)) {
-            throw new \LogicException('Cannot make method with statements abstract');
-        }
+	/**
+	 * Makes the method abstract.
+	 *
+	 * @return $this The builder instance (for fluid interface)
+	 */
+	public function makeAbstract() {
+		if ( ! empty( $this->stmts ) ) {
+			throw new \LogicException( 'Cannot make method with statements abstract' );
+		}
 
-        $this->flags = BuilderHelpers::addModifier($this->flags, Modifiers::ABSTRACT);
-        $this->stmts = null; // abstract methods don't have statements
+		$this->flags = BuilderHelpers::addModifier( $this->flags, Modifiers::ABSTRACT );
+		$this->stmts = null; // abstract methods don't have statements
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Makes the method final.
-     *
-     * @return $this The builder instance (for fluid interface)
-     */
-    public function makeFinal() {
-        $this->flags = BuilderHelpers::addModifier($this->flags, Modifiers::FINAL);
+	/**
+	 * Makes the method final.
+	 *
+	 * @return $this The builder instance (for fluid interface)
+	 */
+	public function makeFinal() {
+		$this->flags = BuilderHelpers::addModifier( $this->flags, Modifiers::FINAL );
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Adds a statement.
-     *
-     * @param Node|PhpParser\Builder $stmt The statement to add
-     *
-     * @return $this The builder instance (for fluid interface)
-     */
-    public function addStmt($stmt) {
-        if (null === $this->stmts) {
-            throw new \LogicException('Cannot add statements to an abstract method');
-        }
+	/**
+	 * Adds a statement.
+	 *
+	 * @param Node|PhpParser\Builder $stmt The statement to add
+	 *
+	 * @return $this The builder instance (for fluid interface)
+	 */
+	public function addStmt( $stmt ) {
+		if ( null === $this->stmts ) {
+			throw new \LogicException( 'Cannot add statements to an abstract method' );
+		}
 
-        $this->stmts[] = BuilderHelpers::normalizeStmt($stmt);
+		$this->stmts[] = BuilderHelpers::normalizeStmt( $stmt );
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Adds an attribute group.
-     *
-     * @param Node\Attribute|Node\AttributeGroup $attribute
-     *
-     * @return $this The builder instance (for fluid interface)
-     */
-    public function addAttribute($attribute) {
-        $this->attributeGroups[] = BuilderHelpers::normalizeAttribute($attribute);
+	/**
+	 * Adds an attribute group.
+	 *
+	 * @param Node\Attribute|Node\AttributeGroup $attribute
+	 *
+	 * @return $this The builder instance (for fluid interface)
+	 */
+	public function addAttribute( $attribute ) {
+		$this->attributeGroups[] = BuilderHelpers::normalizeAttribute( $attribute );
 
-        return $this;
-    }
+		return $this;
+	}
 
-    /**
-     * Returns the built method node.
-     *
-     * @return Stmt\ClassMethod The built method node
-     */
-    public function getNode(): Node {
-        return new Stmt\ClassMethod($this->name, [
-            'flags'      => $this->flags,
-            'byRef'      => $this->returnByRef,
-            'params'     => $this->params,
-            'returnType' => $this->returnType,
-            'stmts'      => $this->stmts,
-            'attrGroups' => $this->attributeGroups,
-        ], $this->attributes);
-    }
+	/**
+	 * Returns the built method node.
+	 *
+	 * @return Stmt\ClassMethod The built method node
+	 */
+	public function getNode(): Node {
+		return new Stmt\ClassMethod(
+			$this->name,
+			array(
+				'flags'      => $this->flags,
+				'byRef'      => $this->returnByRef,
+				'params'     => $this->params,
+				'returnType' => $this->returnType,
+				'stmts'      => $this->stmts,
+				'attrGroups' => $this->attributeGroups,
+			),
+			$this->attributes
+		);
+	}
 }

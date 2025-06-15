@@ -5,11 +5,11 @@ namespace PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\BinaryOp;
 
 class BooleanAnd extends BinaryOp {
-    public function getOperatorSigil(): string {
-        return '&&';
-    }
+	public function getOperatorSigil(): string {
+		return '&&';
+	}
 
-    public function getType(): string {
-        return 'Expr_BinaryOp_BooleanAnd';
-    }
+	public function getType(): string {
+		return 'Expr_BinaryOp_BooleanAnd';
+	}
 }

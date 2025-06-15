@@ -10,38 +10,38 @@ use PhpParser\NodeVisitorAbstract;
  * a filter callback.
  */
 class FindingVisitor extends NodeVisitorAbstract {
-    /** @var callable Filter callback */
-    protected $filterCallback;
-    /** @var list<Node> Found nodes */
-    protected array $foundNodes;
+	/** @var callable Filter callback */
+	protected $filterCallback;
+	/** @var list<Node> Found nodes */
+	protected array $foundNodes;
 
-    public function __construct(callable $filterCallback) {
-        $this->filterCallback = $filterCallback;
-    }
+	public function __construct( callable $filterCallback ) {
+		$this->filterCallback = $filterCallback;
+	}
 
-    /**
-     * Get found nodes satisfying the filter callback.
-     *
-     * Nodes are returned in pre-order.
-     *
-     * @return list<Node> Found nodes
-     */
-    public function getFoundNodes(): array {
-        return $this->foundNodes;
-    }
+	/**
+	 * Get found nodes satisfying the filter callback.
+	 *
+	 * Nodes are returned in pre-order.
+	 *
+	 * @return list<Node> Found nodes
+	 */
+	public function getFoundNodes(): array {
+		return $this->foundNodes;
+	}
 
-    public function beforeTraverse(array $nodes): ?array {
-        $this->foundNodes = [];
+	public function beforeTraverse( array $nodes ): ?array {
+		$this->foundNodes = array();
 
-        return null;
-    }
+		return null;
+	}
 
-    public function enterNode(Node $node) {
-        $filterCallback = $this->filterCallback;
-        if ($filterCallback($node)) {
-            $this->foundNodes[] = $node;
-        }
+	public function enterNode( Node $node ) {
+		$filterCallback = $this->filterCallback;
+		if ( $filterCallback( $node ) ) {
+			$this->foundNodes[] = $node;
+		}
 
-        return null;
-    }
+		return null;
+	}
 }
