@@ -79,6 +79,53 @@ To add a new feature:
 2. Register any hooks or functions in that file.
 3. Require the new file in `qr-trackr.php`.
 
+## Post-Foundation Plugin Changes (2024-2025)
+
+After the initial refactor and foundation, the following major changes and improvements were made to QR Trackr:
+
+### Modularization & Architecture
+- All business logic was separated into modules under `includes/` (admin, AJAX, rewrite, debug, utility, etc.).
+- The main plugin file now only bootstraps and loads modules, with no business logic.
+- Each module registers its own hooks and handles a single concern, improving maintainability and scalability.
+
+### Database & Tracking
+- Custom tables `{prefix}_qr_trackr_links` and `{prefix}_qr_trackr_scans` are now used for all tracking and stats.
+- All queries and schema updates use safe, standards-compliant SQL with proper escaping and parameterization.
+- Table creation and migrations are handled on activation with robust error handling and logging.
+
+### QR Code Generation
+- Switched to local QR code generation using the `endroid/qr-code` library (no external services).
+- All QR code images are generated and served from the local uploads directory.
+- Added support for custom QR code styles and error correction levels.
+
+### Admin UI & UX
+- Redesigned admin pages for mobile-first, responsive experience.
+- Added stats overview and individual scan statistics pages.
+- Improved table/list rendering, filtering, and bulk actions.
+- Added destination URL editing directly from the stats table.
+- Enhanced success messages and download instructions for QR code creation.
+
+### JavaScript & Performance
+- Refactored admin JS to use proper scoping, event delegation, and debug logging.
+- Scripts/styles are only loaded on relevant admin pages for performance.
+- Improved AJAX error handling and user feedback.
+
+### Security & Coding Standards
+- All user input is sanitized and validated using WordPress functions.
+- All output is properly escaped.
+- Nonces are used for all AJAX and form operations.
+- Follows strict WordPress coding standards (see .cursorrules).
+- Comprehensive debug logging added for troubleshooting.
+
+### CI/CD & Testing
+- Modernized test environment with Yoast/wp-test-utils and Brain Monkey.
+- Fixed PHPCS and ESLint config for full standards compliance.
+- Improved pre-commit and CI workflows for reliability and portability.
+
+### Documentation
+- README and inline docs updated to reflect all changes and best practices.
+- Added detailed instructions for extending, testing, and contributing to the plugin.
+
 ## Security & Best Practices
 - Follows WordPress coding standards and security best practices.
 - All admin features are accessible only to users with `manage_options` capability.
