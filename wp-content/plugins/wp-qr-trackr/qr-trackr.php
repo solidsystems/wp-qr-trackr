@@ -2,7 +2,7 @@
 /**
  * Plugin Name: QR Trackr
  * Description: Generate and track QR codes for WordPress pages and posts. Adds QR code generation to listings and edit screens, and tracks scans with stats overview.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Your Name
  * Text Domain: qr-trackr
  *
