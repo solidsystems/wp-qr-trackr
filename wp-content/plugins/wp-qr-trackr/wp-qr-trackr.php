@@ -27,7 +27,7 @@ define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'QR_TRACKR_VERSION', '1.0.4' );
 
-// Load Composer autoloader
+// Load Composer autoloader.
 require_once QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
 
 /**
@@ -36,10 +36,10 @@ require_once QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
  * @return void
  */
 function qr_trackr_bootstrap() {
-	// Load activation module first to ensure tables are created
+	// Load activation module first to ensure tables are created.
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-activation.php';
-	
-	// Load remaining modules
+
+	// Load remaining modules.
 	require_once QR_TRACKR_PLUGIN_DIR . 'qr-trackr.php';
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-utils.php';
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-qr.php';
