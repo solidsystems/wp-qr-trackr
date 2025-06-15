@@ -515,3 +515,146 @@ This project uses a `.cursorrules` file to enforce strict WordPress plugin devel
 - **Review & Automation:** PR reviewers and automated tools/pre-commit hooks must enforce these rules before approving or merging.
 
 See the `.cursorrules` file for the authoritative list. These standards help ensure security, maintainability, and WordPress best practices across the codebase.
+
+## Development Setup
+
+### Prerequisites
+- Docker and Docker Compose
+- PHP 8.4 or later
+- Composer
+- Yarn
+- MySQL 8.0 (for local development)
+
+### Local Development
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/solidsystems/wp-qr-trackr.git
+   cd wp-qr-trackr
+   ```
+
+2. Copy the environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Start the development environment:
+   ```bash
+   docker compose up -d
+   ```
+
+4. Install dependencies:
+   ```bash
+   composer install
+   yarn install
+   ```
+
+5. Run tests locally:
+   ```bash
+   ./vendor/bin/phpunit --configuration=wp-content/plugins/wp-qr-trackr/phpunit.xml
+   ```
+
+### CI/CD Environment
+The project uses GitHub Actions for continuous integration. The CI environment:
+- Uses PHP 8.4
+- Runs on Ubuntu latest
+- Uses MySQL 8.0 service container
+- Executes PHPUnit tests
+- Generates code coverage reports
+
+### Testing
+Both local and CI environments use the same testing configuration:
+- PHPUnit for unit and integration tests
+- WordPress test suite integration
+- Code coverage reporting via Codecov
+
+To ensure consistency between local and CI environments:
+1. Use Docker Compose for local development
+2. Run tests in the CI container locally:
+   ```bash
+   docker compose run ci-runner
+   ```
+
+### Database Configuration
+The project uses MySQL 8.0 in both environments:
+- Local: Managed via Docker Compose
+- CI: Managed via GitHub Actions service container
+
+Database credentials are managed through environment variables:
+- `WORDPRESS_DB_NAME`: Database name
+- `WORDPRESS_DB_USER`: Database user
+- `WORDPRESS_DB_PASSWORD`: Database password
+- `WORDPRESS_DB_ROOT_PASSWORD`: Root password (local only)
+
+## Development Environment Alignment (PLLFASLPII)
+
+### Overview
+The Post-Linter Linter Fix and System Level Package Install Independence (PLLFASLPII) process ensures consistent behavior between local development and CI/CD environments. This process was crucial in resolving subtle differences between local and GitHub Actions environments.
+
+### Key Components
+
+#### 1. Package Management Alignment
+- Standardized on Yarn as the primary package manager
+- Aligned package versions between root and plugin package.json files
+- Resolved peer dependency conflicts:
+  - ESLint version compatibility with WordPress requirements
+  - Stylelint version alignment with stylelint-config-standard
+  - Husky configuration updates for v9
+
+#### 2. Development Tool Configuration
+- Updated ESLint configuration to use WordPress standards
+- Aligned Stylelint configuration with WordPress requirements
+- Modernized Husky setup using postinstall hooks
+- Ensured consistent module type declarations
+
+#### 3. CI/CD Integration
+- Removed deprecated husky commands from CI scripts
+- Aligned local and CI package installation processes
+- Ensured consistent linting behavior across environments
+
+### Implementation Steps
+1. Identified version mismatches between local and CI environments
+2. Updated package.json files to use compatible versions
+3. Modernized development tool configurations
+4. Verified changes in both local and CI environments
+5. Documented the process for future reference
+
+### Reflections
+
+#### The Reality of Automated Development
+This process highlighted several important aspects of modern development:
+
+1. **Initial Working State ≠ Production Ready**
+   - Tools may work locally but require significant alignment for CI/CD
+   - Automated tools often provide a starting point, not a complete solution
+
+2. **Understanding Fundamentals**
+   - Deep knowledge of development tools is essential
+   - Understanding how tools interact is crucial for troubleshooting
+   - Local success doesn't guarantee CI/CD compatibility
+
+3. **Iterative Improvement**
+   - What seemed like "one commit away" required multiple iterations
+   - Each fix revealed new dependencies and requirements
+   - Continuous testing in both environments was essential
+
+4. **Documentation Importance**
+   - Clear documentation of the alignment process is crucial
+   - Future developers need to understand the reasoning behind decisions
+   - Version compatibility requirements must be clearly stated
+
+### Best Practices Moving Forward
+
+1. **Version Management**
+   - Keep package versions aligned between environments
+   - Document version compatibility requirements
+   - Regular updates to development tools
+
+2. **CI/CD Integration**
+   - Test changes in CI environment before local deployment
+   - Maintain consistent tooling across environments
+   - Document any environment-specific requirements
+
+3. **Development Workflow**
+   - Regular testing in both local and CI environments
+   - Clear documentation of tool configurations
+   - Version control of all configuration files
