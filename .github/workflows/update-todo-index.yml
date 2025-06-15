@@ -24,7 +24,7 @@ jobs:
         run: ./scripts/update-todo-index.sh
       - name: Commit and push if TODO.md changed
         run: |
-          git remote set-url origin https://x-access-token:${CI_GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           if git diff --quiet TODO.md; then
             echo "No changes to TODO.md."
           else
@@ -33,4 +33,4 @@ jobs:
             git push origin HEAD
           fi
         env:
-          CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
