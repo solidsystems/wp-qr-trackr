@@ -149,7 +149,7 @@ add_action(
 	function () {
 		global $wpdb;
 		$links_table = $wpdb->prefix . 'qr_trackr_links';
-		// phpcs:ignore -- Schema change is required for plugin migration logic; caching is not applicable.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema change is required for plugin migration logic; caching is not applicable.
 		$columns  = $wpdb->get_results( $wpdb->prepare( 'SHOW COLUMNS FROM %s', $links_table ), ARRAY_A );
 		$expected = array( 'id', 'post_id', 'destination_url', 'created_at', 'updated_at' );
 		$actual   = array_map(
