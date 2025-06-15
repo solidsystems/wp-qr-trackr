@@ -80,11 +80,11 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress
       - name: Run PHPUnit
-        run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
+        run: ./vendor/bin/phpunit --configuration=wp-content/plugins/wp-qr-trackr/phpunit.xml --coverage-clover=wp-content/plugins/wp-qr-trackr/coverage.xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./coverage.xml
+          files: ./wp-content/plugins/wp-qr-trackr/coverage.xml
         continue-on-error: true
 
   audit-deps:
