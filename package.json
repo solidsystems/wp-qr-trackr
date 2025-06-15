@@ -1,9 +1,14 @@
 {
   "devDependencies": {
-    "husky": "^9.1.7"
+    "eslint": "^9.0.0",
+    "husky": "^9.1.7",
+    "stylelint": "^16.3.1",
+    "stylelint-config-standard": "^38.0.0"
   },
   "scripts": {
-    "setup:ci": "yarn install && npx husky install",
-    "lint": "cd wp-content/plugins/wp-qr-trackr && yarn lint"
+    "setup:ci": "yarn install && yarn husky install",
+    "lint": "cd wp-content/plugins/wp-qr-trackr && yarn lint",
+    "stylelint": "cd wp-content/plugins/wp-qr-trackr && yarn stylelint",
+    "prepare": "husky install"
   }
 }
