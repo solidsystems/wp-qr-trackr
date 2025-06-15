@@ -56,7 +56,16 @@ function qr_trackr_get_most_recent_tracking_link( $post_id ) {
 	global $wpdb;
 	$links_table = $wpdb->prefix . 'qr_trackr_links';
 	// Table name is safe as it is constructed from $wpdb->prefix and a static string.
-	return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE post_id = %d ORDER BY created_at DESC LIMIT 1', $links_table, $post_id ) );
+	$cache_key = 'qr_trackr_link_' . $post_id;
+	$link      = wp_cache_get( $cache_key );
+	if ( $link ) {
+		return $link;
+	}
+	$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE post_id = %d ORDER BY created_at DESC LIMIT 1', $links_table, $post_id ) );
+	if ( $link ) {
+		wp_cache_set( $cache_key, $link );
+	}
+	return $link;
 }
 
 /**

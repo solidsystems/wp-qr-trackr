@@ -50,14 +50,10 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 				return;
 			}
 
-			$command = escapeshellcmd( $phpunit );
-			
-			// Add filter if specified.
+			$command = 'php ' . escapeshellarg( $phpunit ) . ' --configuration=' . escapeshellarg( __DIR__ . '/../../../phpunit.xml' );
 			if ( ! empty( $assoc_args['filter'] ) ) {
 				$command .= ' --filter=' . escapeshellarg( $assoc_args['filter'] );
 			}
-			
-			// Add group if specified.
 			if ( ! empty( $assoc_args['group'] ) ) {
 				$command .= ' --group=' . escapeshellarg( $assoc_args['group'] );
 			}

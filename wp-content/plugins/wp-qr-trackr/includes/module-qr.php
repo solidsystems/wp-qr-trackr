@@ -64,7 +64,7 @@ function qr_trackr_get_or_create_tracking_link( $post_id ) {
 	$table = $wpdb->prefix . 'qr_trackr_links';
 	
 	// Get link with caching.
-	$cache_key = 'qr_trackr_link_post_' . $post_id;
+	$cache_key = 'qr_trackr_link_' . $post_id;
 	$link = wp_cache_get( $cache_key );
 	if ( false === $link ) {
 		$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE post_id = %d', $table, $post_id ) );
@@ -117,7 +117,7 @@ function qr_trackr_get_tracking_link_by_id( $link_id ) {
 	$table = $wpdb->prefix . 'qr_trackr_links';
 	
 	// Get link with caching.
-	$cache_key = 'qr_trackr_link_id_' . $link_id;
+	$cache_key = 'qr_trackr_link_by_id_' . $link_id;
 	$link = wp_cache_get( $cache_key );
 	if ( false === $link ) {
 		$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE id = %d', $table, $link_id ) );

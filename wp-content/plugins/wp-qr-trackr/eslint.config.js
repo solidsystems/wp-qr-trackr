@@ -1,17 +1,20 @@
+/**
+ * ESLint configuration for QR Trackr plugin.
+ */
+
 export default [
-  {
-    ignores: [
-      'vendor/',
-      'node_modules/',
-      'coverage/',
-    ],
-    files: ["**/*.js"],
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
-    },
-    rules: {
-      // Add custom rules as needed
-    },
-  },
+	{
+		files: ['**/*.js'],
+		rules: {
+			'no-console': 'warn',
+			'no-unused-vars': 'warn',
+			'prefer-const': 'warn',
+		},
+	},
+	{
+		files: ['**/*.test.js'],
+		rules: {
+			'no-console': 'off',
+		},
+	},
 ]; 
