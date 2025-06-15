@@ -9,8 +9,12 @@ composer install --prefer-dist --no-progress
 echo "Installing Yarn dependencies..."
 yarn install
 
+echo "Setting up husky pre-commit hooks..."
+yarn husky install
+yarn husky add .husky/pre-commit "yarn lint && yarn stylelint && phpcs -d memory_limit=512M --standard=.phpcs.xml --ignore=vendor ."
+
 echo "Running PHP_CodeSniffer..."
-phpcs -d memory_limit=512M --standard=WordPress --ignore=vendor .
+phpcs -d memory_limit=512M --standard=.phpcs.xml --ignore=vendor .
 
 echo "Running ESLint..."
 yarn lint

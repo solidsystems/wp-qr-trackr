@@ -1,4 +1,4 @@
-FROM php:8.3-cli
+FROM php:8.4-cli
 
 RUN apt-get update && \
     apt-get install -y git unzip curl lsb-release ca-certificates && \
@@ -7,11 +7,19 @@ RUN apt-get update && \
     npm install -g yarn && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Install PHP extensions
+RUN apt-get install -y libzip-dev && \
+    docker-php-ext-install zip
+
+# Install PHPCS and WordPress Coding Standards
 RUN composer global require "squizlabs/php_codesniffer=*"
 ENV PATH="/root/.composer/vendor/bin:${PATH}"
 RUN composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
 RUN composer global require "wp-coding-standards/wpcs"
 RUN phpcs --config-set installed_paths /root/.composer/vendor/wp-coding-standards/wpcs,/root/.composer/vendor/phpcsstandards/phpcsextra,/root/.composer/vendor/phpcsstandards/phpcsutils
 RUN phpcs -i
+
+# Install husky for pre-commit hooks
+RUN npm install -g husky
 
 WORKDIR /var/www/html/wp-content/plugins/wp-qr-trackr 
