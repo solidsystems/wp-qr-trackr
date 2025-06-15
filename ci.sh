@@ -11,7 +11,7 @@ yarn install
 
 echo "Setting up husky pre-commit hooks..."
 yarn prepare
-yarn husky add .husky/pre-commit "yarn lint && yarn stylelint && phpcs -d memory_limit=512M --standard=.phpcs.xml --ignore=vendor ."
+yarn husky add .husky/pre-commit "cd wp-content/plugins/wp-qr-trackr && yarn lint && yarn stylelint && phpcs -d memory_limit=512M --standard=.phpcs.xml --ignore=vendor ."
 
 echo "Running PHP_CodeSniffer..."
 phpcs -d memory_limit=512M --standard=.phpcs.xml --ignore=vendor .

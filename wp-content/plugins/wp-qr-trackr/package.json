@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "lint": "eslint \"**/*.js\"",
+    "lint": "eslint \"**/*.js\" --ignore-pattern .eslintrc.js",
     "stylelint": "stylelint \"**/*.css\"",
     "prepare": "husky install"
   },
   "devDependencies": {
     "@wordpress/eslint-plugin": "^17.0.0",
+    "@wordpress/scripts": "^27.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-wordpress": "^2.0.0",
     "husky": "^9.1.7",
     "stylelint": "^16.3.1",
     "stylelint-config-standard": "^38.0.0",
