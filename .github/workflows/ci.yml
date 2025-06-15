@@ -4,8 +4,48 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          coverage: none
+          tools: composer:v2, phpcs, phpstan
+
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-progress
+          composer require --dev squizlabs/php_codesniffer wp-coding-standards/wpcs phpstan/phpstan
+
+      - name: Run PHPCS
+        run: |
+          ./vendor/bin/phpcs --standard=WordPress wp-content/plugins/wp-qr-trackr/
+
+      - name: Run PHPStan
+        run: |
+          ./vendor/bin/phpstan analyse wp-content/plugins/wp-qr-trackr/ --level=5
+
+      - name: Run WordPress Security Scanner
+        run: |
+          composer require --dev wp-cli/wp-cli-bundle
+          ./vendor/bin/wp plugin verify-checksums wp-qr-trackr
+          ./vendor/bin/wp plugin check wp-qr-trackr
+
+      - name: Run ESLint
+        run: |
+          yarn install
+          yarn lint
+
+      - name: Run Stylelint
+        run: |
+          yarn stylelint
+
   lint-php:
     name: PHP Lint & Standards
     runs-on: ubuntu-latest
