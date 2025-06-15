@@ -20,7 +20,14 @@ function qr_trackr_ajax_get_stats() {
 	check_ajax_referer( 'qr_trackr_stats_nonce', 'security' );
 	global $wpdb;
 	$table = $wpdb->prefix . 'qr_trackr_scans'; // Safe table name.
-	$total = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM `%s`', $table ) );
+	
+	// Get total scans with caching.
+	$cache_key = 'qr_trackr_total_scans';
+	$total = wp_cache_get( $cache_key );
+	if ( false === $total ) {
+		$total = $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM `%s`', $table ) );
+		wp_cache_set( $cache_key, $total, '', 300 ); // Cache for 5 minutes.
+	}
 	wp_send_json_success( array( 'total_scans' => intval( $total ) ) );
 }
 add_action( 'wp_ajax_qr_trackr_get_stats', 'qr_trackr_ajax_get_stats' );
