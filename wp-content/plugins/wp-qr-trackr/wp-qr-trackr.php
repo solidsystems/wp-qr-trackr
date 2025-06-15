@@ -22,32 +22,57 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Load Composer autoloader.
+require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
+
 // Define plugin constants.
+define( 'QR_TRACKR_VERSION', '1.0.2' );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'QR_TRACKR_VERSION', '1.0.4' );
 
-// Load Composer autoloader.
-require_once QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
+// Fallback debug logging function in case debug module isn't loaded yet.
+if ( ! function_exists( 'qr_trackr_debug_log' ) ) {
+	/**
+	 * Fallback debug logging function.
+	 *
+	 * @param string $message The message to log.
+	 * @return void
+	 */
+	function qr_trackr_debug_log( $message ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[QR Trackr] ' . $message );
+		}
+	}
+}
 
 /**
- * Bootstrap the QR Trackr plugin by requiring all modules.
+ * Bootstrap the plugin.
  *
  * @return void
  */
 function qr_trackr_bootstrap() {
-	// Load activation module first to ensure tables are created.
+	// Load debug module first to ensure logging is available.
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-debug.php';
+
+	// Load activation module to ensure tables are created.
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-activation.php';
 
+	// Load requirements module.
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-requirements.php';
+
+	// Check if requirements are met before loading remaining modules.
+	if ( ! qr_trackr_requirements_met() ) {
+		return;
+	}
+
 	// Load remaining modules.
-	require_once QR_TRACKR_PLUGIN_DIR . 'qr-trackr.php';
-	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-utils.php';
-	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-qr.php';
-	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-rewrite.php';
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-admin.php';
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-ajax.php';
-	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-debug.php';
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-rewrite.php';
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-utility.php';
 }
+
+// Initialize plugin.
 qr_trackr_bootstrap();
 
 // Register WP-CLI command for running tests.
