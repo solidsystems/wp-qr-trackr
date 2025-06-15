@@ -51,6 +51,32 @@ root/
 - `--standard=../../../.phpcs.xml` (correct config file path with leading dot)
 - `--extensions=php` (to avoid memory issues with large JS files in node_modules)
 
+## PHPCS Warnings Allowed in Pre-commit and CI/CD
+
+**Note:** As of the latest workflow update, both the pre-commit hook and the GitHub Actions CI/CD pipeline are configured to allow PHPCS warnings (such as justified direct database calls with PHPCS ignore comments) and only block on errors. This is achieved by running PHPCS with `--warning-severity=0` in both local and CI workflows. Only true errors will block commits and merges; warnings will be reported but will not fail the workflow.
+
+## Differences Between Local Pre-commit Linting and GitHub Actions
+
+Local pre-commit linting (via Husky/Docker) and GitHub Actions (GHA) CI/CD workflows are both used to enforce code quality, but differences in environment, configuration, and file paths can sometimes cause discrepancies in results.
+
+### Why Results May Differ
+- **Environment:** Local hooks run in your dev environment (often via Docker), while GHA runs in a clean GitHub VM.
+- **Paths:** Local scripts may use relative paths that work on your machine but not in CI. GHA requires paths relative to the workflow's working directory.
+- **Config:** Both use `.phpcs.xml`, but if the path is wrong in CI, the wrong ruleset/files may be checked.
+- **Exclusions:** Test files, `node_modules`, and other non-source files are excluded from PHPCS in both local and CI runs, but misconfigured paths can cause these to be included/excluded incorrectly.
+
+### What Was Done to Fix This Project
+- **PHPCS Path Fixes:** The GHA workflow was updated to use the correct path to the `phpcs` binary and config file, matching the local setup (e.g., `../../../vendor/bin/phpcs`).
+- **Warning Handling:** Both local and CI runs now use `--warning-severity=0` to allow warnings but block on errors only.
+- **Exclusions:** `.phpcs.xml` excludes test files, `node_modules`, and other non-source code from linting in both environments.
+- **Documentation:** This section and the README were updated to help contributors understand and resolve discrepancies.
+
+### Troubleshooting Steps
+- Double-check the PHPCS version and config file used in both environments.
+- Ensure you are running the same commands as the CI workflow (see `.github/workflows/ci.yml`).
+- Reinstall dependencies and hooks with `yarn setup:ci`.
+- If you see different results locally and in CI, review this section and the README for guidance.
+
 ## General Contribution Questions
 - All standards and automation are described in the main README. The CI/CD pipeline enforces best practices so you can focus on building features.
 - For anything not covered here, see `CONTRIBUTING.md` or open an issue.
