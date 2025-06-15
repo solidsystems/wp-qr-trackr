@@ -717,3 +717,8 @@ During code review and PHPCS compliance work, the Cursor assistant specifically 
 - Documentation and tests are required for all new features
 - Use the provided project plans and automation scripts for team/project management
 - **PHPCS and Schema Migrations:** If you must use direct database calls for schema changes, wrap the relevant code with `// phpcs:disable` and `// phpcs:enable` to suppress warnings. Always include a comment explaining why this is necessary, as this approach is accepted but may be debated among experienced WordPress developers.
+
+## Stuff To Do After It's Done
+
+- **Review and merge [PR #11](https://github.com/solidsystems/wp-qr-trackr/pull/11):**
+  - This PR improves the build script, automates the release process, and updates the changelog and plugin version. Now that CI is passing for dev tooling, it should be reviewed and merged to finalize the release workflow improvements.
