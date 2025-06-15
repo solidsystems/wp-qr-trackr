@@ -62,13 +62,19 @@ jobs:
           COMPOSER_PROCESS_TIMEOUT: 0
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
-      - name: Run PHPUnit
-        run: ./vendor/bin/phpunit --configuration=wp-content/plugins/wp-qr-trackr/phpunit.xml --coverage-clover=wp-content/plugins/wp-qr-trackr/coverage.xml
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Run PHPUnit tests
+        run: |
+          cd wp-content/plugins/wp-qr-trackr
+          vendor/bin/phpunit --coverage-clover=coverage.xml
+        env:
+          WP_TESTS_DIR: ${{ github.workspace }}/wp-tests-lib
+          WP_CORE_DIR: ${{ github.workspace }}/wp
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-        continue-on-error: true
+          name: coverage-report
+          path: wp-content/plugins/wp-qr-trackr/coverage.xml
+          retention-days: 7
 
   lint-php:
     name: PHP Lint & Standards
