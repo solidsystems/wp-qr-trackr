@@ -19,7 +19,4 @@ RUN composer global require "wp-coding-standards/wpcs"
 RUN phpcs --config-set installed_paths /root/.composer/vendor/wp-coding-standards/wpcs,/root/.composer/vendor/phpcsstandards/phpcsextra,/root/.composer/vendor/phpcsstandards/phpcsutils
 RUN phpcs -i
 
-# Install husky for pre-commit hooks
-RUN npm install -g husky
-
 WORKDIR /var/www/html/wp-content/plugins/wp-qr-trackr 
