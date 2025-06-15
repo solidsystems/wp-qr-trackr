@@ -207,6 +207,24 @@ add_action(
 				'nonce'   => wp_create_nonce( 'qr_trackr_admin_nonce' ),
 			)
 		);
+
+		// Localize the script with new data
+		wp_localize_script(
+			'qr-trackr-admin',
+			'qrTrackrNonce',
+			array(
+				'nonce' => wp_create_nonce( 'qr_trackr_nonce' ),
+			)
+		);
+
+		// Add debug mode to JavaScript
+		wp_localize_script(
+			'qr-trackr-admin',
+			'qrTrackrDebugMode',
+			array(
+				'debug' => qr_trackr_is_debug_enabled(),
+			)
+		);
 	}
 );
 

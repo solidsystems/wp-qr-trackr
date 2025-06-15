@@ -257,7 +257,19 @@ class QR_Trackr_List_Table extends WP_List_Table {
 				$link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $item->id );
 				return '<a href="' . esc_url( $link ) . '" target="_blank">' . esc_html( $link ) . '</a>';
 			case 'destination_url':
-				return '<a href="' . esc_url( $item->destination_url ) . '" target="_blank">' . esc_html( $item->destination_url ) . '</a>';
+				$actions = array(
+					'edit' => sprintf(
+						'<a href="#" class="edit-destination" data-link-id="%d" data-destination="%s">%s</a>',
+						$item->id,
+						esc_attr( $item->destination_url ),
+						__( 'Edit', 'qr-trackr' )
+					),
+				);
+				return sprintf(
+					'%1$s %2$s',
+					'<a href="' . esc_url( $item->destination_url ) . '" target="_blank">' . esc_html( $item->destination_url ) . '</a>',
+					$this->row_actions( $actions )
+				);
 			case 'scans':
 				error_log( 'QR Trackr Debug: Scans value for item ' . $item->id . ': ' . print_r( $item->scans, true ) );
 				return intval( $item->scans );
