@@ -1,6 +1,6 @@
 {
 	"extends": [
-		"@wordpress/stylelint-config"
+		"stylelint-config-standard"
 	],
 	"rules": {
 		"no-descending-specificity": null,
