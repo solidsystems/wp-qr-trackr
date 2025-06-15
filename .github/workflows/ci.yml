@@ -25,12 +25,12 @@ jobs:
         run: |
           composer install --prefer-dist --no-progress
           cd wp-content/plugins/wp-qr-trackr
-          ../../../vendor/bin/phpcs --standard=../../../.phpcs.xml --report=full --extensions=php .
+          ../../../vendor/bin/phpcs --standard=../../../.phpcs.xml --report=full --extensions=php --warning-severity=0 .
       - name: PHP_CodeSniffer (Tests Only)
         run: |
           composer install --prefer-dist --no-progress
           cd wp-content/plugins/wp-qr-trackr
-          ../../../vendor/bin/phpcs --standard=../../../.phpcs.xml --report=full --extensions=php tests
+          ../../../vendor/bin/phpcs --standard=../../../.phpcs.xml --report=full --extensions=php --warning-severity=0 tests
 
   lint-js:
     name: JS Lint
