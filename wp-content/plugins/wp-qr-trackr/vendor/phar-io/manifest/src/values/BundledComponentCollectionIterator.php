@@ -15,33 +15,33 @@ use function count;
 
 /** @template-implements Iterator<int,BundledComponent> */
 class BundledComponentCollectionIterator implements Iterator {
-    /** @var BundledComponent[] */
-    private $bundledComponents;
+	/** @var BundledComponent[] */
+	private $bundledComponents;
 
-    /** @var int */
-    private $position = 0;
+	/** @var int */
+	private $position = 0;
 
-    public function __construct(BundledComponentCollection $bundledComponents) {
-        $this->bundledComponents = $bundledComponents->getBundledComponents();
-    }
+	public function __construct( BundledComponentCollection $bundledComponents ) {
+		$this->bundledComponents = $bundledComponents->getBundledComponents();
+	}
 
-    public function rewind(): void {
-        $this->position = 0;
-    }
+	public function rewind(): void {
+		$this->position = 0;
+	}
 
-    public function valid(): bool {
-        return $this->position < count($this->bundledComponents);
-    }
+	public function valid(): bool {
+		return $this->position < count( $this->bundledComponents );
+	}
 
-    public function key(): int {
-        return $this->position;
-    }
+	public function key(): int {
+		return $this->position;
+	}
 
-    public function current(): BundledComponent {
-        return $this->bundledComponents[$this->position];
-    }
+	public function current(): BundledComponent {
+		return $this->bundledComponents[ $this->position ];
+	}
 
-    public function next(): void {
-        $this->position++;
-    }
+	public function next(): void {
+		++$this->position;
+	}
 }

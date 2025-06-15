@@ -1,0 +1,37 @@
+name: Update TODO Index
+
+on:
+  push:
+    branches: [main, "feature/*"]
+  pull_request:
+    branches: [main, "feature/*"]
+
+permissions:
+  contents: write
+
+jobs:
+  update-todo-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Make script executable
+        run: chmod +x scripts/update-todo-index.sh
+      - name: Run TODO index update script
+        run: ./scripts/update-todo-index.sh
+      - name: Commit and push if TODO.md changed
+        run: |
+          if git diff --quiet TODO.md; then
+            echo "No changes to TODO.md."
+          else
+            git add TODO.md
+            git commit -m "chore: update TODO index [ci skip]"
+            git push origin HEAD
+          fi 

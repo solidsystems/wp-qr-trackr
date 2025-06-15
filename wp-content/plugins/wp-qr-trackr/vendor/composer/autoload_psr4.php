@@ -7,10 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
-    'Mockery\\' => array($vendorDir . '/mockery/mockery/library/Mockery'),
-    'Endroid\\QrCode\\' => array($vendorDir . '/endroid/qr-code/src'),
     'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
-    'DASPRiD\\Enum\\' => array($vendorDir . '/dasprid/enum/src'),
-    'Brain\\Monkey\\' => array($vendorDir . '/brain/monkey/src'),
-    'BaconQrCode\\' => array($vendorDir . '/bacon/bacon-qr-code/src'),
 );

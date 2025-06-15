@@ -16,25 +16,25 @@ use function count;
 
 /** @template-implements IteratorAggregate<int,Author> */
 class AuthorCollection implements Countable, IteratorAggregate {
-    /** @var Author[] */
-    private $authors = [];
+	/** @var Author[] */
+	private $authors = array();
 
-    public function add(Author $author): void {
-        $this->authors[] = $author;
-    }
+	public function add( Author $author ): void {
+		$this->authors[] = $author;
+	}
 
-    /**
-     * @return Author[]
-     */
-    public function getAuthors(): array {
-        return $this->authors;
-    }
+	/**
+	 * @return Author[]
+	 */
+	public function getAuthors(): array {
+		return $this->authors;
+	}
 
-    public function count(): int {
-        return count($this->authors);
-    }
+	public function count(): int {
+		return count( $this->authors );
+	}
 
-    public function getIterator(): AuthorCollectionIterator {
-        return new AuthorCollectionIterator($this);
-    }
+	public function getIterator(): AuthorCollectionIterator {
+		return new AuthorCollectionIterator( $this );
+	}
 }

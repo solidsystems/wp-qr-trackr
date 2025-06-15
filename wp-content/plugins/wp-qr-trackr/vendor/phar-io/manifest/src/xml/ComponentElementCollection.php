@@ -11,9 +11,9 @@
 namespace PharIo\Manifest;
 
 class ComponentElementCollection extends ElementCollection {
-    public function current(): ComponentElement {
-        return new ComponentElement(
-            $this->getCurrentElement()
-        );
-    }
+	public function current(): ComponentElement {
+		return new ComponentElement(
+			$this->getCurrentElement()
+		);
+	}
 }

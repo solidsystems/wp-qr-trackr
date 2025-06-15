@@ -22,94 +22,94 @@ use function libxml_use_internal_errors;
 use function sprintf;
 
 class ManifestDocument {
-    public const XMLNS = 'https://phar.io/xml/manifest/1.0';
+	public const XMLNS = 'https://phar.io/xml/manifest/1.0';
 
-    /** @var DOMDocument */
-    private $dom;
+	/** @var DOMDocument */
+	private $dom;
 
-    public static function fromFile(string $filename): ManifestDocument {
-        if (!is_file($filename)) {
-            throw new ManifestDocumentException(
-                sprintf('File "%s" not found', $filename)
-            );
-        }
+	public static function fromFile( string $filename ): ManifestDocument {
+		if ( ! is_file( $filename ) ) {
+			throw new ManifestDocumentException(
+				sprintf( 'File "%s" not found', $filename )
+			);
+		}
 
-        return self::fromString(
-            file_get_contents($filename)
-        );
-    }
+		return self::fromString(
+			file_get_contents( $filename )
+		);
+	}
 
-    public static function fromString(string $xmlString): ManifestDocument {
-        $prev = libxml_use_internal_errors(true);
-        libxml_clear_errors();
+	public static function fromString( string $xmlString ): ManifestDocument {
+		$prev = libxml_use_internal_errors( true );
+		libxml_clear_errors();
 
-        try {
-            $dom = new DOMDocument();
-            $dom->loadXML($xmlString);
-            $errors = libxml_get_errors();
-            libxml_use_internal_errors($prev);
-        } catch (Throwable $t) {
-            throw new ManifestDocumentException($t->getMessage(), 0, $t);
-        }
+		try {
+			$dom = new DOMDocument();
+			$dom->loadXML( $xmlString );
+			$errors = libxml_get_errors();
+			libxml_use_internal_errors( $prev );
+		} catch ( Throwable $t ) {
+			throw new ManifestDocumentException( $t->getMessage(), 0, $t );
+		}
 
-        if (count($errors) !== 0) {
-            throw new ManifestDocumentLoadingException($errors);
-        }
+		if ( count( $errors ) !== 0 ) {
+			throw new ManifestDocumentLoadingException( $errors );
+		}
 
-        return new self($dom);
-    }
+		return new self( $dom );
+	}
 
-    private function __construct(DOMDocument $dom) {
-        $this->ensureCorrectDocumentType($dom);
+	private function __construct( DOMDocument $dom ) {
+		$this->ensureCorrectDocumentType( $dom );
 
-        $this->dom = $dom;
-    }
+		$this->dom = $dom;
+	}
 
-    public function getContainsElement(): ContainsElement {
-        return new ContainsElement(
-            $this->fetchElementByName('contains')
-        );
-    }
+	public function getContainsElement(): ContainsElement {
+		return new ContainsElement(
+			$this->fetchElementByName( 'contains' )
+		);
+	}
 
-    public function getCopyrightElement(): CopyrightElement {
-        return new CopyrightElement(
-            $this->fetchElementByName('copyright')
-        );
-    }
+	public function getCopyrightElement(): CopyrightElement {
+		return new CopyrightElement(
+			$this->fetchElementByName( 'copyright' )
+		);
+	}
 
-    public function getRequiresElement(): RequiresElement {
-        return new RequiresElement(
-            $this->fetchElementByName('requires')
-        );
-    }
+	public function getRequiresElement(): RequiresElement {
+		return new RequiresElement(
+			$this->fetchElementByName( 'requires' )
+		);
+	}
 
-    public function hasBundlesElement(): bool {
-        return $this->dom->getElementsByTagNameNS(self::XMLNS, 'bundles')->length === 1;
-    }
+	public function hasBundlesElement(): bool {
+		return $this->dom->getElementsByTagNameNS( self::XMLNS, 'bundles' )->length === 1;
+	}
 
-    public function getBundlesElement(): BundlesElement {
-        return new BundlesElement(
-            $this->fetchElementByName('bundles')
-        );
-    }
+	public function getBundlesElement(): BundlesElement {
+		return new BundlesElement(
+			$this->fetchElementByName( 'bundles' )
+		);
+	}
 
-    private function ensureCorrectDocumentType(DOMDocument $dom): void {
-        $root = $dom->documentElement;
+	private function ensureCorrectDocumentType( DOMDocument $dom ): void {
+		$root = $dom->documentElement;
 
-        if ($root->localName !== 'phar' || $root->namespaceURI !== self::XMLNS) {
-            throw new ManifestDocumentException('Not a phar.io manifest document');
-        }
-    }
+		if ( $root->localName !== 'phar' || $root->namespaceURI !== self::XMLNS ) {
+			throw new ManifestDocumentException( 'Not a phar.io manifest document' );
+		}
+	}
 
-    private function fetchElementByName(string $elementName): DOMElement {
-        $element = $this->dom->getElementsByTagNameNS(self::XMLNS, $elementName)->item(0);
+	private function fetchElementByName( string $elementName ): DOMElement {
+		$element = $this->dom->getElementsByTagNameNS( self::XMLNS, $elementName )->item( 0 );
 
-        if (!$element instanceof DOMElement) {
-            throw new ManifestDocumentException(
-                sprintf('Element %s missing', $elementName)
-            );
-        }
+		if ( ! $element instanceof DOMElement ) {
+			throw new ManifestDocumentException(
+				sprintf( 'Element %s missing', $elementName )
+			);
+		}
 
-        return $element;
-    }
+		return $element;
+	}
 }

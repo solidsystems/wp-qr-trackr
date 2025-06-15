@@ -13,22 +13,22 @@ namespace PharIo\Manifest;
 use PharIo\Version\Version;
 
 class BundledComponent {
-    /** @var string */
-    private $name;
+	/** @var string */
+	private $name;
 
-    /** @var Version */
-    private $version;
+	/** @var Version */
+	private $version;
 
-    public function __construct(string $name, Version $version) {
-        $this->name    = $name;
-        $this->version = $version;
-    }
+	public function __construct( string $name, Version $version ) {
+		$this->name    = $name;
+		$this->version = $version;
+	}
 
-    public function getName(): string {
-        return $this->name;
-    }
+	public function getName(): string {
+		return $this->name;
+	}
 
-    public function getVersion(): Version {
-        return $this->version;
-    }
+	public function getVersion(): Version {
+		return $this->version;
+	}
 }

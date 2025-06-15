@@ -11,9 +11,9 @@
 namespace PharIo\Manifest;
 
 class AuthorElementCollection extends ElementCollection {
-    public function current(): AuthorElement {
-        return new AuthorElement(
-            $this->getCurrentElement()
-        );
-    }
+	public function current(): AuthorElement {
+		return new AuthorElement(
+			$this->getCurrentElement()
+		);
+	}
 }

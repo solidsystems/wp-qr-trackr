@@ -8,20 +8,20 @@ use PhpParser\NodeAbstract;
  * Represents the "..." in "foo(...)" of the first-class callable syntax.
  */
 class VariadicPlaceholder extends NodeAbstract {
-    /**
-     * Create a variadic argument placeholder (first-class callable syntax).
-     *
-     * @param array<string, mixed> $attributes Additional attributes
-     */
-    public function __construct(array $attributes = []) {
-        $this->attributes = $attributes;
-    }
+	/**
+	 * Create a variadic argument placeholder (first-class callable syntax).
+	 *
+	 * @param array<string, mixed> $attributes Additional attributes
+	 */
+	public function __construct( array $attributes = array() ) {
+		$this->attributes = $attributes;
+	}
 
-    public function getType(): string {
-        return 'VariadicPlaceholder';
-    }
+	public function getType(): string {
+		return 'VariadicPlaceholder';
+	}
 
-    public function getSubNodeNames(): array {
-        return [];
-    }
+	public function getSubNodeNames(): array {
+		return array();
+	}
 }

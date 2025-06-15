@@ -16,25 +16,25 @@ use function count;
 
 /** @template-implements IteratorAggregate<int,BundledComponent> */
 class BundledComponentCollection implements Countable, IteratorAggregate {
-    /** @var BundledComponent[] */
-    private $bundledComponents = [];
+	/** @var BundledComponent[] */
+	private $bundledComponents = array();
 
-    public function add(BundledComponent $bundledComponent): void {
-        $this->bundledComponents[] = $bundledComponent;
-    }
+	public function add( BundledComponent $bundledComponent ): void {
+		$this->bundledComponents[] = $bundledComponent;
+	}
 
-    /**
-     * @return BundledComponent[]
-     */
-    public function getBundledComponents(): array {
-        return $this->bundledComponents;
-    }
+	/**
+	 * @return BundledComponent[]
+	 */
+	public function getBundledComponents(): array {
+		return $this->bundledComponents;
+	}
 
-    public function count(): int {
-        return count($this->bundledComponents);
-    }
+	public function count(): int {
+		return count( $this->bundledComponents );
+	}
 
-    public function getIterator(): BundledComponentCollectionIterator {
-        return new BundledComponentCollectionIterator($this);
-    }
+	public function getIterator(): BundledComponentCollectionIterator {
+		return new BundledComponentCollectionIterator( $this );
+	}
 }

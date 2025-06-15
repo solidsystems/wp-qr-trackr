@@ -11,22 +11,22 @@
 namespace PharIo\Manifest;
 
 class License {
-    /** @var string */
-    private $name;
+	/** @var string */
+	private $name;
 
-    /** @var Url */
-    private $url;
+	/** @var Url */
+	private $url;
 
-    public function __construct(string $name, Url $url) {
-        $this->name = $name;
-        $this->url  = $url;
-    }
+	public function __construct( string $name, Url $url ) {
+		$this->name = $name;
+		$this->url  = $url;
+	}
 
-    public function getName(): string {
-        return $this->name;
-    }
+	public function getName(): string {
+		return $this->name;
+	}
 
-    public function getUrl(): Url {
-        return $this->url;
-    }
+	public function getUrl(): Url {
+		return $this->url;
+	}
 }

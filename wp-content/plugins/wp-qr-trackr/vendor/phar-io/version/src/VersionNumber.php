@@ -11,18 +11,18 @@ namespace PharIo\Version;
 
 class VersionNumber {
 
-    /** @var ?int */
-    private $value;
+	/** @var ?int */
+	private $value;
 
-    public function __construct(?int $value) {
-        $this->value = $value;
-    }
+	public function __construct( ?int $value ) {
+		$this->value = $value;
+	}
 
-    public function isAny(): bool {
-        return $this->value === null;
-    }
+	public function isAny(): bool {
+		return $this->value === null;
+	}
 
-    public function getValue(): ?int {
-        return $this->value;
-    }
+	public function getValue(): ?int {
+		return $this->value;
+	}
 }

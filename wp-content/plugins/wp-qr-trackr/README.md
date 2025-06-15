@@ -20,16 +20,84 @@ Generate and track QR codes for WordPress pages and posts. Adds QR code generati
 - Use the QR Trackr admin menu for an overview and individual scan statistics.
 
 ## Database
-- Creates a custom table `{prefix}_qr_trackr_scans` to store scan events.
+- Creates custom tables `{prefix}_qr_trackr_scans` (scan events) and `{prefix}_qr_trackr_links` (tracking links).
+
+## Project Architecture
+
+QR Trackr is built using a **modular architecture** for maintainability, scalability, and clarity. All major logic is separated into modules under the `includes/` directory:
+
+- **module-activation.php**: Handles plugin activation, database table creation, and activation-time checks.
+- **module-admin.php**: All admin UI logic, including menus, admin pages, admin columns, row actions, notices, and admin script enqueuing.
+- **module-ajax.php**: AJAX handlers (e.g., QR code creation via AJAX).
+- **module-rewrite.php**: Custom rewrite rules, query vars, and endpoint handlers for QR code tracking and redirection.
+- **module-debug.php**: Debug logging utilities, debug mode admin UI, and admin footer debug output.
+- **module-utility.php**: Shared utility functions (e.g., rendering QR lists, getting tracking links, DB migrations, save_post handlers).
+
+The main plugin file (`qr-trackr.php`) only bootstraps the plugin and loads these modules.
+
+### Why Modularize?
+- **Separation of concerns**: Each module handles a specific aspect of the plugin.
+- **Maintainability**: Easier to update, debug, and extend.
+- **Scalability**: Add new features as new modules without cluttering the main file.
+- **WordPress Standards**: Follows best practices for file organization and hook registration.
+
+### Extending QR Trackr
+To add a new feature:
+1. Create a new module file in `includes/` (e.g., `module-rest.php`).
+2. Register any hooks or functions in that file.
+3. Require the new file in `qr-trackr.php`.
 
 ## Security & Best Practices
 - Follows WordPress coding standards and security best practices.
 - All admin features are accessible only to users with `manage_options` capability.
+- All user input is sanitized and validated.
 
 ## Roadmap
 - Export scan stats
 - Custom QR code styles
 - REST API integration
+
+## Testing & Development
+
+### Dependencies
+- **Install dependencies:**
+  ```sh
+  composer install
+  ```
+- **Run PHPCS (WordPress Coding Standards):**
+  ```sh
+  composer phpcs
+  ```
+  This uses the local config and works on Mac, Linux, and CI. No global PHPCS install is needed.
+- **Run JS linting:**
+  ```sh
+  yarn lint
+  ```
+- **Run CSS linting:**
+  ```sh
+  yarn stylelint
+  ```
+
+### Best Practices Philosophy
+- **Always use local Composer dependencies for tools like PHPCS.**
+  - Add PHPCS as a dev dependency in the root composer.json.
+  - All contributors (Mac, Linux, CI) should run `composer install` and use `vendor/bin/phpcs`.
+  - Never require or rely on global PHPCS installs—this ensures version consistency and zero path issues.
+  - Add Composer scripts for common tasks (e.g., `composer phpcs`).
+  - This approach is portable, standards-compliant, and works everywhere.
+
+### Testing Framework
+For comprehensive testing setup and framework details, see the "Modern WordPress Plugin Testing Setup (2024+)" section in the main project README.
+
+## PR Summary (June 2025)
+
+**WordPress Plugin Test Environment Modernization Complete:**
+- Implemented modern testing stack with Yoast/wp-test-utils and Brain Monkey for 2025 industry standards
+- Fixed ESLint config to use flat config ignores and updated lint scripts for standards compliance
+- Updated pre-commit hook to only lint staged JS source files, excluding config files
+- Moved Composer install/audit steps in CI to the project root, preventing failures
+- Updated workflow for TODO index to use CI_GITHUB_TOKEN for authenticated pushes
+- All changes documented and workflow is now robust, standards-compliant, and future-proof
 
 ---
 
