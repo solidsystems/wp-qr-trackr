@@ -1,76 +1,38 @@
-name: Release
+name: Release Plugin
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.1)'
+        required: true
+        type: string
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up zip
-        run: sudo apt-get update && sudo apt-get install -y zip
-      - name: Make build script executable
-        run: chmod +x build-release.sh
-      - name: Get new version from plugin file
-        id: get_version
-        run: |
-          VERSION=$(grep -E '^\s*\*?\s*Version:\s*[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?' wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php | head -1 | sed -E 's/.*Version:\s*([0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?).*/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if [[ "$VERSION" == *-rc* ]]; then
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "prerelease=false" >> $GITHUB_OUTPUT
-          fi
-      - name: Build release zip
-        run: |
-          if [[ "${{ steps.get_version.outputs.prerelease }}" == "true" ]]; then
-            ./build-release.sh prerelease $(echo "${{ steps.get_version.outputs.version }}" | sed -E 's/.*-rc([0-9]+)/\1/')
-          else
-            ./build-release.sh patch
-          fi
-      - name: Create Git tag
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email github-actions[bot]@users.noreply.github.com
-          git tag v${{ steps.get_version.outputs.version }}
-          git push origin v${{ steps.get_version.outputs.version }}
-      - name: Extract changelog entry
-        id: changelog
-        run: |
-          ENTRY=$(awk '/^## \[${{ steps.get_version.outputs.version }}\] /{flag=1;next}/^## \[/{flag=0}flag' CHANGELOG.md)
-          echo "entry<<EOF" >> $GITHUB_OUTPUT
-          echo "$ENTRY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/checkout@v4
         with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          name: QR Trackr v${{ steps.get_version.outputs.version }}
-          body: ${{ steps.changelog.outputs.entry }}
-          files: wp-qr-trackr-v${{ steps.get_version.outputs.version }}.zip
-          prerelease: ${{ steps.get_version.outputs.prerelease }}
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Make build script executable
+        run: chmod +x scripts/build-release.sh
+
+      - name: Build and release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Send email notification
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "QR Trackr Release v${{ steps.get_version.outputs.version }}"
-          to: ${{ secrets.RELEASE_EMAIL_TO }}
-          from: ${{ secrets.RELEASE_EMAIL_FROM }}
-          body: |
-            A new QR Trackr release is available!
-            Version: v${{ steps.get_version.outputs.version }}
-            Changelog:
-            ${{ steps.changelog.outputs.entry }}
-            Release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.get_version.outputs.version }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: ./scripts/build-release.sh
 
 # Prereleases (with -rcN) are supported and will be marked as prereleases on GitHub.
 # To use email notifications, set the following secrets in your repo:
