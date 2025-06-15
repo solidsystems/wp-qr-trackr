@@ -136,11 +136,16 @@ jobs:
       - name: Ensure clean test database
         run: |
           mysql -h 127.0.0.1 -u root -proot -e "DROP DATABASE IF EXISTS wordpress_test; CREATE DATABASE wordpress_test;"
-      - name: Install WordPress
+      - name: Set up WordPress
         run: |
           wp core download --version=latest --path=wp
           wp config create --dbname=wordpress_test --dbuser=root --dbpass=root --dbhost=127.0.0.1 --path=wp
-          wp db create --path=wp
+          wp db create --skip-check --path=wp
+        shell: /usr/bin/bash -e {0}
+        env:
+          COMPOSER_PROCESS_TIMEOUT: 0
+          COMPOSER_NO_INTERACTION: 1
+          COMPOSER_NO_AUDIT: 1
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit --configuration=wp-content/plugins/wp-qr-trackr/phpunit.xml --coverage-clover=wp-content/plugins/wp-qr-trackr/coverage.xml
       - name: Upload coverage to Codecov
