@@ -18,12 +18,20 @@
 
 // 1. Define ABSPATH at the very top for compatibility with plugin files.
 if ( ! defined( 'ABSPATH' ) ) {
-	define( 'ABSPATH', dirname( __DIR__ ) . '/' );
+	define( 'ABSPATH', dirname( __DIR__, 3 ) . '/' );
 }
 
 // Ensure esc_html() is available for output escaping in test/debug context.
 if ( ! function_exists( 'esc_html' ) ) {
-	require_once dirname( __DIR__, 3 ) . '/wp-includes/formatting.php';
+	$wp_includes_path = dirname( __DIR__, 3 ) . '/wp-includes/formatting.php';
+	if ( ! file_exists( $wp_includes_path ) ) {
+		// Try alternate path for CI environment
+		$wp_includes_path = dirname( __DIR__, 4 ) . '/wp-includes/formatting.php';
+	}
+	if ( ! file_exists( $wp_includes_path ) ) {
+		die( '[ERROR] WordPress core files not found. Please ensure WordPress is installed in the correct location.' );
+	}
+	require_once $wp_includes_path;
 }
 
 // 2. CI debug: confirm ABSPATH is set.
