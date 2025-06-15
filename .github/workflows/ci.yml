@@ -25,7 +25,7 @@ jobs:
 
       - name: Run PHPCS
         run: |
-          ./vendor/bin/phpcs --standard=WordPress wp-content/plugins/wp-qr-trackr/
+          ./vendor/bin/phpcs --standard=.phpcs.xml wp-content/plugins/wp-qr-trackr/
 
       - name: Run PHPStan
         run: |
