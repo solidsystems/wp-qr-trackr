@@ -20,11 +20,27 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		/**
 		 * Runs the plugin's PHPUnit test suite.
 		 *
+		 * ## OPTIONS
+		 *
+		 * [--filter=<test-name>]
+		 * : Filter which tests to run.
+		 *
+		 * [--group=<group-name>]
+		 * : Filter which test groups to run.
+		 *
 		 * ## EXAMPLES
-		 *     wp qr-trackr test
+		 *
+		 *     # Run all tests
+		 *     $ wp qr-trackr test
+		 *
+		 *     # Run specific test
+		 *     $ wp qr-trackr test --filter=test_qr_code_generation
+		 *
+		 *     # Run specific test group
+		 *     $ wp qr-trackr test --group=qr-code
 		 *
 		 * @param array $args       Positional arguments (unused).
-		 * @param array $assoc_args Associative arguments (unused).
+		 * @param array $assoc_args Associative arguments.
 		 * @return void
 		 */
 		public function test( $args, $assoc_args ) {
@@ -33,9 +49,22 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 				WP_CLI::error( 'PHPUnit not found. Please run `composer install` first.' );
 				return;
 			}
+
+			$command = escapeshellcmd( $phpunit );
+			
+			// Add filter if specified.
+			if ( ! empty( $assoc_args['filter'] ) ) {
+				$command .= ' --filter=' . escapeshellarg( $assoc_args['filter'] );
+			}
+			
+			// Add group if specified.
+			if ( ! empty( $assoc_args['group'] ) ) {
+				$command .= ' --group=' . escapeshellarg( $assoc_args['group'] );
+			}
+
 			WP_CLI::log( 'Running QR Trackr PHPUnit tests...' );
 			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_passthru
-			passthru( escapeshellcmd( $phpunit ), $exit_code );
+			passthru( $command, $exit_code );
 			if ( 0 === $exit_code ) {
 				WP_CLI::success( 'All tests passed!' );
 			} else {

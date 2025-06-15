@@ -62,7 +62,17 @@ function qr_trackr_generate_qr_image_for_link( $link_id ) {
 function qr_trackr_get_or_create_tracking_link( $post_id ) {
 	global $wpdb;
 	$table = $wpdb->prefix . 'qr_trackr_links';
-	$link  = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE post_id = %d', $table, $post_id ) );
+	
+	// Get link with caching.
+	$cache_key = 'qr_trackr_link_post_' . $post_id;
+	$link = wp_cache_get( $cache_key );
+	if ( false === $link ) {
+		$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE post_id = %d', $table, $post_id ) );
+		if ( $link ) {
+			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
+		}
+	}
+	
 	if ( $link ) {
 		qr_trackr_debug_log(
 			'Found existing tracking link',
@@ -73,6 +83,7 @@ function qr_trackr_get_or_create_tracking_link( $post_id ) {
 		);
 		return $link;
 	}
+	
 	$wpdb->insert(
 		$table,
 		array( 'post_id' => $post_id ),
@@ -86,7 +97,13 @@ function qr_trackr_get_or_create_tracking_link( $post_id ) {
 			'link_id' => $link_id,
 		)
 	);
-	return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE id = %d', $table, $link_id ) );
+	
+	// Get and cache the new link.
+	$new_link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE id = %d', $table, $link_id ) );
+	if ( $new_link ) {
+		wp_cache_set( $cache_key, $new_link, '', 300 ); // Cache for 5 minutes.
+	}
+	return $new_link;
 }
 
 /**
@@ -98,6 +115,15 @@ function qr_trackr_get_or_create_tracking_link( $post_id ) {
 function qr_trackr_get_tracking_link_by_id( $link_id ) {
 	global $wpdb;
 	$table = $wpdb->prefix . 'qr_trackr_links';
-	return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE id = %d', $table, $link_id ) );
+	
+	// Get link with caching.
+	$cache_key = 'qr_trackr_link_id_' . $link_id;
+	$link = wp_cache_get( $cache_key );
+	if ( false === $link ) {
+		$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %s WHERE id = %d', $table, $link_id ) );
+		if ( $link ) {
+			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
+		}
+	}
+	return $link;
 }
-// ... existing code ...
