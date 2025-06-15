@@ -31,25 +31,6 @@ function qr_trackr_is_debug_enabled() {
 }
 
 /**
- * Log debug messages for QR Trackr if debug mode is enabled.
- *
- * @param string $msg  The debug message.
- * @param mixed  $data Optional. Additional data to log.
- * @return void
- */
-function qr_trackr_debug_log( $msg, $data = null ) {
-	if ( ! qr_trackr_is_debug_enabled() ) {
-		return;
-	}
-	$out = '[QR Trackr Debug] ' . gmdate( 'Y-m-d H:i:s' ) . ' ' . $msg;
-	if ( null !== $data ) {
-		$out .= ' ' . ( is_string( $data ) ? $data : wp_json_encode( $data ) );
-	}
-	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-	error_log( $out );
-}
-
-/**
  * Get the debug log file path.
  *
  * @return string The path to the debug log file.
