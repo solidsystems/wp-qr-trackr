@@ -4,6 +4,18 @@
 - Debug logging is available upon request and should be implemented where appropriate.
 - UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices.
 
+# WordPress Rewrite Rules Best Practices
+- Rewrite rules must be registered on the 'init' hook to ensure WordPress's rewrite system is fully loaded.
+- Never attempt to add rewrite rules before WordPress is fully initialized (e.g., during plugins_loaded).
+- Always check is_admin() and wp_doing_ajax() before adding rewrite rules to prevent admin interference.
+- Use add_rewrite_rule() with 'top' priority for custom URL structures to ensure they take precedence.
+- Flush rewrite rules only during plugin activation/deactivation, not during normal operation.
+- Register query vars using the 'query_vars' filter before adding rewrite rules.
+- Use proper sanitization and escaping for all URL parameters and redirects.
+- Implement proper error handling for invalid or missing rewrite parameters.
+- Document all custom rewrite rules and their expected URL patterns.
+- Test rewrite rules in both pretty permalinks and default permalink settings.
+
 # Modular Setup Considerations
 - Major plugin logic should be separated into modules (e.g., admin, AJAX, rewrite, debug, utility) under an `includes/` directory.
 - The main plugin file should only bootstrap and require these modules, not contain business logic.
@@ -11,6 +23,58 @@
 - When adding new features, create a new module and require it in the main file.
 - Modularization improves maintainability, scalability, testability, and aligns with WordPress best practices.
 - Document the purpose of each module in the README and keep module boundaries clear.
+
+# Module Design Principles
+- Each module should have a clear, single responsibility
+- Modules should be loosely coupled and highly cohesive
+- Dependencies between modules should be explicit and documented
+- Each module should have its own error handling and logging
+- Modules should be independently testable
+- Module interfaces should be stable and well-documented
+- Changes to one module should not require changes to others
+- Each module should have clear entry and exit points
+
+# Module Organization
+- Core functionality modules should be loaded first
+- Feature modules should be loaded after core modules
+- UI/Admin modules should be loaded last
+- Module loading order should be documented
+- Each module should declare its dependencies
+- Circular dependencies between modules should be avoided
+- Module initialization should be explicit and controlled
+
+# Module Documentation
+- Each module must have a header comment describing its purpose
+- Module dependencies must be documented
+- Module hooks and filters must be documented
+- Module configuration options must be documented
+- Module error handling must be documented
+- Module testing requirements must be documented
+
+# Module Testing
+- Each module should have its own test suite
+- Module tests should be independent of other modules
+- Module tests should cover all public interfaces
+- Module tests should include error cases
+- Module tests should be automated
+- Module test coverage should be monitored
+- Module tests should be run before deployment
+
+# Module Security
+- Each module should validate its own input
+- Each module should sanitize its own output
+- Each module should handle its own permissions
+- Each module should log security events
+- Each module should have security tests
+- Each module should follow WordPress security best practices
+
+# Module Performance
+- Each module should be optimized for performance
+- Each module should implement caching where appropriate
+- Each module should minimize database queries
+- Each module should use WordPress transients for caching
+- Each module should profile its performance
+- Each module should document performance requirements
 
 # Contribution Workflow Standards
 - Every code change or new feature must be accompanied by updated documentation (e.g., README.md, inline comments).
@@ -64,4 +128,8 @@ All PHP files (except inline alignment in arrays/comments) must use tabs for ind
 
 # Review & Automation
 - PR reviewers must check for these standards before approving.
-- Automated tools and pre-commit hooks should enforce these rules where possible. 
+- Automated tools and pre-commit hooks should enforce these rules where possible.
+
+# Cursor Project Rule: Parallel Documentation Paths
+
+All major documentation files (README, CONTRIBUTING, TROUBLESHOOTING, etc.) must have parallel development and production versions (e.g., README.dev.md and README.prod.md). Both versions must be kept up to date, include all shared sections, and be referenced in the main README or project landing page. This ensures clarity for both development and production users and prevents environment-specific confusion. 
