@@ -53,5 +53,22 @@ _Add your name in parentheses if you start working on an item!_
 
 - Pre-commit hooks and CI will enforce these rules automatically.
 
+## Practical Plugin Examples
+
+Here are some practical plugin ideas you can build using this modular, standards-compliant framework:
+
+- **Tic Tac Toe Game**: A playable game in the WordPress admin, demonstrating UI, AJAX, and state management.
+- **Simple Polls/Voting**: Let users create and vote in polls, with results displayed in real time.
+- **Contact Form with Logging**: A secure, extensible contact form with admin-side message logging and spam protection.
+- **Custom Redirect Manager**: Manage and track custom URL redirects, with analytics and error logging.
+- **Admin Notes/Sticky Notes**: Allow admins to leave notes for themselves or other users, with privacy and permissions.
+- **Maintenance Mode Switch**: Toggle site-wide maintenance mode with customizable messaging and scheduling.
+- **User Feedback Widget**: Collect feedback from users, with moderation and export features.
+- **Simple Event Calendar**: Add and display events, with RSVP and notification options.
+- **Download Manager**: Track and control file downloads, with access restrictions and reporting.
+- **Admin Dashboard Widgets**: Add custom widgets to the WordPress dashboard for stats, tips, or quick actions.
+
+These examples are great starting points for learning, contributing, or building your own production plugins. If you have an idea, open an issue or PR!
+
 ## Questions or Suggestions?
 Open an issue or start a discussion! We're happy to help and open to new ideas. 

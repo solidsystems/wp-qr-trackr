@@ -2,7 +2,6 @@
 
 # Node, Composer, and vendor
 node_modules/
-vendor/
 composer.json
 composer.lock
 package.json

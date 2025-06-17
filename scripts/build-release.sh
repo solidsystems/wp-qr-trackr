@@ -30,79 +30,86 @@ if [ ! -f "$PLUGIN_FILE" ]; then
   exit 1
 fi
 
-if [ $# -lt 1 ]; then
-  echo "Usage: $0 [major|minor|patch|prerelease [type] N]"
-  exit 1
-fi
-
-BUMP_TYPE="$1"
-
-# Extract current version from plugin file
-CURRENT_VERSION=$(grep "Version:" "$PLUGIN_FILE" | head -1 | sed 's/.*Version: *//' | sed 's/ .*//')
-if [ -z "$CURRENT_VERSION" ]; then
-  echo "Error: Could not find current version in $PLUGIN_FILE"
-  exit 1
-fi
-
-if [ "$BUMP_TYPE" = "prerelease" ]; then
-  # Usage: prerelease [type] N
-  if [ $# -eq 2 ]; then
-    PR_TYPE="rc"
-    PR_NUM="$2"
-  elif [ $# -eq 3 ]; then
-    PR_TYPE="$2"
-    PR_NUM="$3"
-    if [[ ! "$PR_TYPE" =~ ^(rc|beta|alpha)$ ]]; then
-      echo "Error: prerelease type must be 'rc', 'beta', or 'alpha'"
-      exit 1
-    fi
-  else
-    echo "Usage: $0 prerelease [type] N (where type is rc, beta, or alpha; N is the prerelease number)"
+# Function to display usage
+usage() {
+    echo "Usage: $0 [major|minor|patch|prerelease [type] N]"
     exit 1
-  fi
-  NEW_VERSION="${CURRENT_VERSION}-${PR_TYPE}${PR_NUM}"
-else
-  IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-  case "$BUMP_TYPE" in
-    major)
-      MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0;;
-    minor)
-      MINOR=$((MINOR+1)); PATCH=0;;
-    patch)
-      PATCH=$((PATCH+1));;
-    *)
-      echo "Usage: $0 [major|minor|patch|prerelease [type] N]"; exit 1;;
-  esac
-  NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+}
+
+# Function to bump version
+bump_version() {
+    local version_file="wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php"
+    local current_version=$(grep -E '^\s*\*?\s*Version:\s*[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?' "$version_file" | head -1 | sed -E 's/.*Version:\s*([0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?).*/\1/')
+    local new_version=""
+
+    case "$1" in
+        major)
+            new_version=$(echo "$current_version" | awk -F. '{$1++; $2=0; $3=0; print $1"."$2"."$3}')
+            ;;
+        minor)
+            new_version=$(echo "$current_version" | awk -F. '{$2++; $3=0; print $1"."$2"."$3}')
+            ;;
+        patch)
+            new_version=$(echo "$current_version" | awk -F. '{$3++; print $1"."$2"."$3}')
+            ;;
+        prerelease)
+            if [ -z "$2" ] || [ -z "$3" ]; then
+                usage
+            fi
+            new_version="${current_version}-${2}${3}"
+            ;;
+        *)
+            usage
+            ;;
+    esac
+
+    # Update version in plugin file
+    sed -i '' -E "s/(Version:).*/\1 $new_version/" "$version_file"
+    echo "Bumped version: $current_version -> $new_version"
+
+    # Update CHANGELOG.md
+    local today=$(date +%Y-%m-%d)
+    local changelog_entry="## [$new_version] - $today\n\n### Changed\n- Release $new_version\n\n"
+    sed -i '' "3i\\
+$changelog_entry" CHANGELOG.md
+    echo "Updated CHANGELOG.md with new version entry."
+}
+
+# Main script
+if [ $# -lt 1 ]; then
+    usage
 fi
 
-# Update version in plugin file
-sed -i.bak "s/Version: $CURRENT_VERSION/Version: $NEW_VERSION/" "$PLUGIN_FILE"
-rm "$PLUGIN_FILE.bak"
+# Bump version
+bump_version "$@"
 
-echo "Bumped version: $CURRENT_VERSION -> $NEW_VERSION"
+# Create release directory
+RELEASE_DIR="wp-qr-trackr"
+rm -rf "$RELEASE_DIR"
+mkdir -p "$RELEASE_DIR"
 
-# Update CHANGELOG.md
-if [ ! -f "$CHANGELOG" ]; then
-  touch "$CHANGELOG"
-fi
-DATE=$(date +%Y-%m-%d)
-CHANGELOG_ENTRY="\n## [$NEW_VERSION] - $DATE\n- Release $NEW_VERSION\n"
-sed -i.bak "1s;^;$CHANGELOG_ENTRY\n;" "$CHANGELOG"
-rm "$CHANGELOG.bak"
+# Copy essential files
+echo "Copying essential files..."
+cp wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php "$RELEASE_DIR/"
+cp wp-content/plugins/wp-qr-trackr/qr-trackr.php "$RELEASE_DIR/"
+cp wp-content/plugins/wp-qr-trackr/README.md "$RELEASE_DIR/"
+cp wp-content/plugins/wp-qr-trackr/composer.json "$RELEASE_DIR/"
 
-echo "Updated $CHANGELOG with new version entry."
+# Copy core directories
+echo "Copying core directories..."
+cp -r wp-content/plugins/wp-qr-trackr/includes "$RELEASE_DIR/"
+cp -r wp-content/plugins/wp-qr-trackr/assets "$RELEASE_DIR/"
 
-# Use rsync to copy only the files not ignored by .distignore to a temp dir
-TMP_DIR=$(mktemp -d)
-rsync -av --exclude-from="$DISTIGNORE" "$PLUGIN_DIR/" "$TMP_DIR/wp-qr-trackr/"
+# Install production dependencies
+echo "Installing production dependencies..."
+cd "$RELEASE_DIR"
+composer install --no-dev --optimize-autoloader
+cd ..
 
-# Zip the result
-ZIP_NAME="wp-qr-trackr-v$NEW_VERSION.zip"
-cd "$TMP_DIR"
-zip -r "$OLDPWD/$ZIP_NAME" wp-qr-trackr
-cd "$OLDPWD"
+# Create zip file
+VERSION=$(grep -E '^\s*\*?\s*Version:\s*[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?' "$RELEASE_DIR/wp-qr-trackr.php" | head -1 | sed -E 's/.*Version:\s*([0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?).*/\1/')
+zip -r "wp-qr-trackr-v$VERSION.zip" "$RELEASE_DIR"
+echo "Release zip created: wp-qr-trackr-v$VERSION.zip"
 
-# Clean up
-echo "Release zip created: $ZIP_NAME"
-rm -rf "$TMP_DIR" 
+# Cleanup
+rm -rf "$RELEASE_DIR" 

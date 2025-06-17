@@ -132,4 +132,7 @@ All PHP files (except inline alignment in arrays/comments) must use tabs for ind
 
 # Cursor Project Rule: Parallel Documentation Paths
 
-All major documentation files (README, CONTRIBUTING, TROUBLESHOOTING, etc.) must have parallel development and production versions (e.g., README.dev.md and README.prod.md). Both versions must be kept up to date, include all shared sections, and be referenced in the main README or project landing page. This ensures clarity for both development and production users and prevents environment-specific confusion. 
+All major documentation files (README, CONTRIBUTING, TROUBLESHOOTING, etc.) must have parallel development and production versions (e.g., README.dev.md and README.prod.md). Both versions must be kept up to date, include all shared sections, and be referenced in the main README or project landing page. This ensures clarity for both development and production users and prevents environment-specific confusion.
+
+# Cursor Project Rule: Plugin-Based Database Migrations
+Always use plugin-based migration routines for database schema changes (never require manual SQL or WP-CLI for schema updates). All schema changes must be handled automatically on plugin activation or upgrade. 

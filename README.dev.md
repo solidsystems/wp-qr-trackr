@@ -98,4 +98,26 @@ See [docs/TROUBLESHOOTING.dev.md](docs/TROUBLESHOOTING.dev.md) for help with com
 
 ## Links & Further Reading
 
-(Shared links...) 
+(Shared links...)
+
+---
+
+## Common Module Loading and Activation Issues
+
+### Module Loading Order
+- Modules must be loaded in the correct order to ensure all dependencies are available when needed.
+- For example, if `module-admin.php` calls a function from `module-debug.php`, the debug module must be loaded first.
+- Always update the main plugin file to load modules in dependency order.
+
+### Activation Hook Pitfalls
+- Activation hooks can fail if required modules or functions are not loaded before the hook runs.
+- Undefined function errors (e.g., `Call to undefined function qr_trackr_is_debug_enabled()`) are usually caused by loading order issues.
+- Use robust error handling and debug logging in activation hooks to catch and diagnose these problems.
+
+### Debugging Tips
+- Check `wp-content/debug.log` for fatal errors and stack traces.
+- Add debug logging at the start and end of each module and activation hook.
+- If you see a fatal error about an undefined function, check the module load order in your main plugin file.
+- Always test plugin activation and deactivation in a clean environment to catch these issues early.
+
+--- 
