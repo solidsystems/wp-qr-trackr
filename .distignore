@@ -2,8 +2,8 @@
 
 # Node, Composer, and vendor
 node_modules/
-composer.json
-composer.lock
+# composer.json
+# composer.lock
 package.json
 yarn.lock
 tsconfig.json
@@ -22,7 +22,7 @@ Dockerfile
 docker-compose.yml
 
 # Project plans, docs, and meta
-README.md
+# README.md
 CONTRIBUTING.md
 PROJECT_PLAN*.md
 TODO.md

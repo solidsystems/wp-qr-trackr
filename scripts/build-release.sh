@@ -20,6 +20,11 @@ if ! command -v zip >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v rsync >/dev/null 2>&1; then
+  echo "Error: rsync is not installed. Please install rsync and try again."
+  exit 1
+fi
+
 if [ ! -f "$DISTIGNORE" ]; then
   echo "Error: .distignore file not found."
   exit 1
@@ -88,28 +93,99 @@ RELEASE_DIR="wp-qr-trackr"
 rm -rf "$RELEASE_DIR"
 mkdir -p "$RELEASE_DIR"
 
-# Copy essential files
-echo "Copying essential files..."
-cp wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php "$RELEASE_DIR/"
-cp wp-content/plugins/wp-qr-trackr/qr-trackr.php "$RELEASE_DIR/"
-cp wp-content/plugins/wp-qr-trackr/README.md "$RELEASE_DIR/"
-cp wp-content/plugins/wp-qr-trackr/composer.json "$RELEASE_DIR/"
+# Use rsync with .distignore as exclude list to copy only needed files
+# .distignore should list all files/directories to exclude from the release (like .gitignore)
+# Example .distignore entries: .git/ node_modules/ tests/ .DS_Store *.md
 
-# Copy core directories
-echo "Copying core directories..."
-cp -r wp-content/plugins/wp-qr-trackr/includes "$RELEASE_DIR/"
-cp -r wp-content/plugins/wp-qr-trackr/assets "$RELEASE_DIR/"
+# Copy plugin files using rsync and .distignore
+# The --delete flag ensures the release dir is clean
+rsync -av --delete --exclude-from="$DISTIGNORE" "$PLUGIN_DIR/" "$RELEASE_DIR/"
 
-# Install production dependencies
-echo "Installing production dependencies..."
-cd "$RELEASE_DIR"
-composer install --no-dev --optimize-autoloader
-cd ..
+# Always include root-level README.md and composer.json in the release (required for verification and best practice)
+cp README.md "$RELEASE_DIR/" 2>/dev/null || true
+cp composer.json "$RELEASE_DIR/" 2>/dev/null || true
+
+# Copy composer.lock for reproducible installs
+cp "$PLUGIN_DIR/composer.lock" "$RELEASE_DIR/" 2>/dev/null || true
+
+# Install production dependencies in the release dir
+if [ -f "$RELEASE_DIR/composer.json" ]; then
+  echo "Installing production dependencies in release dir..."
+  (cd "$RELEASE_DIR" && composer install --no-dev --optimize-autoloader)
+fi
+
+# Remove dev-only files from vendor if any slipped through
+find "$RELEASE_DIR/vendor" -type d -name "tests" -prune -exec rm -rf '{}' + 2>/dev/null || true
+find "$RELEASE_DIR/vendor" -type d -name "test" -prune -exec rm -rf '{}' + 2>/dev/null || true
 
 # Create zip file
 VERSION=$(grep -E '^\s*\*?\s*Version:\s*[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?' "$RELEASE_DIR/wp-qr-trackr.php" | head -1 | sed -E 's/.*Version:\s*([0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?).*/\1/')
-zip -r "wp-qr-trackr-v$VERSION.zip" "$RELEASE_DIR"
-echo "Release zip created: wp-qr-trackr-v$VERSION.zip"
+ZIP_FILE="wp-qr-trackr-v$VERSION.zip"
+zip -r "$ZIP_FILE" "$RELEASE_DIR"
+echo "Release zip created: $ZIP_FILE"
+
+# Automated release verification
+VERIFY_DIR="verify-release-tmp"
+rm -rf "$VERIFY_DIR"
+mkdir "$VERIFY_DIR"
+unzip -q "$ZIP_FILE" -d "$VERIFY_DIR"
+PLUGIN_VERIFY_DIR="$VERIFY_DIR/wp-qr-trackr"
+
+# Required files/directories
+REQUIRED=(
+  "wp-qr-trackr.php"
+  "qr-trackr.php"
+  "README.md"
+  "composer.json"
+  "vendor"
+  "includes"
+  "assets"
+)
+
+echo "\nVerifying release contents..."
+FAIL=0
+for f in "${REQUIRED[@]}"; do
+  if [ ! -e "$PLUGIN_VERIFY_DIR/$f" ]; then
+    echo "ERROR: Required file or directory missing: $f"
+    FAIL=1
+  fi
+done
+
+# Forbidden files/directories
+FORBIDDEN=(
+  ".git"
+  ".env"
+  ".env.example"
+  "node_modules"
+  "tests"
+  ".DS_Store"
+  "scripts"
+  "docker-compose.yml"
+  "php.ini"
+)
+
+for f in "${FORBIDDEN[@]}"; do
+  if find "$PLUGIN_VERIFY_DIR" -name "$f" | grep -q .; then
+    echo "ERROR: Forbidden file or directory found in release: $f"
+    FAIL=1
+  fi
+done
+
+if [ "$FAIL" -eq 0 ]; then
+  echo "Release verification PASSED."
+else
+  echo "Release verification FAILED."
+  rm -rf "$VERIFY_DIR"
+  exit 2
+fi
+
+# Clean up
+rm -rf "$VERIFY_DIR"
 
 # Cleanup
-rm -rf "$RELEASE_DIR" 
+rm -rf "$RELEASE_DIR"
+
+# Notes for maintainers:
+# - To add or remove files from the release, edit .distignore (see README.dev.md for details)
+# - This script uses rsync for speed and reliability; .distignore is the single source of truth for exclusions
+# - Only production dependencies are included; dev/test files are pruned 
