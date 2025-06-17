@@ -84,6 +84,9 @@ function qr_trackr_admin_enqueue_scripts($hook) {
 	
 	wp_localize_script('qr-trackr-admin', 'qrTrackrAdmin', array(
 		'nonce' => wp_create_nonce('qr_trackr_nonce'),
+		'editNonce' => wp_create_nonce('qr_trackr_edit'),
+		'deleteNonce' => wp_create_nonce('qr_trackr_delete'),
+		'regenerateNonce' => wp_create_nonce('qr_trackr_regenerate'),
 		'ajaxurl' => admin_url('admin-ajax.php'),
 		'i18n' => array(
 			'confirmDelete' => __('Are you sure you want to delete this QR code?', 'wp-qr-trackr'),
@@ -569,7 +572,7 @@ function qr_trackr_stats_page() {
 
 // Add AJAX handler for getting link data
 add_action('wp_ajax_qr_trackr_get_link', function() {
-	if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'qr_trackr_admin')) {
+	if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'qr_trackr_edit')) {
 		wp_send_json_error('Invalid security token.');
 	}
 
