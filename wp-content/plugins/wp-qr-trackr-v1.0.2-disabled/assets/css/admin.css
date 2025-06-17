@@ -1,0 +1,60 @@
+/* QR Trackr Admin Styles */
+
+.qr-trackr-container {
+	margin-top: 20px;
+}
+
+.qr-trackr-message {
+	margin-bottom: 20px;
+}
+
+.qr-trackr-list {
+	background: #fff;
+	padding: 20px;
+	border: 1px solid #ccd0d4;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.qr-trackr-qr-image {
+	max-width: 200px;
+	height: auto;
+	margin: 10px 0;
+}
+
+.qr-trackr-create-form {
+	margin-bottom: 2em;
+	background: #fafafa;
+	padding: 1em;
+	border: 1px solid #eee;
+	max-width: 600px;
+}
+
+.qr-trackr-create-form select {
+	min-width: 250px;
+}
+
+.qr-trackr-debug-log {
+	background: #fff;
+	padding: 20px;
+	border: 1px solid #ccd0d4;
+	box-shadow: 0 1px 1px rgba(0,0,0,.04);
+	margin-top: 20px;
+}
+
+.qr-trackr-debug-log pre {
+	margin: 0;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 782px) {
+	.qr-trackr-create-form select {
+		min-width: 100%;
+		margin-bottom: 10px;
+	}
+
+	.qr-trackr-create-form button {
+		width: 100%;
+	}
+} 

@@ -79,6 +79,8 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
    docker compose up --build
    ```
 
+> **Note:** Debug mode is enabled by default in the development environment. When using the standard Docker workflow (including `reset-docker.sh`), a `wp-config-dev.php` file is automatically included to enable `WP_DEBUG` and log errors to `wp-content/debug.log`. This ensures all PHP errors and warnings are captured for troubleshooting during development. Do not use this file in production.
+
 ---
 
 ## Usage
@@ -721,3 +723,239 @@ During code review and PHPCS compliance work, the Cursor assistant specifically 
 ## Stuff To Do After It's Done
 
 - **PR #11 has been merged:** The build script and release process improvements have been completed. The automated release workflow is now in place, ensuring robust and repeatable releases.
+
+## Changelog
+
+### Version 1.0.4
+- Resolved constant redeclaration issues.
+- Fixed SQL syntax errors in database operations.
+- Improved overall stability and code quality.
+
+### Version 1.0.3
+- Fixed SQL syntax errors in database operations.
+- Improved code quality and stability.
+
+### Version 1.0.2
+- Initial release to address issues with the plugin.
+
+### Version 1.0.1
+- Initial release of the QR Trackr plugin.
+
+## Summary of Changes
+- **Version Updates**: Released versions 1.0.2, 1.0.3, and 1.0.4 to address various issues and improve functionality.
+- **Code Improvements**: Removed duplicate constants, fixed SQL syntax errors, and improved the activation function.
+- **New Features**: Implemented an automated release process and enhanced documentation.
+- **Bug Fixes**: Resolved fatal errors and warnings related to file inclusion and constant redeclarations.
+- **Documentation Updates**: Updated the README to reflect changes and improvements made to the plugin.
+
+## Post-Foundation Changes and Improvements
+
+### List Table Enhancements
+- Implemented proper column rendering with `single_row()` and `single_row_columns()`
+- Added destination URL editing functionality
+- Fixed SQL queries to use proper table name formatting with backticks
+- Added debug logging for better troubleshooting
+- Improved table display with proper HTML structure
+
+### JavaScript Optimizations
+- Scoped jQuery properly using IIFE pattern
+- Added 'use strict' mode for better error catching
+- Improved event handling for edit functionality
+- Reduced script loading to only QR Trackr admin pages
+- Enhanced debug logging in console
+
+### Performance Improvements
+- Removed unnecessary script loading on post/page creation screens
+- Optimized SQL queries with proper indexing
+- Added caching for frequently accessed data
+- Improved table rendering performance
+- Reduced DOM manipulation overhead
+
+### Security Enhancements
+- Added nonces for all AJAX operations
+- Improved data sanitization and validation
+- Enhanced URL validation for destination links
+- Added proper escaping for all output
+- Implemented secure redirect handling
+
+### UI/UX Improvements
+- Simplified menu structure (renamed to "QR Trackr")
+- Enhanced success message display duration
+- Improved QR code preview and download experience
+- Added clearer instructions for users
+- Mobile-first responsive design improvements
+
+### Database Optimizations
+- Fixed table name formatting in queries
+- Added proper indexing for frequently queried columns
+- Implemented efficient caching strategies
+- Optimized scan recording process
+- Improved query performance for statistics
+
+### Code Quality
+- Added comprehensive debug logging
+- Improved error handling and reporting
+- Enhanced code documentation
+- Fixed deprecated function usage
+- Implemented WordPress coding standards
+
+## Requirements
+
+- WordPress 5.0 or higher
+- PHP 7.4 or higher
+- MySQL 5.6 or higher
+
+## License
+
+This plugin is licensed under the GPL v2 or later.
+
+## Credits
+
+- QR Code generation powered by [Endroid QR Code](https://github.com/endroid/qr-code)
+- Icons by [Dashicons](https://developer.wordpress.org/resource/dashicons/)
+
+## Database Schema
+
+The plugin uses two main database tables:
+
+### qr_trackr_links
+- `id` (bigint) - Primary key, auto-increment
+- `post_id` (bigint) - Associated WordPress post/page ID
+- `destination_url` (varchar) - The URL the QR code redirects to
+- `created_at` (datetime) - When the QR code was created
+- `updated_at` (datetime) - When the QR code was last updated
+
+### qr_trackr_scans
+- `id` (bigint) - Primary key, auto-increment
+- `link_id` (bigint) - Foreign key to qr_trackr_links
+- `user_agent` (varchar) - Browser/device information
+- `ip_address` (varchar) - IP address of the scanner
+- `scanned_at` (datetime) - When the QR code was scanned
+
+## Modular Architecture Philosophy
+
+The QR Trackr plugin is built with a modular architecture to ensure maintainability, scalability, and clean separation of concerns. This approach aligns with WordPress best practices and makes the codebase easier to maintain and extend.
+
+### Core Principles
+
+1. **Separation of Concerns**
+   - Each module handles a specific aspect of functionality
+   - Clear boundaries between different types of operations
+   - Reduced coupling between components
+
+2. **Single Responsibility**
+   - Each module has one primary purpose
+   - Functions are focused and do one thing well
+   - Easier to test and maintain
+
+3. **Progressive Enhancement**
+   - Core functionality works without optional features
+   - Graceful degradation when dependencies are missing
+   - Clear fallback mechanisms
+
+### Module Organization
+
+The plugin is organized into the following modules:
+
+1. **Core Modules** (Loaded First)
+   - `module-requirements.php` - System requirements checking
+   - `module-activation.php` - Plugin activation/deactivation
+   - `module-utils.php` - Utility functions and database helpers
+
+2. **Feature Modules**
+   - `module-qr.php` - QR code generation
+   - `module-rewrite.php` - URL rewriting and redirection
+   - `module-ajax.php` - AJAX handlers
+   - `module-debug.php` - Debug logging
+
+3. **UI/Admin Modules** (Loaded Last)
+   - `module-admin.php` - Admin interface
+   - `class-qr-trackr-list-table.php` - Custom list table
+
+### Benefits of Modular Approach
+
+1. **Maintainability**
+   - Easier to locate and fix issues
+   - Clearer code organization
+   - Simpler testing and debugging
+
+2. **Scalability**
+   - New features can be added as separate modules
+   - Existing modules can be enhanced independently
+   - Reduced risk of conflicts
+
+3. **Testability**
+   - Modules can be tested in isolation
+   - Clearer boundaries for unit tests
+   - Easier to mock dependencies
+
+4. **Security**
+   - Better control over data flow
+   - Clearer permission boundaries
+   - Easier to audit and secure
+
+### Future Development Guidelines
+
+When adding new features or making changes:
+
+1. **Documentation**
+   - Document module purpose and dependencies
+   - Keep README and inline comments up to date
+   - Document any new database schema changes
+
+2. **Code Standards**
+   - Follow WordPress coding standards
+   - Maintain modular structure
+   - Use proper error handling
+
+3. **Testing**
+   - Add tests for new functionality
+   - Update existing tests as needed
+   - Test edge cases and error conditions
+
+4. **User Experience**
+   - Maintain mobile-first approach
+   - Provide clear feedback
+   - Handle errors gracefully
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This plugin is licensed under the GPL v2 or later.
+
+## Example: Production Configuration (DigitalOcean App Platform)
+
+When deploying your WordPress site and the QR Trackr plugin to a production environment—such as a site created with [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform/)—it is critical to disable debug mode and ensure your configuration is secure and optimized for performance.
+
+**Recommended `wp-config.php` settings for production:**
+
+```php
+// Production configuration example
+
+define( 'WP_DEBUG', false );
+define( 'WP_DEBUG_LOG', false );
+define( 'WP_DEBUG_DISPLAY', false );
+
+define( 'DISALLOW_FILE_EDIT', true ); // Prevents file editing from the admin
+
+define( 'FORCE_SSL_ADMIN', true ); // Enforce SSL for admin
+
+// Set database and other secrets via environment variables (recommended for DigitalOcean App Platform)
+define( 'DB_NAME', getenv('DB_NAME') );
+define( 'DB_USER', getenv('DB_USER') );
+define( 'DB_PASSWORD', getenv('DB_PASSWORD') );
+define( 'DB_HOST', getenv('DB_HOST') );
+// ... other environment-based config ...
+```
+
+> **Important:**
+> - Do **not** include `wp-config-dev.php` or enable debug mode in production.
+> - Ensure all secrets (database credentials, salts, etc.) are set via environment variables in the DigitalOcean App Platform dashboard.
+> - Always use SSL and restrict file editing in the admin for security.
+> - Monitor logs using DigitalOcean's built-in logging or forward to a managed OpenSearch instance as described in the infrastructure section.

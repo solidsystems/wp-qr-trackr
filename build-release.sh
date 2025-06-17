@@ -5,7 +5,8 @@ set -e
 
 # Configuration
 PLUGIN_NAME="wp-qr-trackr"
-VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
+PLUGIN_SRC_DIR="wp-content/plugins/wp-qr-trackr-v1.0.2-disabled"
+VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' "$PLUGIN_SRC_DIR/wp-qr-trackr.php" | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
 BUILD_DIR="build"
 DIST_DIR="dist"
 ZIP_NAME="${PLUGIN_NAME}-v${VERSION}.zip"
@@ -46,6 +47,12 @@ create_build_dir() {
 copy_files() {
     print_status "Copying files to build directory..."
     
+    # Install Composer dependencies if not already installed
+    if [ ! -d "vendor" ]; then
+        print_status "Installing Composer dependencies..."
+        composer install --no-dev --optimize-autoloader
+    fi
+    
     # Read .distignore and create exclusion list
     if [ -f .distignore ]; then
         EXCLUDES=$(cat .distignore | grep -v '^#' | grep -v '^$' | sed 's/^/--exclude=/')
@@ -60,9 +67,12 @@ copy_files() {
         --exclude='build' \
         --exclude='dist' \
         --exclude='node_modules' \
-        --exclude='vendor' \
         --exclude='*.zip' \
-        ./ "$BUILD_DIR/$PLUGIN_NAME/"
+        "$PLUGIN_SRC_DIR/" "$BUILD_DIR/"
+        
+    # Copy vendor directory
+    print_status "Copying vendor directory..."
+    cp -r vendor "$BUILD_DIR/"
 }
 
 # Create zip file
@@ -70,7 +80,7 @@ create_zip() {
     print_status "Creating zip file..."
     mkdir -p "$DIST_DIR"
     cd "$BUILD_DIR"
-    zip -r "../$DIST_DIR/$ZIP_NAME" "$PLUGIN_NAME"
+    zip -r "../$DIST_DIR/$ZIP_NAME" .
     cd ..
 }
 
