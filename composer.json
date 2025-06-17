@@ -12,6 +12,6 @@
     },
     "phpcs": "vendor/bin/phpcs --standard=wp-content/plugins/wp-qr-trackr/phpcs.xml --report=full wp-content/plugins/wp-qr-trackr",
     "require": {
-        "endroid/qr-code": "^4.0"
+        "endroid/qr-code": "^5.0"
     }
 }
