@@ -959,3 +959,53 @@ define( 'DB_HOST', getenv('DB_HOST') );
 > - Ensure all secrets (database credentials, salts, etc.) are set via environment variables in the DigitalOcean App Platform dashboard.
 > - Always use SSL and restrict file editing in the admin for security.
 > - Monitor logs using DigitalOcean's built-in logging or forward to a managed OpenSearch instance as described in the infrastructure section.
+
+## Local Docker Environments: Parallel Dev & Nonprod
+
+This project supports running both a development and a nonprod (production-like) WordPress environment in parallel using Docker Compose. Each environment is fully isolated, with its own containers, networks, and volumes.
+
+- **Dev environment** (port 8080):
+  - Plugin is live-mounted for rapid iteration.
+  - Debug mode and dev tools enabled by default.
+  - Use for active development and testing.
+- **Nonprod environment** (port 8081):
+  - Clean, vanilla WordPress install (plugin NOT preinstalled).
+  - Use for production-like testing, plugin upload, and release validation.
+
+### Launching Both Environments
+
+Use the provided script to launch both environments in parallel:
+
+```sh
+./scripts/launch-all-docker.sh
+```
+
+- This script starts both dev (8080) and nonprod (8081) environments with unique Docker Compose project names (`wpqrdev` and `wpqrnonprod`).
+- It includes robust health checks, waits for containers to be ready, and cleans up orphaned containers.
+- You can access:
+  - Dev: http://localhost:8080
+  - Nonprod: http://localhost:8081
+
+### Stopping and Resetting Environments
+
+- To stop all containers:
+  ```sh
+  docker compose -p wpqrdev down
+  docker compose -p wpqrnonprod down
+  ```
+- To reset a specific environment (removes all data):
+  ```sh
+  ./scripts/reset-docker.sh dev
+  ./scripts/reset-docker.sh nonprod
+  ```
+
+### Troubleshooting Parallel Docker
+- If you see port conflicts, ensure no other services are using 8080 or 8081.
+- Use `docker ps` and `docker compose ps -a -p wpqrdev`/`-p wpqrnonprod` to inspect running containers.
+- The launch script uses `--remove-orphans` to clean up old containers.
+- If you encounter issues, try stopping all containers and running the launch script again.
+
+### Why Parallel Environments?
+- **Dev**: Fast, iterative development with live plugin code.
+- **Nonprod**: Clean, production-like WordPress for final plugin testing and release validation.
+- Both can run simultaneously without interference, supporting robust QA and release workflows.

@@ -46,3 +46,7 @@ flowchart TD
   WP --> Plugin
   Plugin --> WP
 ``` 
+
+## Environment Architecture Note
+
+The project now supports parallel Docker Compose environments for development (dev, port 8080) and production-like testing (nonprod, port 8081). Use `./scripts/launch-all-docker.sh` to run both in isolation. This enables rapid iteration in dev while ensuring all releases are validated in a clean, production-like WordPress instance, supporting robust modularity and QA. 

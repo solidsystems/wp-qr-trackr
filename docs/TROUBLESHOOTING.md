@@ -300,4 +300,25 @@ Work through each category and file, applying the recommended fixes. Re-run PHPC
 
 ## Compliance Checklist Reference
 
-A full WordPress Coding Standards compliance checklist is now maintained in the [README.md](./README.md). Please refer to that section for the latest status and any remaining minor issues before release or PR merge. 
+A full WordPress Coding Standards compliance checklist is now maintained in the [README.md](./README.md). Please refer to that section for the latest status and any remaining minor issues before release or PR merge.
+
+## Parallel Docker Environments & Troubleshooting
+
+This project supports running both dev (8080) and nonprod (8081) WordPress environments in parallel using Docker Compose. Use `./scripts/launch-all-docker.sh` to start both environments with full isolation.
+
+### Common Issues
+- **Port Conflicts:**
+  - If you see errors about ports 8080 or 8081 being in use, run `lsof -i :8080` or `lsof -i :8081` to find and stop the conflicting process.
+- **Orphaned Containers:**
+  - The launch script uses `--remove-orphans` to clean up old containers. If you see unexpected containers, run `docker compose -p wpqrdev down` and `docker compose -p wpqrnonprod down`.
+- **Resetting Environments:**
+  - To reset dev: `./scripts/reset-docker.sh dev`
+  - To reset nonprod: `./scripts/reset-docker.sh nonprod`
+- **Accessing Environments:**
+  - Dev: http://localhost:8080
+  - Nonprod: http://localhost:8081
+
+### Best Practices
+- Always use the launch script for parallel environments.
+- Only upload release ZIPs to nonprod; dev is for live code.
+- If in doubt, stop all containers and relaunch. 
