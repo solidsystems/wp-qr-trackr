@@ -81,7 +81,8 @@ function qr_trackr_admin_enqueue_scripts($hook) {
 		QR_TRACKR_VERSION,
 		true
 	);
-	wp_enqueue_style('jquery-ui-autocomplete');
+	// Enqueue a jQuery UI theme for Autocomplete styling
+	wp_enqueue_style('jquery-ui-theme', '//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css');
 	
 	wp_localize_script('qr-trackr-admin', 'qrTrackrAdmin', array(
 		'nonce' => wp_create_nonce('qr_trackr_nonce'),
