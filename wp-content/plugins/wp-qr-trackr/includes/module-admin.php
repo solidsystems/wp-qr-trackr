@@ -77,10 +77,11 @@ function qr_trackr_admin_enqueue_scripts($hook) {
 	wp_enqueue_script(
 		'qr-trackr-admin',
 		QR_TRACKR_PLUGIN_URL . 'assets/js/admin.js',
-		array('jquery'),
+		array('jquery', 'jquery-ui-autocomplete'),
 		QR_TRACKR_VERSION,
 		true
 	);
+	wp_enqueue_style('jquery-ui-autocomplete');
 	
 	wp_localize_script('qr-trackr-admin', 'qrTrackrAdmin', array(
 		'nonce' => wp_create_nonce('qr_trackr_nonce'),
@@ -125,25 +126,10 @@ function qr_trackr_admin_page() {
 				</div>
 				
 				<div class="form-field post-select" style="display: none;">
-					<label for="post_id"><?php _e('Select Post/Page', 'wp-qr-trackr'); ?></label>
-					<select name="post_id" id="post_id">
-						<?php
-						$posts = get_posts(array(
-							'post_type' => array('post', 'page'),
-							'post_status' => 'publish',
-							'numberposts' => -1
-						));
-						
-						foreach ($posts as $post) {
-							printf(
-								'<option value="%s" data-url="%s">%s</option>',
-								esc_attr($post->ID),
-								esc_url(get_permalink($post->ID)),
-								esc_html($post->post_title)
-							);
-						}
-						?>
-					</select>
+					<label for="post_search_input"><?php _e('Select Post/Page', 'wp-qr-trackr'); ?></label>
+					<input type="text" name="post_search_input" id="post_search_input" placeholder="Start typing to search posts/pages..." autocomplete="off">
+					<input type="hidden" name="post_id" id="post_id">
+					<div id="post_search_results" class="qr-trackr-search-results" style="position:relative;"></div>
 				</div>
 				
 				<div class="form-field external-url" style="display: none;">

@@ -491,6 +491,31 @@ function qr_trackr_track_scan() {
 }
 add_action('init', 'qr_trackr_track_scan');
 
+add_action('wp_ajax_qr_trackr_search_posts', 'qr_trackr_ajax_search_posts');
+function qr_trackr_ajax_search_posts() {
+	check_ajax_referer('qr_trackr_nonce', 'nonce');
+	if (!current_user_can('manage_options')) {
+		wp_send_json_error('Permission denied.');
+	}
+	$term = isset($_POST['term']) ? sanitize_text_field(wp_unslash($_POST['term'])) : '';
+	$args = array(
+		'post_type' => array('post', 'page'),
+		'post_status' => 'publish',
+		's' => $term,
+		'posts_per_page' => 20,
+	);
+	$posts = get_posts($args);
+	$results = array();
+	foreach ($posts as $post) {
+		$results[] = array(
+			'ID' => $post->ID,
+			'title' => $post->post_title,
+			'permalink' => get_permalink($post->ID),
+		);
+	}
+	wp_send_json_success($results);
+}
+
 if ( function_exists( 'qr_trackr_debug_log' ) ) {
 	qr_trackr_debug_log('Loaded module-ajax.php.');
 }

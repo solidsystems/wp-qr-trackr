@@ -507,4 +507,41 @@ jQuery(document).ready(function($) {
 			$('.edit-qr[data-id="' + linkId + '"]').trigger('click');
 		});
 	});
+
+	// Enhance post/page search with autocomplete
+	if ($('#post_search_input').length) {
+		$('#post_search_input').autocomplete({
+			source: function(request, response) {
+				$.ajax({
+					type: 'POST',
+					url: qrTrackrAdmin.ajaxurl,
+					dataType: 'json',
+					data: {
+						action: 'qr_trackr_search_posts',
+						term: request.term,
+						nonce: qrTrackrAdmin.nonce
+					},
+					success: function(data) {
+						if (data.success && data.data) {
+							response(data.data.map(function(post) {
+								return {
+									label: post.title + ' (' + post.ID + ')',
+									value: post.title,
+									id: post.ID,
+									permalink: post.permalink
+								};
+							}));
+						} else {
+							response([]);
+						}
+					}
+				});
+			},
+			minLength: 2,
+			select: function(event, ui) {
+				$('#post_id').val(ui.item.id);
+				$('#post_id').data('url', ui.item.permalink);
+			}
+		});
+	}
 }); 
