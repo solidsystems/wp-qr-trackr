@@ -41,12 +41,19 @@ echo "[INFO] Starting local GitHub MCP server (port 7000)..."
 npx -y @modelcontextprotocol/server-github --port 7000 &
 MCP_PID=$!
 
+# Start local Context7 MCP server (advanced documentation as a service)
+echo "[INFO] Starting local Context7 MCP server (port 7001)..."
+npx -y @modelcontextprotocol/server-context7 --port 7001 &
+CONTEXT7_PID=$!
+
 # Print status and access URLs
 echo "\n[INFO] All environments started:"
 echo "  DEV:     http://localhost:8080 (WordPress dev)"
 echo "  NONPROD: http://localhost:8081 (WordPress nonprod)"
 echo "  MCP:     http://localhost:7000 (GitHub MCP API)"
+echo "  CONTEXT7: http://localhost:7001 (Context7 MCP: documentation as a service)"
 echo "\n[INFO] MCP server PID: $MCP_PID"
+echo "[INFO] Context7 MCP server PID: $CONTEXT7_PID"
 
 echo "[INFO] Tailing logs for all Docker containers... (Ctrl+C to stop)"
 docker-compose logs -f 
