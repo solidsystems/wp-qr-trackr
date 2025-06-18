@@ -510,37 +510,48 @@ jQuery(document).ready(function($) {
 
 	// Enhance post/page search with autocomplete
 	if ($('#post_search_input').length) {
+		function fetchPosts(term, callback) {
+			$.ajax({
+				type: 'POST',
+				url: qrTrackrAdmin.ajaxurl,
+				dataType: 'json',
+				data: {
+					action: 'qr_trackr_search_posts',
+					term: term,
+					nonce: qrTrackrAdmin.nonce
+				},
+				success: function(data) {
+					if (data.success && data.data) {
+						callback(data.data.map(function(post) {
+							return {
+								label: post.title + ' (' + post.ID + ')',
+								value: post.title,
+								id: post.ID,
+								permalink: post.permalink
+							};
+						}));
+					} else {
+						callback([]);
+					}
+				}
+			});
+		}
 		$('#post_search_input').autocomplete({
 			source: function(request, response) {
-				$.ajax({
-					type: 'POST',
-					url: qrTrackrAdmin.ajaxurl,
-					dataType: 'json',
-					data: {
-						action: 'qr_trackr_search_posts',
-						term: request.term,
-						nonce: qrTrackrAdmin.nonce
-					},
-					success: function(data) {
-						if (data.success && data.data) {
-							response(data.data.map(function(post) {
-								return {
-									label: post.title + ' (' + post.ID + ')',
-									value: post.title,
-									id: post.ID,
-									permalink: post.permalink
-								};
-							}));
-						} else {
-							response([]);
-						}
-					}
-				});
+				fetchPosts(request.term, response);
 			},
-			minLength: 2,
+			minLength: 0,
 			select: function(event, ui) {
 				$('#post_id').val(ui.item.id);
 				$('#post_id').data('url', ui.item.permalink);
+			},
+			open: function() {
+				// Optionally style the dropdown
+			}
+		});
+		$('#post_search_input').on('focus', function() {
+			if (!$(this).val()) {
+				$(this).autocomplete('search', '');
 			}
 		});
 	}
