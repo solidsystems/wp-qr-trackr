@@ -135,4 +135,10 @@ All PHP files (except inline alignment in arrays/comments) must use tabs for ind
 All major documentation files (README, CONTRIBUTING, TROUBLESHOOTING, etc.) must have parallel development and production versions (e.g., README.dev.md and README.prod.md). Both versions must be kept up to date, include all shared sections, and be referenced in the main README or project landing page. This ensures clarity for both development and production users and prevents environment-specific confusion.
 
 # Cursor Project Rule: Plugin-Based Database Migrations
-Always use plugin-based migration routines for database schema changes (never require manual SQL or WP-CLI for schema updates). All schema changes must be handled automatically on plugin activation or upgrade. 
+Always use plugin-based migration routines for database schema changes (never require manual SQL or WP-CLI for schema updates). All schema changes must be handled automatically on plugin activation or upgrade.
+
+# PHPCS Memory Requirement
+phpcs_min_memory_mb = 1024  # PHPCS requires at least 1GB of memory for this project. For large codebases, 4GB (4096MB) is recommended.
+
+# MCP Integration Rule
+# When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), Cursor and agents should use MCP APIs by default for documentation, repository, and cloud operations. This ensures consistent, secure, and agent-friendly workflows across all plugins and environments. 

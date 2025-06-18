@@ -46,14 +46,21 @@ echo "[INFO] Starting local Context7 MCP server (port 7001)..."
 npx -y @modelcontextprotocol/server-context7 --port 7001 &
 CONTEXT7_PID=$!
 
+# Start local DigitalOcean MCP server (cloud/devops automation)
+echo "[INFO] Starting local DigitalOcean MCP server (port 7002)..."
+npx -y @modelcontextprotocol/server-digitalocean --port 7002 &
+DO_MCP_PID=$!
+
 # Print status and access URLs
 echo "\n[INFO] All environments started:"
-echo "  DEV:     http://localhost:8080 (WordPress dev)"
-echo "  NONPROD: http://localhost:8081 (WordPress nonprod)"
-echo "  MCP:     http://localhost:7000 (GitHub MCP API)"
-echo "  CONTEXT7: http://localhost:7001 (Context7 MCP: documentation as a service)"
+echo "  DEV:       http://localhost:8080 (WordPress dev)"
+echo "  NONPROD:   http://localhost:8081 (WordPress nonprod)"
+echo "  MCP:       http://localhost:7000 (GitHub MCP API)"
+echo "  CONTEXT7:  http://localhost:7001 (Context7 MCP: documentation as a service)"
+echo "  DIGITALOCEAN: http://localhost:7002 (DigitalOcean MCP: cloud/devops automation)"
 echo "\n[INFO] MCP server PID: $MCP_PID"
 echo "[INFO] Context7 MCP server PID: $CONTEXT7_PID"
+echo "[INFO] DigitalOcean MCP server PID: $DO_MCP_PID"
 
 echo "[INFO] Tailing logs for all Docker containers... (Ctrl+C to stop)"
 docker-compose logs -f 

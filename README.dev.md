@@ -310,9 +310,9 @@ wp-qr-trackr is a modular, robust WordPress plugin for QR code generation and tr
 - `README.nonprod.md` for nonprod Docker/QA environment.
 - `README.prod.md` for production deployment and usage.
 
-## Local All-in-One Environment
+## All-in-One Environment
 
-You can now start all environments (dev, nonprod, and a local GitHub MCP server) with:
+You can now start all environments (dev, nonprod, and local MCP servers) with:
 
 ```sh
 ./scripts/launch-all-docker.sh
@@ -320,25 +320,47 @@ You can now start all environments (dev, nonprod, and a local GitHub MCP server)
 
 - **Dev**: WordPress on port 8080 (live-mounts, rapid iteration)
 - **Nonprod**: WordPress on port 8081 (clean, no live-mounts)
-- **MCP**: Local GitHub MCP server on port 7000 (for merge/conflict attention and repo automation)
+- **MCP (GitHub)**: http://localhost:7000 (repo automation, merge/conflict attention)
+- **MCP (Context7)**: http://localhost:7001 (advanced documentation as a service)
+- **MCP (DigitalOcean)**: http://localhost:7002 (cloud/devops automation)
 
 See script comments for details and requirements.
 
 ---
 
-## [COMMON] MCP Philosophy and Local GitHub MCP
+## MCP Technical Capabilities
 
-**Model Context Protocol (MCP)** is a standard for giving LLMs (and dev tools) secure, controlled access to tools and data sources. In this project, a local GitHub MCP server is used to help:
+The following MCP servers provide native capabilities to the Cursor development environment and all plugins:
 
-- Detect and resolve merge conflicts, detached HEADs, and PR attention issues.
-- Automate repo hygiene and reduce human error in common Git workflows.
-- Provide a local, auditable API for GitHub operations, which can be used by agents or scripts.
+### Context7 MCP (Documentation as a Service)
+- Search, retrieve, and serve advanced documentation for all plugins and codebases
+- Share documentation as a service across multiple plugins
+- Example commands:
+  - `searchDocs(query)`: Find documentation by keyword or topic
+  - `getDoc(file, section)`: Retrieve a specific doc section
+  - `listDocs()`: List all available documentation topics
 
-**Example:**
-- If you hit a detached HEAD or merge conflict, the MCP server can surface this to your agent or automation, and even suggest or execute safe resolutions.
-- Frequent issues like "PR needs attention" or "merge conflict on main" can be detected and handled programmatically, reducing friction for contributors.
+### GitHub MCP (Repository Automation)
+- Manage PRs, branches, merges, and repo state
+- Detect and resolve merge conflicts, detached HEADs, and PR attention issues
+- Example commands:
+  - `listPRs()`: List open pull requests
+  - `mergePR(prNumber)`: Merge a pull request
+  - `getRepoStatus()`: Show current branch, HEAD, and conflict state
+  - `createBranch(name)`: Create a new branch
 
-MCP is part of the project's commitment to robust, agent-friendly, and future-proof open source workflows.
+### DigitalOcean MCP (Cloud/DevOps Automation)
+- Manage DigitalOcean droplets, databases, and cloud resources
+- Automate deployments, scaling, and backups
+- Example commands:
+  - `listDroplets()`: List all droplets
+  - `createDroplet(config)`: Create a new droplet
+  - `getDatabaseStatus(id)`: Get status of a managed database
+  - `scaleDroplet(id, size)`: Resize a droplet
+
+---
+
+> **Cursor Rule:** When MCP servers are present, Cursor and agents should use MCP APIs by default for documentation, repo, and cloud operations.
 
 # System Requirements
 
