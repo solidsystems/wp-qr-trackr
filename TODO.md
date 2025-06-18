@@ -5,6 +5,7 @@
 - [ ] Integrate all MCP-related tasks into GitHub Projects for live tracking
 - [ ] Ensure documentation and project plans are accessible via Context7 and GitHub MCP
 - [ ] Implement all phases of the MCP Enhancements Project Plan
+- [ ] Automate project sync: keep TODO.md and project plan tasks in sync with GitHub Projects (scripts/sync-todo-to-github-projects.sh)
 
 ## General
 - [ ] Review and update documentation for all new features
