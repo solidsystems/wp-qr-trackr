@@ -317,18 +317,29 @@ function qr_trackr_create_qr_code() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	$destination = isset($_POST['destination']) ? esc_url_raw($_POST['destination']) : '';
-	if (empty($destination)) {
-		qr_trackr_debug_log('Destination URL is required for QR code creation.');
-		if (function_exists('qr_trackr_is_debug_enabled') && qr_trackr_is_debug_enabled()) {
-			$error = 'Destination URL is required.';
-			$log = qr_trackr_get_debug_log();
-			$lines = explode("\n", trim($log));
-			$last = end($lines);
-			wp_send_json_error($error . ($last ? ' Debug: ' . $last : ''));
-		} else {
-			wp_send_json_error('Destination URL is required');
+	$destination_type = isset($_POST['destination_type']) ? sanitize_text_field($_POST['destination_type']) : '';
+	if ($destination_type === 'post') {
+		$post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+		if (!$post_id || !get_post($post_id) || get_post_status($post_id) !== 'publish') {
+			wp_send_json_error('Please select a valid published post or page.');
+			return;
 		}
+		$destination = get_permalink($post_id);
+	} elseif ($destination_type === 'external') {
+		$destination = isset($_POST['destination']) ? esc_url_raw($_POST['destination']) : '';
+		if (empty($destination)) {
+			wp_send_json_error('Destination URL is required');
+			return;
+		}
+	} elseif ($destination_type === 'custom') {
+		$destination = isset($_POST['destination']) ? esc_url_raw($_POST['destination']) : '';
+		if (empty($destination)) {
+			wp_send_json_error('Destination URL is required');
+			return;
+		}
+	} else {
+		wp_send_json_error('Invalid destination type');
+		return;
 	}
 
 	// Create QR code

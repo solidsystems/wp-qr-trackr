@@ -74,6 +74,7 @@ function qr_trackr_admin_enqueue_scripts($hook) {
 		QR_TRACKR_VERSION
 	);
 	
+	wp_enqueue_script('jquery-ui-autocomplete');
 	wp_enqueue_script(
 		'qr-trackr-admin',
 		QR_TRACKR_PLUGIN_URL . 'assets/js/admin.js',
@@ -83,6 +84,14 @@ function qr_trackr_admin_enqueue_scripts($hook) {
 	);
 	// Enqueue a jQuery UI theme for Autocomplete styling
 	wp_enqueue_style('jquery-ui-theme', '//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css');
+	
+	// Enqueue Select2 for filterable post select
+	wp_enqueue_style('select2', '//cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
+	wp_enqueue_script('select2', '//cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array('jquery'), null, true);
+	wp_localize_script('qr-trackr-admin', 'qrTrackrSelect2', array(
+		'ajaxurl' => admin_url('admin-ajax.php'),
+		'nonce' => wp_create_nonce('qr_trackr_nonce'),
+	));
 	
 	wp_localize_script('qr-trackr-admin', 'qrTrackrAdmin', array(
 		'nonce' => wp_create_nonce('qr_trackr_nonce'),
@@ -127,9 +136,10 @@ function qr_trackr_admin_page() {
 				</div>
 				
 				<div class="form-field post-select" style="display: none;">
-					<label for="post_search_input"><?php _e('Select Post/Page', 'wp-qr-trackr'); ?></label>
-					<input type="text" name="post_search_input" id="post_search_input" placeholder="Start typing to search posts/pages..." autocomplete="off">
-					<input type="hidden" name="post_id" id="post_id">
+					<label for="post_id"><?php _e('Select Post/Page', 'wp-qr-trackr'); ?></label>
+					<select name="post_id" id="post_id" style="width:100%">
+						<option value="">Start typing to search posts/pages...</option>
+					</select>
 					<div id="post_search_results" class="qr-trackr-search-results" style="position:relative;"></div>
 				</div>
 				

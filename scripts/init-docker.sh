@@ -20,5 +20,5 @@ else
   echo "Port $PORT is free."
 fi
 
-echo "Starting Docker environment with docker-compose..."
-docker-compose up --build 
+echo "Starting Docker dev environment with docker-compose.dev.yml..."
+docker-compose -f docker-compose.dev.yml up --build 
