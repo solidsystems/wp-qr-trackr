@@ -338,4 +338,36 @@ See script comments for details and requirements.
 - If you hit a detached HEAD or merge conflict, the MCP server can surface this to your agent or automation, and even suggest or execute safe resolutions.
 - Frequent issues like "PR needs attention" or "merge conflict on main" can be detected and handled programmatically, reducing friction for contributors.
 
-MCP is part of the project's commitment to robust, agent-friendly, and future-proof open source workflows. 
+MCP is part of the project's commitment to robust, agent-friendly, and future-proof open source workflows.
+
+# System Requirements
+
+To run the all-in-one environment (`./scripts/launch-all-docker.sh`), your system should meet the following:
+
+## Minimum
+- **CPU:** 4 cores (modern Intel/AMD or Apple Silicon)
+- **RAM:** 8 GB
+- **Disk Space:** 10 GB free
+- **OS:** macOS, Linux, or Windows (with WSL2)
+- **Docker:** Docker Desktop or Engine v20.10+
+- **Docker Compose:** v1.29+ (or Compose V2 plugin)
+- **Node.js & npx:** Node.js v16+
+- **Internet Connection:** Required for pulling images and MCP server dependencies
+
+## Recommended
+- **CPU:** 8+ cores
+- **RAM:** 16 GB or more
+- **Disk Space:** 20 GB+ free
+- **OS:**
+  - macOS Monterey+ (Apple Silicon or Intel)
+  - Ubuntu 20.04+ (or equivalent)
+  - Windows 11 with WSL2
+- **Docker:** Latest stable, with at least 4 CPUs and 8 GB RAM allocated
+- **Node.js & npx:** Node.js v18+ (LTS)
+- **Network:** Reliable broadband
+
+## Additional Notes
+- **Ports:** 8080 (dev), 8081 (nonprod), 7000 (MCP) must be available
+- **Performance:** Running all environments is resource-intensive; close unused apps and allocate enough resources to Docker
+- **Apple Silicon:** All images are ARM64 compatible; keep Docker Desktop updated
+- **First Run:** May be slower due to image/npm downloads 
