@@ -295,7 +295,7 @@ jQuery(document).ready(function($) {
 		var linkId = button.data('id');
 
 		$.post(qrTrackrAdmin.ajaxurl, {
-			action: 'qr_trackr_generate_qr',
+			action: 'qr_trackr_regenerate_qr_code',
 			nonce: qrTrackrAdmin.regenerateNonce,
 			link_id: linkId
 		}, function(response) {
