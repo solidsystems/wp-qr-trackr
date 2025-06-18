@@ -260,10 +260,17 @@ function qr_trackr_ajax_update_destination() {
 		wp_die();
 	}
 	
-	// Check if user can edit the post
-	if (!current_user_can('edit_post', $link->post_id)) {
-		wp_send_json_error(array('message' => 'You do not have permission to edit this link.'));
-		wp_die();
+	// Check if user can edit the post or, for non-post links, if user is admin
+	if ($link->post_id && $link->post_id > 0) {
+		if (!current_user_can('edit_post', $link->post_id)) {
+			wp_send_json_error(array('message' => 'You do not have permission to edit this link.'));
+			wp_die();
+		}
+	} else {
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(array('message' => 'You do not have permission to edit this link.'));
+			wp_die();
+		}
 	}
 	
 	// Update the destination URL
