@@ -1,0 +1,52 @@
+#!/bin/bash
+# launch-all-docker.sh
+# Starts dev, nonprod, and local GitHub MCP environments for wp-qr-trackr
+#
+# - Dev: WordPress on port 8080 (live-mounts, rapid iteration)
+# - Nonprod: WordPress on port 8081 (clean, no live-mounts)
+# - MCP: Local GitHub MCP server for merge/conflict attention
+#
+# Usage: ./scripts/launch-all-docker.sh
+
+set -euo pipefail
+
+# Check for required tools
+tool_check() {
+  for tool in "$@"; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      echo "[ERROR] Required tool '$tool' not found. Please install it." >&2
+      exit 1
+    fi
+  done
+}
+tool_check docker docker-compose npx
+
+# Start dev environment (port 8080)
+echo "[INFO] Starting DEV environment (port 8080)..."
+if [ -f docker-compose.dev.yml ]; then
+  docker-compose -f docker-compose.dev.yml up -d
+else
+  # Use docker-compose.yml with port override for dev
+  docker-compose -f docker-compose.yml up -d
+fi
+
+# Start nonprod environment (port 8081)
+echo "[INFO] Starting NONPROD environment (port 8081)..."
+docker-compose -f docker-compose.yml up -d
+
+# Start local GitHub MCP server
+echo "[INFO] Starting local GitHub MCP server (port 7000)..."
+# Use npx to run the official MCP GitHub server (see https://github.com/docker/mcp-servers)
+# You may need to set GITHUB_PERSONAL_ACCESS_TOKEN for full functionality
+npx -y @modelcontextprotocol/server-github --port 7000 &
+MCP_PID=$!
+
+# Print status and access URLs
+echo "\n[INFO] All environments started:"
+echo "  DEV:     http://localhost:8080 (WordPress dev)"
+echo "  NONPROD: http://localhost:8081 (WordPress nonprod)"
+echo "  MCP:     http://localhost:7000 (GitHub MCP API)"
+echo "\n[INFO] MCP server PID: $MCP_PID"
+
+echo "[INFO] Tailing logs for all Docker containers... (Ctrl+C to stop)"
+docker-compose logs -f 

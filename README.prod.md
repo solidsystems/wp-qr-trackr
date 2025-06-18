@@ -97,4 +97,61 @@ See [docs/TROUBLESHOOTING.prod.md](docs/TROUBLESHOOTING.prod.md) for help with c
 
 ## Links & Further Reading
 
-(Shared links...) 
+(Shared links...)
+
+# wp-qr-trackr Production Deployment & Usage Guide
+
+> **Note:** Sections marked with [COMMON] are shared with dev and nonprod documentation.
+
+## [COMMON] Project Overview
+wp-qr-trackr is a modular, robust WordPress plugin for QR code generation and tracking. It is open source and built entirely via prompt engineering and Cursor's Agent Mode.
+
+## Production Deployment
+- Download the latest verified release ZIP from GitHub Releases.
+- Upload the ZIP via the WordPress admin plugin installer.
+- No development or test files are included in the release ZIP.
+- All dependencies are bundled; no Composer install required on production.
+
+## [COMMON] Plugin Structure
+- Modular includes: admin, AJAX, rewrite, debug, utility, etc.
+- Main plugin file only bootstraps modules.
+- All business logic is in `includes/` modules.
+
+## [COMMON] Coding Standards
+- WordPress Coding Standards enforced via PHPCS.
+- PHPCS requires at least 1GB RAM, 4GB recommended for large codebases (see `.cursorrules`).
+- All code must pass CI/CD before merging.
+
+## Production Usage
+- Activate the plugin in the WordPress admin.
+- Use the QR Trackr admin page to generate, edit, regenerate, and delete QR codes.
+- All admin actions are protected by separate nonces and strict capability checks.
+
+## [COMMON] Security Practices
+- Separate nonces for all admin AJAX actions.
+- Strict capability checks for all sensitive actions.
+
+## [COMMON] Release Process
+- Automated build script ensures only required files are included.
+- Release ZIP is verified for required/forbidden files.
+- Releases are published to GitHub with full changelogs.
+
+## [COMMON] Contributor Notes
+- See `.cursorrules` for project rules and environment requirements.
+- All major documentation files have parallel dev, nonprod, and prod versions.
+
+## See also
+- `README.dev.md` for local development.
+- `README.nonprod.md` for nonprod Docker/QA environment.
+
+## MCP and All-in-One Launch (for Reference)
+
+While not required in production, the project supports a local GitHub MCP server for agent-based repo automation and merge conflict prevention. See the dev README for philosophy and usage details.
+
+To launch all environments (dev, nonprod, MCP) locally:
+
+```sh
+./scripts/launch-all-docker.sh
+```
+
+This is primarily for development and advanced QA. 
