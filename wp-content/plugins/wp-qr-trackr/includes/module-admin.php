@@ -88,6 +88,7 @@ function qr_trackr_admin_enqueue_scripts( $hook ) {
 	wp_enqueue_script(
 		'qr-trackr-admin',
 		QR_TRACKR_PLUGIN_URL . 'assets/js/admin.js',
+    docs/parallel-docs-prod-dev
 		array( 'jquery', 'jquery-ui-autocomplete' ),
 		QR_TRACKR_VERSION,
 		true
@@ -153,6 +154,7 @@ function qr_trackr_admin_page() {
 					</select>
 				</div>
 				<div class="form-field post-select" style="display: none;">
+          docs/parallel-docs-prod-dev
 					<label for="post_id"><?php esc_html_e( 'Pick a page or post', 'wp-qr-trackr' ); ?></label>
 					<select name="post_id" id="post_id" style="width:100%">
 						<option value=""><?php esc_html_e( 'Start typing to search…', 'wp-qr-trackr' ); ?></option>
