@@ -1,6 +1,61 @@
-# QR Trackr - WordPress QR Code Tracking Plugin
+# QR Trackr – Effortless QR Codes for Your WordPress Site
 
-A professional WordPress plugin for generating and tracking QR codes, with support for both internal and external destinations.
+Welcome to **QR Trackr**, the easiest way to create, manage, and track QR codes right from your WordPress dashboard. No technical skills required!
+
+---
+
+## ✨ What Can QR Trackr Do For You?
+- **Create QR codes** for any page, post, or custom link in just a few clicks.
+- **Track every scan** – see how many times your QR codes are used and where.
+- **Download and print** beautiful QR codes (PNG or SVG).
+- **Change destinations anytime** – update where your QR code points, even after printing!
+- **Easy-to-read links** – your QR codes use simple, pretty URLs like `yourwebsite.com/qr/abc123`.
+- **Works everywhere** – perfect for flyers, menus, business cards, and more.
+
+---
+
+## 🚀 Quick Start (No Tech Skills Needed)
+1. **Install the Plugin**
+   - Download the latest version from [GitHub Releases](https://github.com/michaelerps/wp-qr-trackr/releases).
+   - In your WordPress dashboard, go to **Plugins > Add New > Upload Plugin**.
+   - Upload the ZIP file and click **Activate**.
+
+2. **Create Your First QR Code**
+   - Click **QR Trackr** in your WordPress menu.
+   - Choose a post, page, or enter any link you want.
+   - Click **Generate QR Code**.
+   - Download your QR code and use it anywhere!
+
+3. **See Your Results**
+   - Come back anytime to see how many times your QR code has been scanned.
+   - Change the destination link whenever you want – your printed QR code will always work!
+
+---
+
+## 💡 Why Use QR Trackr?
+- **No coding, no hassle** – everything is point-and-click.
+- **Instant analytics** – see what's working and what's not.
+- **Safe and private** – your data stays on your site.
+- **Perfect for small businesses, events, restaurants, and more!**
+
+---
+
+## 🔄 Upgrading? Read This!
+If you're updating QR Trackr to a new version:
+1. **Deactivate and reactivate the plugin** (in Plugins > Installed Plugins) to make sure everything is up to date.
+2. Go to **Settings > Permalinks** and click **Save Changes** (this helps your QR codes work everywhere).
+3. If you made QR codes before, just click **Regenerate** next to each one to update them.
+4. That's it! Your QR codes will now use the new, easy-to-read links.
+
+---
+
+## 🛟 Need Help?
+- If your QR code doesn't work, try step 2 above (Settings > Permalinks > Save Changes).
+- Still stuck? Reach out on the [GitHub project page](https://github.com/michaelerps/wp-qr-trackr/issues) or ask your website manager for help.
+
+---
+
+**QR Trackr makes QR codes simple, powerful, and fun. Try it today!**
 
 ## Features
 
@@ -39,6 +94,19 @@ The form will only allow submission if the selected destination is valid. Invali
 - PHP 7.4 or higher
 - Pretty permalinks enabled (recommended)
 - Write permissions for the uploads directory
+
+## Production Dependency Requirements
+
+The following Composer packages are required for production builds:
+
+| Package/Folder         | Needed for Production? | Why?                        |
+|------------------------|-----------------------|-----------------------------|
+| endroid/qr-code        | Yes                   | QR code generation          |
+| bacon/bacon-qr-code    | Yes                   | Dependency of endroid/qr-code |
+| dasprid/enum           | Yes                   | Dependency of bacon/bacon-qr-code |
+| Everything else listed | No                    | Dev/test/code quality only  |
+
+To keep your plugin lean, only these production dependencies should be included in the distributed zip. All other packages (test, QA, code quality, etc.) should be excluded from production builds.
 
 ## Modular Architecture Philosophy
 
@@ -409,4 +477,18 @@ So, we've learned what QR Trackr does, how to use it, and why its simple, organi
 
 - The QR code admin table now includes a compact, padded ID column for each QR code, making it easier to reference and manage individual codes.
 - The edit QR code destination feature uses a secure, consistent nonce and only one AJAX handler for reliability and security.
-- The plugin's admin UI is now more responsive and visually balanced, with improved table column sizing and padding for better readability. 
+- The plugin's admin UI is now more responsive and visually balanced, with improved table column sizing and padding for better readability.
+
+## v1.0.4 (2025-06-17)
+
+### Security
+- All admin AJAX actions (edit, delete, regenerate) now use their own separate, localized nonces for maximum security.
+
+### Contributor Notes
+- PHPCS (WordPress Coding Standards) requires at least 1GB of memory to lint the codebase. For large codebases or CI, 4GB is recommended. See `.cursorrules` for details.
+
+---
+
+# wp-qr-trackr
+
+... (existing content) ... 

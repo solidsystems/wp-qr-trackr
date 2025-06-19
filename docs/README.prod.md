@@ -23,4 +23,21 @@ Use the launch script:
 ### Why This Matters
 - Nonprod is always clean—no dev artifacts, no plugin preinstalled.
 - Ensures release ZIPs are tested in a true production-like environment.
-- Parallel workflow supports rapid iteration and robust QA. 
+- Parallel workflow supports rapid iteration and robust QA.
+
+## Migration Instructions (v1.1.0+)
+If upgrading from an older version of QR Trackr:
+
+1. **Deactivate and reactivate the plugin** in the WordPress admin to trigger the database migration. This will add a `qr_code` column and backfill codes for existing links.
+2. Go to **Settings > Permalinks** and click **Save Changes** to flush rewrite rules.
+3. Regenerate QR codes for existing links to ensure they use the new `/qr/<qr_code>` format.
+4. Test by scanning a QR code or visiting a `/qr/<qr_code>` URL.
+
+If you encounter 404 errors, ensure you have completed all steps above. 
+
+## Troubleshooting: Package Manager
+
+- **Yarn is the only supported package manager for this project.**
+- Only `yarn.lock` should be present in the project root.
+- If you see `package-lock.json` or `pnpm-lock.yaml`, delete them to avoid conflicts.
+- If using VS Code, set `"npm.packageManager": "yarn"` in `.vscode/settings.json` to enforce Yarn usage. 

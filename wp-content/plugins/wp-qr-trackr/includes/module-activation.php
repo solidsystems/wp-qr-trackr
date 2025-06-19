@@ -60,10 +60,16 @@ function qr_trackr_create_tables() {
 function qr_trackr_migrate_links_table() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	$column = $wpdb->get_results( $wpdb->prepare( "SHOW COLUMNS FROM `$table_name` LIKE %s", 'qr_code_url' ) );
+	$column = $wpdb->get_results( $wpdb->prepare( "SHOW COLUMNS FROM `$table_name` LIKE %s", 'qr_code' ) );
 	if ( empty( $column ) ) {
-		$wpdb->query( "ALTER TABLE `$table_name` ADD COLUMN `qr_code_url` VARCHAR(255) DEFAULT NULL" );
-		qr_trackr_debug_log('Migration: Added qr_code_url column to qr_trackr_links table.');
+		$wpdb->query( "ALTER TABLE `$table_name` ADD COLUMN `qr_code` VARCHAR(32) UNIQUE DEFAULT NULL" );
+		qr_trackr_debug_log('Migration: Added qr_code column to qr_trackr_links table.');
+	}
+	// Backfill qr_code for existing rows if missing
+	$rows = $wpdb->get_results( "SELECT id, qr_code FROM `$table_name` WHERE qr_code IS NULL OR qr_code = ''" );
+	foreach ( $rows as $row ) {
+		$qr_code = substr( str_shuffle( 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' ), 0, 8 );
+		$wpdb->update( $table_name, array( 'qr_code' => $qr_code ), array( 'id' => $row->id ), array( '%s' ), array( '%d' ) );
 	}
 }
 

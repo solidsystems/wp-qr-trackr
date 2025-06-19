@@ -46,7 +46,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 ### Prerequisites
 - macOS (ARM or x86), Linux, or Windows (see project plans for cross-platform support)
 - [Homebrew](https://brew.sh/) (macOS)
-- [Yarn](https://yarnpkg.com/)
+- [Yarn](https://yarnpkg.com/) (**only supported package manager; do not use npm or pnpm**)
 - [Composer](https://getcomposer.org/)
 - Docker (for local dev/testing)
 
@@ -66,6 +66,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
    yarn install
    composer install
    ```
+   > **Note:** Only `yarn.lock` should be present. If you see a `package-lock.json` or `pnpm-lock.yaml`, delete them to avoid conflicts. This project does not support npm or pnpm lockfiles.
 4. **Set up your environment:**
    ```sh
    cp .env.example .env
@@ -81,6 +82,12 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
    ```
 
 > **Note:** Debug mode is enabled by default in the development environment. When using the standard Docker workflow (including `reset-docker.sh`), a `wp-config-dev.php` file is automatically included to enable `WP_DEBUG` and log errors to `wp-content/debug.log`. This ensures all PHP errors and warnings are captured for troubleshooting during development. Do not use this file in production.
+
+### Troubleshooting
+If you see warnings about multiple lockfiles or npm being used as the package manager:
+- Delete `package-lock.json` and/or `pnpm-lock.yaml` if present.
+- Ensure only `yarn.lock` is present in the project root.
+- If using VS Code, set `"npm.packageManager": "yarn"` in `.vscode/settings.json` to enforce Yarn usage.
 
 ---
 
@@ -278,6 +285,33 @@ Curious about the philosophy behind this and other innovations? See [Reflections
 ```
 
 This will produce a complete, up-to-date set of screenshots and documentation assets for the plugin—automatically, every time.
+
+---
+
+## Multi-Project Playwright Documentation Orchestration
+
+This project supports automated documentation and UI testing for multiple plugins/projects using a single orchestrator workflow.
+
+### How It Works
+- The orchestrator script (`scripts/playwright-docs-orchestrator.sh`) uses the `PLUGIN_DIR` environment variable to select which plugin to mount, activate, and test.
+- The Playwright user flow script must be named using the convention: `scripts/playwright-<PLUGIN_DIR>-userflow.js` (e.g., `scripts/playwright-wp-qr-trackr-userflow.js`).
+- The orchestrator will activate the specified plugin and run the corresponding Playwright script.
+
+### Usage Example
+```sh
+PLUGIN_DIR=wp-qr-trackr ./scripts/playwright-docs-orchestrator.sh
+PLUGIN_DIR=another-plugin ./scripts/playwright-docs-orchestrator.sh
+```
+
+### Adding a New Project
+1. Place your plugin code in `wp-content/plugins/<your-plugin-dir>`.
+2. Create a Playwright user flow script named `scripts/playwright-<your-plugin-dir>-userflow.js`.
+3. Run the orchestrator with `PLUGIN_DIR=<your-plugin-dir>`.
+
+### Notes
+- The orchestrator and init scripts will automatically activate the specified plugin.
+- You can add as many projects as you like, as long as you follow the naming convention.
+- Each project can have its own Playwright user flow for custom documentation and UI testing.
 
 ---
 

@@ -27,4 +27,10 @@
         <exclude-pattern>includes/module-rewrite.php</exclude-pattern>
         <exclude-pattern>includes/module-ajax.php</exclude-pattern>
     </rule>
+    <!-- Exclude false positives for table assignments in module-admin.php -->
+    <rule ref="WordPress.DB.PreparedSQL.InterpolatedNotPrepared">
+        <exclude-pattern>includes/module-admin.php</exclude-pattern>
+        <exclude-pattern>wp-content/plugins/wp-qr-trackr/includes/module-admin.php</exclude-pattern>
+        <exclude-pattern>**/module-admin.php</exclude-pattern>
+    </rule>
 </ruleset> 

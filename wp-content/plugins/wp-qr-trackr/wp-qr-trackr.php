@@ -3,7 +3,7 @@
  * Plugin Name: QR Trackr
  * Plugin URI: https://github.com/michaelerps/wp-qr-trackr
  * Description: A powerful WordPress plugin for creating, managing, and tracking QR codes with detailed analytics.
- * Version: 1.1.0
+ * Version: 1.0.0
  * Author: Michael Erps
  * Author URI: https://github.com/michaelerps
  * License: GPL v2 or later
@@ -12,6 +12,10 @@
  * Domain Path: /languages
  * Requires at least: 5.0
  * Requires PHP: 7.4
+ *
+ * Main plugin file for QR Trackr.
+ *
+ * @package QR_Trackr
  */
 
 // Exit if accessed directly.
@@ -34,25 +38,25 @@ if ( ! function_exists( 'qr_trackr_debug_log' ) ) {
 	}
 }
 
-// Define plugin constants
+// Define plugin constants.
 define( 'QR_TRACKR_VERSION', '1.1.0' );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'QR_TRACKR_DEBUG', defined( 'WP_DEBUG' ) && WP_DEBUG );
 
-// Robust error handling and logging for plugin load
+// Robust error handling and logging for plugin load.
 try {
-	qr_trackr_debug_log('--- QR Trackr plugin file loaded ---');
+	qr_trackr_debug_log( '--- QR Trackr plugin file loaded ---' );
 
 	// Load Composer autoloader.
 	if ( ! file_exists( plugin_dir_path( __FILE__ ) . 'vendor/autoload.php' ) ) {
-		qr_trackr_debug_log('Composer autoload.php missing. Plugin cannot function.');
+		qr_trackr_debug_log( 'Composer autoload.php missing. Plugin cannot function.' );
 		return;
 	}
 	require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
-	// Load required files in correct order
-	$modules = [
+	// Load required files in correct order.
+	$modules = array(
 		'includes/module-requirements.php',
 		'includes/module-utils.php',
 		'includes/module-debug.php',
@@ -61,19 +65,19 @@ try {
 		'includes/module-admin.php',
 		'includes/module-ajax.php',
 		'includes/module-rewrite.php',
-	];
+	);
 	foreach ( $modules as $mod ) {
 		$mod_path = QR_TRACKR_PLUGIN_DIR . $mod;
 		if ( ! file_exists( $mod_path ) ) {
-			qr_trackr_debug_log('Required module missing: ' . $mod);
+			qr_trackr_debug_log( 'Required module missing: ' . $mod );
 			return;
 		}
 		require_once $mod_path;
 	}
 
-	qr_trackr_debug_log('All core modules loaded.');
-} catch (Throwable $e) {
-	qr_trackr_debug_log('Fatal error during plugin file load: ' . $e->getMessage());
+	qr_trackr_debug_log( 'All core modules loaded.' );
+} catch ( Throwable $e ) {
+	qr_trackr_debug_log( 'Fatal error during plugin file load: ' . $e->getMessage() );
 	return;
 }
 
@@ -92,61 +96,61 @@ function qr_trackr_load_textdomain() {
 add_action( 'init', 'qr_trackr_load_textdomain' );
 
 /**
- * Initialize the plugin
+ * Initialize the plugin.
  */
 function qr_trackr_init() {
 	try {
-		qr_trackr_debug_log('Initializing QR Trackr plugin...');
-		// Load text domain
+		qr_trackr_debug_log( 'Initializing QR Trackr plugin...' );
+		// Load text domain.
 		load_plugin_textdomain( 'wp-qr-trackr', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
-		
-		// Check requirements
+
+		// Check requirements.
 		if ( ! function_exists( 'qr_trackr_check_requirements' ) ) {
-			qr_trackr_debug_log( 'Requirements module not loaded' );
+			qr_trackr_debug_log( 'Requirements module not loaded.' );
 			return;
 		}
-		
+
 		$requirements = qr_trackr_check_requirements();
-		
-		// Store requirements status
-		update_option('qr_trackr_requirements', $requirements);
-		
-		// Only block initialization if library is missing
+
+		// Store requirements status.
+		update_option( 'qr_trackr_requirements', $requirements );
+
+		// Only block initialization if library is missing.
 		if ( ! $requirements['library'] ) {
-			qr_trackr_debug_log( 'QR code library not available' );
+			qr_trackr_debug_log( 'QR code library not available.' );
 			return;
 		}
-		
-		// For other requirements, show admin notice but continue initialization
+
+		// For other requirements, show admin notice but continue initialization.
 		if ( ! $requirements['permalinks'] ) {
-			add_option('qr_trackr_permalinks_missing', true);
-			qr_trackr_debug_log( 'Pretty permalinks not enabled' );
+			add_option( 'qr_trackr_permalinks_missing', true );
+			qr_trackr_debug_log( 'Pretty permalinks not enabled.' );
 		}
-		
+
 		if ( ! $requirements['uploads'] ) {
-			add_option('qr_trackr_uploads_missing', true);
-			qr_trackr_debug_log( 'Uploads directory not writable' );
+			add_option( 'qr_trackr_uploads_missing', true );
+			qr_trackr_debug_log( 'Uploads directory not writable.' );
 		}
-		
-		// Initialize admin module
+
+		// Initialize admin module.
 		if ( is_admin() && function_exists( 'qr_trackr_admin_init' ) ) {
 			qr_trackr_admin_init();
 		}
-		
-		// Initialize AJAX module
+
+		// Initialize AJAX module.
 		if ( function_exists( 'qr_trackr_ajax_init' ) ) {
 			qr_trackr_ajax_init();
 		}
-		
-		// Initialize rewrite module only on frontend
+
+		// Initialize rewrite module only on frontend.
 		if ( ! is_admin() && ! wp_doing_ajax() && function_exists( 'qr_trackr_rewrite_init' ) ) {
 			qr_trackr_rewrite_init();
 		}
-		qr_trackr_debug_log('QR Trackr plugin initialization complete.');
-	} catch (Exception $e) {
-		qr_trackr_debug_log('Error during plugin initialization: ' . $e->getMessage());
-	} catch (Throwable $e) {
-		qr_trackr_debug_log('Fatal error during plugin initialization: ' . $e->getMessage());
+		qr_trackr_debug_log( 'QR Trackr plugin initialization complete.' );
+	} catch ( Exception $e ) {
+		qr_trackr_debug_log( 'Error during plugin initialization: ' . $e->getMessage() );
+	} catch ( Throwable $e ) {
+		qr_trackr_debug_log( 'Fatal error during plugin initialization: ' . $e->getMessage() );
 	}
 }
 add_action( 'plugins_loaded', 'qr_trackr_init' );
@@ -157,4 +161,4 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	require_once QR_TRACKR_PLUGIN_DIR . 'includes/class-qr-trackr-cli-command.php';
 }
 
-qr_trackr_debug_log('--- QR Trackr plugin file END ---');
+qr_trackr_debug_log( '--- QR Trackr plugin file END ---' );

@@ -45,6 +45,15 @@ function qr_trackr_get_available_shapes() {
 }
 
 /**
+ * Generate a unique QR code string.
+ *
+ * @return string
+ */
+function qr_trackr_generate_unique_qr_code() {
+	return substr( str_shuffle( 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' ), 0, 8 );
+}
+
+/**
  * Generate QR code image for a tracking link
  *
  * @param int $link_id The ID of the tracking link
@@ -64,9 +73,24 @@ function qr_trackr_generate_qr_image_for_link($link_id) {
 		qr_trackr_debug_log('Link not found for QR generation: ' . $link_id);
 		return false;
 	}
-	
-	// Get the tracking URL
-	$tracking_url = qr_trackr_get_tracking_url($link_id);
+
+	// Ensure qr_code exists
+	if (empty($link->qr_code)) {
+		$qr_code = qr_trackr_generate_unique_qr_code();
+		$wpdb->update(
+			$table_name,
+			array('qr_code' => $qr_code),
+			array('id' => $link_id),
+			array('%s'),
+			array('%d')
+		);
+		$link->qr_code = $qr_code;
+	}
+
+	// Get the tracking URL using qr_code
+	$tracking_url = function_exists('qr_trackr_get_rewrite_tracking_url')
+		? qr_trackr_get_rewrite_tracking_url($link->qr_code)
+		: home_url('/qr/' . $link->qr_code);
 	if (!$tracking_url) {
 		qr_trackr_debug_log('Failed to generate tracking URL for link: ' . $link_id);
 		return false;
@@ -188,7 +212,6 @@ function qr_trackr_get_or_create_tracking_link( $post_id ) {
 	$cache_key = 'qr_trackr_link_' . $post_id;
 	$link      = wp_cache_get( $cache_key );
 	if ( false === $link ) {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query is required for plugin logic and is cached above.
 		$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . $table . ' WHERE post_id = %d', $post_id ) );
 		if ( $link ) {
 			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
@@ -196,33 +219,29 @@ function qr_trackr_get_or_create_tracking_link( $post_id ) {
 	}
 
 	if ( $link ) {
-		qr_trackr_debug_log(
-			'Found existing tracking link',
-			array(
-				'post_id' => $post_id,
-				'link_id' => $link->id,
-			)
-		);
+		// Ensure qr_code exists
+		if ( empty( $link->qr_code ) ) {
+			$qr_code = qr_trackr_generate_unique_qr_code();
+			$wpdb->update(
+				$table,
+				array('qr_code' => $qr_code),
+				array('id' => $link->id),
+				array('%s'),
+				array('%d')
+			);
+			$link->qr_code = $qr_code;
+		}
 		return $link;
 	}
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Insert is required for plugin logic.
+	// Insert new link with qr_code
+	$qr_code = qr_trackr_generate_unique_qr_code();
 	$wpdb->insert(
 		$table,
-		array( 'post_id' => $post_id ),
-		array( '%d' )
+		array( 'post_id' => $post_id, 'qr_code' => $qr_code ),
+		array( '%d', '%s' )
 	);
 	$link_id = $wpdb->insert_id;
-	qr_trackr_debug_log(
-		'Created new tracking link',
-		array(
-			'post_id' => $post_id,
-			'link_id' => $link_id,
-		)
-	);
-
-	// Get and cache the new link.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query is required for plugin logic and is cached above.
 	$new_link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . $table . ' WHERE id = %d', $link_id ) );
 	if ( $new_link ) {
 		wp_cache_set( $cache_key, $new_link, '', 300 ); // Cache for 5 minutes.

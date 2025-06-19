@@ -10,5 +10,8 @@
     "lint": "cd wp-content/plugins/wp-qr-trackr && yarn lint",
     "stylelint": "cd wp-content/plugins/wp-qr-trackr && yarn stylelint",
     "postinstall": "husky"
+  },
+  "dependencies": {
+    "playwright": "^1.53.1"
   }
 }

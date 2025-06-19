@@ -15,6 +15,7 @@ services:
     depends_on:
       - db-playwright
     volumes:
+      - wp_core_playwright:/var/www/html
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
       - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
 
@@ -31,6 +32,7 @@ services:
       WP_HOME: http://localhost:8087
       WP_SITEURL: http://localhost:8087
     volumes:
+      - wp_core_playwright:/var/www/html
       - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     entrypoint: ["tail", "-f", "/dev/null"]
@@ -49,3 +51,5 @@ services:
 volumes:
   db_data_playwright:
     # Persistent database storage for Playwright doc runs 
+  wp_core_playwright:
+    # Persistent WordPress core for Playwright doc runs 

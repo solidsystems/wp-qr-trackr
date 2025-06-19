@@ -141,4 +141,7 @@ Always use plugin-based migration routines for database schema changes (never re
 phpcs_min_memory_mb = 1024  # PHPCS requires at least 1GB of memory for this project. For large codebases, 4GB (4096MB) is recommended.
 
 # MCP Integration Rule
-# When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), Cursor and agents should use MCP APIs by default for documentation, repository, and cloud operations. This ensures consistent, secure, and agent-friendly workflows across all plugins and environments. 
+# When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), Cursor and agents should use MCP APIs by default for documentation, repository, and cloud operations. This ensures consistent, secure, and agent-friendly workflows across all plugins and environments.
+
+# Playwright Dev-Only Rule
+Playwright is only installed and used in the dev Docker image (port 8080). It must not be present in production or nonprod images. Automated UI testing and screenshot capture are only supported in dev. 
