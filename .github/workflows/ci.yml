@@ -63,7 +63,7 @@ jobs:
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
       - name: Make PHPUnit executable
-        run: chmod +x vendor/bin/phpunit
+        run: chmod +x wp-content/plugins/wp-qr-trackr/vendor/bin/phpunit
       - name: Run PHPUnit tests
         run: |
           cd wp-content/plugins/wp-qr-trackr
@@ -117,7 +117,7 @@ jobs:
         run: yarn install
         working-directory: wp-content/plugins/wp-qr-trackr
       - name: Run ESLint (targeted)
-        run: yarn eslint "assets/**/*.js"
+        run: yarn eslint "assets/**/*.js" --no-error-on-unmatched-pattern
         working-directory: wp-content/plugins/wp-qr-trackr
 
   lint-css:
