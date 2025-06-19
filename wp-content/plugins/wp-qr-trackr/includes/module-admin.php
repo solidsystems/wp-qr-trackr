@@ -92,6 +92,7 @@ function qr_trackr_admin_enqueue_scripts( $hook ) {
 		QR_TRACKR_VERSION,
 		true
 	);
+	wp_enqueue_style( 'jquery-ui-autocomplete' );
 
 	// Localize admin script for general admin actions.
 	wp_localize_script(
