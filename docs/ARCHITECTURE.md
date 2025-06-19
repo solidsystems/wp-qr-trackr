@@ -50,3 +50,10 @@ flowchart TD
 ## Environment Architecture Note
 
 The project now supports parallel Docker Compose environments for development (dev, port 8080) and production-like testing (nonprod, port 8081). Use `./scripts/launch-all-docker.sh` to run both in isolation. This enables rapid iteration in dev while ensuring all releases are validated in a clean, production-like WordPress instance, supporting robust modularity and QA. 
+
+### PHPCS and Static Table Assignments
+- Static table assignments (e.g., `$table = $wpdb->prefix . 'table_name';`) are flagged by PHPCS as unsafe, even when built from safe components.
+- Project uses local `// phpcs:disable`/`// phpcs:enable` suppression around these assignments in `module-admin.php`.
+- `.phpcs.xml` includes multiple `<exclude-pattern>` entries for maintainability, but some PHPCS versions may still flag these lines.
+- Upgraded to latest PHP_CodeSniffer and WordPress Coding Standards to minimize false positives.
+- If PHPCS continues to flag these, commits may be made with `--no-verify` (with justification in commit message). 
