@@ -21,6 +21,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 6. [For Engineering & IT Leadership](#for-engineering--it-leadership)
 7. [Troubleshooting & FAQ](./TROUBLESHOOTING.md)
 8. [Links & Further Reading](#links--further-reading)
+9. [Reflections from the Creator](docs/REFLECTIONS-FROM-THE-CREATOR.md)
 
 ---
 
@@ -248,6 +249,35 @@ If you see different results locally and in CI:
 - Ensure you are running the same commands as the CI workflow (see `.github/workflows/ci.yml`).
 - Reinstall dependencies and hooks with `yarn setup:ci`.
 - Review the troubleshooting section in `TROUBLESHOOTING.md` for more details.
+
+---
+
+## Accidental Innovation: Documentation Orchestrator
+
+One of the most delightful surprises in this project was the creation of a fully automated documentation orchestrator—an innovation that was never on the original roadmap, but has become a favorite feature for both development and documentation.
+
+### What is it?
+A single script, `./scripts/playwright-docs-orchestrator.sh`, gives you foolproof, on-demand, always-up-to-date documentation and accessibility screenshots for the plugin. It:
+- Kills any process or container using port 8087 to avoid resource contention.
+- Ensures a clean, isolated WordPress install on port 8087 (using Docker Compose and a dedicated DB volume).
+- Runs the full WP-CLI setup to guarantee a fresh admin user and site state.
+- Executes a Playwright user flow script that logs in, creates a QR code, and captures screenshots of every step.
+- Outputs all screenshots to `assets/screenshots/` for use in documentation, accessibility reviews, and user guides.
+
+### Why does it matter?
+- **Zero manual steps:** No more worrying about stale screenshots or inconsistent docs—just run the script and everything is rebuilt from scratch.
+- **Accessibility by default:** Every UI flow is captured and ready for Section 508 or WCAG review.
+- **Developer and user friendly:** Anyone can generate the latest docs and screenshots, making onboarding and support easier.
+- **A happy accident:** This workflow emerged from troubleshooting and automation work, and is now a core part of the dev experience.
+
+Curious about the philosophy behind this and other innovations? See [Reflections from the Creator](docs/REFLECTIONS-FROM-THE-CREATOR.md).
+
+**Try it yourself:**
+```sh
+./scripts/playwright-docs-orchestrator.sh
+```
+
+This will produce a complete, up-to-date set of screenshots and documentation assets for the plugin—automatically, every time.
 
 ---
 

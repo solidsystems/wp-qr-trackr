@@ -172,6 +172,33 @@ Use this to start the nonprod environment after a reset, or to restart it at any
 
 ---
 
+## Accidental Innovation: Documentation Orchestrator
+
+One of the most delightful surprises in this project was the creation of a fully automated documentation orchestrator—an innovation that was never on the original roadmap, but has become a favorite feature for both development and documentation.
+
+### What is it?
+A single script, `./scripts/playwright-docs-orchestrator.sh`, gives you foolproof, on-demand, always-up-to-date documentation and accessibility screenshots for the plugin. It:
+- Kills any process or container using port 8087 to avoid resource contention.
+- Ensures a clean, isolated WordPress install on port 8087 (using Docker Compose and a dedicated DB volume).
+- Runs the full WP-CLI setup to guarantee a fresh admin user and site state.
+- Executes a Playwright user flow script that logs in, creates a QR code, and captures screenshots of every step.
+- Outputs all screenshots to `assets/screenshots/` for use in documentation, accessibility reviews, and user guides.
+
+### Why does it matter?
+- **Zero manual steps:** No more worrying about stale screenshots or inconsistent docs—just run the script and everything is rebuilt from scratch.
+- **Accessibility by default:** Every UI flow is captured and ready for Section 508 or WCAG review.
+- **Developer and user friendly:** Anyone can generate the latest docs and screenshots, making onboarding and support easier.
+- **A happy accident:** This workflow emerged from troubleshooting and automation work, and is now a core part of the dev experience.
+
+**Try it yourself:**
+```sh
+./scripts/playwright-docs-orchestrator.sh
+```
+
+This will produce a complete, up-to-date set of screenshots and documentation assets for the plugin—automatically, every time.
+
+---
+
 ## Infrastructure & Plumbing
 
 (Shared infrastructure details, with dev notes...)
