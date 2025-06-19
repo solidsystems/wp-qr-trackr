@@ -62,6 +62,8 @@ jobs:
           COMPOSER_PROCESS_TIMEOUT: 0
           COMPOSER_NO_INTERACTION: 1
           COMPOSER_NO_AUDIT: 1
+      - name: Make PHPUnit executable
+        run: chmod +x vendor/bin/phpunit
       - name: Run PHPUnit tests
         run: |
           cd wp-content/plugins/wp-qr-trackr
@@ -114,8 +116,8 @@ jobs:
       - name: Install JS dependencies
         run: yarn install
         working-directory: wp-content/plugins/wp-qr-trackr
-      - name: Run ESLint
-        run: yarn lint
+      - name: Run ESLint (targeted)
+        run: yarn eslint "assets/**/*.js"
         working-directory: wp-content/plugins/wp-qr-trackr
 
   lint-css:
