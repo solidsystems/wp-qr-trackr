@@ -25,7 +25,7 @@ function qr_trackr_create_tables() {
 	$charset_collate = $wpdb->get_charset_collate();
 	$table_name      = $wpdb->prefix . 'qr_trackr_links';
 
-	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+	$sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}qr_trackr_links (
 		id bigint(20) NOT NULL AUTO_INCREMENT,
 		post_id bigint(20) NOT NULL,
 		destination_url varchar(255) NOT NULL,
@@ -44,7 +44,7 @@ function qr_trackr_create_tables() {
 
 	// Create scans table.
 	$scans_table = $wpdb->prefix . 'qr_trackr_scans';
-	$sql         = "CREATE TABLE IF NOT EXISTS $scans_table (
+	$sql         = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}qr_trackr_scans (
 		id bigint(20) NOT NULL AUTO_INCREMENT,
 		link_id bigint(20) NOT NULL,
 		user_agent varchar(255) DEFAULT NULL,
@@ -69,13 +69,13 @@ function qr_trackr_create_tables() {
 function qr_trackr_migrate_links_table() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	$column     = $wpdb->get_results( $wpdb->prepare( 'SHOW COLUMNS FROM `' . $table_name . '` LIKE %s', 'qr_code' ) );
+	$column     = $wpdb->get_results( $wpdb->prepare( "SHOW COLUMNS FROM `{$wpdb->prefix}qr_trackr_links` LIKE %s", 'qr_code' ) );
 	if ( empty( $column ) ) {
-		$wpdb->query( 'ALTER TABLE `' . $table_name . '` ADD COLUMN `qr_code` VARCHAR(32) UNIQUE DEFAULT NULL' );
+		$wpdb->query( "ALTER TABLE `{$wpdb->prefix}qr_trackr_links` ADD COLUMN `qr_code` VARCHAR(32) UNIQUE DEFAULT NULL" );
 		qr_trackr_debug_log( 'Migration: Added qr_code column to qr_trackr_links table.' );
 	}
 	// Backfill qr_code for existing rows if missing.
-	$rows = $wpdb->get_results( 'SELECT id, qr_code FROM `' . $table_name . '` WHERE qr_code IS NULL OR qr_code = ""' );
+	$rows = $wpdb->get_results( "SELECT id, qr_code FROM `{$wpdb->prefix}qr_trackr_links` WHERE qr_code IS NULL OR qr_code = ''" );
 	foreach ( $rows as $row ) {
 		$qr_code = substr( str_shuffle( 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' ), 0, 8 );
 		$wpdb->update( $table_name, array( 'qr_code' => $qr_code ), array( 'id' => $row->id ), array( '%s' ), array( '%d' ) );
@@ -195,7 +195,7 @@ function qr_trackr_uninstall() {
 	try {
 		// Drop the table.
 		$table_name = $wpdb->prefix . 'qr_trackr_links';
-		$wpdb->query( 'DROP TABLE IF EXISTS ' . $table_name );
+		$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->prefix}qr_trackr_links`" );
 		// Remove options.
 		delete_option( 'qr_trackr_version' );
 		delete_option( 'qr_trackr_verify_destinations' );
