@@ -52,4 +52,45 @@ For advanced testing, you can start dev, nonprod, and a local GitHub MCP server 
 ./scripts/launch-all-docker.sh
 ```
 
-See the dev README for details on MCP and its role in repo automation and merge conflict prevention. 
+See the dev README for details on MCP and its role in repo automation and merge conflict prevention.
+
+### Modular Linting & Formatting Configuration
+
+To ensure code quality and consistency across all contributors and environments, this project uses a modular, extensible lint-staged configuration. This setup automatically lints and formats all relevant file types before each commit, using the right tool for each language or format. 
+
+**Key points:**
+- No `cd` commands are used in config files, avoiding path confusion and automation issues.
+- All linting/formatting is run from the project root, ensuring compatibility with Husky, lint-staged, and CI/CD.
+- The configuration is easily extendable for new file types or tools.
+- This approach enforces standards, reduces review friction, and prevents common pitfalls in cross-platform and modular setups.
+
+**Current `.lintstagedrc.json` config:**
+```json
+{
+  "*.js": "eslint --fix",
+  "*.jsx": "eslint --fix",
+  "*.ts": "eslint --fix",
+  "*.tsx": "eslint --fix",
+  "*.php": "phpcbf",
+  "*.css": "stylelint --fix",
+  "*.scss": "stylelint --fix",
+  "*.json": "prettier --write",
+  "*.md": "prettier --write",
+  "*.yml": "prettier --write",
+  "*.yaml": "prettier --write"
+}
+```
+
+**What each tool does:**
+- `eslint --fix`: Lints and auto-formats JavaScript, JSX, TypeScript, and TSX files.
+- `phpcbf`: Applies WordPress and project PHP coding standards automatically.
+- `stylelint --fix`: Lints and auto-formats CSS and SCSS files.
+- `prettier --write`: Formats JSON, Markdown, and YAML files for consistency.
+
+**Significance:**
+- **Reliability:** Avoids automation pitfalls (like infinite loops from `cd` in configs).
+- **Consistency:** All code and docs are auto-formatted before commit.
+- **Modularity:** Easy to add new file types or tools as the project grows.
+- **Cross-platform:** Works on macOS, Linux, and CI/CD without modification.
+
+See `scripts/.lintstagedrc.json` for the authoritative config. Update this file if you add new file types or want to change linting/formatting tools. 

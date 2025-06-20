@@ -168,7 +168,64 @@ Use this to start the nonprod environment after a reset, or to restart it at any
 
 ## Development & Contribution
 
-(Shared and dev-specific contribution instructions...)
+### PHPCS Exception: Dynamic Table Name Interpolation in SQL Queries
+
+WordPress plugins must often use dynamic table names to support multisite and custom table prefixes. This requires interpolating the table name into SQL queries, which PHPCS will flag as an error ("Use placeholders and $wpdb->prepare(); found $sql").
+
+**Project Policy:**
+- All SQL queries in this codebase use `$wpdb->prepare()` for all variable data except the table name.
+- Table names are interpolated using the `$wpdb->prefix` property, following WordPress best practices.
+- Each such query is annotated with a PHPCS ignore comment:
+  ```php
+  // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name interpolation is required for dynamic table prefixing in WordPress. All other variables are safely prepared.
+  $link = $wpdb->get_row( $wpdb->prepare( $sql, $id ) );
+  ```
+- This is a known and accepted exception. Reviewers should not reject PRs for these PHPCS errors as long as the ignore comment and justification are present.
+
+**References:**
+- [WordPress Core Handbook: Database Access Abstraction Object (wpdb)](https://developer.wordpress.org/reference/classes/wpdb/)
+- [WordPress Coding Standards: Prepared SQL](https://github.com/WordPress/WordPress-Coding-Standards/blob/develop/WordPress/Sniffs/DB/PreparedSQLSniff.php)
+
+### Modular Linting & Formatting Configuration
+
+To ensure code quality and consistency across all contributors and environments, this project uses a modular, extensible lint-staged configuration. This setup automatically lints and formats all relevant file types before each commit, using the right tool for each language or format. 
+
+**Key points:**
+- No `cd` commands are used in config files, avoiding path confusion and automation issues.
+- All linting/formatting is run from the project root, ensuring compatibility with Husky, lint-staged, and CI/CD.
+- The configuration is easily extendable for new file types or tools.
+- This approach enforces standards, reduces review friction, and prevents common pitfalls in cross-platform and modular setups.
+
+**Current `.lintstagedrc.json` config:**
+```json
+{
+  "*.js": "eslint --fix",
+  "*.jsx": "eslint --fix",
+  "*.ts": "eslint --fix",
+  "*.tsx": "eslint --fix",
+  "*.php": "phpcbf",
+  "*.css": "stylelint --fix",
+  "*.scss": "stylelint --fix",
+  "*.json": "prettier --write",
+  "*.md": "prettier --write",
+  "*.yml": "prettier --write",
+  "*.yaml": "prettier --write"
+}
+```
+
+**What each tool does:**
+- `eslint --fix`: Lints and auto-formats JavaScript, JSX, TypeScript, and TSX files.
+- `phpcbf`: Applies WordPress and project PHP coding standards automatically.
+- `stylelint --fix`: Lints and auto-formats CSS and SCSS files.
+- `prettier --write`: Formats JSON, Markdown, and YAML files for consistency.
+
+**Significance:**
+- **Reliability:** Avoids automation pitfalls (like infinite loops from `cd` in configs).
+- **Consistency:** All code and docs are auto-formatted before commit.
+- **Modularity:** Easy to add new file types or tools as the project grows.
+- **Cross-platform:** Works on macOS, Linux, and CI/CD without modification.
+
+See `scripts/.lintstagedrc.json` for the authoritative config. Update this file if you add new file types or want to change linting/formatting tools.
 
 ---
 

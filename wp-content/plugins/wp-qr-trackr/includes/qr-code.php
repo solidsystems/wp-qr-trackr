@@ -9,4 +9,4 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// ... existing code ...
+// QR code utility functions can be added here.
