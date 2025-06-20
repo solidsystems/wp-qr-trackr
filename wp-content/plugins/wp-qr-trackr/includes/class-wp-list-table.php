@@ -14,6 +14,8 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
 	class WP_List_Table {
 		/**
 		 * Constructor for WP_List_Table stub.
+		 *
+		 * @return void
 		 */
 		public function __construct() {}
 	}

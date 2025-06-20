@@ -21,6 +21,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 6. [For Engineering & IT Leadership](#for-engineering--it-leadership)
 7. [Troubleshooting & FAQ](./TROUBLESHOOTING.md)
 8. [Links & Further Reading](#links--further-reading)
+9. [Reflections from the Creator](docs/REFLECTIONS-FROM-THE-CREATOR.md)
 
 ---
 
@@ -45,7 +46,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 ### Prerequisites
 - macOS (ARM or x86), Linux, or Windows (see project plans for cross-platform support)
 - [Homebrew](https://brew.sh/) (macOS)
-- [Yarn](https://yarnpkg.com/)
+- [Yarn](https://yarnpkg.com/) (**only supported package manager; do not use npm or pnpm**)
 - [Composer](https://getcomposer.org/)
 - Docker (for local dev/testing)
 
@@ -65,6 +66,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
    yarn install
    composer install
    ```
+   > **Note:** Only `yarn.lock` should be present. If you see a `package-lock.json` or `pnpm-lock.yaml`, delete them to avoid conflicts. This project does not support npm or pnpm lockfiles.
 4. **Set up your environment:**
    ```sh
    cp .env.example .env
@@ -80,6 +82,12 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
    ```
 
 > **Note:** Debug mode is enabled by default in the development environment. When using the standard Docker workflow (including `reset-docker.sh`), a `wp-config-dev.php` file is automatically included to enable `WP_DEBUG` and log errors to `wp-content/debug.log`. This ensures all PHP errors and warnings are captured for troubleshooting during development. Do not use this file in production.
+
+### Troubleshooting
+If you see warnings about multiple lockfiles or npm being used as the package manager:
+- Delete `package-lock.json` and/or `pnpm-lock.yaml` if present.
+- Ensure only `yarn.lock` is present in the project root.
+- If using VS Code, set `"npm.packageManager": "yarn"` in `.vscode/settings.json` to enforce Yarn usage.
 
 ---
 
@@ -248,6 +256,62 @@ If you see different results locally and in CI:
 - Ensure you are running the same commands as the CI workflow (see `.github/workflows/ci.yml`).
 - Reinstall dependencies and hooks with `yarn setup:ci`.
 - Review the troubleshooting section in `TROUBLESHOOTING.md` for more details.
+
+---
+
+## Accidental Innovation: Documentation Orchestrator
+
+One of the most delightful surprises in this project was the creation of a fully automated documentation orchestrator—an innovation that was never on the original roadmap, but has become a favorite feature for both development and documentation.
+
+### What is it?
+A single script, `./scripts/playwright-docs-orchestrator.sh`, gives you foolproof, on-demand, always-up-to-date documentation and accessibility screenshots for the plugin. It:
+- Kills any process or container using port 8087 to avoid resource contention.
+- Ensures a clean, isolated WordPress install on port 8087 (using Docker Compose and a dedicated DB volume).
+- Runs the full WP-CLI setup to guarantee a fresh admin user and site state.
+- Executes a Playwright user flow script that logs in, creates a QR code, and captures screenshots of every step.
+- Outputs all screenshots to `assets/screenshots/` for use in documentation, accessibility reviews, and user guides.
+
+### Why does it matter?
+- **Zero manual steps:** No more worrying about stale screenshots or inconsistent docs—just run the script and everything is rebuilt from scratch.
+- **Accessibility by default:** Every UI flow is captured and ready for Section 508 or WCAG review.
+- **Developer and user friendly:** Anyone can generate the latest docs and screenshots, making onboarding and support easier.
+- **A happy accident:** This workflow emerged from troubleshooting and automation work, and is now a core part of the dev experience.
+
+Curious about the philosophy behind this and other innovations? See [Reflections from the Creator](docs/REFLECTIONS-FROM-THE-CREATOR.md).
+
+**Try it yourself:**
+```sh
+./scripts/playwright-docs-orchestrator.sh
+```
+
+This will produce a complete, up-to-date set of screenshots and documentation assets for the plugin—automatically, every time.
+
+---
+
+## Multi-Project Playwright Documentation Orchestration
+
+This project supports automated documentation and UI testing for multiple plugins/projects using a single orchestrator workflow.
+
+### How It Works
+- The orchestrator script (`scripts/playwright-docs-orchestrator.sh`) uses the `PLUGIN_DIR` environment variable to select which plugin to mount, activate, and test.
+- The Playwright user flow script must be named using the convention: `scripts/playwright-<PLUGIN_DIR>-userflow.js` (e.g., `scripts/playwright-wp-qr-trackr-userflow.js`).
+- The orchestrator will activate the specified plugin and run the corresponding Playwright script.
+
+### Usage Example
+```sh
+PLUGIN_DIR=wp-qr-trackr ./scripts/playwright-docs-orchestrator.sh
+PLUGIN_DIR=another-plugin ./scripts/playwright-docs-orchestrator.sh
+```
+
+### Adding a New Project
+1. Place your plugin code in `wp-content/plugins/<your-plugin-dir>`.
+2. Create a Playwright user flow script named `scripts/playwright-<your-plugin-dir>-userflow.js`.
+3. Run the orchestrator with `PLUGIN_DIR=<your-plugin-dir>`.
+
+### Notes
+- The orchestrator and init scripts will automatically activate the specified plugin.
+- You can add as many projects as you like, as long as you follow the naming convention.
+- Each project can have its own Playwright user flow for custom documentation and UI testing.
 
 ---
 
@@ -959,3 +1023,94 @@ define( 'DB_HOST', getenv('DB_HOST') );
 > - Ensure all secrets (database credentials, salts, etc.) are set via environment variables in the DigitalOcean App Platform dashboard.
 > - Always use SSL and restrict file editing in the admin for security.
 > - Monitor logs using DigitalOcean's built-in logging or forward to a managed OpenSearch instance as described in the infrastructure section.
+
+## Local Docker Environments: Parallel Dev & Nonprod
+
+This project supports running both a development and a nonprod (production-like) WordPress environment in parallel using Docker Compose. Each environment is fully isolated, with its own containers, networks, and volumes.
+
+- **Dev environment** (port 8080):
+  - Plugin is live-mounted for rapid iteration.
+  - Debug mode and dev tools enabled by default.
+  - Use for active development and testing.
+- **Nonprod environment** (port 8081):
+  - Clean, vanilla WordPress install (plugin NOT preinstalled).
+  - Use for production-like testing, plugin upload, and release validation.
+
+### Launching Both Environments
+
+Use the provided script to launch both environments in parallel:
+
+```sh
+./scripts/launch-all-docker.sh
+```
+
+- This script starts both dev (8080) and nonprod (8081) environments with unique Docker Compose project names (`wpqrdev` and `wpqrnonprod`).
+- It includes robust health checks, waits for containers to be ready, and cleans up orphaned containers.
+- You can access:
+  - Dev: http://localhost:8080
+  - Nonprod: http://localhost:8081
+
+### Stopping and Resetting Environments
+
+- To stop all containers:
+  ```sh
+  docker compose -p wpqrdev down
+  docker compose -p wpqrnonprod down
+  ```
+- To reset a specific environment (removes all data):
+  ```sh
+  ./scripts/reset-docker.sh dev
+  ./scripts/reset-docker.sh nonprod
+  ```
+
+### Troubleshooting Parallel Docker
+- If you see port conflicts, ensure no other services are using 8080 or 8081.
+- Use `docker ps` and `docker compose ps -a -p wpqrdev`/`-p wpqrnonprod` to inspect running containers.
+- The launch script uses `--remove-orphans` to clean up old containers.
+- If you encounter issues, try stopping all containers and running the launch script again.
+
+### Why Parallel Environments?
+- **Dev**: Fast, iterative development with live plugin code.
+- **Nonprod**: Clean, production-like WordPress for final plugin testing and release validation.
+- Both can run simultaneously without interference, supporting robust QA and release workflows.
+
+### Modular Linting & Formatting Configuration
+
+To ensure code quality and consistency across all contributors and environments, this project uses a modular, extensible lint-staged configuration. This setup automatically lints and formats all relevant file types before each commit, using the right tool for each language or format. 
+
+**Key points:**
+- No `cd` commands are used in config files, avoiding path confusion and automation issues.
+- All linting/formatting is run from the project root, ensuring compatibility with Husky, lint-staged, and CI/CD.
+- The configuration is easily extendable for new file types or tools.
+- This approach enforces standards, reduces review friction, and prevents common pitfalls in cross-platform and modular setups.
+
+**Current `.lintstagedrc.json` config:**
+```json
+{
+  "*.js": "eslint --fix",
+  "*.jsx": "eslint --fix",
+  "*.ts": "eslint --fix",
+  "*.tsx": "eslint --fix",
+  "*.php": "phpcbf",
+  "*.css": "stylelint --fix",
+  "*.scss": "stylelint --fix",
+  "*.json": "prettier --write",
+  "*.md": "prettier --write",
+  "*.yml": "prettier --write",
+  "*.yaml": "prettier --write"
+}
+```
+
+**What each tool does:**
+- `eslint --fix`: Lints and auto-formats JavaScript, JSX, TypeScript, and TSX files.
+- `phpcbf`: Applies WordPress and project PHP coding standards automatically.
+- `stylelint --fix`: Lints and auto-formats CSS and SCSS files.
+- `prettier --write`: Formats JSON, Markdown, and YAML files for consistency.
+
+**Significance:**
+- **Reliability:** Avoids automation pitfalls (like infinite loops from `cd` in configs).
+- **Consistency:** All code and docs are auto-formatted before commit.
+- **Modularity:** Easy to add new file types or tools as the project grows.
+- **Cross-platform:** Works on macOS, Linux, and CI/CD without modification.
+
+See `scripts/.lintstagedrc.json` for the authoritative config. Update this file if you add new file types or want to change linting/formatting tools.

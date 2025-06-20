@@ -70,6 +70,94 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 
 > **Note:** Debug mode is enabled by default in the development environment. When using the standard Docker workflow (including `reset-docker.sh`), a `wp-config-dev.php` file is automatically included to enable `WP_DEBUG` and log errors to `wp-content/debug.log`. This ensures all PHP errors and warnings are captured for troubleshooting during development. Do not use this file in production.
 
+### Quick Start
+
+1. **Start the environment:**
+   ```sh
+   ./scripts/launch-nonprod-docker.sh
+   ```
+   (This script will launch the Docker environment and print access details.)
+
+2. **Access WordPress:**
+   - Open [http://localhost:8081](http://localhost:8081) in your browser.
+   - Complete the WordPress install wizard (choose any admin credentials).
+
+3. **Upload the plugin:**
+   - In the WordPress admin, go to **Plugins → Add New → Upload Plugin**.
+   - Select your plugin ZIP file and install/activate it.
+
+4. **Test the plugin:**
+   - Use the admin UI to verify plugin features in a clean environment.
+
+### Database Credentials
+- DB Name: `wpdb`
+- DB User: `wpuser`
+- DB Password: `wppass`
+- MySQL Root Password: `rootpass`
+
+### Notes
+- The plugin code is **not live-mounted**; changes require re-uploading the ZIP.
+- Database data persists between runs via Docker volume `db_data`.
+- No other plugins or themes are pre-installed.
+- **Debug logging is enabled by default in this environment.**
+- **Nonprod runs on port 8081, so you can run both dev (8080) and nonprod (8081) environments at the same time.**
+
+## Local Non-Production Docker Testing
+
+This environment provides a clean, vanilla WordPress install for plugin testing. It is designed to:
+- Simulate a real-world, production-like WordPress site with no development dependencies, no live-mounts, and no pre-installed plugins or themes.
+- Allow you to upload and test your plugin ZIP file as an end user would, ensuring compatibility and catching issues that might not appear in a dev environment.
+- Use a separate port (8081) so you can run both dev (8080) and nonprod (8081) environments simultaneously.
+
+**Why?**
+- This setup helps catch issues related to plugin packaging, missing dependencies, or environment differences before release.
+- It ensures your plugin works on a fresh WordPress install, just like your users will experience.
+
+### PHP Upload Limits for Plugin Testing
+- The nonprod environment sets PHP upload limits using `WORDPRESS_CONFIG_EXTRA` in `docker-compose.yml`:
+  ```yaml
+  WORDPRESS_CONFIG_EXTRA: |
+    @ini_set('upload_max_filesize', '64M');
+    @ini_set('post_max_size', '64M');
+  ```
+- This is required because the official WordPress Docker image ignores `PHP_UPLOAD_MAX_FILESIZE` and `PHP_POST_MAX_SIZE` environment variables.
+- You can now upload large plugin ZIP files for testing without hitting the "link you followed has expired" error.
+
+## Managing the Non-Production Docker Environment
+
+To make plugin testing easy and reliable, two scripts are provided:
+
+### 1. Reset the Non-Production Environment
+Use this to fully reset the nonprod environment, including removing all containers and the database volume for a fresh start.
+
+```sh
+./scripts/reset-nonprod-docker.sh
+```
+- Stops and removes all nonprod (8081) containers
+- Removes the `db_data` volume (erases all nonprod database data)
+- Rebuilds Docker images for a clean environment
+- Use this if you want a completely fresh WordPress install and database
+
+### 2. Launch the Non-Production Environment
+Use this to start the nonprod environment after a reset, or to restart it at any time.
+
+```sh
+./scripts/launch-nonprod-docker.sh
+```
+- Tears down any running nonprod containers and volumes (safe to run repeatedly)
+- Starts the nonprod WordPress and MySQL containers on port 8081
+- Prints access instructions and tails the logs for live debugging
+
+**Typical workflow:**
+1. Reset the environment for a clean slate:
+   ```sh
+   ./scripts/reset-nonprod-docker.sh
+   ```
+2. Launch the environment and begin testing:
+   ```sh
+   ./scripts/launch-nonprod-docker.sh
+   ```
+
 ---
 
 ## Usage
@@ -80,7 +168,91 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 
 ## Development & Contribution
 
-(Shared and dev-specific contribution instructions...)
+### PHPCS Exception: Dynamic Table Name Interpolation in SQL Queries
+
+WordPress plugins must often use dynamic table names to support multisite and custom table prefixes. This requires interpolating the table name into SQL queries, which PHPCS will flag as an error ("Use placeholders and $wpdb->prepare(); found $sql").
+
+**Project Policy:**
+- All SQL queries in this codebase use `$wpdb->prepare()` for all variable data except the table name.
+- Table names are interpolated using the `$wpdb->prefix` property, following WordPress best practices.
+- Each such query is annotated with a PHPCS ignore comment:
+  ```php
+  // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name interpolation is required for dynamic table prefixing in WordPress. All other variables are safely prepared.
+  $link = $wpdb->get_row( $wpdb->prepare( $sql, $id ) );
+  ```
+- This is a known and accepted exception. Reviewers should not reject PRs for these PHPCS errors as long as the ignore comment and justification are present.
+
+**References:**
+- [WordPress Core Handbook: Database Access Abstraction Object (wpdb)](https://developer.wordpress.org/reference/classes/wpdb/)
+- [WordPress Coding Standards: Prepared SQL](https://github.com/WordPress/WordPress-Coding-Standards/blob/develop/WordPress/Sniffs/DB/PreparedSQLSniff.php)
+
+### Modular Linting & Formatting Configuration
+
+To ensure code quality and consistency across all contributors and environments, this project uses a modular, extensible lint-staged configuration. This setup automatically lints and formats all relevant file types before each commit, using the right tool for each language or format. 
+
+**Key points:**
+- No `cd` commands are used in config files, avoiding path confusion and automation issues.
+- All linting/formatting is run from the project root, ensuring compatibility with Husky, lint-staged, and CI/CD.
+- The configuration is easily extendable for new file types or tools.
+- This approach enforces standards, reduces review friction, and prevents common pitfalls in cross-platform and modular setups.
+
+**Current `.lintstagedrc.json` config:**
+```json
+{
+  "*.js": "eslint --fix",
+  "*.jsx": "eslint --fix",
+  "*.ts": "eslint --fix",
+  "*.tsx": "eslint --fix",
+  "*.php": "phpcbf",
+  "*.css": "stylelint --fix",
+  "*.scss": "stylelint --fix",
+  "*.json": "prettier --write",
+  "*.md": "prettier --write",
+  "*.yml": "prettier --write",
+  "*.yaml": "prettier --write"
+}
+```
+
+**What each tool does:**
+- `eslint --fix`: Lints and auto-formats JavaScript, JSX, TypeScript, and TSX files.
+- `phpcbf`: Applies WordPress and project PHP coding standards automatically.
+- `stylelint --fix`: Lints and auto-formats CSS and SCSS files.
+- `prettier --write`: Formats JSON, Markdown, and YAML files for consistency.
+
+**Significance:**
+- **Reliability:** Avoids automation pitfalls (like infinite loops from `cd` in configs).
+- **Consistency:** All code and docs are auto-formatted before commit.
+- **Modularity:** Easy to add new file types or tools as the project grows.
+- **Cross-platform:** Works on macOS, Linux, and CI/CD without modification.
+
+See `scripts/.lintstagedrc.json` for the authoritative config. Update this file if you add new file types or want to change linting/formatting tools.
+
+---
+
+## Accidental Innovation: Documentation Orchestrator
+
+One of the most delightful surprises in this project was the creation of a fully automated documentation orchestrator—an innovation that was never on the original roadmap, but has become a favorite feature for both development and documentation.
+
+### What is it?
+A single script, `./scripts/playwright-docs-orchestrator.sh`, gives you foolproof, on-demand, always-up-to-date documentation and accessibility screenshots for the plugin. It:
+- Kills any process or container using port 8087 to avoid resource contention.
+- Ensures a clean, isolated WordPress install on port 8087 (using Docker Compose and a dedicated DB volume).
+- Runs the full WP-CLI setup to guarantee a fresh admin user and site state.
+- Executes a Playwright user flow script that logs in, creates a QR code, and captures screenshots of every step.
+- Outputs all screenshots to `assets/screenshots/` for use in documentation, accessibility reviews, and user guides.
+
+### Why does it matter?
+- **Zero manual steps:** No more worrying about stale screenshots or inconsistent docs—just run the script and everything is rebuilt from scratch.
+- **Accessibility by default:** Every UI flow is captured and ready for Section 508 or WCAG review.
+- **Developer and user friendly:** Anyone can generate the latest docs and screenshots, making onboarding and support easier.
+- **A happy accident:** This workflow emerged from troubleshooting and automation work, and is now a core part of the dev experience.
+
+**Try it yourself:**
+```sh
+./scripts/playwright-docs-orchestrator.sh
+```
+
+This will produce a complete, up-to-date set of screenshots and documentation assets for the plugin—automatically, every time.
 
 ---
 
@@ -120,4 +292,188 @@ See [docs/TROUBLESHOOTING.dev.md](docs/TROUBLESHOOTING.dev.md) for help with com
 - If you see a fatal error about an undefined function, check the module load order in your main plugin file.
 - Always test plugin activation and deactivation in a clean environment to catch these issues early.
 
---- 
+---
+
+## Release Packaging: rsync + .distignore Exclude List
+
+To guarantee that only the required files and production dependencies are included in the plugin release ZIP (and nothing else), the release process uses `rsync` with an exclude list from `.distignore`.
+
+### Why rsync + .distignore?
+- **Speed:** Only the needed files are copied, never copied and then deleted.
+- **Reliability:** No risk of accidentally shipping dev files, secrets, or large unnecessary files.
+- **Single source of truth:** `.distignore` is the only place you need to update to add/remove files from the release.
+- **Industry standard:** This is the approach used by many professional open source projects.
+
+### How to maintain the exclude list
+- Edit `.distignore` in the project root. It works like `.gitignore` (one pattern per line).
+- Example entries:
+  ```
+  .git/
+  node_modules/
+  tests/
+  .DS_Store
+  *.md
+  *.sh
+  docker-compose.yml
+  php.ini
+  scripts/
+  wp-content/plugins/wp-qr-trackr/.env
+  wp-content/plugins/wp-qr-trackr/.env.example
+  ```
+- To add or remove files from the release, just update `.distignore` and re-run the release script.
+
+### How to build a release
+Run:
+```sh
+./scripts/build-release.sh [major|minor|patch|prerelease [type] N]
+```
+This will:
+- Bump the version and update the changelog
+- Copy only the required files (using rsync and .distignore)
+- Install production dependencies
+- Create a minimal, production-ready ZIP in the project root
+
+---
+
+## Technical Reference: Work Instructions
+
+### Maintaining the Release Packaging Process
+- **To add or remove files from the plugin release:**
+  - Edit `.distignore` in the project root. This file controls what is excluded from the release ZIP.
+  - Patterns work like `.gitignore`.
+- **To build a release:**
+  - Run `./scripts/build-release.sh` with the appropriate version bump argument.
+- **To verify the release:**
+  - Unzip the generated ZIP and confirm only the expected files and the `vendor/` directory (with production dependencies) are present.
+- **If you add new dev tools, scripts, or config files:**
+  - Add them to `.distignore` if they should not be shipped to users.
+
+---
+
+# wp-qr-trackr Development Guide
+
+> **Note:** Sections marked with [COMMON] are shared with nonprod and production documentation.
+
+## [COMMON] Project Overview
+wp-qr-trackr is a modular, robust WordPress plugin for QR code generation and tracking. It is open source and built entirely via prompt engineering and Cursor's Agent Mode.
+
+## Local Development Environment
+- Uses Docker Compose for local WordPress + MySQL stack.
+- No live-mounts in nonprod; live-mounts may be used in dev for rapid iteration.
+- See `docker-compose.yml` (dev version) for service definitions.
+
+## [COMMON] Plugin Structure
+- Modular includes: admin, AJAX, rewrite, debug, utility, etc.
+- Main plugin file only bootstraps modules.
+- All business logic is in `includes/` modules.
+
+## [COMMON] Coding Standards
+- WordPress Coding Standards enforced via PHPCS.
+- PHPCS requires at least 1GB RAM, 4GB recommended for large codebases (see `.cursorrules`).
+- All code must pass CI/CD before merging.
+
+## Development Workflow
+- Use feature branches and PRs for all changes.
+- Run `./scripts/build-release.sh patch` to build and verify release ZIPs.
+- Use `reset-nonprod-docker.sh` to reset the nonprod environment for clean testing.
+
+## [COMMON] Security Practices
+- Separate nonces for all admin AJAX actions.
+- Strict capability checks for all sensitive actions.
+
+## [COMMON] Release Process
+- Automated build script ensures only required files are included.
+- Release ZIP is verified for required/forbidden files.
+- Releases are published to GitHub with full changelogs.
+
+## [COMMON] Contributor Notes
+- See `.cursorrules` for project rules and environment requirements.
+- All major documentation files have parallel dev, nonprod, and prod versions.
+
+## See also
+- `README.nonprod.md` for nonprod Docker/QA environment.
+- `README.prod.md` for production deployment and usage.
+
+## All-in-One Environment
+
+You can now start all environments (dev, nonprod, and local MCP servers) with:
+
+```sh
+./scripts/launch-all-docker.sh
+```
+
+- **Dev**: WordPress on port 8080 (live-mounts, rapid iteration)
+- **Nonprod**: WordPress on port 8081 (clean, no live-mounts)
+- **MCP (GitHub)**: http://localhost:7000 (repo automation, merge/conflict attention)
+- **MCP (Context7)**: http://localhost:7001 (advanced documentation as a service)
+- **MCP (DigitalOcean)**: http://localhost:7002 (cloud/devops automation)
+
+See script comments for details and requirements.
+
+---
+
+## MCP Technical Capabilities
+
+The following MCP servers provide native capabilities to the Cursor development environment and all plugins:
+
+### Context7 MCP (Documentation as a Service)
+- Search, retrieve, and serve advanced documentation for all plugins and codebases
+- Share documentation as a service across multiple plugins
+- Example commands:
+  - `searchDocs(query)`: Find documentation by keyword or topic
+  - `getDoc(file, section)`: Retrieve a specific doc section
+  - `listDocs()`: List all available documentation topics
+
+### GitHub MCP (Repository Automation)
+- Manage PRs, branches, merges, and repo state
+- Detect and resolve merge conflicts, detached HEADs, and PR attention issues
+- Example commands:
+  - `listPRs()`: List open pull requests
+  - `mergePR(prNumber)`: Merge a pull request
+  - `getRepoStatus()`: Show current branch, HEAD, and conflict state
+  - `createBranch(name)`: Create a new branch
+
+### DigitalOcean MCP (Cloud/DevOps Automation)
+- Manage DigitalOcean droplets, databases, and cloud resources
+- Automate deployments, scaling, and backups
+- Example commands:
+  - `listDroplets()`: List all droplets
+  - `createDroplet(config)`: Create a new droplet
+  - `getDatabaseStatus(id)`: Get status of a managed database
+  - `scaleDroplet(id, size)`: Resize a droplet
+
+---
+
+> **Cursor Rule:** When MCP servers are present, Cursor and agents should use MCP APIs by default for documentation, repo, and cloud operations.
+
+# System Requirements
+
+To run the all-in-one environment (`./scripts/launch-all-docker.sh`), your system should meet the following:
+
+## Minimum
+- **CPU:** 4 cores (modern Intel/AMD or Apple Silicon)
+- **RAM:** 8 GB
+- **Disk Space:** 10 GB free
+- **OS:** macOS, Linux, or Windows (with WSL2)
+- **Docker:** Docker Desktop or Engine v20.10+
+- **Docker Compose:** v1.29+ (or Compose V2 plugin)
+- **Node.js & npx:** Node.js v16+
+- **Internet Connection:** Required for pulling images and MCP server dependencies
+
+## Recommended
+- **CPU:** 8+ cores
+- **RAM:** 16 GB or more
+- **Disk Space:** 20 GB+ free
+- **OS:**
+  - macOS Monterey+ (Apple Silicon or Intel)
+  - Ubuntu 20.04+ (or equivalent)
+  - Windows 11 with WSL2
+- **Docker:** Latest stable, with at least 4 CPUs and 8 GB RAM allocated
+- **Node.js & npx:** Node.js v18+ (LTS)
+- **Network:** Reliable broadband
+
+## Additional Notes
+- **Ports:** 8080 (dev), 8081 (nonprod), 7000 (MCP) must be available
+- **Performance:** Running all environments is resource-intensive; close unused apps and allocate enough resources to Docker
+- **Apple Silicon:** All images are ARM64 compatible; keep Docker Desktop updated
+- **First Run:** May be slower due to image/npm downloads 

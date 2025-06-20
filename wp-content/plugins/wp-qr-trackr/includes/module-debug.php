@@ -84,7 +84,7 @@ function qr_trackr_debug_settings_page() {
 
 	// Get log contents.
 	$log_contents = qr_trackr_get_debug_log();
-	$debug_mode = get_option( 'qr_trackr_debug_mode', '0' );
+	$debug_mode   = get_option( 'qr_trackr_debug_mode', '0' );
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'QR Trackr Debug Settings', 'qr-trackr' ); ?></h1>

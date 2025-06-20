@@ -15,6 +15,8 @@
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	/**
 	 * Run QR Trackr PHPUnit tests via WP-CLI.
+	 *
+	 * @package QR_Trackr
 	 */
 	class QR_Trackr_CLI_Command {
 		/**
@@ -59,7 +61,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			}
 
 			WP_CLI::log( 'Running QR Trackr PHPUnit tests...' );
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_passthru
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_passthru -- Required for CLI test execution.
 			passthru( $command, $exit_code );
 			if ( 0 === $exit_code ) {
 				WP_CLI::success( 'All tests passed!' );

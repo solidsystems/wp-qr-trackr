@@ -87,4 +87,22 @@ wp-qr-trackr is a modular, robust WordPress plugin for QR code generation and tr
 ## Meta: How This Project Was Built
 - **Prompt Engineering Only:** All code, scripts, and documentation were generated via prompt engineering using Cursor's Agent Mode. No code was written by hand.
 - **First Public Open Source Repo:** This is the author's first public open source project, intended as a learning resource and a robust, real-world example of AI-driven software engineering.
-- **Open Source Invitation:** Contributions, feedback, and improvements are welcome! See the main README for how to get involved. 
+- **Open Source Invitation:** Contributions, feedback, and improvements are welcome! See the main README for how to get involved.
+
+## v1.0.4 (2025-06-17)
+
+### Security & Contributor Experience
+- All admin AJAX actions now use separate, localized nonces for edit, delete, and regenerate, following best security practices for WordPress plugins.
+- PHPCS memory requirement is now documented for contributors (minimum 1GB, 4GB recommended for large codebases).
+- These changes further harden the plugin for public/production use and improve onboarding for new contributors.
+
+## Parallel Docker Environments: Key Learning
+
+- The introduction of parallel Docker Compose environments (dev on 8080, nonprod on 8081) and the `launch-all-docker.sh` script was a major improvement.
+- This enables:
+  - Rapid, live-mount development in dev.
+  - Clean, production-like release validation in nonprod (no plugin preinstalled).
+  - Robust QA and modularity, as both environments are fully isolated and can run simultaneously.
+- This workflow is now a best practice for all future plugin projects.
+
+--- 

@@ -1,0 +1,32 @@
+# Dockerfile for wp-qr-trackr dev environment (port 8080)
+# Playwright is installed here for automated UI testing and screenshot capture.
+# Do NOT install Playwright in production or nonprod images.
+
+FROM wordpress:php8.1-apache
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y curl less gnupg default-mysql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Node.js and Playwright for UI testing
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get update && \
+    apt-get install -y nodejs && \
+    npm install -g npm@latest && \
+    npm install -g playwright && \
+    npx playwright install --with-deps
+
+# Install WP-CLI
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
+
+# Copy entrypoint script
+COPY ./scripts/docker-dev-entrypoint.sh /usr/local/bin/docker-dev-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-dev-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-dev-entrypoint.sh"]
+CMD ["apache2-foreground"]
+
+# ... rest of your Dockerfile ... 
