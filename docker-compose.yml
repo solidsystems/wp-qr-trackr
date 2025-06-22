@@ -34,13 +34,9 @@ services:
     volumes:
       - ./wp-content/plugins:/var/www/html/wp-content/plugins
       - ./ci.sh:/ci.sh
-    working_dir: /var/www/html/wp-content/plugins/wp-qr-trackr
     environment:
       WORDPRESS_DB_HOST: db-nonprod:3306
       WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpress
-    entrypoint: ["/bin/bash", "/ci.sh"]
 
 volumes:
   db_data_nonprod:

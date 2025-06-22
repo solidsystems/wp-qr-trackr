@@ -1,0 +1,36 @@
+FROM wordpress:latest
+
+# Install system dependencies, PHP extensions, and Node.js/Yarn
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libzip-dev \
+    nodejs \
+    npm \
+    && npm install -g yarn \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-install zip
+
+# Install Composer globally
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set up the working directory
+WORKDIR /var/www/html
+
+# Copy the plugin code and install dependencies
+COPY ./wp-content/plugins/wp-qr-trackr /var/www/html/wp-content/plugins/wp-qr-trackr
+RUN cd /var/www/html/wp-content/plugins/wp-qr-trackr && \
+    composer install --no-dev --prefer-dist && \
+    yarn install --frozen-lockfile
+
+# Set up the WordPress test environment
+ENV WP_TESTS_DIR /var/www/html/wp-content/tests
+RUN mkdir -p $WP_TESTS_DIR
+COPY ./wp-content/plugins/wp-qr-trackr/bin/install-wp-tests.sh /install-wp-tests.sh
+RUN chmod +x /install-wp-tests.sh && \
+    /install-wp-tests.sh wordpress_test rootpass db-nonprod latest
+
+# Define the entrypoint for the CI runner
+COPY ./ci.sh /ci.sh
+RUN chmod +x /ci.sh
+ENTRYPOINT ["/ci.sh"] 
