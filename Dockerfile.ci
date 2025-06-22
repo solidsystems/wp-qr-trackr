@@ -14,16 +14,22 @@ RUN apt-get update && apt-get install -y \
 # Install Composer globally
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set up the working directory
+# Set the working directory for the app installation
+WORKDIR /usr/src/app
+
+# Copy dependency definition files first
+COPY composer.json composer.lock package.json yarn.lock ./
+
+# Install PHP and JS dependencies
+RUN composer install --no-dev --prefer-dist
+RUN yarn install --frozen-lockfile
+
+# Copy the entire project into the container
+COPY . .
+
+# Set up the WordPress test environment within the main WordPress volume
 WORKDIR /var/www/html
-
-# Copy the plugin code and install dependencies
-COPY ./wp-content/plugins/wp-qr-trackr /var/www/html/wp-content/plugins/wp-qr-trackr
-RUN cd /var/www/html/wp-content/plugins/wp-qr-trackr && \
-    composer install --no-dev --prefer-dist && \
-    yarn install --frozen-lockfile
-
-# Set up the WordPress test environment
+RUN cp -a /usr/src/app/wp-content/. ./wp-content/
 ENV WP_TESTS_DIR /var/www/html/wp-content/tests
 RUN mkdir -p $WP_TESTS_DIR
 COPY ./wp-content/plugins/wp-qr-trackr/bin/install-wp-tests.sh /install-wp-tests.sh
