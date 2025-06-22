@@ -83,7 +83,10 @@ function qr_trackr_template_redirect() {
 
 	$wpdb->update(
 		"{$wpdb->prefix}qr_trackr_links",
-		array( 'access_count' => $link->access_count + 1, 'last_accessed' => current_time( 'mysql' ) ),
+		array(
+			'access_count'  => $link->access_count + 1,
+			'last_accessed' => current_time( 'mysql' ),
+		),
 		array( 'id' => $link->id )
 	);
 
@@ -92,13 +95,16 @@ function qr_trackr_template_redirect() {
 }
 
 /**
- * Flush rewrite rules on plugin activation.
+ * Flush rewrite rules to apply changes.
  *
- * @return void
+ * This function is typically called on plugin activation to ensure the new QR
+ * code rewrite rules are recognized by WordPress.
  */
 if ( ! function_exists( 'qr_trackr_flush_rewrite_rules' ) ) {
+	/**
+	 * Flush rewrite rules.
+	 */
 	function qr_trackr_flush_rewrite_rules() {
-		qr_trackr_add_rewrite_rules();
 		flush_rewrite_rules();
 	}
 }

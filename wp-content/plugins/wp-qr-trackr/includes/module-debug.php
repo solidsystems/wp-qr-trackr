@@ -42,7 +42,7 @@ function qr_trackr_debug_log( $message, $title = '' ) {
 		return;
 	}
 
-	$log_file = qr_trackr_get_debug_log_path();
+	$log_file  = qr_trackr_get_debug_log_path();
 	$timestamp = gmdate( 'Y-m-d H:i:s' );
 	$header    = $title ? "--- [ $timestamp ] $title ---\n" : "--- [ $timestamp ] ---\n";
 
@@ -75,8 +75,9 @@ function qr_trackr_get_debug_log_path() {
 function qr_trackr_clear_debug_log() {
 	$log_file = qr_trackr_get_debug_log_path();
 	if ( file_exists( $log_file ) ) {
-		wp_delete_file( $log_file );
+		return wp_delete_file( $log_file );
 	}
+	return false;
 }
 
 /**

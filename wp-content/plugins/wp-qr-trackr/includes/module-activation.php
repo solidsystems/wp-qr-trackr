@@ -100,12 +100,15 @@ function qr_trackr_activate( $network_wide ) {
 }
 
 /**
- * Flush rewrite rules.
+ * Flush rewrite rules to apply changes.
  *
- * @return void
+ * This function is typically called on plugin activation to ensure the new QR
+ * code rewrite rules are recognized by WordPress. It checks for an admin context
+ * to avoid running on the frontend.
  */
-if ( ! function_exists( 'qr_trackr_flush_rewrite_rules' ) ) {
-	function qr_trackr_flush_rewrite_rules() {
+function qr_trackr_flush_rewrite_rules() {
+	// Ensure this only runs in the admin context.
+	if ( ! is_admin() ) {
 		// Ensure rewrite rules are flushed.
 		flush_rewrite_rules();
 	}

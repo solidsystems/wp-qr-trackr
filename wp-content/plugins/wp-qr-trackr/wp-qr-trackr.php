@@ -47,11 +47,14 @@ function qr_trackr_init_plugin() {
 	// Load Composer autoloader.
 	if ( ! file_exists( plugin_dir_path( __FILE__ ) . 'vendor/autoload.php' ) ) {
 		// Display an admin notice if the autoloader is missing.
-		add_action( 'admin_notices', function() {
-			echo '<div class="notice notice-error"><p>';
-			echo esc_html__( 'QR Trackr: Composer autoloader not found. The plugin cannot function. Please run `composer install`.', 'wp-qr-trackr' );
-			echo '</p></div>';
-		});
+		add_action(
+			'admin_notices',
+			function () {
+				echo '<div class="notice notice-error"><p>';
+				echo esc_html__( 'QR Trackr: Composer autoloader not found. The plugin cannot function. Please run `composer install`.', 'wp-qr-trackr' );
+				echo '</p></div>';
+			}
+		);
 		return;
 	}
 	require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
