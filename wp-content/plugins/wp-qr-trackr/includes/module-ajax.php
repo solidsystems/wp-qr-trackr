@@ -198,6 +198,7 @@ add_action( 'wp_ajax_qr_trackr_update_destination', 'qr_trackr_ajax_update_desti
  * @return void
  */
 function qr_trackr_create_qr_code() {
+	qr_trackr_debug_log( 'AJAX: qr_trackr_create_qr_code started.', $_POST );
 	check_ajax_referer( 'qr_trackr_nonce', 'nonce' );
 
 	if ( ! current_user_can( 'manage_options' ) ) {
@@ -217,6 +218,8 @@ function qr_trackr_create_qr_code() {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	$destination_type = isset( $_POST['destination_type'] ) ? sanitize_text_field( wp_unslash( $_POST['destination_type'] ) ) : '';
+	qr_trackr_debug_log( 'Destination type: ' . $destination_type );
+
 	if ( 'post' === $destination_type ) {
 		$post_id = isset( $_POST['post_id'] ) ? intval( wp_unslash( $_POST['post_id'] ) ) : 0;
 		if ( 0 === $post_id || ! get_post( $post_id ) || 'publish' !== get_post_status( $post_id ) ) {
@@ -235,8 +238,11 @@ function qr_trackr_create_qr_code() {
 		return;
 	}
 
+	qr_trackr_debug_log( 'Final destination URL: ' . $destination );
+
 	// Create QR code.
 	$qr_code = qr_trackr_generate_qr_code( $destination );
+	qr_trackr_debug_log( 'qr_trackr_generate_qr_code result:', $qr_code );
 	if ( is_wp_error( $qr_code ) ) {
 		qr_trackr_debug_log( 'QR code generation error: ' . $qr_code->get_error_message() );
 		if ( function_exists( 'qr_trackr_is_debug_enabled' ) && qr_trackr_is_debug_enabled() ) {
@@ -453,11 +459,10 @@ function qr_trackr_ajax_get_qr_code() {
 	// Sanitize link ID.
 	$link_id = isset( $_POST['link_id'] ) ? intval( $_POST['link_id'] ) : 0;
 	if ( 0 === $link_id ) {
-		wp_send_json_error( 'Invalid link ID' );
-		return;
+		wp_send_json_error( 'Invalid link ID.' );
 	}
 
-	// Get link data
+	// Get link data.
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 	$link       = $wpdb->get_row(
@@ -467,20 +472,19 @@ function qr_trackr_ajax_get_qr_code() {
 		)
 	);
 
-	if ( ! $link ) {
-		wp_send_json_error( 'Link not found' );
-		return;
+	if ( null === $link ) {
+		wp_send_json_error( 'Link not found.' );
 	}
 
-	// Generate QR code
+	// Generate QR code.
 	$qr_image = qr_trackr_generate_qr_image_for_link( $link_id );
 	if ( ! $qr_image ) {
 		qr_trackr_debug_log( 'Failed to generate QR code for link ID: ' . $link_id );
-		wp_send_json_error( 'Failed to generate QR code' );
+		wp_send_json_error( 'Failed to generate QR code.' );
 		return;
 	}
 
-	// Update link with QR code URL (store only PNG)
+	// Update link with QR code URL (store only PNG).
 	$result = $wpdb->update(
 		$table_name,
 		array( 'qr_code_url' => $qr_image['png'] ),
@@ -489,15 +493,15 @@ function qr_trackr_ajax_get_qr_code() {
 		array( '%d' )
 	);
 
-	if ( $result === false ) {
+	if ( false === $result ) {
 		qr_trackr_debug_log( 'Failed to update QR code URL in database for link ID: ' . $link_id );
-		wp_send_json_error( 'Failed to update QR code URL' );
+		wp_send_json_error( 'Failed to update QR code URL.' );
 		return;
 	}
 
 	wp_send_json_success(
 		array(
-			'message'         => 'QR code generated successfully',
+			'message'         => 'QR code generated successfully.',
 			'qr_code_url'     => $qr_image['png'],
 			'qr_code_svg_url' => $qr_image['svg'],
 		)

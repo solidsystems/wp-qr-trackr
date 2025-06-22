@@ -1,8 +1,10 @@
 {
   "devDependencies": {
-    "eslint": "^9.0.0",
+    "@playwright/test": "^1.46.0",
+    "eslint": "^9.8.0",
+    "eslint-plugin-playwright": "^1.6.2",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.2",
+    "lint-staged": "^15.0.0",
     "stylelint": "^16.20.0",
     "stylelint-config-standard": "^38.0.0"
   },
@@ -10,7 +12,8 @@
     "setup:ci": "yarn install",
     "lint": "eslint",
     "stylelint": "stylelint",
-    "postinstall": "husky"
+    "postinstall": "husky",
+    "test:e2e": "playwright test scripts/playwright-wp-qr-trackr-userflow.test.js"
   },
   "dependencies": {
     "playwright": "^1.53.1"

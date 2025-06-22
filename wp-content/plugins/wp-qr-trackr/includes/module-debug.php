@@ -31,6 +31,34 @@ function qr_trackr_is_debug_enabled() {
 }
 
 /**
+ * Log a message to the debug file if debugging is enabled.
+ *
+ * @param string|array|object $message The message or data to log.
+ * @param string              $title   Optional title for the log entry.
+ * @return void
+ */
+function qr_trackr_debug_log( $message, $title = '' ) {
+	if ( ! qr_trackr_is_debug_enabled() ) {
+		return;
+	}
+
+	$log_file = qr_trackr_get_debug_log_path();
+	$timestamp = gmdate( 'Y-m-d H:i:s' );
+	$header    = $title ? "--- [ $timestamp ] $title ---\n" : "--- [ $timestamp ] ---\n";
+
+	$entry = $header;
+	if ( is_array( $message ) || is_object( $message ) ) {
+		$entry .= print_r( $message, true );
+	} else {
+		$entry .= $message;
+	}
+	$entry .= "\n\n";
+
+	// Use file_put_contents with FILE_APPEND to handle file locking.
+	file_put_contents( $log_file, $entry, FILE_APPEND | LOCK_EX );
+}
+
+/**
  * Get the debug log file path.
  *
  * @return string The path to the debug log file.
@@ -47,22 +75,25 @@ function qr_trackr_get_debug_log_path() {
 function qr_trackr_clear_debug_log() {
 	$log_file = qr_trackr_get_debug_log_path();
 	if ( file_exists( $log_file ) ) {
-		return unlink( $log_file );
+		wp_delete_file( $log_file );
 	}
-	return true;
 }
 
 /**
  * Get the debug log contents.
  *
- * @return string The contents of the debug log file.
+ * @return string|false Log content or false on failure.
  */
 function qr_trackr_get_debug_log() {
 	$log_file = qr_trackr_get_debug_log_path();
-	if ( file_exists( $log_file ) ) {
-		return file_get_contents( $log_file );
+	if ( ! file_exists( $log_file ) ) {
+		return false;
 	}
-	return '';
+	$response = wp_remote_get( $log_file );
+	if ( is_wp_error( $response ) ) {
+		return false;
+	}
+	return wp_remote_retrieve_body( $response );
 }
 
 /**

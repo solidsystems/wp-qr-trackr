@@ -72,9 +72,9 @@ function qr_trackr_generate_qr_image_for_link( $link_id ) {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// Get link data.
-	$sql = "SELECT * FROM `{$table_name}` WHERE id = %d";$link = $wpdb->get_row(
+	$link = $wpdb->get_row(
 		$wpdb->prepare(
-			$sql,
+			"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE id = %d",
 			$link_id
 		)
 	);
@@ -233,8 +233,7 @@ function qr_trackr_get_or_create_tracking_link( $post_id ) {
 	$cache_key = 'qr_trackr_link_' . $post_id;
 	$link      = wp_cache_get( $cache_key );
 	if ( false === $link ) {
-		$sql  = "SELECT * FROM `{$table}` WHERE post_id = %d";
-		$link = $wpdb->get_row( $wpdb->prepare( $sql, $post_id ) );
+		$link = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE post_id = %d", $post_id ) );
 		if ( $link ) {
 			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
 		}
@@ -289,9 +288,7 @@ function qr_trackr_get_tracking_link_by_id( $link_id ) {
 	$cache_key = 'qr_trackr_link_by_id_' . $link_id;
 	$link      = wp_cache_get( $cache_key );
 	if ( false === $link ) {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query is required for plugin logic and is cached above.
-		$sql  = "SELECT * FROM `{$table}` WHERE id = %d";
-		$link = $wpdb->get_row( $wpdb->prepare( $sql, $link_id ) );
+		$link = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE id = %d", $link_id ) );
 		if ( $link ) {
 			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
 		}

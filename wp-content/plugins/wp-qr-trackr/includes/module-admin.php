@@ -88,8 +88,7 @@ function qr_trackr_admin_enqueue_scripts( $hook ) {
 	wp_enqueue_script(
 		'qr-trackr-admin',
 		QR_TRACKR_PLUGIN_URL . 'assets/js/admin.js',
-    todo-update-fix
-		array( 'jquery', 'jquery-ui-autocomplete' ),
+		array( 'jquery', 'jquery-ui-autocomplete', 'select2' ),
 		QR_TRACKR_VERSION,
 		true
 	);

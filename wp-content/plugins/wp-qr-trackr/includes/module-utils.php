@@ -15,9 +15,6 @@ if ( function_exists( 'qr_trackr_debug_log' ) ) {
 	qr_trackr_debug_log( 'Loading module-utils.php...' );
 }
 
-// Utility functions.
-// ... (move qr_trackr_get_most_recent_tracking_link, qr_trackr_render_qr_list_html, etc. here).
-
 /**
  * Safely get a value from an array by key.
  *
@@ -58,17 +55,13 @@ function qr_trackr_escape_url( $url ) {
  */
 function qr_trackr_get_most_recent_tracking_link( $post_id ) {
 	global $wpdb;
-	$links_table = $wpdb->prefix . 'qr_trackr_links';
-	$cache_key   = 'qr_trackr_link_' . $post_id;
-	$link        = wp_cache_get( $cache_key );
-	if ( $link ) {
+	$cache_key = 'qr_trackr_link_' . $post_id;
+	$link      = wp_cache_get( $cache_key );
+	if ( false !== $link ) {
 		return $link;
 	}
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query is required for plugin logic and is cached above.
-	$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . $links_table . ' WHERE post_id = %d ORDER BY created_at DESC LIMIT 1', $post_id ) );
-	if ( $link ) {
-		wp_cache_set( $cache_key, $link );
-	}
+	$link = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d ORDER BY created_at DESC LIMIT 1", $post_id ) );
+	wp_cache_set( $cache_key, $link );
 	return $link;
 }
 
@@ -80,15 +73,13 @@ function qr_trackr_get_most_recent_tracking_link( $post_id ) {
  */
 function qr_trackr_render_qr_list_html( $post_id ) {
 	global $wpdb;
-	$links_table = $wpdb->prefix . 'qr_trackr_links';
-	$cache_key   = 'qr_trackr_links_list_' . $post_id;
-	$links       = wp_cache_get( $cache_key );
+	$cache_key = 'qr_trackr_links_list_' . $post_id;
+	$links     = wp_cache_get( $cache_key );
 	if ( false === $links ) {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query is required for admin table rendering, short-term cache added.
-		$links = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . $links_table . ' WHERE post_id = %d ORDER BY created_at DESC', $post_id ) );
+		$links = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d ORDER BY created_at DESC", $post_id ) );
 		wp_cache_set( $cache_key, $links, '', 60 ); // Cache for 1 minute.
 	}
-	if ( ! $links ) {
+	if ( empty( $links ) ) {
 		return '<div class="qr-trackr-list"><p>' . esc_html__( 'No QR codes found.', 'wp-qr-trackr' ) . '</p></div>';
 	}
 	$html  = '<div class="qr-trackr-list"><table class="widefat"><thead><tr>';
@@ -100,7 +91,7 @@ function qr_trackr_render_qr_list_html( $post_id ) {
 		$html         .= '<tr>';
 		$html         .= '<td>' . intval( $link->id ) . '</td>';
 		$html         .= '<td>';
-		if ( $qr_urls && ! empty( $qr_urls['png'] ) ) {
+		if ( ! empty( $qr_urls ) && ! empty( $qr_urls['png'] ) ) {
 			$html .= '<img src="' . esc_url( $qr_urls['png'] ) . '" style="max-width:60px; display:block; margin-bottom:4px;" alt="QR Code">';
 			$html .= '<span style="font-size:12px; color:#555;">';
 			$html .= '<a href="' . esc_url( $qr_urls['png'] ) . '" download title="' . esc_attr__( 'Download PNG', 'wp-qr-trackr' ) . '" style="margin-right:8px; text-decoration:none;"><span class="dashicons dashicons-media-default" style="vertical-align:middle;"></span> PNG</a>';
@@ -115,15 +106,120 @@ function qr_trackr_render_qr_list_html( $post_id ) {
 	return $html;
 }
 
+/**
+ * Get all tracking links.
+ *
+ * @return array
+ */
+function qr_trackr_get_all_links() {
+	global $wpdb;
+	return $wpdb->get_results( "SELECT * FROM `{$wpdb->prefix}qr_trackr_links`" );
+}
+
+/**
+ * Get a tracking link by its ID.
+ *
+ * @param int $id The link ID.
+ * @return object|null
+ */
+function qr_trackr_get_link_by_id( $id ) {
+	global $wpdb;
+	return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE id = %d", $id ) );
+}
+
+/**
+ * Get all scans for a given link ID.
+ *
+ * @param int $link_id The link ID.
+ * @return array
+ */
+function qr_trackr_get_scans_by_link_id( $link_id ) {
+	global $wpdb;
+	return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM `{$wpdb->prefix}qr_trackr_scans` WHERE link_id = %d", $link_id ) );
+}
+
+/**
+ * Create a new tracking link.
+ *
+ * @param string $url  The destination URL.
+ * @param string $name The name of the link.
+ * @return object|false The new link object or false on failure.
+ */
+function qr_trackr_create_link( $url, $name = '' ) {
+	global $wpdb;
+	$result = $wpdb->insert(
+		$wpdb->prefix . 'qr_trackr_links',
+		array(
+			'destination_url' => $url,
+			'name'            => $name,
+			'qr_code'         => qr_trackr_generate_unique_qr_code(),
+		),
+		array(
+			'%s',
+			'%s',
+			'%s',
+		)
+	);
+	if ( ! $result ) {
+		return false;
+	}
+	$link_id = $wpdb->insert_id;
+	return qr_trackr_get_link_by_id( $link_id );
+}
+
+/**
+ * Update an existing tracking link.
+ *
+ * @param int    $id   The link ID.
+ * @param string $url  The new destination URL.
+ * @param string $name The new name.
+ * @return bool True on success, false on failure.
+ */
+function qr_trackr_update_link( $id, $url, $name = '' ) {
+	global $wpdb;
+	$result = $wpdb->update(
+		$wpdb->prefix . 'qr_trackr_links',
+		array(
+			'destination_url' => $url,
+			'name'            => $name,
+		),
+		array(
+			'id' => $id,
+		),
+		array(
+			'%s',
+			'%s',
+		),
+		array(
+			'%d',
+		)
+	);
+	return (bool) $result;
+}
+
+/**
+ * Delete a tracking link.
+ *
+ * @param int $id The link ID.
+ * @return bool True on success, false on failure.
+ */
+function qr_trackr_delete_link( $id ) {
+	global $wpdb;
+	$result = $wpdb->delete(
+		$wpdb->prefix . 'qr_trackr_links',
+		array(
+			'id' => $id,
+		),
+		array(
+			'%d',
+		)
+	);
+	return (bool) $result;
+}
+
 // Save post handler for updating destination URL.
 add_action(
 	'save_post',
-	/**
-	 * Handle saving of destination URL for a QR code link.
-	 *
-	 * @param int $post_id The post ID.
-	 * @return void
-	 */
 	function ( $post_id ) {
 		if ( isset( $_POST['qr_trackr_dest_nonce'], $_POST['qr_trackr_dest_url'], $_POST['qr_trackr_link_id'] ) ) {
 			$nonce    = isset( $_POST['qr_trackr_dest_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_dest_nonce'] ) ) : '';
@@ -136,9 +232,7 @@ add_action(
 				return;
 			}
 			global $wpdb;
-			$links_table = $wpdb->prefix . 'qr_trackr_links';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Update is required for plugin logic.
-			$wpdb->update( $links_table, array( 'destination_url' => $dest_url ), array( 'id' => $link_id ) );
+			$wpdb->update( $wpdb->prefix . 'qr_trackr_links', array( 'destination_url' => $dest_url ), array( 'id' => $link_id ) );
 		}
 	}
 );
@@ -146,26 +240,20 @@ add_action(
 // Migration/verification for qr_trackr_links table schema.
 add_action(
 	'init',
-	/**
-	 * Verify and migrate qr_trackr_links table schema if needed.
-	 *
-	 * @return void
-	 */
 	function () {
 		global $wpdb;
-		$links_table = $wpdb->prefix . 'qr_trackr_links';
 
 		// Check if table exists first.
-		$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $links_table ) ) === $links_table;
-		if ( false === $table_exists ) {
+		$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->prefix . 'qr_trackr_links' ) );
+		if ( ! $table_exists ) {
 			qr_trackr_debug_log( 'Migration: Table does not exist, creating...' );
 			qr_trackr_create_tables();
 			return;
 		}
 
 		// Get current columns.
-		$columns = $wpdb->get_results( 'SHOW COLUMNS FROM ' . $links_table, ARRAY_A );
-		if ( false === $columns ) {
+		$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$wpdb->prefix}qr_trackr_links", ARRAY_A );
+		if ( ! $columns ) {
 			qr_trackr_debug_log( 'Migration: Failed to get columns.', $wpdb->last_error );
 			return;
 		}
@@ -193,7 +281,7 @@ add_action(
 
 			// Add missing columns.
 			foreach ( $missing as $column => $definition ) {
-				$sql    = 'ALTER TABLE ' . $links_table . ' ADD COLUMN ' . $column . ' ' . $definition;
+				$sql    = "ALTER TABLE {$wpdb->prefix}qr_trackr_links ADD COLUMN {$column} {$definition}";
 				$result = $wpdb->query( $sql );
 				if ( false === $result ) {
 					qr_trackr_debug_log( 'Migration: Failed to add column ' . $column . '.', $wpdb->last_error );
@@ -206,15 +294,23 @@ add_action(
 		}
 
 		// Verify and migrate scans table.
-		$scans_table  = $wpdb->prefix . 'qr_trackr_scans';
-		$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $scans_table ) ) === $scans_table;
-		if ( false === $table_exists ) {
+		$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->prefix . 'qr_trackr_scans' ) );
+		if ( ! $table_exists ) {
 			qr_trackr_debug_log( 'Migration: Scans table does not exist, creating...' );
 			qr_trackr_create_tables();
 			return;
 		}
 	}
 );
+
+/**
+ * Check if the current user has administrator capabilities.
+ *
+ * @return bool True if the user is an admin, false otherwise.
+ */
+function qr_trackr_is_admin_user() {
+	return current_user_can( 'manage_options' );
+}
 
 if ( function_exists( 'qr_trackr_debug_log' ) ) {
 	qr_trackr_debug_log( 'Loaded module-utils.php.' );
