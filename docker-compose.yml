@@ -22,6 +22,11 @@ services:
       MYSQL_USER: wpuser
       MYSQL_PASSWORD: wppass
       MYSQL_ROOT_PASSWORD: rootpass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - db_data_nonprod:/var/lib/mysql
 
@@ -30,13 +35,13 @@ services:
       context: .
       dockerfile: Dockerfile.ci
     depends_on:
-      - db-nonprod
-    volumes:
-      - ./wp-content/plugins:/var/www/html/wp-content/plugins
-      - ./ci.sh:/ci.sh
+      db-nonprod:
+        condition: service_healthy
     environment:
       WORDPRESS_DB_HOST: db-nonprod:3306
       WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
 
 volumes:
   db_data_nonprod:

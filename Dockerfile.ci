@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     nodejs \
     npm \
+    default-mysql-client \
     && npm install -g yarn \
     && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-install zip
@@ -17,26 +18,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set the working directory for the app installation
 WORKDIR /usr/src/app
 
-# Copy dependency definition files first
+# Copy dependency definition files first and install
 COPY composer.json composer.lock package.json yarn.lock ./
-
-# Install PHP and JS dependencies
 RUN composer install --no-dev --prefer-dist
 RUN yarn install --frozen-lockfile
 
 # Copy the entire project into the container
 COPY . .
 
-# Set up the WordPress test environment within the main WordPress volume
-WORKDIR /var/www/html
-RUN cp -a /usr/src/app/wp-content/. ./wp-content/
-ENV WP_TESTS_DIR /var/www/html/wp-content/tests
-RUN mkdir -p $WP_TESTS_DIR
-COPY ./wp-content/plugins/wp-qr-trackr/bin/install-wp-tests.sh /install-wp-tests.sh
-RUN chmod +x /install-wp-tests.sh && \
-    /install-wp-tests.sh wordpress_test rootpass db-nonprod latest
-
-# Define the entrypoint for the CI runner
+# Copy the CI script and make it executable
 COPY ./ci.sh /ci.sh
 RUN chmod +x /ci.sh
+
+# The entrypoint will be the CI script itself
 ENTRYPOINT ["/ci.sh"] 
