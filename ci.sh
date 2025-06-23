@@ -19,7 +19,7 @@ php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp
 composer install --prefer-source
 
 # Example PHPCS usage
-php -d memory_limit=2G ./vendor/bin/phpcs --standard=WordPress wp-content/plugins/wp-qr-trackr
+php -d memory_limit=4G ./vendor/bin/phpcs --standard=WordPress wp-content/plugins/wp-qr-trackr
 
 # --- JS Linting (run from WP root) ---
 echo "--- Running Stylelint ---"
