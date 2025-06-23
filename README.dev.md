@@ -168,23 +168,59 @@ Use this to start the nonprod environment after a reset, or to restart it at any
 
 ## Development & Contribution
 
-### CI/CD Pipeline
+### CI/CD Pipeline: A Pre-Built Container Approach
 
-This project uses a fully containerized CI/CD pipeline powered by GitHub Actions to ensure code quality, correctness, and adherence to standards. The workflow automatically runs on every push or pull request to the `main` branch or any `feature/**` branch.
+To accelerate testing and improve reliability, this project uses a sophisticated CI/CD architecture based on a pre-built Docker container. Instead of building the testing environment from scratch on every run, the pipeline pulls a stable, versioned CI container from the GitHub Container Registry (GHCR).
 
-**Workflow File:** `.github/workflows/ci.yml`
+This approach provides two key benefits:
+- **Speed:** CI checks start almost instantly, as the time-consuming step of building the Docker image is eliminated from the main workflow.
+- **Reliability:** It completely avoids Docker caching issues and ensures that every test run—whether in CI or locally—uses the exact same, consistent environment.
 
-**Process Overview:**
+#### Architecture Overview
 
-1.  **Build CI Container:** The workflow first builds a dedicated Docker container using `Dockerfile.ci`. This container includes WordPress, PHP, Node.js, and all necessary dependencies to run the checks.
-2.  **Run Checks:** It then executes the `ci.sh` script inside the container, which performs the following steps:
-    *   **Wait for Database:** Ensures the `db-nonprod` service is healthy and ready for connections.
-    *   **JS/CSS Linting:** Runs `yarn eslint` and `yarn stylelint` against the plugin's files from the WordPress root directory.
-    *   **PHP Testing Setup:** Changes into the plugin's directory (`wp-content/plugins/wp-qr-trackr`) and runs the `scripts/install-wp-tests.sh` script to set up the WordPress test environment and database.
-    *   **PHPCS:** Runs `./vendor/bin/phpcs .` to check for PHP coding standards violations.
-    *   **PHPUnit:** Runs the full PHPUnit test suite using `./vendor/bin/phpunit`.
+```mermaid
+graph TD
+    subgraph "Developer"
+        A[Push Code]
+    end
 
-This containerized approach guarantees a consistent and reproducible testing environment, eliminating "it works on my machine" issues and ensuring that all checks run in an environment identical to production.
+    subgraph "GitHub Actions"
+        A --> B{Dependency Files Changed?};
+        B -- Yes --> C[Workflow: `publish-ci-image.yml`];
+        B -- No --> D[Workflow: `ci.yml`];
+
+        C --> E[1. Build Docker Image];
+        E --> F[2. Push to GitHub Container Registry];
+
+        D --> G[1. Pull Image from Registry];
+        F --> G;
+        G --> H[2. Run Tests];
+    end
+
+    style F fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#ccf,stroke:#333,stroke-width:2px
+    style D fill:#cfc,stroke:#333,stroke-width:2px
+    linkStyle 2 stroke-width:2px,stroke-dasharray: 3 3;
+```
+
+#### How It Works
+
+The system is composed of two distinct GitHub Actions workflows:
+
+1.  **`publish-ci-image.yml` (The Builder)**
+    - **Purpose:** To build and publish the CI Docker image.
+    - **Trigger:** This workflow runs *only* when files defining the CI environment are changed on the `main` branch (e.g., `Dockerfile.ci`, `composer.json`, `package.json`).
+    - **Action:** It builds the `ci-runner` image and pushes it to the GitHub Container Registry, where it becomes the new standard for testing.
+
+2.  **`ci.yml` (The Tester)**
+    - **Purpose:** To run all linting and testing checks on the code.
+    - **Trigger:** Runs on every push and pull request.
+    - **Action:**
+        - It logs into the GitHub Container Registry.
+        - It uses `docker-compose.ci.yml` to pull the pre-built `ci-runner` image.
+        - It executes the `ci.sh` script inside the container to run all checks.
+
+This separation of concerns ensures that the time-intensive build process only happens when absolutely necessary, making the day-to-day development and testing cycle fast and efficient.
 
 ### PHPCS Exception: Dynamic Table Name Interpolation in SQL Queries
 
@@ -450,50 +486,4 @@ The following MCP servers provide native capabilities to the Cursor development 
 - Example commands:
   - `listPRs()`: List open pull requests
   - `mergePR(prNumber)`: Merge a pull request
-  - `getRepoStatus()`: Show current branch, HEAD, and conflict state
-  - `createBranch(name)`: Create a new branch
-
-### DigitalOcean MCP (Cloud/DevOps Automation)
-- Manage DigitalOcean droplets, databases, and cloud resources
-- Automate deployments, scaling, and backups
-- Example commands:
-  - `listDroplets()`: List all droplets
-  - `createDroplet(config)`: Create a new droplet
-  - `getDatabaseStatus(id)`: Get status of a managed database
-  - `scaleDroplet(id, size)`: Resize a droplet
-
----
-
-> **Cursor Rule:** When MCP servers are present, Cursor and agents should use MCP APIs by default for documentation, repo, and cloud operations.
-
-# System Requirements
-
-To run the all-in-one environment (`./scripts/launch-all-docker.sh`), your system should meet the following:
-
-## Minimum
-- **CPU:** 4 cores (modern Intel/AMD or Apple Silicon)
-- **RAM:** 8 GB
-- **Disk Space:** 10 GB free
-- **OS:** macOS, Linux, or Windows (with WSL2)
-- **Docker:** Docker Desktop or Engine v20.10+
-- **Docker Compose:** v1.29+ (or Compose V2 plugin)
-- **Node.js & npx:** Node.js v16+
-- **Internet Connection:** Required for pulling images and MCP server dependencies
-
-## Recommended
-- **CPU:** 8+ cores
-- **RAM:** 16 GB or more
-- **Disk Space:** 20 GB+ free
-- **OS:**
-  - macOS Monterey+ (Apple Silicon or Intel)
-  - Ubuntu 20.04+ (or equivalent)
-  - Windows 11 with WSL2
-- **Docker:** Latest stable, with at least 4 CPUs and 8 GB RAM allocated
-- **Node.js & npx:** Node.js v18+ (LTS)
-- **Network:** Reliable broadband
-
-## Additional Notes
-- **Ports:** 8080 (dev), 8081 (nonprod), 7000 (MCP) must be available
-- **Performance:** Running all environments is resource-intensive; close unused apps and allocate enough resources to Docker
-- **Apple Silicon:** All images are ARM64 compatible; keep Docker Desktop updated
-- **First Run:** May be slower due to image/npm downloads 
+  - `
