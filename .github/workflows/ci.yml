@@ -25,7 +25,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Sanitize image tag
+        id: sanitize
+        run: echo "tag=${{ github.ref_name }}" | sed -e 's/\//-/g' >> $GITHUB_OUTPUT
+
       - name: Run All CI Checks
         env:
-          CI_IMAGE_TAG: ${{ github.ref_name }}
+          CI_IMAGE_TAG: ${{ steps.sanitize.outputs.tag }}
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm ci-runner 
