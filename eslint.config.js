@@ -1,10 +1,5 @@
 module.exports = [
   {
-    files: ["**/*.js"],
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
-    },
     ignores: [
       "vendor/",
       "node_modules/",
@@ -14,6 +9,13 @@ module.exports = [
       "coverage/",
       "wp-content/plugins/wp-qr-trackr/coverage/",
     ],
+  },
+  {
+    files: ["**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
     rules: {
       // Add custom rules as needed
     },
