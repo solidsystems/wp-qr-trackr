@@ -27,8 +27,10 @@ RUN yarn install --frozen-lockfile
 # Copy the entire project into the container
 COPY . .
 
-# Copy the CI script and make it executable
+# Copy utility and CI scripts and make them executable
+COPY ./scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
 COPY ./ci.sh /ci.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
 RUN chmod +x /ci.sh
 
 # The entrypoint will be the CI script itself
