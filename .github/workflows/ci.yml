@@ -18,7 +18,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build CI Container
-        run: docker compose build ci-runner
+        run: docker compose build --no-cache ci-runner
 
       - name: Run All CI Checks
         run: docker compose run --rm ci-runner 
