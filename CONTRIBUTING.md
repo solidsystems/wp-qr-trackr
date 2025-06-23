@@ -71,4 +71,9 @@ Here are some practical plugin ideas you can build using this modular, standards
 These examples are great starting points for learning, contributing, or building your own production plugins. If you have an idea, open an issue or PR!
 
 ## Questions or Suggestions?
-Open an issue or start a discussion! We're happy to help and open to new ideas. 
+Open an issue or start a discussion! We're happy to help and open to new ideas.
+
+## CI/CD Memory Limits & Composer/PHPCS Troubleshooting
+- CI/CD enforces a 2G memory limit for Composer and PHPCS to prevent out-of-memory errors.
+- Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs have been removed.
+- For memory or VCS issues, see docs/TROUBLESHOOTING.md. 

@@ -321,4 +321,9 @@ This project supports running both dev (8080) and nonprod (8081) WordPress envir
 ### Best Practices
 - Always use the launch script for parallel environments.
 - Only upload release ZIPs to nonprod; dev is for live code.
-- If in doubt, stop all containers and relaunch. 
+- If in doubt, stop all containers and relaunch.
+
+## Composer/PHPCS Memory & VCS Issues
+- CI/CD enforces a 2G memory limit for Composer and PHPCS to prevent out-of-memory errors. If you see OOM errors locally, set COMPOSER_MEMORY_LIMIT=2G and use php -d memory_limit=2G for PHPCS.
+- Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs (NormalizedArrays, Universal, Modernize) have been removed from PHPCSStandards and should not be referenced.
+- If Composer fails to clone a PHPCS sniff repository, check that the repository exists and is public. Remove any references to unavailable sniffs from composer.json and PHPCS config. 

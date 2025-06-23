@@ -139,6 +139,31 @@ To ensure code quality and consistency across all contributors and environments,
 
 See `scripts/.lintstagedrc.json` for the authoritative config. Update this file if you add new file types or want to change linting/formatting tools.
 
+## Executive Summary: Production CI/CD Architecture
+
+```mermaid
+graph TD
+    subgraph "Developer"
+        A[Push Code]
+    end
+
+    subgraph "CI/CD Pipeline"
+        A --> B{Dependency Files Changed?}
+        B -- Yes --> C[Build & Publish CI Docker Image]
+        B -- No --> D[Pull Pre-built CI Image]
+        C --> E[Push to GHCR]
+        E --> F[CI Workflow: Run Tests]
+        D --> F
+        F[Run Linting & Tests in Container]
+    end
+```
+
+## CI/CD Memory Management
+
+- The CI/CD pipeline uses a pre-built Docker image and enforces a 2G memory limit for Composer and PHPCS to ensure reliability.
+- Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs have been removed.
+- These memory settings are not enforced in production or local development unless needed.
+
 ---
 
 ## Production Deployment & Configuration

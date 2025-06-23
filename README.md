@@ -127,7 +127,7 @@ This approach provides two key benefits:
 - **Speed:** CI checks start almost instantly, as the time-consuming step of building the Docker image is eliminated from the main workflow.
 - **Reliability:** It completely avoids Docker caching issues and ensures that every test run—whether in CI or locally—uses the exact same, consistent environment.
 
-#### Architecture Overview
+#### Executive Summary: Containerized CI/CD Architecture
 
 ```mermaid
 graph TD
@@ -136,22 +136,14 @@ graph TD
     end
 
     subgraph "GitHub Actions"
-        A --> B{Dependency Files Changed?};
-        B -- Yes --> C[Workflow: `publish-ci-image.yml`];
-        B -- No --> D[Workflow: `ci.yml`];
-
-        C --> E[1. Build Docker Image];
-        E --> F[2. Push to GitHub Container Registry];
-
-        D --> G[1. Pull Image from Registry];
-        F --> G;
-        G --> H[2. Run Tests];
+        A --> B{Dependency Files Changed?}
+        B -- Yes --> C[Build & Publish CI Docker Image]
+        B -- No --> D[Pull Pre-built CI Image]
+        C --> E[Push to GHCR]
+        E --> F[CI Workflow: Run Tests]
+        D --> F
+        F[Run Linting & Tests in Container]
     end
-
-    style F fill:#f9f,stroke:#333,stroke-width:2px
-    style C fill:#ccf,stroke:#333,stroke-width:2px
-    style D fill:#cfc,stroke:#333,stroke-width:2px
-    linkStyle 2 stroke-width:2px,stroke-dasharray: 3 3;
 ```
 
 #### How It Works
@@ -718,3 +710,16 @@ See the `.cursorrules` file for the authoritative list. These standards help ens
    ```bash
    ./vendor/bin/phpunit --configuration=wp-content/plugins/wp-qr-trackr/phpunit.xml
    ```
+
+## Containerization & CI/CD: Lessons Learned
+
+This project uses a pre-built Docker image for CI/CD, pulled from GHCR, to ensure fast, reliable, and consistent test environments. All Composer and PHPCS operations in CI/CD are run with a 2G memory limit to prevent out-of-memory errors. Local development does not enforce these limits by default, but contributors can set them if needed.
+
+### Key Challenges & Solutions
+- **Composer memory limits:** Enforced 2G memory limit in CI/CD to prevent OOM errors.
+- **Single Composer context:** Removed plugin-level Composer artifacts; all dependencies are managed at the project root.
+- **PHPCS sniffs:** Removed references to unavailable sniffs (NormalizedArrays, Universal, Modernize) after they were removed from PHPCSStandards.
+- **VCS/Composer issues:** Ensured only available sniffs are referenced and correct repository URLs are used.
+- **Docker resource consumption:** CI/CD runners must be provisioned with at least 2G of memory for reliable operation.
+
+See CONTRIBUTING.md and docs/TROUBLESHOOTING.md for more details.

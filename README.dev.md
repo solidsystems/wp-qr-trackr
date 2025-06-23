@@ -487,3 +487,29 @@ The following MCP servers provide native capabilities to the Cursor development 
   - `listPRs()`: List open pull requests
   - `mergePR(prNumber)`: Merge a pull request
   - `
+
+## Containerized CI/CD & Memory Management
+
+## Executive Summary: Containerized Dev & CI/CD Architecture
+
+```mermaid
+graph TD
+    subgraph "Developer"
+        A[Push Code or Run Tests Locally]
+    end
+
+    subgraph "CI/CD Pipeline"
+        A --> B{Dependency Files Changed?}
+        B -- Yes --> C[Build & Publish CI Docker Image]
+        B -- No --> D[Pull Pre-built CI Image]
+        C --> E[Push to GHCR]
+        E --> F[CI Workflow: Run Tests]
+        D --> F
+        F[Run Linting & Tests in Container]
+    end
+```
+
+- CI/CD uses a pre-built Docker image with 2G memory limits for Composer and PHPCS to prevent OOM errors.
+- Local development does not enforce these limits by default, but you can set COMPOSER_MEMORY_LIMIT=2G and php -d memory_limit=2G if you encounter memory issues.
+- Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs have been removed.
+- See docs/TROUBLESHOOTING.md for troubleshooting Composer/PHPCS and VCS issues.
