@@ -34,4 +34,6 @@ RUN chmod +x /usr/local/bin/wait-for-it.sh
 RUN chmod +x /ci.sh
 
 # The entrypoint will be the CI script itself
-ENTRYPOINT ["/ci.sh"] 
+ENTRYPOINT ["/ci.sh"]
+
+# End of Dockerfile 
