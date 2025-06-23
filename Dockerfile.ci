@@ -24,6 +24,9 @@ COPY composer.json composer.lock package.json yarn.lock ./
 RUN composer install --prefer-dist
 RUN yarn install --frozen-lockfile
 
+# Copy plugin composer files first (for cache and correctness)
+COPY wp-content/plugins/wp-qr-trackr/composer.json wp-content/plugins/wp-qr-trackr/composer.lock ./wp-content/plugins/wp-qr-trackr/
+
 # Copy the entire project into the container
 COPY . .
 
