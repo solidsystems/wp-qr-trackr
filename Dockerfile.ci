@@ -36,4 +36,5 @@ RUN chmod +x /ci.sh
 # The entrypoint will be the CI script itself
 ENTRYPOINT ["/ci.sh"]
 
-# End of Dockerfile 
+# End of Dockerfile
+# Trigger CI build 
