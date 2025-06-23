@@ -27,6 +27,13 @@ RUN yarn install --frozen-lockfile
 # Copy the entire project into the container
 COPY . .
 
+# Install plugin dependencies (including dev dependencies for PHPCS)
+WORKDIR /usr/src/app/wp-content/plugins/wp-qr-trackr
+RUN composer install --prefer-dist
+
+# Return to main app directory
+WORKDIR /usr/src/app
+
 # Copy utility and CI scripts and make them executable
 COPY ./scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
 COPY ./ci.sh /ci.sh
