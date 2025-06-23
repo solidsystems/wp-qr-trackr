@@ -15,17 +15,15 @@ services:
     # No plugin code mount: upload via admin UI for clean testing
 
   db-nonprod:
-    image: mysql:8
+    image: mariadb:10.5
     restart: always
     environment:
       MYSQL_DATABASE: wpdb
-      MYSQL_USER: wpuser
-      MYSQL_PASSWORD: wppass
-      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_ROOT_PASSWORD: password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
+      interval: 30s
+      timeout: 10s
       retries: 5
     volumes:
       - db_data_nonprod:/var/lib/mysql

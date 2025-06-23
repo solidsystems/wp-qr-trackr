@@ -8,11 +8,17 @@ cd /var/www/html
 # Copy the plugin source to the correct location
 cp -a /usr/src/app/wp-content/. ./wp-content/
 
+# Set the path to the project root
+PROJECT_ROOT=$(pwd)
+
+# Wait for the database to be ready
+/usr/wait-for-it.sh db-nonprod:3306 -t 60 -- echo "Database is up"
+
 # Install the WordPress test suite
 /usr/src/app/wp-content/plugins/wp-qr-trackr/bin/install-wp-tests.sh \
   wordpress_test \
-  rootpass \
-  db-nonprod \
+  root \
+  password \
   db-nonprod \
   latest
 
@@ -20,7 +26,7 @@ cp -a /usr/src/app/wp-content/. ./wp-content/
 cd /var/www/html/wp-content/plugins/wp-qr-trackr
 
 echo "--- Running PHP Code Sniffer ---"
-./vendor/bin/phpcs --standard=.phpcs.xml
+./vendor/bin/phpcs --standard="$PROJECT_ROOT/.phpcs.xml"
 
 echo "--- Running PHPUnit Tests ---"
 ./vendor/bin/phpunit --configuration phpunit.xml
