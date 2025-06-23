@@ -924,7 +924,7 @@ class Akismet_Admin {
 	 * @return bool
 	 */
 	public static function are_any_comments_waiting_to_be_checked() {
-		return ! ! get_comments(
+		return (bool) get_comments(
 			array(
 				// Exclude comments that are not pending. This would happen if someone manually approved or spammed a comment
 				// that was waiting to be checked. The akismet_error meta entry will eventually be removed by the cron recheck job.

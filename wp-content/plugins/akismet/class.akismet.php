@@ -272,10 +272,10 @@ class Akismet {
 			$comment_agent        = isset( $commentdata['comment_agent'] ) ? $commentdata['comment_agent'] : '';
 
 			if ( wp_check_comment_disallowed_list( $comment_author, $comment_author_email, $comment_author_url, $comment_content, $comment_author_ip, $comment_agent ) ) {
-				$commentdata['akismet_result'] = 'skipped';
+				$commentdata['akismet_result']                 = 'skipped';
 				$commentdata['comment_meta']['akismet_result'] = 'skipped';
 
-				$commentdata['akismet_skipped_microtime'] = microtime( true );
+				$commentdata['akismet_skipped_microtime']                 = microtime( true );
 				$commentdata['comment_meta']['akismet_skipped_microtime'] = $commentdata['akismet_skipped_microtime'];
 
 				self::set_last_comment( $commentdata );
@@ -396,12 +396,12 @@ class Akismet {
 		}
 
 		if ( isset( $response[0]['x-akismet-pro-tip'] ) ) {
-			$commentdata['akismet_pro_tip'] = $response[0]['x-akismet-pro-tip'];
+			$commentdata['akismet_pro_tip']                 = $response[0]['x-akismet-pro-tip'];
 			$commentdata['comment_meta']['akismet_pro_tip'] = $response[0]['x-akismet-pro-tip'];
 		}
 
 		if ( isset( $response[0]['x-akismet-guid'] ) ) {
-			$commentdata['akismet_guid'] = $response[0]['x-akismet-guid'];
+			$commentdata['akismet_guid']                 = $response[0]['x-akismet-guid'];
 			$commentdata['comment_meta']['akismet_guid'] = $response[0]['x-akismet-guid'];
 		}
 
@@ -527,7 +527,7 @@ class Akismet {
 					// The comment wasn't sent to Akismet because it matched the disallowed comment keys.
 					self::update_comment_history( $comment->comment_ID, '', 'wp-disallowed' );
 					self::update_comment_history( $comment->comment_ID, '', 'akismet-skipped-disallowed' );
-				} else if ( ! isset( self::$last_comment['akismet_result'] ) ) {
+				} elseif ( ! isset( self::$last_comment['akismet_result'] ) ) {
 					// Add a generic skipped history item.
 					self::update_comment_history( $comment->comment_ID, '', 'akismet-skipped' );
 				} else {
@@ -1266,7 +1266,7 @@ class Akismet {
 			// If the comment got sent to the API and got a response, it will have a GUID.
 
 			return ( $comment1['akismet_guid'] == $comment2['akismet_guid'] );
-		} else if ( ! empty( $comment1['akismet_skipped_microtime'] ) && ! empty( $comment2['akismet_skipped_microtime'] ) ) {
+		} elseif ( ! empty( $comment1['akismet_skipped_microtime'] ) && ! empty( $comment2['akismet_skipped_microtime'] ) ) {
 			// It won't have a GUID if it didn't get sent to the API because it matched the disallowed list,
 			// but it should have a microtimestamp to use here for matching against the comment DB entry it matches.
 			return ( strval( $comment1['akismet_skipped_microtime'] ) == strval( $comment2['akismet_skipped_microtime'] ) );
@@ -1308,7 +1308,7 @@ class Akismet {
 	 */
 	public static function get_fields_for_comment_matching( $comment_id ) {
 		return array(
-			'akismet_guid' => get_comment_meta( $comment_id, 'akismet_guid', true ),
+			'akismet_guid'              => get_comment_meta( $comment_id, 'akismet_guid', true ),
 			'akismet_skipped_microtime' => get_comment_meta( $comment_id, 'akismet_skipped_microtime', true ),
 		);
 	}
@@ -1927,9 +1927,9 @@ p {
 					),
 					array(
 						'a' => array(
-							'href' => array(),
+							'href'   => array(),
 							'target' => array(),
-							'rel' => array(),
+							'rel'    => array(),
 						),
 					)
 				) .
