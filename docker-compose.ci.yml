@@ -1,0 +1,13 @@
+# This file is for CI/CD environments (GitHub Actions).
+# It overrides the ci-runner service to use a pre-built image from GHCR.
+services:
+  ci-runner:
+    image: ghcr.io/solidsystems/wp-qr-trackr/ci-runner:main
+    depends_on:
+      db-nonprod:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db-nonprod:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress 
