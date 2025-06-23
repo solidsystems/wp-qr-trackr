@@ -1,35 +1,38 @@
 #!/bin/bash
-set -e
+set -ex
 
-echo "--- Setting up WordPress Test Environment ---"
-# Move to the WordPress root
-cd /var/www/html
-
-# Copy the plugin source to the correct location
-cp -a /usr/src/app/wp-content/. ./wp-content/
-
-# Set the path to the project root
-PROJECT_ROOT=$(pwd)
+# Define paths for clarity
+WP_CORE_DIR=/tmp/wordpress
+PLUGIN_SLUG="wp-qr-trackr"
+PLUGIN_SRC_DIR="/usr/src/app"
+PLUGIN_TEST_DIR="${WP_CORE_DIR}/wp-content/plugins/${PLUGIN_SLUG}"
 
 # Wait for the database to be ready
 /usr/wait-for-it.sh db-nonprod:3306 -t 60 -- echo "Database is up"
 
-# Install the WordPress test suite
-/usr/src/app/wp-content/plugins/wp-qr-trackr/bin/install-wp-tests.sh \
-  wordpress_test \
-  root \
-  password \
-  db-nonprod \
-  latest
+# Set up WordPress test environment non-interactively.
+# The `yes |` command automatically answers 'y' to the confirmation prompt
+# for deleting an existing database, which is essential for CI.
+# We run this from /tmp to keep the project directory clean.
+cd /tmp
+yes | /usr/install-wp-tests.sh wordpress_test root password db-nonprod latest
 
-# Return to the plugin directory to run tests
-cd /var/www/html/wp-content/plugins/wp-qr-trackr
+# Copy the plugin source from the build context to the correct location
+# within the temporary WordPress installation. This is a critical step
+# that allows the test runner to find the plugin files.
+mkdir -p "${PLUGIN_TEST_DIR}"
+cp -a "${PLUGIN_SRC_DIR}/." "${PLUGIN_TEST_DIR}/"
+
+# Navigate to the plugin's directory to run tests and linting.
+# This ensures that the correct vendor binaries and configuration
+# files (phpunit.xml, .phpcs.xml) are used.
+cd "${PLUGIN_TEST_DIR}"
 
 echo "--- Running PHP Code Sniffer ---"
-./vendor/bin/phpcs --standard="$PROJECT_ROOT/.phpcs.xml"
+./vendor/bin/phpcs --standard=./.phpcs.xml .
 
 echo "--- Running PHPUnit Tests ---"
-./vendor/bin/phpunit --configuration phpunit.xml
+./vendor/bin/phpunit
 
 echo "--- Running Stylelint ---"
 yarn stylelint "**/*.css"
