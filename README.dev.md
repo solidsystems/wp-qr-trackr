@@ -168,6 +168,24 @@ Use this to start the nonprod environment after a reset, or to restart it at any
 
 ## Development & Contribution
 
+### CI/CD Pipeline
+
+This project uses a fully containerized CI/CD pipeline powered by GitHub Actions to ensure code quality, correctness, and adherence to standards. The workflow automatically runs on every push or pull request to the `main` branch or any `feature/**` branch.
+
+**Workflow File:** `.github/workflows/ci.yml`
+
+**Process Overview:**
+
+1.  **Build CI Container:** The workflow first builds a dedicated Docker container using `Dockerfile.ci`. This container includes WordPress, PHP, Node.js, and all necessary dependencies to run the checks.
+2.  **Run Checks:** It then executes the `ci.sh` script inside the container, which performs the following steps:
+    *   **Wait for Database:** Ensures the `db-nonprod` service is healthy and ready for connections.
+    *   **JS/CSS Linting:** Runs `yarn eslint` and `yarn stylelint` against the plugin's files from the WordPress root directory.
+    *   **PHP Testing Setup:** Changes into the plugin's directory (`wp-content/plugins/wp-qr-trackr`) and runs the `scripts/install-wp-tests.sh` script to set up the WordPress test environment and database.
+    *   **PHPCS:** Runs `./vendor/bin/phpcs .` to check for PHP coding standards violations.
+    *   **PHPUnit:** Runs the full PHPUnit test suite using `./vendor/bin/phpunit`.
+
+This containerized approach guarantees a consistent and reproducible testing environment, eliminating "it works on my machine" issues and ensuring that all checks run in an environment identical to production.
+
 ### PHPCS Exception: Dynamic Table Name Interpolation in SQL Queries
 
 WordPress plugins must often use dynamic table names to support multisite and custom table prefixes. This requires interpolating the table name into SQL queries, which PHPCS will flag as an error ("Use placeholders and $wpdb->prepare(); found $sql").
@@ -389,6 +407,8 @@ wp-qr-trackr is a modular, robust WordPress plugin for QR code generation and tr
 ## [COMMON] Contributor Notes
 - See `.cursorrules` for project rules and environment requirements.
 - All major documentation files have parallel dev, nonprod, and prod versions.
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for more details and a living task tracker.
+- Use the provided project plans and automation scripts for team/project management.
 
 ## See also
 - `README.nonprod.md` for nonprod Docker/QA environment.

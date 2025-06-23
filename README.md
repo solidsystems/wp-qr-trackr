@@ -119,6 +119,24 @@ If you see warnings about multiple lockfiles or npm being used as the package ma
 - Run `./scripts/pr-summary-comment.sh <PR_NUMBER> [SUMMARY_TEXT]` to automate PR summary comments.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for more details and a living task tracker.
 
+### CI/CD Pipeline
+
+This project uses a fully containerized CI/CD pipeline powered by GitHub Actions to ensure code quality, correctness, and adherence to standards. The workflow automatically runs on every push or pull request to the `main` branch or any `feature/**` branch.
+
+**Workflow File:** `.github/workflows/ci.yml`
+
+**Process Overview:**
+
+1.  **Build CI Container:** The workflow first builds a dedicated Docker container using `Dockerfile.ci`. This container includes WordPress, PHP, Node.js, and all necessary dependencies to run the checks.
+2.  **Run Checks:** It then executes the `ci.sh` script inside the container, which performs the following steps:
+    *   **Wait for Database:** Ensures the `db-nonprod` service is healthy and ready for connections.
+    *   **JS/CSS Linting:** Runs `yarn eslint` and `yarn stylelint` against the plugin's files from the WordPress root directory.
+    *   **PHP Testing Setup:** Changes into the plugin's directory (`wp-content/plugins/wp-qr-trackr`) and runs the `scripts/install-wp-tests.sh` script to set up the WordPress test environment and database.
+    *   **PHPCS:** Runs `./vendor/bin/phpcs .` to check for PHP coding standards violations.
+    *   **PHPUnit:** Runs the full PHPUnit test suite using `./vendor/bin/phpunit`.
+
+This containerized approach guarantees a consistent and reproducible testing environment, eliminating "it works on my machine" issues and ensuring that all checks run in an environment identical to production.
+
 ### Containerized Testing Environment
 
 To ensure maximum portability and consistency, this project has moved away from local dependency requirements for testing and now uses a fully containerized testing environment powered by Docker. This approach eliminates the "it works on my machine" problem and guarantees that tests run in a clean, isolated, and identical environment, whether on a developer's local machine or in a CI/CD pipeline.

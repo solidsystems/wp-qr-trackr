@@ -44,6 +44,24 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 4. **Configure environment variables and secrets in the DigitalOcean App Platform dashboard.**
 5. **Ensure debug mode is disabled in production.**
 
+### CI/CD Pipeline
+
+This project uses a fully containerized CI/CD pipeline powered by GitHub Actions to ensure code quality, correctness, and adherence to standards. The workflow automatically runs on every push or pull request to the `main` branch or any `feature/**` branch.
+
+**Workflow File:** `.github/workflows/ci.yml`
+
+**Process Overview:**
+
+1.  **Build CI Container:** The workflow first builds a dedicated Docker container using `Dockerfile.ci`. This container includes WordPress, PHP, Node.js, and all necessary dependencies to run the checks.
+2.  **Run Checks:** It then executes the `ci.sh` script inside the container, which performs the following steps:
+    *   **Wait for Database:** Ensures the `db-nonprod` service is healthy and ready for connections.
+    *   **JS/CSS Linting:** Runs `yarn eslint` and `yarn stylelint` against the plugin's files from the WordPress root directory.
+    *   **PHP Testing Setup:** Changes into the plugin's directory (`wp-content/plugins/wp-qr-trackr`) and runs the `scripts/install-wp-tests.sh` script to set up the WordPress test environment and database.
+    *   **PHPCS:** Runs `./vendor/bin/phpcs .` to check for PHP coding standards violations.
+    *   **PHPUnit:** Runs the full PHPUnit test suite using `./vendor/bin/phpunit`.
+
+This containerized approach guarantees a consistent and reproducible testing environment, eliminating "it works on my machine" issues and ensuring that all checks run in an environment identical to production.
+
 ### Modular Linting & Formatting Configuration
 
 To ensure code quality and consistency across all contributors and environments, this project uses a modular, extensible lint-staged configuration. This setup automatically lints and formats all relevant file types before each commit, using the right tool for each language or format. 
