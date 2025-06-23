@@ -8,7 +8,61 @@ on:
   pull_request:
 
 jobs:
+  build_image:
+    name: Build and Push CI Image
+    runs-on: ubuntu-latest
+    # This job only runs when dependency files are changed.
+    if: |
+      github.event_name == 'push' &&
+      contains(join(github.event.commits.*.message, ' '), '#build-ci') ||
+      (
+        github.event_name == 'push' &&
+        (
+          contains(join(github.event.commits.*.modified, ' '), 'Dockerfile.ci') ||
+          contains(join(github.event.commits.*.modified, ' '), 'composer.json') ||
+          contains(join(github.event.commits.*.modified, ' '), 'composer.lock') ||
+          contains(join(github.event.commits.*.modified, ' '), 'package.json') ||
+          contains(join(github.event.commits.*.modified, ' '), 'yarn.lock') ||
+          contains(join(github.event.commits.*.modified, ' '), 'ci.sh')
+        )
+      )
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags and labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/ci-runner
+          tags: |
+            type=ref,event=branch
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.ci
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
   test:
+    name: Run All CI Checks
+    needs: build_image
+    if: always() # This ensures the test job always runs, even if the build job is skipped.
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,7 +81,7 @@ jobs:
 
       - name: Sanitize image tag
         id: sanitize
-        run: echo "tag=${{ github.ref_name }}" | sed -e 's/\//-/g' >> $GITHUB_OUTPUT
+        run: echo "tag=$(echo ${{ github.ref_name }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
       - name: Run All CI Checks
         env:
