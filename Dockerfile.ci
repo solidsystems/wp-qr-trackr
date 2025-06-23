@@ -21,7 +21,7 @@ WORKDIR /usr/src/app
 
 # Copy dependency definition files first and install
 COPY composer.json composer.lock package.json yarn.lock ./
-RUN composer install --no-dev --prefer-dist
+RUN composer install --prefer-dist
 RUN yarn install --frozen-lockfile
 
 # Copy the entire project into the container
