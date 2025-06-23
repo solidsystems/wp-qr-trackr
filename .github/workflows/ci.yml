@@ -26,4 +26,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run All CI Checks
+        env:
+          CI_IMAGE_TAG: ${{ github.ref_name }}
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm ci-runner 

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'feature/containerized-testing-with-lint-errors'
     paths:
       - 'Dockerfile.ci'
       - 'composer.json'

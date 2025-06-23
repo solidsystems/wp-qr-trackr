@@ -2,7 +2,7 @@
 # It overrides the ci-runner service to use a pre-built image from GHCR.
 services:
   ci-runner:
-    image: ghcr.io/solidsystems/wp-qr-trackr/ci-runner:main
+    image: ghcr.io/solidsystems/wp-qr-trackr/ci-runner:${CI_IMAGE_TAG:-main}
     depends_on:
       db-nonprod:
         condition: service_healthy
