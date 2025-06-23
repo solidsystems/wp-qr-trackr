@@ -31,6 +31,11 @@ COPY . .
 WORKDIR /usr/src/app/wp-content/plugins/wp-qr-trackr
 RUN composer install --prefer-dist
 
+# Debug: List installed sniffs and vendor directories
+RUN ls -l /usr/src/app/wp-content/plugins/wp-qr-trackr/vendor/wp-coding-standards || true
+RUN ls -l /usr/src/app/wp-content/plugins/wp-qr-trackr/vendor/phpcsutils || true
+RUN ./vendor/bin/phpcs -i || true
+
 # Return to main app directory
 WORKDIR /usr/src/app
 
