@@ -21,26 +21,14 @@ WORKDIR /usr/src/app
 
 # Copy dependency definition files first and install
 COPY composer.json composer.lock package.json yarn.lock ./
-RUN composer install --prefer-dist
+RUN COMPOSER_MEMORY_LIMIT=2G composer install --prefer-dist
 RUN yarn install --frozen-lockfile
-
-# Copy plugin composer files first (for cache and correctness)
-COPY wp-content/plugins/wp-qr-trackr/composer.json wp-content/plugins/wp-qr-trackr/composer.lock ./wp-content/plugins/wp-qr-trackr/
 
 # Copy the entire project into the container
 COPY . .
 
-# Install plugin dependencies (including dev dependencies for PHPCS)
-WORKDIR /usr/src/app/wp-content/plugins/wp-qr-trackr
-RUN composer install --prefer-dist
-
-# Debug: List installed sniffs and vendor directories
-RUN ls -l /usr/src/app/wp-content/plugins/wp-qr-trackr/vendor/wp-coding-standards || true
-RUN ls -l /usr/src/app/wp-content/plugins/wp-qr-trackr/vendor/phpcsutils || true
-RUN ./vendor/bin/phpcs -i || true
-
-# Return to main app directory
-WORKDIR /usr/src/app
+# Set PHPCS installed_paths from the root vendor directory
+RUN php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils
 
 # Copy utility and CI scripts and make them executable
 COPY ./scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
@@ -53,3 +41,5 @@ ENTRYPOINT ["/ci.sh"]
 
 # End of Dockerfile
 # Trigger CI build 
+
+# CI cache-busting: force rebuild for Dockerfile.ci update #build-ci 
