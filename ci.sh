@@ -6,6 +6,21 @@ set -ex
 # Wait for the database to be ready
 wait-for-it.sh db-nonprod:3306 -t 60 -- echo "Database is up"
 
+# Enforce 2G memory limit for Composer and PHPCS
+export COMPOSER_MEMORY_LIMIT=2G
+
+# Always reset PHPCS installed_paths to only supported sniffs
+php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils
+
+# Debug: Show PHPCS config
+./vendor/bin/phpcs --config-show
+
+# Example Composer usage
+composer install --prefer-source
+
+# Example PHPCS usage
+php -d memory_limit=2G ./vendor/bin/phpcs --standard=WordPress wp-content/plugins/wp-qr-trackr
+
 # --- JS Linting (run from WP root) ---
 echo "--- Running Stylelint ---"
 # We need to specify the path to the plugin's CSS files.
@@ -32,7 +47,7 @@ chmod +x ../../../scripts/install-wp-tests.sh
 echo "--- Running PHP Code Sniffer ---"
 # Run from the root of our plugin, phpcs will find the .phpcs.xml config file
 # and scan all files in the current directory.
-./vendor/bin/phpcs .
+php -d memory_limit=2G ./vendor/bin/phpcs .
 
 echo "--- Running PHPUnit Tests ---"
 # Run from the root, phpunit will find the phpunit.xml and wp-tests-config.php
