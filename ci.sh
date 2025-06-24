@@ -25,8 +25,8 @@ find wp-content/plugins/wp-qr-trackr -type f | grep -vE 'vendor|node_modules|\.g
 # Example Composer usage
 composer install --prefer-source
 
-# Example PHPCS usage (normal output)
-php -d memory_limit=4G ./vendor/bin/phpcs --standard=WordPress wp-content/plugins/wp-qr-trackr
+# Example PHPCS usage (only PHP files)
+php -d memory_limit=4G ./vendor/bin/phpcs --standard=WordPress --extensions=php wp-content/plugins/wp-qr-trackr
 
 # --- JS Linting (run from WP root) ---
 echo "--- Running Stylelint ---"
