@@ -9,6 +9,10 @@
     <!-- Exclude deprecated sniffs -->
     <exclude name="Generic.Functions.CallTimePassByReference" />
     
+    <!-- Only lint these files/directories -->
+    <file>wp-content/plugins/wp-qr-trackr/qr-trackr.php</file>
+    <file>wp-content/plugins/wp-qr-trackr/includes/</file>
+    
     <!-- Exclude patterns -->
     <exclude-pattern>assets/*.js</exclude-pattern>
     <exclude-pattern>assets/*.css</exclude-pattern>
