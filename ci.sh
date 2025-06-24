@@ -15,14 +15,18 @@ php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp
 # Debug: Show PHPCS config
 ./vendor/bin/phpcs --config-show
 
-# Debug: List all files PHPCS might scan (excluding common large/binary types)
+# Print PHPCS version and working directory
+./vendor/bin/phpcs --version
+pwd
+
+# Print the list of files PHPCS might scan (excluding common large/binary types)
 find wp-content/plugins/wp-qr-trackr -type f | grep -vE 'vendor|node_modules|\.git|\.png|\.jpg|\.jpeg|\.gif|\.svg|\.zip|\.tar|\.gz|\.pdf|\.mp4|\.mov|\.webm|\.ico|\.DS_Store|\.log|\.coverage|\.js|\.css' || true
 
 # Example Composer usage
 composer install --prefer-source
 
-# Example PHPCS usage with verbose output
-php -d memory_limit=4G ./vendor/bin/phpcs -vv --standard=WordPress wp-content/plugins/wp-qr-trackr
+# Example PHPCS usage (normal output)
+php -d memory_limit=4G ./vendor/bin/phpcs --standard=WordPress wp-content/plugins/wp-qr-trackr
 
 # --- JS Linting (run from WP root) ---
 echo "--- Running Stylelint ---"
