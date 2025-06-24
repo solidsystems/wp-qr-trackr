@@ -4,7 +4,7 @@ set -ex
 # The working directory is /usr/src/app (WordPress root).
 
 # Wait for the database to be ready
-wait-for-it.sh db-nonprod:3306 -t 60 -- echo "Database is up"
+./scripts/wait-for-it.sh db-nonprod:3306 -t 60 -- echo "Database is up"
 
 # Enforce 2G memory limit for Composer and PHPCS
 export COMPOSER_MEMORY_LIMIT=2G
@@ -25,8 +25,8 @@ find wp-content/plugins/wp-qr-trackr -type f | grep -vE 'vendor|node_modules|\.g
 # Example Composer usage
 composer install --prefer-source
 
-# Example PHPCS usage (only PHP files)
-php -d memory_limit=4G ./vendor/bin/phpcs --standard=WordPress --extensions=php wp-content/plugins/wp-qr-trackr
+# Example PHPCS usage (only PHP files, ignore vendor)
+php -d memory_limit=2G ./vendor/bin/phpcs --standard=WordPress --extensions=php --ignore='vendor/*,build/**' wp-content/plugins/wp-qr-trackr
 
 # --- JS Linting (run from WP root) ---
 echo "--- Running Stylelint ---"
@@ -54,7 +54,7 @@ chmod +x ../../../scripts/install-wp-tests.sh
 echo "--- Running PHP Code Sniffer ---"
 # Run from the root of our plugin, phpcs will find the .phpcs.xml config file
 # and scan all files in the current directory.
-php -d memory_limit=2G ./vendor/bin/phpcs .
+php -d memory_limit=2G ./vendor/bin/phpcs --ignore='vendor/*,build/**' .
 
 echo "--- Running PHPUnit Tests ---"
 # Run from the root, phpunit will find the phpunit.xml and wp-tests-config.php

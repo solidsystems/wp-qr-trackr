@@ -27,6 +27,7 @@
     <exclude-pattern>tests/MinimalTest.php</exclude-pattern>
     <exclude-pattern>bootstrap.php</exclude-pattern>
     <exclude-pattern>includes/class-qr-trackr-list-table.php</exclude-pattern>
+    <exclude-pattern>build/**</exclude-pattern>
     
     <!-- Ignore specific rules for admin/stats code -->
     <rule ref="WordPress.DB.DirectDatabaseQuery.DirectQuery">
