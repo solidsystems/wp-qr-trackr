@@ -723,3 +723,22 @@ This project uses a pre-built Docker image for CI/CD, pulled from GHCR, to ensur
 - **Docker resource consumption:** CI/CD runners must be provisioned with at least 2G of memory for reliable operation.
 
 See CONTRIBUTING.md and docs/TROUBLESHOOTING.md for more details.
+
+## Lessons Learned
+
+### Platform-Specific Learnings (PHP/WordPress)
+- **Restrict PHPCS to PHP files:** To prevent out-of-memory errors and unnecessary linting, always use the `--extensions=php` flag with PHPCS in CI/CD. This ensures only PHP files are scanned, which is especially important in WordPress plugins that may include non-PHP files (e.g., Markdown, XML, shell scripts).
+- **Using Cursor as an Assistant:** Leveraging Cursor's AI assistant accelerated troubleshooting, configuration, and documentation, especially for complex CI/CD and linting issues.
+- **Modular Configurations:** Modularizing configuration files (Docker, Composer, PHPCS, etc.) made it easier to maintain, debug, and scale the project.
+- **Defining and Implementing Best Practices:** Establishing and enforcing best practices for development environments (e.g., memory limits, dependency management, code standards) led to more reliable and maintainable workflows.
+
+## Security Best Practices
+
+All forms and data-changing actions in QR Trackr are protected by WordPress nonces and server-side verification:
+
+- **Admin forms** (e.g., create, edit, delete QR codes) include a nonce field and verify it server-side before processing.
+- **AJAX endpoints** require a valid nonce and verify it using `check_ajax_referer()` or `wp_verify_nonce()`.
+- **Bulk and destructive actions** (such as deleting QR codes) are protected by nonces in both the action link and the handler.
+- **Settings and debug forms** use `wp_nonce_field()` and verify with `check_admin_referer()`.
+
+This ensures robust protection against CSRF and other attacks, fully complying with WordPress security standards and project rules. All new features must include nonce protection for any form or data-changing action.

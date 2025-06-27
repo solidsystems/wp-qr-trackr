@@ -145,3 +145,9 @@ phpcs_min_memory_mb = 1024  # PHPCS requires at least 1GB of memory for this pro
 
 # Playwright Dev-Only Rule
 Playwright is only installed and used in the dev Docker image (port 8080). It must not be present in production or nonprod images. Automated UI testing and screenshot capture are only supported in dev. 
+
+# Platform-Specific Learnings and Best Practices (PHP/WordPress)
+- Always restrict PHPCS to PHP files using --extensions=php in CI/CD for all plugin development.
+- Use Cursor as an assistant for troubleshooting, configuration, and documentation.
+- Favor modular configuration (Docker, Composer, PHPCS, etc.) for maintainability and scalability.
+- Define and enforce best practices for development environments (memory, dependencies, code standards) from the start. 

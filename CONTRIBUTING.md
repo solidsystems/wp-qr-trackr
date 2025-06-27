@@ -1,3 +1,21 @@
+# 🚀 Contributor Onboarding: Use Docker for Everything
+
+**Requirements:**
+- Docker Desktop (latest)
+- Git
+
+**All development, linting, and testing must be done inside the Docker container (`ci-runner`).**
+No need to install PHP, Composer, Node, or CLI tools on your host.
+
+See `README.dev.md` for full onboarding and workflow details.
+
+**Automated onboarding check:**
+- The script `scripts/check-onboarding.sh` runs automatically before every commit (pre-commit hook).
+- You can run it manually with `bash scripts/check-onboarding.sh`.
+- It checks for Docker, Docker running, and Git, and warns if local PHP, Composer, or Node is installed.
+
+---
+
 # Contributing to QR Trackr Plugin Template
 
 Thank you for your interest in contributing! This project is both a production-ready WordPress plugin (QR Trackr) and a modern template for building your own plugins. We welcome improvements, bug fixes, and new features.

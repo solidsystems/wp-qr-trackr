@@ -60,6 +60,7 @@ function qr_trackr_get_most_recent_tracking_link( $post_id ) {
 	if ( false !== $link ) {
 		return $link;
 	}
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query is required for most recent tracking link. Caching is implemented above.
 	$link = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d ORDER BY created_at DESC LIMIT 1", $post_id ) );
 	wp_cache_set( $cache_key, $link );
 	return $link;
@@ -76,6 +77,7 @@ function qr_trackr_render_qr_list_html( $post_id ) {
 	$cache_key = 'qr_trackr_links_list_' . $post_id;
 	$links     = wp_cache_get( $cache_key );
 	if ( false === $links ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query is required for rendering QR list. Caching is implemented above.
 		$links = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d ORDER BY created_at DESC", $post_id ) );
 		wp_cache_set( $cache_key, $links, '', 60 ); // Cache for 1 minute.
 	}
@@ -113,6 +115,7 @@ function qr_trackr_render_qr_list_html( $post_id ) {
  */
 function qr_trackr_get_all_links() {
 	global $wpdb;
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query is required for admin utility. Caching is not used to ensure up-to-date data for admin actions.
 	return $wpdb->get_results( "SELECT * FROM `{$wpdb->prefix}qr_trackr_links`" );
 }
 
@@ -124,6 +127,7 @@ function qr_trackr_get_all_links() {
  */
 function qr_trackr_get_link_by_id( $id ) {
 	global $wpdb;
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query is required for admin utility. Caching is not used to ensure up-to-date data for admin actions.
 	return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE id = %d", $id ) );
 }
 
@@ -135,6 +139,7 @@ function qr_trackr_get_link_by_id( $id ) {
  */
 function qr_trackr_get_scans_by_link_id( $link_id ) {
 	global $wpdb;
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query is required for admin utility. Caching is not used to ensure up-to-date data for admin actions.
 	return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM `{$wpdb->prefix}qr_trackr_scans` WHERE link_id = %d", $link_id ) );
 }
 
@@ -232,6 +237,7 @@ add_action(
 				return;
 			}
 			global $wpdb;
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query is required for admin utility. Caching is not used to ensure up-to-date data for admin actions.
 			$wpdb->update( $wpdb->prefix . 'qr_trackr_links', array( 'destination_url' => $dest_url ), array( 'id' => $link_id ) );
 		}
 	}
@@ -281,7 +287,8 @@ add_action(
 
 			// Add missing columns.
 			foreach ( $missing as $column => $definition ) {
-				$sql    = "ALTER TABLE {$wpdb->prefix}qr_trackr_links ADD COLUMN {$column} {$definition}";
+				$sql = "ALTER TABLE {$wpdb->prefix}qr_trackr_links ADD COLUMN {$column} {$definition}";
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Dynamic DDL is not supported by prepare. This is required for schema migration.
 				$result = $wpdb->query( $sql );
 				if ( false === $result ) {
 					qr_trackr_debug_log( 'Migration: Failed to add column ' . $column . '.', $wpdb->last_error );
@@ -310,6 +317,305 @@ add_action(
  */
 function qr_trackr_is_admin_user() {
 	return current_user_can( 'manage_options' );
+}
+
+/**
+ * Get QR code data by ID.
+ *
+ * @param int $qr_id QR code ID.
+ * @return array|WP_Error QR code data or error object.
+ */
+function get_qr_data( $qr_id ) {
+	global $wpdb;
+
+	$cache_key = 'qr_trackr_data_' . $qr_id;
+	$qr_data   = wp_cache_get( $cache_key );
+
+	if ( false !== $qr_data ) {
+		return $qr_data;
+	}
+
+	if ( ! is_numeric( $qr_id ) ) {
+		return new WP_Error( 'invalid_id', esc_html__( 'Invalid QR code ID provided.', 'wp-qr-trackr' ) );
+	}
+
+	try {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query needed for QR data, caching implemented.
+		$qr_data = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
+				intval( $qr_id )
+			),
+			ARRAY_A
+		);
+
+		if ( ! $qr_data ) {
+			return new WP_Error( 'not_found', esc_html__( 'QR code not found.', 'wp-qr-trackr' ) );
+		}
+
+		wp_cache_set( $cache_key, $qr_data, '', 300 ); // Cache for 5 minutes
+
+		return $qr_data;
+
+	} catch ( Exception $e ) {
+		return new WP_Error( 'data_error', $e->getMessage() );
+	}
+}
+
+/**
+ * Get scan count for a QR code.
+ *
+ * @param int $qr_id QR code ID.
+ * @return int|WP_Error Scan count or error object.
+ */
+function get_scan_count( $qr_id ) {
+	global $wpdb;
+
+	$cache_key = 'qr_trackr_scan_count_' . $qr_id;
+	$count     = wp_cache_get( $cache_key );
+
+	if ( false !== $count ) {
+		return intval( $count );
+	}
+
+	if ( ! is_numeric( $qr_id ) ) {
+		return new WP_Error( 'invalid_id', esc_html__( 'Invalid QR code ID provided.', 'wp-qr-trackr' ) );
+	}
+
+	try {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query needed for scan count, caching implemented.
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_scans WHERE link_id = %d",
+				intval( $qr_id )
+			)
+		);
+
+		wp_cache_set( $cache_key, $count, '', 300 ); // Cache for 5 minutes
+
+		return intval( $count );
+
+	} catch ( Exception $e ) {
+		return new WP_Error( 'count_error', $e->getMessage() );
+	}
+}
+
+/**
+ * Get scan history for a QR code.
+ *
+ * @param int    $id     QR code ID.
+ * @param string $period Time period ('day', 'week', 'month', 'year').
+ * @return array|WP_Error Scan history data or error object.
+ */
+function get_scan_history( $id, $period = 'month' ) {
+	global $wpdb;
+
+	$cache_key = 'qr_trackr_history_' . $id . '_' . $period;
+	$history   = wp_cache_get( $cache_key );
+
+	if ( false !== $history ) {
+		return $history;
+	}
+
+	if ( ! is_numeric( $id ) ) {
+		return new WP_Error( 'invalid_id', esc_html__( 'Invalid QR code ID provided.', 'wp-qr-trackr' ) );
+	}
+
+	$valid_periods = array( 'day', 'week', 'month', 'year' );
+	if ( ! in_array( $period, $valid_periods, true ) ) {
+		return new WP_Error( 'invalid_period', esc_html__( 'Invalid time period specified.', 'wp-qr-trackr' ) );
+	}
+
+	try {
+		$sql      = '';
+		$interval = '';
+		$format   = '';
+
+		switch ( $period ) {
+			case 'day':
+				$interval = '30 DAY';
+				$format   = '%Y-%m-%d';
+				break;
+			case 'week':
+				$interval = '12 WEEK';
+				$format   = '%x-W%v';
+				break;
+			case 'month':
+				$interval = '12 MONTH';
+				$format   = '%Y-%m';
+				break;
+			case 'year':
+				$interval = '5 YEAR';
+				$format   = '%Y';
+				break;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query needed for scan history, caching implemented.
+		$history = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DATE_FORMAT(scan_time, %s) as period, COUNT(*) as count 
+			FROM {$wpdb->prefix}qr_trackr_scans 
+			WHERE link_id = %d 
+			AND scan_time >= DATE_SUB(NOW(), INTERVAL {$interval}) 
+			GROUP BY period 
+			ORDER BY period DESC",
+				$format,
+				$id
+			)
+		);
+
+		wp_cache_set( $cache_key, $history, '', 300 ); // Cache for 5 minutes
+
+		return $history;
+
+	} catch ( Exception $e ) {
+		return new WP_Error( 'history_error', $e->getMessage() );
+	}
+}
+
+/**
+ * Get QR code statistics.
+ *
+ * @param int $id QR code ID.
+ * @return array|WP_Error Statistics data or error object.
+ */
+function qrc_get_statistics( $id ) {
+	global $wpdb;
+
+	$cache_key = 'qr_trackr_stats_' . $id;
+	$stats     = wp_cache_get( $cache_key );
+
+	if ( false !== $stats ) {
+		return $stats;
+	}
+
+	if ( ! is_numeric( $id ) ) {
+		return new WP_Error( 'invalid_id', esc_html__( 'Invalid QR code ID provided.', 'wp-qr-trackr' ) );
+	}
+
+	$id = intval( $id );
+
+	try {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query needed for stats, caching implemented.
+		$total_scans = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_scans WHERE link_id = %d",
+				$id
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query needed for stats, caching implemented.
+		$unique_visitors = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(DISTINCT ip_address) FROM {$wpdb->prefix}qr_trackr_scans WHERE link_id = %d",
+				$id
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query needed for stats, caching implemented.
+		$last_scan = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_scans WHERE link_id = %d ORDER BY scan_time DESC LIMIT 1",
+				$id
+			)
+		);
+
+		$stats = array(
+			'total_scans'     => intval( $total_scans ),
+			'unique_visitors' => intval( $unique_visitors ),
+			'last_scan'       => $last_scan ? array(
+				'time'     => $last_scan->scan_time,
+				'location' => $last_scan->location,
+				'device'   => $last_scan->user_agent,
+			) : null,
+			'scan_history'    => get_scan_history( $id ),
+			'scan_locations'  => qrc_get_scan_locations( $id ),
+			'scan_devices'    => qrc_get_scan_devices( $id ),
+		);
+
+		wp_cache_set( $cache_key, $stats, '', 300 ); // Cache for 5 minutes
+
+		return $stats;
+
+	} catch ( Exception $e ) {
+		return new WP_Error( 'stats_error', $e->getMessage() );
+	}
+}
+
+/**
+ * Get scan locations for a QR code.
+ *
+ * @param int $id QR code ID.
+ * @return array|WP_Error Array of locations or error object.
+ */
+function qrc_get_scan_locations( $id ) {
+	global $wpdb;
+
+	$cache_key = 'qr_trackr_locations_' . $id;
+	$locations = wp_cache_get( $cache_key );
+
+	if ( false !== $locations ) {
+		return $locations;
+	}
+
+	if ( ! is_numeric( $id ) ) {
+		return new WP_Error( 'invalid_id', esc_html__( 'Invalid QR code ID provided.', 'wp-qr-trackr' ) );
+	}
+
+	try {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query needed for locations, caching implemented.
+		$locations = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT location, COUNT(*) as count FROM {$wpdb->prefix}qr_trackr_scans WHERE link_id = %d AND location IS NOT NULL GROUP BY location ORDER BY count DESC",
+				$id
+			)
+		);
+
+		wp_cache_set( $cache_key, $locations, '', 300 ); // Cache for 5 minutes
+
+		return $locations;
+
+	} catch ( Exception $e ) {
+		return new WP_Error( 'location_error', $e->getMessage() );
+	}
+}
+
+/**
+ * Get scan devices for a QR code.
+ *
+ * @param int $id QR code ID.
+ * @return array|WP_Error Array of devices or error object.
+ */
+function qrc_get_scan_devices( $id ) {
+	global $wpdb;
+
+	$cache_key = 'qr_trackr_devices_' . $id;
+	$devices   = wp_cache_get( $cache_key );
+
+	if ( false !== $devices ) {
+		return $devices;
+	}
+
+	if ( ! is_numeric( $id ) ) {
+		return new WP_Error( 'invalid_id', esc_html__( 'Invalid QR code ID provided.', 'wp-qr-trackr' ) );
+	}
+
+	try {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query needed for devices, caching implemented.
+		$devices = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT user_agent, COUNT(*) as count FROM {$wpdb->prefix}qr_trackr_scans WHERE link_id = %d GROUP BY user_agent ORDER BY count DESC",
+				$id
+			)
+		);
+
+		wp_cache_set( $cache_key, $devices, '', 300 ); // Cache for 5 minutes
+
+		return $devices;
+
+	} catch ( Exception $e ) {
+		return new WP_Error( 'device_error', $e->getMessage() );
+	}
 }
 
 if ( function_exists( 'qr_trackr_debug_log' ) ) {

@@ -52,7 +52,7 @@ For advanced testing, you can start dev, nonprod, and a local GitHub MCP server 
 ./scripts/launch-all-docker.sh
 ```
 
-See the dev README for details on MCP and its role in repo automation and merge conflict prevention.
+See the dev README for details on MCP and its role in repo automation and merge conflict prevention. 
 
 ### CI/CD Pipeline: A Pre-Built Container Approach
 

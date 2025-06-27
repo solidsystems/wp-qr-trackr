@@ -21,9 +21,12 @@ if ( function_exists( 'qr_trackr_debug_log' ) ) {
  * @return void
  */
 function qr_trackr_rewrite_init() {
-	add_filter( 'query_vars', 'qr_trackr_add_query_vars' );
-	add_action( 'init', 'qr_trackr_add_rewrite_rules', 20 );
-	add_action( 'template_redirect', 'qr_trackr_template_redirect' );
+	// Only add rewrite rules if not in admin or AJAX context.
+	if ( ! is_admin() && ! wp_doing_ajax() ) {
+		add_filter( 'query_vars', 'qr_trackr_add_query_vars' );
+		add_action( 'init', 'qr_trackr_add_rewrite_rules', 20 );
+		add_action( 'template_redirect', 'qr_trackr_template_redirect' );
+	}
 }
 
 /**
@@ -33,7 +36,7 @@ function qr_trackr_rewrite_init() {
  * @return array Modified query vars.
  */
 function qr_trackr_add_query_vars( $vars ) {
-	$vars[] = 'qr_trackr_scan';
+	$vars[] = 'qr_trackr_redirect';
 	return $vars;
 }
 
@@ -43,103 +46,243 @@ function qr_trackr_add_query_vars( $vars ) {
  * @return void
  */
 function qr_trackr_add_rewrite_rules() {
-	add_rewrite_rule( '^qr-trackr/scan/([0-9]+)/?$', 'index.php?qr_trackr_scan=$matches[1]', 'top' );
+	add_rewrite_rule(
+		'^qr-trackr/redirect/([0-9]+)/?$',
+		'index.php?qr_trackr_redirect=$matches[1]',
+		'top'
+	);
 }
 
 /**
  * Handle template redirect for QR tracking.
  *
+ * @global wpdb $wpdb WordPress database abstraction object.
  * @return void
  */
 function qr_trackr_template_redirect() {
 	global $wpdb;
-	$scan_id = get_query_var( 'qr_trackr_scan' );
+	$link_id = get_query_var( 'qr_trackr_redirect' );
 
-	if ( empty( $scan_id ) ) {
+	if ( empty( $link_id ) || ! is_numeric( $link_id ) ) {
 		return;
 	}
 
-	$link = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
-			$scan_id
-		)
-	);
+	$link_id   = absint( $link_id );
+	$cache_key = 'qr_trackr_link_' . $link_id;
+	$link      = wp_cache_get( $cache_key, 'qr_trackr' );
+
+	if ( false === $link ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+		$link = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
+				$link_id
+			)
+		);
+
+		if ( $link ) {
+			wp_cache_set( $cache_key, $link, 'qr_trackr', 300 ); // Cache for 5 minutes
+		}
+	}
 
 	if ( ! $link ) {
-		wp_safe_redirect( home_url() );
+		wp_safe_redirect( home_url(), 404 );
 		exit;
 	}
 
-	$wpdb->insert(
-		"{$wpdb->prefix}qr_trackr_scans",
-		array(
-			'link_id'    => $link->id,
-			'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '',
-			'ip_address' => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '',
-			'scanned_at' => current_time( 'mysql' ),
-		)
-	);
+	try {
+		// Start transaction for scan logging.
+		$wpdb->query( 'START TRANSACTION' );
 
-	$wpdb->update(
-		"{$wpdb->prefix}qr_trackr_links",
-		array(
-			'access_count'  => $link->access_count + 1,
-			'last_accessed' => current_time( 'mysql' ),
-		),
-		array( 'id' => $link->id )
-	);
+		// Record scan with proper sanitization.
+		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 ) : '';
+		$ip_address = qr_trackr_get_client_ip();
+		$location   = qr_trackr_get_location_data( $ip_address );
 
-	wp_safe_redirect( esc_url_raw( $link->destination_url ) );
-	exit;
-}
+		// Insert scan record.
+		$scan_result = $wpdb->insert(
+			$wpdb->prefix . 'qr_trackr_scans',
+			array(
+				'link_id'    => $link_id,
+				'user_agent' => $user_agent,
+				'ip_address' => $ip_address,
+				'location'   => $location,
+				'scanned_at' => current_time( 'mysql', true ),
+			),
+			array(
+				'%d',
+				'%s',
+				'%s',
+				'%s',
+				'%s',
+			)
+		);
 
-/**
- * Flush rewrite rules to apply changes.
- *
- * This function is typically called on plugin activation to ensure the new QR
- * code rewrite rules are recognized by WordPress.
- */
-if ( ! function_exists( 'qr_trackr_flush_rewrite_rules' ) ) {
-	/**
-	 * Flush rewrite rules.
-	 */
-	function qr_trackr_flush_rewrite_rules() {
-		flush_rewrite_rules();
+		if ( false === $scan_result ) {
+			throw new Exception( 'Failed to record scan.' );
+		}
+
+		// Update scan count.
+		$update_result = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$wpdb->prefix}qr_trackr_links SET scans = scans + 1 WHERE id = %d",
+				$link_id
+			)
+		);
+
+		if ( false === $update_result ) {
+			throw new Exception( 'Failed to update scan count.' );
+		}
+
+		// Commit transaction.
+		$wpdb->query( 'COMMIT' );
+
+		// Clear caches.
+		wp_cache_delete( $cache_key, 'qr_trackr' );
+		wp_cache_delete( 'qr_trackr_stats_' . $link_id, 'qr_trackr' );
+
+		// Log successful scan if debug is enabled.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log( sprintf( 'QR code scan recorded for link ID %d from IP %s', $link_id, $ip_address ) );
+		}
+
+		// Redirect to destination.
+		wp_safe_redirect( esc_url_raw( $link->destination_url ), 302 );
+		exit;
+
+	} catch ( Exception $e ) {
+		// Rollback transaction on error.
+		$wpdb->query( 'ROLLBACK' );
+
+		// Log error if debug is enabled.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log( 'QR code scan error: ' . $e->getMessage() );
+		}
+
+		// Still redirect to destination on error, but log it.
+		wp_safe_redirect( esc_url_raw( $link->destination_url ), 302 );
+		exit;
 	}
 }
 
 /**
- * Get tracking URL for a link.
+ * Get client IP address with proxy support.
  *
- * @param string $qr_code The QR code to generate URL for.
- * @return string The tracking URL.
- */
-function qr_trackr_get_rewrite_tracking_url( $qr_code ) {
-	if ( qr_trackr_check_permalinks() ) {
-		return home_url( 'qr/' . $qr_code );
-	}
-
-	return add_query_arg( 'qr_trackr', $qr_code, home_url() );
-}
-
-/**
- * Get client IP address.
- *
- * @return string Client IP address.
+ * @return string Sanitized IP address.
  */
 function qr_trackr_get_client_ip() {
 	$ip = '';
 
-	if ( isset( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-		$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
-	} elseif ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-		$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
-	} elseif ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
-		$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+	// Check for proxy addresses.
+	$proxy_headers = array(
+		'HTTP_CLIENT_IP',
+		'HTTP_X_FORWARDED_FOR',
+		'HTTP_X_FORWARDED',
+		'HTTP_X_CLUSTER_CLIENT_IP',
+		'HTTP_FORWARDED_FOR',
+		'HTTP_FORWARDED',
+		'REMOTE_ADDR',
+	);
+
+	foreach ( $proxy_headers as $header ) {
+		if ( ! empty( $_SERVER[ $header ] ) ) {
+			$ip = sanitize_text_field( wp_unslash( $_SERVER[ $header ] ) );
+			// Validate IP address.
+			if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+				return $ip;
+			}
+		}
 	}
 
-	return $ip;
+	return '0.0.0.0';
+}
+
+/**
+ * Get location data from IP address.
+ *
+ * @param string $ip_address IP address to look up.
+ * @return string JSON encoded location data or empty string on failure.
+ */
+function qr_trackr_get_location_data( $ip_address ) {
+	if ( ! get_option( 'qr_trackr_track_location', false ) ) {
+		return '';
+	}
+
+	$cache_key = 'qr_trackr_location_' . md5( $ip_address );
+	$location  = wp_cache_get( $cache_key, 'qr_trackr' );
+
+	if ( false === $location ) {
+		try {
+			$response = wp_safe_remote_get(
+				'https://ipapi.co/' . $ip_address . '/json/',
+				array(
+					'timeout'    => 5,
+					'user-agent' => 'WordPress/QR-Trackr',
+					'sslverify'  => true,
+				)
+			);
+
+			if ( is_wp_error( $response ) ) {
+				throw new Exception( $response->get_error_message() );
+			}
+
+			$body = wp_remote_retrieve_body( $response );
+			$data = json_decode( $body, true );
+
+			if ( empty( $data ) || ! is_array( $data ) ) {
+				throw new Exception( 'Invalid location data received.' );
+			}
+
+			$location = wp_json_encode(
+				array(
+					'country' => isset( $data['country_name'] ) ? $data['country_name'] : '',
+					'region'  => isset( $data['region'] ) ? $data['region'] : '',
+					'city'    => isset( $data['city'] ) ? $data['city'] : '',
+				)
+			);
+
+			wp_cache_set( $cache_key, $location, 'qr_trackr', DAY_IN_SECONDS );
+
+		} catch ( Exception $e ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+				qr_trackr_debug_log( 'Location lookup error: ' . $e->getMessage() );
+			}
+			$location = '';
+		}
+	}
+
+	return $location;
+}
+
+/**
+ * Check if pretty permalinks are enabled.
+ *
+ * @return bool True if pretty permalinks are enabled, false otherwise.
+ */
+function qr_trackr_check_permalinks() {
+	static $pretty_permalinks = null;
+
+	if ( null === $pretty_permalinks ) {
+		$pretty_permalinks = (bool) get_option( 'permalink_structure' );
+	}
+
+	return $pretty_permalinks;
+}
+
+/**
+ * Get tracking URL for a QR code.
+ *
+ * @param int $link_id Link ID.
+ * @return string Tracking URL.
+ */
+function qr_trackr_get_tracking_url( $link_id ) {
+	$link_id = absint( $link_id );
+
+	if ( qr_trackr_check_permalinks() ) {
+		return home_url( 'qr-trackr/redirect/' . $link_id );
+	}
+
+	return add_query_arg( 'qr_trackr_redirect', $link_id, home_url() );
 }
 
 /**
@@ -152,21 +295,13 @@ function qr_trackr_get_all_tracking_links_for_post( $post_id ) {
 	global $wpdb;
 	$table = $wpdb->prefix . 'qr_trackr_links';
 
-	// Get links with caching.
-	$cache_key = 'qr_trackr_links_post_' . $post_id;
-	$links     = wp_cache_get( $cache_key );
-
-	if ( false === $links ) {
-		$links = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE post_id = %d ORDER BY created_at DESC",
-				$post_id
-			)
-		);
-		if ( false !== $links ) {
-			wp_cache_set( $cache_key, $links, '', 300 ); // Cache for 5 minutes.
-		}
-	}
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query required for admin utility. Caching is not used to ensure up-to-date data for admin actions.
+	$links = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE post_id = %d ORDER BY created_at DESC",
+			$post_id
+		)
+	);
 
 	return ! empty( $links ) ? $links : array();
 }

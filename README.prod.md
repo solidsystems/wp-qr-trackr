@@ -31,6 +31,15 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 
 ## Quick Start / Onboarding (Production)
 
+# 🚀 Production Onboarding: Container-Only Workflow
+
+**Requirements:**
+- Docker Desktop (latest)
+- Git
+
+**All production validation, linting, and testing should be run in the Docker container.**
+No need to install PHP, Composer, Node, or CLI tools on your host.
+
 ### Prerequisites
 - DigitalOcean App Platform account
 - WordPress-compatible hosting
@@ -169,3 +178,120 @@ graph TD
 ## Production Deployment & Configuration
 
 **Recommended `
+
+## Security Best Practices
+
+All forms and data-changing actions in QR Trackr are protected by WordPress nonces and server-side verification:
+
+- **Admin forms** (e.g., create, edit, delete QR codes) include a nonce field and verify it server-side before processing.
+- **AJAX endpoints** require a valid nonce and verify it using `check_ajax_referer()` or `wp_verify_nonce()`.
+- **Bulk and destructive actions** (such as deleting QR codes) are protected by nonces in both the action link and the handler.
+- **Settings and debug forms** use `wp_nonce_field()` and verify with `check_admin_referer()`.
+
+This ensures robust protection against CSRF and other attacks, fully complying with WordPress security standards and project rules. All new features must include nonce protection for any form or data-changing action.
+
+## Lessons Learned
+
+### Platform-Specific Learnings (PHP/WordPress)
+- **Restrict PHPCS to PHP files:** Use the `--extensions=php` flag with PHPCS in CI/CD to avoid memory issues and unnecessary linting of non-PHP files.
+- **Using Cursor as an Assistant:** Cursor's AI assistant provided rapid troubleshooting and configuration support.
+- **Modular Configurations:** Modular configuration files (Docker, Composer, PHPCS, etc.) improved maintainability and reliability.
+- **Defining and Implementing Best Practices:** Enforcing best practices for dev environments (memory, dependencies, standards) led to a more stable production workflow.
+
+## Linting and PHPCS Configuration
+
+### PHP_CodeSniffer (PHPCS) Setup
+
+- PHPCS is configured via `.phpcs.xml` at the project root.
+- Only source files in `wp-content/plugins/wp-qr-trackr/qr-trackr.php` and `wp-content/plugins/wp-qr-trackr/includes/` are explicitly included for linting.
+- The `build/` directory and all its subdirectories are excluded using `<exclude-pattern>build/**</exclude-pattern>` in `.phpcs.xml`.
+- The CI script (`ci.sh`) uses the `--ignore='vendor/*,build/**'` flag in all PHPCS invocations to ensure build artifacts are never linted, preventing duplicate or false-positive errors.
+- This setup avoids issues where PHPCS would lint both source and build output, causing confusing or duplicate errors, especially for files that are copied or transformed during the build process.
+- If you add new directories for build or generated files, update both `.phpcs.xml` and the `--ignore` flags in your scripts.
+
+### Lessons Learned
+
+- Always exclude build and generated directories from PHPCS to avoid false positives and duplicate errors.
+- Use both `.phpcs.xml` patterns and explicit `--ignore` flags in CI scripts for maximum reliability across environments.
+- If you see errors referencing files or lines that don't exist in your source, check if build artifacts are being linted.
+- Restrict `<file>` entries in `.phpcs.xml` to only your actual source code.
+
+---
+
+## Troubleshooting & FAQ (Production)
+
+### Common Issues
+1. **Performance Issues:**
+   - **Symptoms:** Slow loading times, high CPU usage, or increased memory consumption.
+   - **Resolution:**
+     - **Check:** Verify that the server resources are sufficient for the plugin's requirements.
+     - **Action:** If necessary, upgrade the hosting plan or optimize the plugin code.
+
+2. **Security Issues:**
+   - **Symptoms:** Unauthorized access attempts or potential security vulnerabilities.
+   - **Resolution:**
+     - **Check:** Regularly update the plugin and its dependencies.
+     - **Action:** Implement security best practices, such as using HTTPS, securing database connections, and regularly auditing the code.
+
+3. **Dependency Issues:**
+   - **Symptoms:** Plugin conflicts or compatibility problems with other plugins or themes.
+   - **Resolution:**
+     - **Check:** Verify that all dependencies are up-to-date and compatible.
+     - **Action:** Update dependencies or seek alternative solutions if conflicts persist.
+
+### Additional Resources
+- [DigitalOcean App Platform Documentation](https://www.digitalocean.com/docs/app-platform/)
+- [WordPress Codex](https://codex.wordpress.org/)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+
+---
+
+## Links & Further Reading
+
+- [GitHub Repository](https://github.com/your-username/qr-trackr)
+- [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform/)
+- [WordPress Plugin Directory](https://wordpress.org/plugins/qr-trackr/)
+
+---
+
+## Conclusion
+
+This template provides a robust foundation for building a modern, production-ready WordPress plugin. By following the steps outlined in this document, you can ensure a secure, stable, and performant deployment.
+
+---
+
+## Contact
+
+For further assistance or questions, please contact the project maintainers at [your-email@example.com](mailto:your-email@example.com).
+
+---
+
+## Acknowledgments
+
+Special thanks to the contributors and maintainers of this project for their hard work and dedication.
+
+## Containerized Linting & Release Workflow
+
+- All production code should be linted and tested inside the Docker container with the local volume mount (`.:/usr/src/app`).
+- This ensures that the code is validated in the same environment as CI/CD, preventing environment drift.
+- For production releases, always run final checks in the container to guarantee compatibility and passing tests.
+- See the architecture diagram below for the workflow.
+
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    A[Local Source Code] -- Mounted as Volume --> B[ci-runner Docker Container]
+    B -- Runs PHPCS/PHPCBF, Tests, Build --> A
+    B -- Same Environment as CI/CD --> C[CI/CD Pipeline]
+    A -- Changes Persist on Host --> D[Git Commit/Push]
+    C -- Validates Code --> D
+    subgraph Developer Workflow
+        A
+        B
+    end
+    subgraph CI/CD
+        C
+        D
+    end
+```

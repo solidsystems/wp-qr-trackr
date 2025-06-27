@@ -40,6 +40,8 @@ services:
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
+    volumes:
+      - .:/usr/src/app
 
 volumes:
   db_data_nonprod:

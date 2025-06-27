@@ -5,8 +5,8 @@ set -e
 
 # Configuration
 PLUGIN_NAME="wp-qr-trackr"
-PLUGIN_DIR="wp-content/plugins/wp-qr-trackr"
-VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' "$PLUGIN_DIR/wp-qr-trackr.php" | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
+PLUGIN_DIR="."
+VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' "wp-qr-trackr.php" | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
 BUILD_DIR="build"
 DIST_DIR="dist"
 ZIP_NAME="$DIST_DIR/$PLUGIN_NAME-v$VERSION.zip"
@@ -75,8 +75,8 @@ cd - > /dev/null
 
 # Info
 if [ -f "$ZIP_NAME" ]; then
-  echo "[INFO] Production build completed successfully!"
-  echo "[INFO] Zip file created at: $ZIP_NAME"
+  print_status "Production build completed successfully!"
+  print_status "Zip file created at: $ZIP_NAME"
 else
-  echo "[ERROR] Build failed. Zip file not found."
+  print_error "Build failed. Zip file not found."
 fi 

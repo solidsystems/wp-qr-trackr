@@ -4,7 +4,14 @@ set -ex
 # The working directory is /usr/src/app (WordPress root).
 
 # Wait for the database to be ready
-./scripts/wait-for-it.sh db-nonprod:3306 -t 60 -- echo "Database is up"
+if [ -x /usr/local/bin/wait-for-it.sh ]; then
+  /usr/local/bin/wait-for-it.sh db-nonprod:3306 -t 60 -- echo "Database is up"
+elif [ -x ./scripts/wait-for-it.sh ]; then
+  ./scripts/wait-for-it.sh db-nonprod:3306 -t 60 -- echo "Database is up"
+else
+  echo "wait-for-it.sh not found!" >&2
+  exit 1
+fi
 
 # Enforce 2G memory limit for Composer and PHPCS
 export COMPOSER_MEMORY_LIMIT=2G

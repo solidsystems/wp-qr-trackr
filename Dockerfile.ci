@@ -35,6 +35,7 @@ COPY ./scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
 COPY ./ci.sh /ci.sh
 RUN chmod +x /usr/local/bin/wait-for-it.sh
 RUN chmod +x /ci.sh
+RUN chmod +x /usr/src/app/scripts/wait-for-it.sh
 
 # The entrypoint will be the CI script itself
 ENTRYPOINT ["/ci.sh"]

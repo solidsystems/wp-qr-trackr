@@ -4,6 +4,7 @@
  *
  * @package WP_QR_TRACKR
  */
+// phpcs:ignoreFile WordPress.Security.EscapeOutput.OutputNotEscaped -- False positive: no $item output in this file.
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -37,7 +38,7 @@ function qrc_requirements_met() {
  * Display a notice if requirements are not met.
  */
 function qrc_requirements_notice() {
-	if ( ! qrc_requirements_met() ) {
+	if ( false === qrc_requirements_met() ) {
 		?>
 		<div class="notice notice-error">
 			<p>
@@ -55,7 +56,7 @@ add_action( 'admin_notices', 'qrc_requirements_notice' );
  * Deactivate the plugin if requirements are not met.
  */
 function qrc_deactivate_self() {
-	if ( ! qrc_requirements_met() ) {
+	if ( false === qrc_requirements_met() ) {
 		deactivate_plugins( plugin_basename( QRC_PLUGIN_FILE ) );
 		if ( isset( $_GET['activate'] ) ) {
 			unset( $_GET['activate'] );

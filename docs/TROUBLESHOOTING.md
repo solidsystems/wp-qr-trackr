@@ -326,4 +326,22 @@ This project supports running both dev (8080) and nonprod (8081) WordPress envir
 ## Composer/PHPCS Memory & VCS Issues
 - CI/CD enforces a 2G memory limit for Composer and PHPCS to prevent out-of-memory errors. If you see OOM errors locally, set COMPOSER_MEMORY_LIMIT=2G and use php -d memory_limit=2G for PHPCS.
 - Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs (NormalizedArrays, Universal, Modernize) have been removed from PHPCSStandards and should not be referenced.
-- If Composer fails to clone a PHPCS sniff repository, check that the repository exists and is public. Remove any references to unavailable sniffs from composer.json and PHPCS config. 
+- If Composer fails to clone a PHPCS sniff repository, check that the repository exists and is public. Remove any references to unavailable sniffs from composer.json and PHPCS config.
+
+## PHPCS: False Positives or Duplicate Errors from Build Artifacts
+
+**Problem:**
+- PHPCS reports errors for files or lines that do not exist in your source code, or you see duplicate errors for the same file.
+
+**Cause:**
+- The linter is scanning build or generated files (e.g., in `build/`), not just your source code.
+
+**Solution:**
+- Exclude build and generated directories in `.phpcs.xml` using `<exclude-pattern>build/**</exclude-pattern>`.
+- Add `--ignore='vendor/*,build/**'` to all PHPCS invocations in your CI scripts (e.g., `ci.sh`).
+- Restrict `<file>` entries in `.phpcs.xml` to only your actual source code.
+- If you add new build or generated directories, update both `.phpcs.xml` and your CI scripts accordingly.
+
+**Lessons Learned:**
+- Always exclude build artifacts from linting to avoid confusing or duplicate errors.
+- Use both config file patterns and command-line flags for maximum reliability. 

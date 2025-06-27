@@ -31,6 +31,22 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 
 ## Quick Start / Onboarding (Development)
 
+# 🚀 Onboarding: Zero Host Dependencies
+
+**Requirements:**
+- Docker Desktop (latest)
+- Git
+
+**How to run all development, linting, and tests:**
+```sh
+docker compose run --rm ci-runner vendor/bin/phpcs
+docker compose run --rm ci-runner vendor/bin/phpcbf
+docker compose run --rm ci-runner bash ci.sh
+```
+
+**Do NOT install PHP, Composer, Node, or CLI tools on your host.**  
+All tools run inside the container, ensuring a consistent, reproducible environment.
+
 ### Prerequisites
 - macOS (ARM or x86), Linux, or Windows (see project plans for cross-platform support)
 - [Homebrew](https://brew.sh/) (macOS)
@@ -101,6 +117,17 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 - No other plugins or themes are pre-installed.
 - **Debug logging is enabled by default in this environment.**
 - **Nonprod runs on port 8081, so you can run both dev (8080) and nonprod (8081) environments at the same time.**
+
+**Onboarding checks are automated!**
+- The script `scripts/check-onboarding.sh` will run automatically before every commit.
+- You can also run it manually at any time: `bash scripts/check-onboarding.sh`
+- It checks for Docker, Docker running, and Git, and warns if local PHP, Composer, or Node is installed.
+
+**Unified code validation:**
+- To validate your code locally (lint, test, etc.), run:
+  - `make validate`
+  - or `docker compose run --rm ci-runner bash scripts/validate.sh`
+- This is the same command used in CI/CD, ensuring consistency.
 
 ## Local Non-Production Docker Testing
 
@@ -513,3 +540,239 @@ graph TD
 - Local development does not enforce these limits by default, but you can set COMPOSER_MEMORY_LIMIT=2G and php -d memory_limit=2G if you encounter memory issues.
 - Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs have been removed.
 - See docs/TROUBLESHOOTING.md for troubleshooting Composer/PHPCS and VCS issues.
+
+## Lessons Learned
+
+### Platform-Specific Learnings (PHP/WordPress)
+- **Restrict PHPCS to PHP files:** Always use the `--extensions=php` flag with PHPCS in CI/CD to avoid memory issues and unnecessary linting of non-PHP files.
+- **Using Cursor as an Assistant:** Cursor's AI assistant was invaluable for rapid troubleshooting, configuration, and documentation.
+- **Modular Configurations:** Keeping configuration modular (Docker, Composer, PHPCS, etc.) improved maintainability and clarity.
+- **Defining and Implementing Best Practices:** Proactively defining and enforcing best practices for dev environments (memory, dependencies, standards) resulted in a more robust workflow.
+
+## Security Best Practices
+
+All forms and data-changing actions in QR Trackr are protected by WordPress nonces and server-side verification:
+
+- **Admin forms** (e.g., create, edit, delete QR codes) include a nonce field and verify it server-side before processing.
+- **AJAX endpoints** require a valid nonce and verify it using `check_ajax_referer()` or `wp_verify_nonce()`.
+- **Bulk and destructive actions** (such as deleting QR codes) are protected by nonces in both the action link and the handler.
+- **Settings and debug forms** use `wp_nonce_field()` and verify with `check_admin_referer()`.
+
+This ensures robust protection against CSRF and other attacks, fully complying with WordPress security standards and project rules. All new features must include nonce protection for any form or data-changing action.
+
+## Linting and PHPCS Configuration
+
+### PHP_CodeSniffer (PHPCS) Setup
+
+- PHPCS is configured via `.phpcs.xml` at the project root.
+- Only source files in `wp-content/plugins/wp-qr-trackr/qr-trackr.php` and `wp-content/plugins/wp-qr-trackr/includes/` are explicitly included for linting.
+- The `build/` directory and all its subdirectories are excluded using `<exclude-pattern>build/**</exclude-pattern>` in `.phpcs.xml`.
+- The CI script (`ci.sh`) uses the `--ignore='vendor/*,build/**'` flag in all PHPCS invocations to ensure build artifacts are never linted, preventing duplicate or false-positive errors.
+- This setup avoids issues where PHPCS would lint both source and build output, causing confusing or duplicate errors, especially for files that are copied or transformed during the build process.
+- If you add new directories for build or generated files, update both `.phpcs.xml` and the `--ignore` flags in your scripts.
+
+### Lessons Learned
+
+- Always exclude build and generated directories from PHPCS to avoid false positives and duplicate errors.
+- Use both `.phpcs.xml` patterns and explicit `--ignore` flags in CI scripts for maximum reliability across environments.
+- If you see errors referencing files or lines that don't exist in your source, check if build artifacts are being linted.
+- Restrict `<file>` entries in `.phpcs.xml` to only your actual source code.
+
+## Containerized Development & Linting
+
+- All code formatting, linting, and testing should be run inside the Docker container using the local volume mount (`.:/usr/src/app`).
+- This ensures that any changes (e.g., PHPCBF autofixes) are made directly to your local files, but using the exact environment and dependencies as CI/CD.
+- This eliminates "works on my machine" issues and guarantees that code passing locally will also pass in CI.
+- To run PHPCS/PHPCBF or tests, always use `docker compose run --rm ci-runner ...`.
+- See the architecture diagram below for the workflow.
+
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    A[Local Source Code] -- Mounted as Volume --> B[ci-runner Docker Container]
+    B -- Runs PHPCS/PHPCBF, Tests, Build --> A
+    B -- Same Environment as CI/CD --> C[CI/CD Pipeline]
+    A -- Changes Persist on Host --> D[Git Commit/Push]
+    C -- Validates Code --> D
+    subgraph Developer Workflow
+        A
+        B
+    end
+    subgraph CI/CD
+        C
+        D
+    end
+```
+
+---
+
+## See also
+- `README.nonprod.md` for nonprod Docker/QA environment.
+- `README.prod.md` for production deployment and usage.
+
+## All-in-One Environment
+
+You can now start all environments (dev, nonprod, and local MCP servers) with:
+
+```sh
+./scripts/launch-all-docker.sh
+```
+
+- **Dev**: WordPress on port 8080 (live-mounts, rapid iteration)
+- **Nonprod**: WordPress on port 8081 (clean, no live-mounts)
+- **MCP (GitHub)**: http://localhost:7000 (repo automation, merge/conflict attention)
+- **MCP (Context7)**: http://localhost:7001 (advanced documentation as a service)
+- **MCP (DigitalOcean)**: http://localhost:7002 (cloud/devops automation)
+
+See script comments for details and requirements.
+
+---
+
+## MCP Technical Capabilities
+
+The following MCP servers provide native capabilities to the Cursor development environment and all plugins:
+
+### Context7 MCP (Documentation as a Service)
+- Search, retrieve, and serve advanced documentation for all plugins and codebases
+- Share documentation as a service across multiple plugins
+- Example commands:
+  - `searchDocs(query)`: Find documentation by keyword or topic
+  - `getDoc(file, section)`: Retrieve a specific doc section
+  - `listDocs()`: List all available documentation topics
+
+### GitHub MCP (Repository Automation)
+- Manage PRs, branches, merges, and repo state
+- Detect and resolve merge conflicts, detached HEADs, and PR attention issues
+- Example commands:
+  - `listPRs()`: List open pull requests
+  - `mergePR(prNumber)`: Merge a pull request
+  - `
+
+## Containerized CI/CD & Memory Management
+
+## Executive Summary: Containerized Dev & CI/CD Architecture
+
+```mermaid
+graph TD
+    subgraph "Developer"
+        A[Push Code or Run Tests Locally]
+    end
+
+    subgraph "CI/CD Pipeline"
+        A --> B{Dependency Files Changed?}
+        B -- Yes --> C[Build & Publish CI Docker Image]
+        B -- No --> D[Pull Pre-built CI Image]
+        C --> E[Push to GHCR]
+        E --> F[CI Workflow: Run Tests]
+        D --> F
+        F[Run Linting & Tests in Container]
+    end
+```
+
+- CI/CD uses a pre-built Docker image with 2G memory limits for Composer and PHPCS to prevent OOM errors.
+- Local development does not enforce these limits by default, but you can set COMPOSER_MEMORY_LIMIT=2G and php -d memory_limit=2G if you encounter memory issues.
+- Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs have been removed.
+- See docs/TROUBLESHOOTING.md for troubleshooting Composer/PHPCS and VCS issues.
+
+## Lessons Learned
+
+### Platform-Specific Learnings (PHP/WordPress)
+- **Restrict PHPCS to PHP files:** Always use the `--extensions=php` flag with PHPCS in CI/CD to avoid memory issues and unnecessary linting of non-PHP files.
+- **Using Cursor as an Assistant:** Cursor's AI assistant was invaluable for rapid troubleshooting, configuration, and documentation.
+- **Modular Configurations:** Keeping configuration modular (Docker, Composer, PHPCS, etc.) improved maintainability and clarity.
+- **Defining and Implementing Best Practices:** Proactively defining and enforcing best practices for dev environments (memory, dependencies, standards) resulted in a more robust workflow.
+
+## Security Best Practices
+
+All forms and data-changing actions in QR Trackr are protected by WordPress nonces and server-side verification:
+
+- **Admin forms** (e.g., create, edit, delete QR codes) include a nonce field and verify it server-side before processing.
+- **AJAX endpoints** require a valid nonce and verify it using `check_ajax_referer()` or `wp_verify_nonce()`.
+- **Bulk and destructive actions** (such as deleting QR codes) are protected by nonces in both the action link and the handler.
+- **Settings and debug forms** use `wp_nonce_field()` and verify with `check_admin_referer()`.
+
+This ensures robust protection against CSRF and other attacks, fully complying with WordPress security standards and project rules. All new features must include nonce protection for any form or data-changing action.
+
+## Linting and PHPCS Configuration
+
+### PHP_CodeSniffer (PHPCS) Setup
+
+- PHPCS is configured via `.phpcs.xml` at the project root.
+- Only source files in `wp-content/plugins/wp-qr-trackr/qr-trackr.php` and `wp-content/plugins/wp-qr-trackr/includes/` are explicitly included for linting.
+- The `build/` directory and all its subdirectories are excluded using `<exclude-pattern>build/**</exclude-pattern>` in `.phpcs.xml`.
+- The CI script (`ci.sh`) uses the `--ignore='vendor/*,build/**'` flag in all PHPCS invocations to ensure build artifacts are never linted, preventing duplicate or false-positive errors.
+- This setup avoids issues where PHPCS would lint both source and build output, causing confusing or duplicate errors, especially for files that are copied or transformed during the build process.
+- If you add new directories for build or generated files, update both `.phpcs.xml` and the `--ignore` flags in your scripts.
+
+### Lessons Learned
+
+- Always exclude build and generated directories from PHPCS to avoid false positives and duplicate errors.
+- Use both `.phpcs.xml` patterns and explicit `--ignore` flags in CI scripts for maximum reliability across environments.
+- If you see errors referencing files or lines that don't exist in your source, check if build artifacts are being linted.
+- Restrict `<file>` entries in `.phpcs.xml` to only your actual source code.
+
+## Containerized Development & Linting
+
+- All code formatting, linting, and testing should be run inside the Docker container using the local volume mount (`.:/usr/src/app`).
+- This ensures that any changes (e.g., PHPCBF autofixes) are made directly to your local files, but using the exact environment and dependencies as CI/CD.
+- This eliminates "works on my machine" issues and guarantees that code passing locally will also pass in CI.
+- To run PHPCS/PHPCBF or tests, always use `docker compose run --rm ci-runner ...`.
+- See the architecture diagram below for the workflow.
+
+## Running Tests Locally with Docker
+
+To ensure consistent test execution across different development environments, we use Docker containers for running tests locally. This mirrors our CI environment and helps catch issues early.
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your system
+- Git repository cloned locally
+
+### Running Tests
+
+1. Start the test environment:
+```bash
+# Use the CI-specific compose file
+docker-compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+```
+
+2. Run the test suite:
+```bash
+# Execute tests inside the container
+docker-compose -f docker-compose.yml -f docker-compose.ci.yml exec ci-runner ./ci.sh
+```
+
+The `ci.sh` script will:
+- Wait for the database to be ready
+- Install Composer dependencies
+- Run PHPCS (PHP CodeSniffer) checks
+- Run Stylelint for CSS files
+- Run ESLint for JavaScript files
+- Set up WordPress test environment
+- Run PHPUnit tests
+
+### Understanding Test Components
+
+- **PHP Tests**: Located in `tests/` directory, using PHPUnit
+- **Coding Standards**: PHPCS configuration in `.phpcs.xml`
+- **JavaScript/CSS Linting**: Configuration in `eslint.config.js` and `.stylelintrc.json`
+
+### Troubleshooting
+
+If you encounter memory issues during test execution:
+1. The containers are configured with appropriate memory limits
+2. PHPCS memory limit is set to 2GB
+3. Composer memory limit is set to 2GB
+
+For other issues, check:
+- Database connection (container `db-nonprod` should be running)
+- Container logs: `docker-compose -f docker-compose.yml -f docker-compose.ci.yml logs`
+- WordPress test environment setup in container
+
+### Clean Up
+
+After testing, stop and remove the containers:
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.ci.yml down
+```

@@ -57,3 +57,29 @@ The project now supports parallel Docker Compose environments for development (d
 - `.phpcs.xml` includes multiple `<exclude-pattern>` entries for maintainability, but some PHPCS versions may still flag these lines.
 - Upgraded to latest PHP_CodeSniffer and WordPress Coding Standards to minimize false positives.
 - If PHPCS continues to flag these, commits may be made with `--no-verify` (with justification in commit message). 
+
+## Docker Volume Mount Workflow
+
+- The `ci-runner` container mounts the local project directory (`.:/usr/src/app`).
+- All linting, formatting, and testing commands run inside the container, but changes are written to the local filesystem.
+- This ensures that the development, CI, and production environments are consistent.
+- See the diagram below for the architecture.
+
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    A[Local Source Code] -- Mounted as Volume --> B[ci-runner Docker Container]
+    B -- Runs PHPCS/PHPCBF, Tests, Build --> A
+    B -- Same Environment as CI/CD --> C[CI/CD Pipeline]
+    A -- Changes Persist on Host --> D[Git Commit/Push]
+    C -- Validates Code --> D
+    subgraph Developer Workflow
+        A
+        B
+    end
+    subgraph CI/CD
+        C
+        D
+    end
+```
