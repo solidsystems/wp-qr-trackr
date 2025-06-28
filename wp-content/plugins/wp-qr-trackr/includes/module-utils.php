@@ -149,29 +149,182 @@ function qr_trackr_get_all_links() {
 }
 
 /**
- * Get a tracking link by its ID.
+ * Get link by ID with caching.
  *
- * @param int $id The link ID.
- * @return object|null
+ * @since 1.0.0
+ * @param int $id Link ID.
+ * @return object|null Link object or null if not found.
  */
-function qr_trackr_get_link_by_id( $id ) {
+function qrc_get_link_by_id( $id ) {
 	global $wpdb;
-	$cache_key = 'qr_trackr_link_' . $id;
-	$link      = wp_cache_get( $cache_key );
+
+	$cache_key = 'qrc_link_' . absint( $id );
+	$link = wp_cache_get( $cache_key );
 
 	if ( false === $link ) {
-		$query = $wpdb->prepare(
-			sprintf(
-				'SELECT * FROM %s WHERE id = %%d',
-				$wpdb->prefix . 'qr_trackr_links'
-			),
-			$id
+		$table = $wpdb->prefix . 'qr_trackr_links';
+		$link = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE id = %d',
+				$table,
+				absint( $id )
+			)
 		);
-		$link  = $wpdb->get_row( $query );
-		wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
+
+		if ( $link ) {
+			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
+		}
 	}
 
 	return $link;
+}
+
+/**
+ * Get link by URL with caching.
+ *
+ * @since 1.0.0
+ * @param string $url URL to look up.
+ * @return object|null Link object or null if not found.
+ */
+function qrc_get_link_by_url( $url ) {
+	global $wpdb;
+
+	$cache_key = 'qrc_link_url_' . md5( $url );
+	$link = wp_cache_get( $cache_key );
+
+	if ( false === $link ) {
+		$table = $wpdb->prefix . 'qr_trackr_links';
+		$link = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE url = %s',
+				$table,
+				esc_url_raw( $url )
+			)
+		);
+
+		if ( $link ) {
+			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
+		}
+	}
+
+	return $link;
+}
+
+/**
+ * Get link statistics.
+ *
+ * @since 1.0.0
+ * @param int $link_id Link ID.
+ * @return array Link statistics.
+ */
+function qrc_get_link_stats( $link_id ) {
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'qr_trackr_stats';
+	$stats = $wpdb->get_results(
+		$wpdb->prepare(
+			'SELECT DATE(created_at) as date, COUNT(*) as count 
+			FROM %i 
+			WHERE link_id = %d 
+			GROUP BY DATE(created_at) 
+			ORDER BY date DESC',
+			$table,
+			absint( $link_id )
+		)
+	);
+
+	return empty( $stats ) ? array() : $stats;
+}
+
+/**
+ * Create a new link.
+ *
+ * @since 1.0.0
+ * @param array $data Link data.
+ * @return int|false The ID of the inserted link, or false on failure.
+ */
+function qrc_create_link( $data ) {
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'qr_trackr_links';
+	$result = $wpdb->insert(
+		$table,
+		array(
+			'url'        => esc_url_raw( $data['url'] ),
+			'title'      => sanitize_text_field( $data['title'] ),
+			'created_at' => current_time( 'mysql' ),
+			'updated_at' => current_time( 'mysql' ),
+		),
+		array( '%s', '%s', '%s', '%s' )
+	);
+
+	return $result ? $wpdb->insert_id : false;
+}
+
+/**
+ * Update an existing link.
+ *
+ * @since 1.0.0
+ * @param int   $id Link ID.
+ * @param array $data Link data.
+ * @return bool True on success, false on failure.
+ */
+function qrc_update_link( $id, $data ) {
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'qr_trackr_links';
+	return (bool) $wpdb->update(
+		$table,
+		array(
+			'url'        => esc_url_raw( $data['url'] ),
+			'title'      => sanitize_text_field( $data['title'] ),
+			'updated_at' => current_time( 'mysql' ),
+		),
+		array( 'id' => absint( $id ) ),
+		array( '%s', '%s', '%s' ),
+		array( '%d' )
+	);
+}
+
+/**
+ * Delete a link.
+ *
+ * @since 1.0.0
+ * @param int $id Link ID.
+ * @return bool True on success, false on failure.
+ */
+function qrc_delete_link( $id ) {
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'qr_trackr_links';
+	return (bool) $wpdb->delete(
+		$table,
+		array( 'id' => absint( $id ) ),
+		array( '%d' )
+	);
+}
+
+/**
+ * Record a link visit.
+ *
+ * @since 1.0.0
+ * @param int $link_id Link ID.
+ * @return bool True on success, false on failure.
+ */
+function qrc_record_visit( $link_id ) {
+	global $wpdb;
+
+	$table = $wpdb->prefix . 'qr_trackr_stats';
+	return (bool) $wpdb->insert(
+		$table,
+		array(
+			'link_id'    => absint( $link_id ),
+			'created_at' => current_time( 'mysql' ),
+			'ip'         => sanitize_text_field( qrc_get_client_ip() ),
+			'user_agent' => sanitize_text_field( qrc_get_user_agent() ),
+		),
+		array( '%d', '%s', '%s', '%s' )
+	);
 }
 
 /**

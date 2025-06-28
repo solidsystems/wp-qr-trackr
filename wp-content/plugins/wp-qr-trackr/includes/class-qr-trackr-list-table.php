@@ -204,48 +204,48 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		if ( false === $total_items ) {
 			// Build the base query with proper escaping.
 			$base_query = "SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_links";
-			
+
 			// Add WHERE clause if we have conditions.
 			if ( ! empty( $where_clauses ) && ! empty( $where_values ) ) {
 				$base_query .= ' WHERE ' . implode( ' AND ', array_map( 'esc_sql', $where_clauses ) );
-				$query = $wpdb->prepare( $base_query, ...$where_values );
+				$query       = $wpdb->prepare( $base_query, ...$where_values );
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
 				$total_items = $wpdb->get_var( $query );
 			} else {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
 				$total_items = $wpdb->get_var( $base_query );
 			}
-			
+
 			wp_cache_set( $cache_key, $total_items, 'qr_trackr', 300 ); // Cache for 5 minutes.
 		}
 
 		// Get items with proper sanitization and validation.
-		$orderby   = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at';
-		$order     = isset( $_REQUEST['order'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
-		$order     = 'ASC' === strtoupper( $order ) ? 'ASC' : 'DESC';
+		$orderby = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at';
+		$order   = isset( $_REQUEST['order'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
+		$order   = 'ASC' === strtoupper( $order ) ? 'ASC' : 'DESC';
 
-		$cache_key = 'qr_trackr_items_' . md5( wp_json_encode( array( $where, $where_values, $orderby, $order, $offset, $per_page ) ) );
+		$cache_key   = 'qr_trackr_items_' . md5( wp_json_encode( array( $where, $where_values, $orderby, $order, $offset, $per_page ) ) );
 		$this->items = wp_cache_get( $cache_key, 'qr_trackr' );
 
 		if ( false === $this->items ) {
 			// Build the base query with proper escaping.
 			$base_query = "SELECT * FROM {$wpdb->prefix}qr_trackr_links";
-			
+
 			// Add WHERE clause if we have conditions.
 			if ( ! empty( $where_clauses ) && ! empty( $where_values ) ) {
 				$base_query .= ' WHERE ' . implode( ' AND ', array_map( 'esc_sql', $where_clauses ) );
-				$base_query .= sprintf( 
+				$base_query .= sprintf(
 					' ORDER BY %s %s LIMIT %d OFFSET %d',
 					esc_sql( $orderby ),
 					esc_sql( $order ),
 					absint( $per_page ),
 					absint( $offset )
 				);
-				$query = $wpdb->prepare( $base_query, ...$where_values );
+				$query       = $wpdb->prepare( $base_query, ...$where_values );
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
 				$this->items = $wpdb->get_results( $query, ARRAY_A );
 			} else {
-				$base_query .= sprintf( 
+				$base_query .= sprintf(
 					' ORDER BY %s %s LIMIT %d OFFSET %d',
 					esc_sql( $orderby ),
 					esc_sql( $order ),
@@ -255,7 +255,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
 				$this->items = $wpdb->get_results( $base_query, ARRAY_A );
 			}
-			
+
 			wp_cache_set( $cache_key, $this->items, 'qr_trackr', 300 ); // Cache for 5 minutes.
 		}
 
@@ -276,7 +276,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 			if ( ! empty( $selected_ids ) ) {
 				$placeholders = implode( ',', array_fill( 0, count( $selected_ids ), '%d' ) );
-				$query = $wpdb->prepare(
+				$query        = $wpdb->prepare(
 					"DELETE FROM {$wpdb->prefix}qr_trackr_links WHERE id IN ($placeholders)",
 					...$selected_ids
 				);
@@ -725,5 +725,108 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	 */
 	protected function get_table_classes() {
 		return array( 'widefat', 'fixed', 'striped', 'qr-trackr-list-table' );
+	}
+
+	/**
+	 * Get the SQL for the totals.
+	 *
+	 * @since 1.0.0
+	 * @param string $where Where clause for the query.
+	 * @return string
+	 */
+	private function get_totals_sql( $where ) {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'qr_trackr_links';
+		$sql = $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table );
+
+		if ( ! empty( $where ) ) {
+			$sql .= ' WHERE ' . $where;
+		}
+
+		return $sql;
+	}
+
+	/**
+	 * Get the SQL for the records.
+	 *
+	 * @since 1.0.0
+	 * @param string $where Where clause for the query.
+	 * @param string $orderby Order by clause.
+	 * @param string $order Order direction.
+	 * @param int    $per_page Number of items per page.
+	 * @param int    $page_number Current page number.
+	 * @return string
+	 */
+	private function get_records_sql( $where, $orderby = '', $order = '', $per_page = 20, $page_number = 1 ) {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'qr_trackr_links';
+		$sql = $wpdb->prepare( 'SELECT * FROM %i', $table );
+
+		if ( ! empty( $where ) ) {
+			$sql .= ' WHERE ' . $where;
+		}
+
+		if ( ! empty( $orderby ) && ! empty( $order ) ) {
+			$sql .= $wpdb->prepare( ' ORDER BY %s %s', $orderby, $order );
+		}
+
+		$sql .= $wpdb->prepare( ' LIMIT %d OFFSET %d', $per_page, ( $page_number - 1 ) * $per_page );
+
+		return $sql;
+	}
+
+	/**
+	 * Delete links by IDs.
+	 *
+	 * @since 1.0.0
+	 * @param array $ids Array of link IDs to delete.
+	 * @return int|false The number of rows deleted, or false on error.
+	 */
+	public function delete_links( $ids ) {
+		global $wpdb;
+
+		if ( empty( $ids ) ) {
+			return false;
+		}
+
+		// Ensure all IDs are integers.
+		$ids = array_map( 'absint', $ids );
+
+		// Create placeholders for the number of IDs.
+		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+		$table = $wpdb->prefix . 'qr_trackr_links';
+
+		// Prepare and execute the delete query.
+		$sql = $wpdb->prepare(
+			'DELETE FROM %i WHERE id IN (' . $placeholders . ')',
+			array_merge( array( $table ), $ids )
+		);
+
+		return $wpdb->query( $sql );
+	}
+
+	/**
+	 * Returns the count of records in the database.
+	 *
+	 * @since 1.0.0
+	 * @param string $search Search term for filtering.
+	 * @return int
+	 */
+	public function record_count( $search = '' ) {
+		global $wpdb;
+
+		$where = '';
+		if ( ! empty( $search ) ) {
+			$where = $wpdb->prepare(
+				'url LIKE %s OR title LIKE %s',
+				'%' . $wpdb->esc_like( $search ) . '%',
+				'%' . $wpdb->esc_like( $search ) . '%'
+			);
+		}
+
+		$sql = $this->get_totals_sql( $where );
+		return absint( $wpdb->get_var( $sql ) );
 	}
 }

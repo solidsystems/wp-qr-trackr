@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2024-03-21
+
+### Fixed
+- Improved SQL query preparation in list table and utils modules
+- Fixed duplicate record_count method in list table
+- Removed unnecessary PHPCS ignore comments
+- Enhanced table name handling in SQL queries
+- Standardized SQL query formatting
+
 ## [1.1.3] - 2024-03-21
 
 ### Security
