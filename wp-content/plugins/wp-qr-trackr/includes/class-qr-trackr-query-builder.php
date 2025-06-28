@@ -123,8 +123,8 @@ class QR_Trackr_Query_Builder {
 
 		// Validate and sanitize order parameters.
 		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
-		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
-		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+		$orderby       = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+		$order         = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
 
 		// Build the base query.
 		$sql = sprintf(
@@ -201,14 +201,12 @@ class QR_Trackr_Query_Builder {
 	public static function get_items_by_ids_sql( $ids ) {
 		global $wpdb;
 
-		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-		return $wpdb->prepare(
-			sprintf(
-				'SELECT * FROM %sqr_trackr_links WHERE id IN (%s)',
-				$wpdb->prefix,
-				$placeholders
-			),
-			...$ids
+		$placeholders = array_fill( 0, count( $ids ), '%d' );
+		$sql = sprintf(
+			'SELECT * FROM %sqr_trackr_links WHERE id IN (' . implode( ',', $placeholders ) . ')',
+			$wpdb->prefix
 		);
+
+		return $wpdb->prepare( $sql, ...$ids );
 	}
 }

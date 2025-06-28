@@ -78,9 +78,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		}
 
 		// Set up filters with proper validation.
-		$this->post_type_filter = isset( $_REQUEST['filter_post_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['filter_post_type'] ) ) : '';
+		$this->post_type_filter   = isset( $_REQUEST['filter_post_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['filter_post_type'] ) ) : '';
 		$this->destination_filter = isset( $_REQUEST['filter_destination'] ) ? esc_url_raw( wp_unslash( $_REQUEST['filter_destination'] ) ) : '';
-		$this->scans_filter = isset( $_REQUEST['filter_scans'] ) ? absint( $_REQUEST['filter_scans'] ) : null;
+		$this->scans_filter       = isset( $_REQUEST['filter_scans'] ) ? absint( $_REQUEST['filter_scans'] ) : null;
 
 		// Initialize inline edit property.
 		$this->inline_edit = false;
@@ -207,33 +207,33 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 
 		// Get and validate pagination parameters.
-		$per_page = $this->get_items_per_page( 'qr_trackr_per_page', 20 );
+		$per_page     = $this->get_items_per_page( 'qr_trackr_per_page', 20 );
 		$current_page = $this->get_pagenum();
 
 		// Build WHERE clause with proper escaping.
 		$where_clauses = array( '1=1' ); // Always true base condition.
-		$where_values = array();
+		$where_values  = array();
 
 		if ( ! empty( $search ) ) {
 			$where_clauses[] = '(destination_url LIKE %s OR title LIKE %s)';
-			$search_pattern = '%' . $wpdb->esc_like( $search ) . '%';
-			$where_values[] = $search_pattern;
-			$where_values[] = $search_pattern;
+			$search_pattern  = '%' . $wpdb->esc_like( $search ) . '%';
+			$where_values[]  = $search_pattern;
+			$where_values[]  = $search_pattern;
 		}
 
 		if ( ! empty( $this->post_type_filter ) ) {
 			$where_clauses[] = 'post_type = %s';
-			$where_values[] = $this->post_type_filter;
+			$where_values[]  = $this->post_type_filter;
 		}
 
 		if ( ! empty( $this->destination_filter ) ) {
 			$where_clauses[] = 'destination_url LIKE %s';
-			$where_values[] = '%' . $wpdb->esc_like( $this->destination_filter ) . '%';
+			$where_values[]  = '%' . $wpdb->esc_like( $this->destination_filter ) . '%';
 		}
 
 		if ( ! empty( $this->scans_filter ) ) {
 			$where_clauses[] = 'scans >= %d';
-			$where_values[] = absint( $this->scans_filter );
+			$where_values[]  = absint( $this->scans_filter );
 		}
 
 		// Build the complete WHERE clause.
@@ -241,12 +241,12 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 		// Get order parameters and sanitize them.
 		$orderby = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'id';
-		$order = isset( $_REQUEST['order'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
+		$order   = isset( $_REQUEST['order'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
 
 		// Ensure valid order values.
-		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+		$order         = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
 		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
-		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+		$orderby       = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
 
 		// Get total items count.
 		$total_items = $this->get_total_items( $where, $where_values );
@@ -278,18 +278,18 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	public function get_links( $search = '', $orderby = 'id', $order = 'DESC', $per_page = 20, $page_number = 1 ) {
 		global $wpdb;
 
-		$where = '';
+		$where        = '';
 		$where_values = array();
 
 		if ( ! empty( $search ) ) {
-			$where = 'url LIKE %s OR title LIKE %s';
-			$search_like = '%' . $wpdb->esc_like( $search ) . '%';
+			$where        = 'url LIKE %s OR title LIKE %s';
+			$search_like  = '%' . $wpdb->esc_like( $search ) . '%';
 			$where_values = array( $search_like, $search_like );
 		}
 
-		$offset = ( $page_number - 1 ) * $per_page;
+		$offset    = ( $page_number - 1 ) * $per_page;
 		$cache_key = 'qr_trackr_links_' . md5( $search . $orderby . $order . $per_page . $page_number );
-		$results = wp_cache_get( $cache_key );
+		$results   = wp_cache_get( $cache_key );
 
 		if ( false === $results ) {
 			$sql = QR_Trackr_Query_Builder::get_items_with_where_sql( $where, $where_values, $orderby, $order, $per_page, $offset );
@@ -317,7 +317,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct delete needed for admin action.
 		$table_name = $this->get_table_name();
-		$result = $wpdb->delete(
+		$result     = $wpdb->delete(
 			$table_name,
 			array( 'id' => $id ),
 			array( '%d' )
@@ -342,15 +342,15 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		global $wpdb;
 
 		$cache_key = 'qr_trackr_record_count_' . md5( $search );
-		$count = wp_cache_get( $cache_key );
+		$count     = wp_cache_get( $cache_key );
 
 		if ( false === $count ) {
-			$where = '';
+			$where        = '';
 			$where_values = array();
 
 			if ( ! empty( $search ) ) {
-				$where = 'url LIKE %s OR title LIKE %s';
-				$search_like = '%' . $wpdb->esc_like( $search ) . '%';
+				$where        = 'url LIKE %s OR title LIKE %s';
+				$search_like  = '%' . $wpdb->esc_like( $search ) . '%';
 				$where_values = array( $search_like, $search_like );
 			}
 
@@ -446,7 +446,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 					return '<div class="error"><p>' . esc_html__( 'Failed to generate QR code URLs.', 'wp-qr-trackr' ) . '</p></div>';
 				}
 
-				$html = '<div class="qr-code-preview">';
+				$html  = '<div class="qr-code-preview">';
 				$html .= sprintf(
 					'<img src="%s" alt="%s" style="width:100px; height:100px;" />',
 					esc_url( $qr_urls['png'] ),
@@ -486,7 +486,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 				);
 
 				// Delete action with nonce.
-				$delete_nonce = wp_create_nonce( 'delete_qr_code_' . absint( $item['id'] ) );
+				$delete_nonce      = wp_create_nonce( 'delete_qr_code_' . absint( $item['id'] ) );
 				$actions['delete'] = sprintf(
 					'<a href="#" class="delete-qr-code" data-id="%d" data-nonce="%s">%s</a>',
 					absint( $item['id'] ),
@@ -495,7 +495,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 				);
 
 				// Regenerate action with nonce.
-				$regenerate_nonce = wp_create_nonce( 'regenerate_qr_code_' . absint( $item['id'] ) );
+				$regenerate_nonce      = wp_create_nonce( 'regenerate_qr_code_' . absint( $item['id'] ) );
 				$actions['regenerate'] = sprintf(
 					'<a href="#" class="regenerate-qr-code" data-id="%d" data-nonce="%s">%s</a>',
 					absint( $item['id'] ),
@@ -666,11 +666,11 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 		// Localize script data.
 		$localized_data = array(
-			'ajaxurl'      => admin_url( 'admin-ajax.php' ),
-			'nonce'        => wp_create_nonce( 'qr_trackr_nonce' ),
-			'deleteText'   => __( 'Are you sure you want to delete this QR code?', 'wp-qr-trackr' ),
-			'errorText'    => __( 'An error occurred. Please try again.', 'wp-qr-trackr' ),
-			'successText'  => __( 'QR code deleted successfully.', 'wp-qr-trackr' ),
+			'ajaxurl'     => admin_url( 'admin-ajax.php' ),
+			'nonce'       => wp_create_nonce( 'qr_trackr_nonce' ),
+			'deleteText'  => __( 'Are you sure you want to delete this QR code?', 'wp-qr-trackr' ),
+			'errorText'   => __( 'An error occurred. Please try again.', 'wp-qr-trackr' ),
+			'successText' => __( 'QR code deleted successfully.', 'wp-qr-trackr' ),
 			'loadingText' => __( 'Loading...', 'wp-qr-trackr' ),
 		);
 
@@ -771,7 +771,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		}
 
 		$action = sanitize_key( $action );
-		$nonce = sanitize_key( $nonce );
+		$nonce  = sanitize_key( $nonce );
 
 		return wp_verify_nonce( $nonce, $action );
 	}
@@ -804,7 +804,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		);
 
 		// Delete action with nonce.
-		$delete_nonce = wp_create_nonce( 'delete_qr_code_' . absint( $item['id'] ) );
+		$delete_nonce      = wp_create_nonce( 'delete_qr_code_' . absint( $item['id'] ) );
 		$actions['delete'] = sprintf(
 			'<a href="#" class="delete-qr-code" data-id="%d" data-nonce="%s">%s</a>',
 			absint( $item['id'] ),
@@ -813,7 +813,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		);
 
 		// Regenerate action with nonce.
-		$regenerate_nonce = wp_create_nonce( 'regenerate_qr_code_' . absint( $item['id'] ) );
+		$regenerate_nonce      = wp_create_nonce( 'regenerate_qr_code_' . absint( $item['id'] ) );
 		$actions['regenerate'] = sprintf(
 			'<a href="#" class="regenerate-qr-code" data-id="%d" data-nonce="%s">%s</a>',
 			absint( $item['id'] ),
@@ -843,7 +843,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		global $wpdb;
 
 		$cache_key = 'qr_trackr_link_by_post_id_' . absint( $post_id );
-		$result = wp_cache_get( $cache_key );
+		$result    = wp_cache_get( $cache_key );
 
 		if ( false === $result ) {
 			$sql = QR_Trackr_Query_Builder::get_items_by_post_id_sql( $post_id );
@@ -867,7 +867,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		}
 
 		$actions = array(
-			'delete' => esc_html__( 'Delete', 'wp-qr-trackr' ),
+			'delete'     => esc_html__( 'Delete', 'wp-qr-trackr' ),
 			'regenerate' => esc_html__( 'Regenerate QR Code', 'wp-qr-trackr' ),
 		);
 
@@ -891,7 +891,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	public function get_qr_links( $per_page = 10, $page_number = 1 ) {
 		global $wpdb;
 
-		$per_page = absint( $per_page );
+		$per_page    = absint( $per_page );
 		$page_number = absint( $page_number );
 
 		if ( empty( $per_page ) || empty( $page_number ) ) {
@@ -899,12 +899,12 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		}
 
 		$cache_key = 'qr_trackr_links_page_' . $page_number . '_' . $per_page;
-		$results = wp_cache_get( $cache_key );
+		$results   = wp_cache_get( $cache_key );
 
 		if ( false === $results ) {
 			$table = $wpdb->prefix . 'qr_trackr_links';
 			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is hardcoded
-			$sql = "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d OFFSET %d";
+			$sql    = "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d OFFSET %d";
 			$offset = ( $page_number - 1 ) * $per_page;
 
 			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is prepared with $per_page and $offset
@@ -931,7 +931,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	 * @return array Array of CSS classes.
 	 */
 	protected function get_table_classes() {
-		$classes = parent::get_table_classes();
+		$classes   = parent::get_table_classes();
 		$classes[] = 'qr-trackr-list-table';
 		$classes[] = 'widefat';
 		$classes[] = 'fixed';
@@ -984,8 +984,8 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 		// Validate and sanitize order parameters.
 		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
-		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
-		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+		$orderby       = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+		$order         = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
 
 		$offset = ( $page_number - 1 ) * $per_page;
 
@@ -1070,15 +1070,13 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_items_by_ids_sql( $ids ) {
 		global $wpdb;
 
-		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-		return $wpdb->prepare(
-			sprintf(
-				'SELECT * FROM %sqr_trackr_links WHERE id IN (%s)',
-				$wpdb->prefix,
-				$placeholders
-			),
-			...$ids
+		$placeholders = array_fill( 0, count( $ids ), '%d' );
+		$sql = sprintf(
+			'SELECT * FROM %sqr_trackr_links WHERE id IN (' . implode( ',', $placeholders ) . ')',
+			$wpdb->prefix
 		);
+
+		return $wpdb->prepare( $sql, ...$ids );
 	}
 
 	/**
@@ -1108,7 +1106,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct delete needed for admin action.
 		$table_name = $this->get_table_name();
-		$sql = $wpdb->prepare(
+		$sql        = $wpdb->prepare(
 			"DELETE FROM {$table_name} WHERE id IN ($placeholders)", // phpcs:ignore WordPress.DB -- Table name is properly prefixed.
 			$ids
 		);
@@ -1149,7 +1147,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
 		$table_name = $this->get_table_name();
-		$sql = $wpdb->prepare(
+		$sql        = $wpdb->prepare(
 			"SELECT COUNT(*) FROM {$table_name} WHERE $where", // phpcs:ignore WordPress.DB -- Table name is properly prefixed.
 			$where_values
 		);
@@ -1175,9 +1173,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		$offset = ( $current_page - 1 ) * $per_page;
 
 		// Ensure valid order values.
-		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+		$order         = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
 		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
-		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+		$orderby       = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
 
 		// Build the base query.
 		$sql = $wpdb->prepare(
@@ -1206,137 +1204,66 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	 * Get the SQL query for fetching items by search term.
 	 *
 	 * @param string $search Search term.
-	 * @return array Array of items.
+	 * @return string SQL query.
 	 */
-	private function get_items_by_search( $search ) {
+	private function get_items_by_search_sql( $search ) {
 		global $wpdb;
 
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE url LIKE %s OR title LIKE %s",
-				'%' . $wpdb->esc_like( $search ) . '%',
-				'%' . $wpdb->esc_like( $search ) . '%'
+		$search_like = '%' . $wpdb->esc_like( $search ) . '%';
+		return $wpdb->prepare(
+			sprintf(
+				'SELECT * FROM %sqr_trackr_links WHERE url LIKE %%s OR title LIKE %%s',
+				$wpdb->prefix
 			),
-			ARRAY_A
+			$search_like,
+			$search_like
 		);
 	}
 
 	/**
 	 * Get the SQL query for fetching items by date range.
 	 *
-	 * @param string $start_date Start date.
-	 * @param string $end_date End date.
-	 * @return array Array of items.
+	 * @param string $start_date Start date in Y-m-d format.
+	 * @param string $end_date End date in Y-m-d format.
+	 * @return string SQL query.
 	 */
-	private function get_items_by_date_range( $start_date, $end_date ) {
+	private function get_items_by_date_range_sql( $start_date, $end_date ) {
 		global $wpdb;
 
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE created_at BETWEEN %s AND %s",
-				$start_date,
-				$end_date
+		return $wpdb->prepare(
+			sprintf(
+				'SELECT * FROM %sqr_trackr_links WHERE DATE(created_at) BETWEEN %%s AND %%s',
+				$wpdb->prefix
 			),
-			ARRAY_A
-		);
-	}
-
-	/**
-	 * Get the SQL query for fetching items by status.
-	 *
-	 * @param string $status Status.
-	 * @return array Array of items.
-	 */
-	private function get_items_by_status( $status ) {
-		global $wpdb;
-
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE status = %s",
-				$status
-			),
-			ARRAY_A
-		);
-	}
-
-	/**
-	 * Get the SQL query for fetching items by category.
-	 *
-	 * @param string $category Category.
-	 * @return array Array of items.
-	 */
-	private function get_items_by_category( $category ) {
-		global $wpdb;
-
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE category = %s",
-				$category
-			),
-			ARRAY_A
-		);
-	}
-
-	/**
-	 * Get the SQL query for fetching items by tag.
-	 *
-	 * @param string $tag Tag.
-	 * @return array Array of items.
-	 */
-	private function get_items_by_tag( $tag ) {
-		global $wpdb;
-
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE FIND_IN_SET(%s, tags)",
-				$tag
-			),
-			ARRAY_A
-		);
-	}
-
-	/**
-	 * Get the SQL query for fetching items by author.
-	 *
-	 * @param int $author_id Author ID.
-	 * @return array Array of items.
-	 */
-	private function get_items_by_author( $author_id ) {
-		global $wpdb;
-
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE author_id = %d",
-				absint( $author_id )
-			),
-			ARRAY_A
+			$start_date,
+			$end_date
 		);
 	}
 
 	/**
 	 * Get the SQL query for fetching items by scan count range.
 	 *
-	 * @param int $min_scans Minimum scans.
-	 * @param int $max_scans Maximum scans.
-	 * @return array Array of items.
+	 * @param int $min_scans Minimum number of scans.
+	 * @param int $max_scans Maximum number of scans.
+	 * @return string SQL query.
 	 */
-	private function get_items_by_scan_count_range( $min_scans, $max_scans ) {
+	private function get_items_by_scan_count_range_sql( $min_scans, $max_scans ) {
 		global $wpdb;
 
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT l.*, COALESCE(s.total_scans, 0) as scans
-				FROM {$wpdb->prefix}qr_trackr_links l
+		return $wpdb->prepare(
+			sprintf(
+				'SELECT l.*, COALESCE(s.total_scans, 0) as scans
+				FROM %1$sqr_trackr_links l
 				LEFT JOIN (
 					SELECT link_id, COUNT(*) as total_scans
-					FROM {$wpdb->prefix}qr_trackr_stats
+					FROM %1$sqr_trackr_stats
 					GROUP BY link_id
 				) s ON l.id = s.link_id
-				HAVING scans BETWEEN %d AND %d",
-				absint( $min_scans ),
-				absint( $max_scans )
+				HAVING scans BETWEEN %%d AND %%d',
+				$wpdb->prefix
 			),
-			ARRAY_A
+			$min_scans,
+			$max_scans
 		);
 	}
 
@@ -1350,7 +1277,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		global $wpdb;
 
 		$cache_key = 'qr_trackr_links_by_ids_' . md5( implode( ',', $ids ) );
-		$results = wp_cache_get( $cache_key );
+		$results   = wp_cache_get( $cache_key );
 
 		if ( false === $results ) {
 			$sql = QR_Trackr_Query_Builder::get_items_by_ids_sql( $ids );
