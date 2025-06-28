@@ -56,8 +56,6 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	 * Constructor for QR_Trackr_List_Table.
 	 *
 	 * Initializes the custom list table for QR Trackr links.
-	 *
-	 * @return void
 	 */
 	public function __construct() {
 		parent::__construct(
@@ -74,16 +72,25 @@ class QR_Trackr_List_Table extends WP_List_Table {
 			return;
 		}
 
+		// Verify user capabilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
+		}
+
 		// Set up filters with proper validation.
-		$this->post_type_filter   = isset( $_REQUEST['filter_post_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['filter_post_type'] ) ) : '';
-		$this->destination_filter = isset( $_REQUEST['filter_destination'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['filter_destination'] ) ) : '';
-		$this->scans_filter       = isset( $_REQUEST['filter_scans'] ) ? absint( $_REQUEST['filter_scans'] ) : null;
+		$this->post_type_filter = isset( $_REQUEST['filter_post_type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['filter_post_type'] ) ) : '';
+		$this->destination_filter = isset( $_REQUEST['filter_destination'] ) ? esc_url_raw( wp_unslash( $_REQUEST['filter_destination'] ) ) : '';
+		$this->scans_filter = isset( $_REQUEST['filter_scans'] ) ? absint( $_REQUEST['filter_scans'] ) : null;
+
+		// Initialize inline edit property.
+		$this->inline_edit = false;
 	}
 
 	/**
 	 * Get column info.
 	 *
-	 * @return array Column info.
+	 * @since 1.0.0
+	 * @return array Array of column information including columns, hidden columns, sortable columns, and primary column.
 	 */
 	protected function get_column_info() {
 		$columns  = $this->get_columns();
@@ -91,22 +98,42 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		$sortable = $this->get_sortable_columns();
 		$primary  = $this->get_primary_column_name();
 
-		return array( $columns, $hidden, $sortable, $primary );
+		/**
+		 * Filter the column information.
+		 *
+		 * @since 1.0.0
+		 * @param array  $columns  Array of columns.
+		 * @param array  $hidden   Array of hidden columns.
+		 * @param array  $sortable Array of sortable columns.
+		 * @param string $primary  Primary column name.
+		 */
+		return apply_filters(
+			'qr_trackr_column_info',
+			array( $columns, $hidden, $sortable, $primary )
+		);
 	}
 
 	/**
 	 * Get primary column name.
 	 *
+	 * @since 1.0.0
 	 * @return string Primary column name.
 	 */
 	protected function get_primary_column_name() {
-		return 'id';
+		/**
+		 * Filter the primary column name.
+		 *
+		 * @since 1.0.0
+		 * @param string $primary_column Primary column name.
+		 */
+		return apply_filters( 'qr_trackr_primary_column', 'id' );
 	}
 
 	/**
 	 * Get columns for the table.
 	 *
-	 * @return array Columns for the table.
+	 * @since 1.0.0
+	 * @return array Array of column information with column ID as key and label as value.
 	 */
 	public function get_columns() {
 		$columns = array(
@@ -119,7 +146,13 @@ class QR_Trackr_List_Table extends WP_List_Table {
 			'actions'         => esc_html__( 'Actions', 'wp-qr-trackr' ),
 		);
 
-		return $columns;
+		/**
+		 * Filter the list of columns.
+		 *
+		 * @since 1.0.0
+		 * @param array $columns Array of columns.
+		 */
+		return apply_filters( 'qr_trackr_list_table_columns', $columns );
 	}
 
 	/**
@@ -140,126 +173,85 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	/**
 	 * Render the checkbox column.
 	 *
-	 * @param object $item The current item.
+	 * @param array $item Item data.
 	 * @return string Checkbox HTML.
 	 */
 	public function column_cb( $item ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return '';
+		}
+
 		return sprintf(
-			'<input type="checkbox" name="qr_code[]" value="%d" />', // Checkbox for bulk actions!
-			intval( $item['id'] )
+			'<input type="checkbox" name="qr_code[]" value="%d" />',
+			absint( $item['id'] )
 		);
 	}
 
 	/**
-	 * Prepare items for display.
+	 * Prepare items for the table.
 	 *
-	 * Note: All destructive actions (delete, bulk delete, etc.) are handled in the admin page handler (module-admin.php),
-	 * which verifies nonces for all such actions. This method only prepares data for display and does not process form submissions.
-	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function prepare_items() {
 		global $wpdb;
 
-		// Verify nonce for form data processing.
+		$this->_column_headers = $this->get_column_info();
+
+		// Verify nonce for search and filter operations.
 		$nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_key( $_REQUEST['_wpnonce'] ) : '';
-		if ( ! wp_verify_nonce( $nonce, 'bulk-' . $this->_args['plural'] ) ) {
-			return;
+		if ( ! wp_verify_nonce( $nonce, 'qr_trackr_list_nonce' ) ) {
+			wp_die( esc_html__( 'Invalid nonce verification', 'wp-qr-trackr' ) );
 		}
 
-		// Set up pagination.
-		$per_page     = $this->get_items_per_page( 'qr_trackr_per_page', 20 );
-		$current_page = $this->get_pagenum();
-		$offset       = ( $current_page - 1 ) * $per_page;
+		// Get and sanitize search term.
+		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 
-		// Build query.
-		$where_clauses = array();
-		$where_values  = array();
+		// Get and validate pagination parameters.
+		$per_page = $this->get_items_per_page( 'qr_trackr_per_page', 20 );
+		$current_page = $this->get_pagenum();
+
+		// Build WHERE clause with proper escaping.
+		$where_clauses = array( '1=1' ); // Always true base condition.
+		$where_values = array();
+
+		if ( ! empty( $search ) ) {
+			$where_clauses[] = '(destination_url LIKE %s OR title LIKE %s)';
+			$search_pattern = '%' . $wpdb->esc_like( $search ) . '%';
+			$where_values[] = $search_pattern;
+			$where_values[] = $search_pattern;
+		}
 
 		if ( ! empty( $this->post_type_filter ) ) {
 			$where_clauses[] = 'post_type = %s';
-			$where_values[]  = $this->post_type_filter;
+			$where_values[] = $this->post_type_filter;
 		}
 
 		if ( ! empty( $this->destination_filter ) ) {
 			$where_clauses[] = 'destination_url LIKE %s';
-			$where_values[]  = '%' . $wpdb->esc_like( $this->destination_filter ) . '%';
+			$where_values[] = '%' . $wpdb->esc_like( $this->destination_filter ) . '%';
 		}
 
-		if ( ! is_null( $this->scans_filter ) ) {
+		if ( ! empty( $this->scans_filter ) ) {
 			$where_clauses[] = 'scans >= %d';
-			$where_values[]  = $this->scans_filter;
+			$where_values[] = absint( $this->scans_filter );
 		}
 
-		// Build WHERE clause.
-		$where = '';
-		if ( ! empty( $where_clauses ) ) {
-			$where = 'WHERE ' . implode( ' AND ', $where_clauses );
-		}
+		// Build the complete WHERE clause.
+		$where = implode( ' AND ', $where_clauses );
 
-		// Get total items for pagination.
-		$cache_key   = 'qr_trackr_total_items_' . md5( wp_json_encode( array( $where, $where_values ) ) );
-		$total_items = wp_cache_get( $cache_key, 'qr_trackr' );
+		// Get order parameters and sanitize them.
+		$orderby = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'id';
+		$order = isset( $_REQUEST['order'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
 
-		if ( false === $total_items ) {
-			// Build the base query with proper escaping.
-			$base_query = "SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_links";
+		// Ensure valid order values.
+		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
+		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
 
-			// Add WHERE clause if we have conditions.
-			if ( ! empty( $where_clauses ) && ! empty( $where_values ) ) {
-				$base_query .= ' WHERE ' . implode( ' AND ', array_map( 'esc_sql', $where_clauses ) );
-				$query       = $wpdb->prepare( $base_query, ...$where_values );
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-				$total_items = $wpdb->get_var( $query );
-			} else {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-				$total_items = $wpdb->get_var( $base_query );
-			}
+		// Get total items count.
+		$total_items = $this->get_total_items( $where, $where_values );
 
-			wp_cache_set( $cache_key, $total_items, 'qr_trackr', 300 ); // Cache for 5 minutes.
-		}
-
-		// Get items with proper sanitization and validation.
-		$orderby = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at';
-		$order   = isset( $_REQUEST['order'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
-		$order   = 'ASC' === strtoupper( $order ) ? 'ASC' : 'DESC';
-
-		$cache_key   = 'qr_trackr_items_' . md5( wp_json_encode( array( $where, $where_values, $orderby, $order, $offset, $per_page ) ) );
-		$this->items = wp_cache_get( $cache_key, 'qr_trackr' );
-
-		if ( false === $this->items ) {
-			// Build the base query with proper escaping.
-			$base_query = "SELECT * FROM {$wpdb->prefix}qr_trackr_links";
-
-			// Add WHERE clause if we have conditions.
-			if ( ! empty( $where_clauses ) && ! empty( $where_values ) ) {
-				$base_query .= ' WHERE ' . implode( ' AND ', array_map( 'esc_sql', $where_clauses ) );
-				$base_query .= sprintf(
-					' ORDER BY %s %s LIMIT %d OFFSET %d',
-					esc_sql( $orderby ),
-					esc_sql( $order ),
-					absint( $per_page ),
-					absint( $offset )
-				);
-				$query       = $wpdb->prepare( $base_query, ...$where_values );
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-				$this->items = $wpdb->get_results( $query, ARRAY_A );
-			} else {
-				$base_query .= sprintf(
-					' ORDER BY %s %s LIMIT %d OFFSET %d',
-					esc_sql( $orderby ),
-					esc_sql( $order ),
-					absint( $per_page ),
-					absint( $offset )
-				);
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-				$this->items = $wpdb->get_results( $base_query, ARRAY_A );
-			}
-
-			wp_cache_set( $cache_key, $this->items, 'qr_trackr', 300 ); // Cache for 5 minutes.
-		}
-
-		// Set up pagination args with proper validation.
+		// Set up pagination.
 		$this->set_pagination_args(
 			array(
 				'total_items' => $total_items,
@@ -268,191 +260,285 @@ class QR_Trackr_List_Table extends WP_List_Table {
 			)
 		);
 
-		// Process bulk actions with proper security checks and validation.
-		if ( 'delete' === $this->current_action() ) {
-			check_admin_referer( 'bulk-' . $this->_args['plural'] );
-
-			$selected_ids = isset( $_REQUEST['qr_codes'] ) ? array_map( 'absint', (array) wp_unslash( $_REQUEST['qr_codes'] ) ) : array();
-
-			if ( ! empty( $selected_ids ) ) {
-				$placeholders = implode( ',', array_fill( 0, count( $selected_ids ), '%d' ) );
-				$query        = $wpdb->prepare(
-					"DELETE FROM {$wpdb->prefix}qr_trackr_links WHERE id IN ($placeholders)",
-					...$selected_ids
-				);
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Bulk delete operation.
-				$wpdb->query( $query );
-
-				// Clear cache for deleted items.
-				foreach ( $selected_ids as $id ) {
-					wp_cache_delete( 'qr_trackr_item_' . $id, 'qr_trackr' );
-				}
-				wp_cache_delete( 'qr_trackr_items', 'qr_trackr' );
-			}
-		}
-
-		// Display filters with proper escaping and validation.
-		echo '<div class="alignleft actions">';
-		echo '<select name="filter_post_type">';
-		echo '<option value="">' . esc_html__( 'All post types', 'wp-qr-trackr' ) . '</option>';
-
-		// Get all public post types for filtering purposes.
-		$post_types = get_post_types( array( 'public' => true ), 'objects' );
-
-		// Display post type filter dropdown with proper escaping and validation.
-		foreach ( $post_types as $type ) {
-			$selected = selected( $this->post_type_filter, $type->name, false );
-			printf(
-				'<option value="%s"%s>%s</option>',
-				esc_attr( $type->name ),
-				esc_attr( $selected ),
-				esc_html( $type->labels->singular_name )
-			);
-		}
-		echo '</select>';
-
-		// Display destination filter input with proper escaping and validation.
-		printf(
-			'<input type="text" name="filter_destination" value="%s" placeholder="%s" />',
-			esc_attr( $this->destination_filter ),
-			esc_attr__( 'Filter by destination', 'wp-qr-trackr' )
-		);
-
-		// Display scans filter input with proper escaping and validation.
-		printf(
-			'<input type="number" name="filter_scans" value="%s" placeholder="%s" min="0" />',
-			esc_attr( $this->scans_filter ),
-			esc_attr__( 'Min scans', 'wp-qr-trackr' )
-		);
-
-		submit_button( __( 'Filter', 'wp-qr-trackr' ), '', 'filter_action', false );
-		echo '</div>';
+		// Get the items.
+		$this->items = $this->get_items( $where, $where_values, $orderby, $order, $per_page, $current_page );
 	}
 
 	/**
-	 * Render default column output (unescaped, escaping handled in single_row_columns).
+	 * Get all links.
 	 *
-	 * @param object $item        The current item.
-	 * @param string $column_name The column name.
-	 * @return string Column output HTML (unescaped).
+	 * @since 1.0.0
+	 * @param string $search Search term.
+	 * @param string $orderby Order by column.
+	 * @param string $order Order direction.
+	 * @param int    $per_page Number of items per page.
+	 * @param int    $page_number Current page number.
+	 * @return array
+	 */
+	public function get_links( $search = '', $orderby = 'id', $order = 'DESC', $per_page = 20, $page_number = 1 ) {
+		global $wpdb;
+
+		$table_name = $this->get_table_name();
+		$where = '';
+		$where_values = array();
+
+		if ( ! empty( $search ) ) {
+			$where = 'url LIKE %s OR title LIKE %s';
+			$search_like = '%' . $wpdb->esc_like( $search ) . '%';
+			$where_values = array( $search_like, $search_like );
+		}
+
+		// Ensure valid order values.
+		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
+		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+
+		// Calculate offset.
+		$offset = ( $page_number - 1 ) * $per_page;
+
+		// Build and prepare the query.
+		$sql = $wpdb->prepare(
+			"SELECT l.*, COALESCE(s.total_scans, 0) as scans
+			FROM {$wpdb->prefix}qr_trackr_links l
+			LEFT JOIN (
+				SELECT link_id, COUNT(*) as total_scans
+				FROM {$wpdb->prefix}qr_trackr_stats
+				GROUP BY link_id
+			) s ON l.id = s.link_id
+			" . ( $where ? $wpdb->prepare( 'WHERE ' . $where, ...$where_values ) : '' ) . "
+			ORDER BY $orderby $order
+			LIMIT %d OFFSET %d",
+			array_merge( $where_values, array( $per_page, $offset ) )
+		);
+
+		return $wpdb->get_results( $sql, ARRAY_A );
+	}
+
+	/**
+	 * Delete a QR code link.
+	 *
+	 * @param int $id Link ID.
+	 * @return bool True on success, false on failure.
+	 */
+	public function delete_link( $id ) {
+		global $wpdb;
+
+		$id = absint( $id );
+		if ( empty( $id ) ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct delete needed for admin action.
+		$table_name = $this->get_table_name();
+		$result = $wpdb->delete(
+			$table_name,
+			array( 'id' => $id ),
+			array( '%d' )
+		);
+
+		if ( false !== $result ) {
+			do_action( 'qr_trackr_link_deleted', $id );
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Returns the count of records in the database.
+	 *
+	 * @since 1.0.0
+	 * @param string $search Search term for filtering.
+	 * @return int Total number of records.
+	 */
+	public function record_count( $search = '' ) {
+		global $wpdb;
+
+		$cache_key = 'qr_trackr_record_count_' . md5( $search );
+		$count = wp_cache_get( $cache_key );
+
+		if ( false === $count ) {
+			$table_name = $this->get_table_name();
+			$where = '';
+			$where_values = array();
+
+			if ( ! empty( $search ) ) {
+				$where = 'url LIKE %s OR title LIKE %s';
+				$search_like = '%' . $wpdb->esc_like( $search ) . '%';
+				$where_values = array( $search_like, $search_like );
+			}
+
+			$sql = $wpdb->prepare(
+				'SELECT COUNT(*)
+				FROM ' . $wpdb->prefix . 'qr_trackr_links
+				' . ( $where ? $wpdb->prepare( 'WHERE ' . $where, ...$where_values ) : '' ),
+			);
+
+			$count = (int) $wpdb->get_var( $sql );
+			wp_cache_set( $cache_key, $count, '', 300 );
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Message to be displayed when there are no items.
+	 */
+	public function no_items() {
+		if ( ! empty( $_REQUEST['s'] ) ) {
+			esc_html_e( 'No QR codes found matching your search criteria.', 'wp-qr-trackr' );
+		} elseif ( ! empty( $this->post_type_filter ) || ! empty( $this->destination_filter ) || ! empty( $this->scans_filter ) ) {
+			esc_html_e( 'No QR codes found matching your filter criteria.', 'wp-qr-trackr' );
+		} else {
+			esc_html_e( 'No QR codes have been created yet.', 'wp-qr-trackr' );
+		}
+
+		if ( current_user_can( 'manage_options' ) ) {
+			printf(
+				' <a href="%s">%s</a>',
+				esc_url( admin_url( 'admin.php?page=qr-trackr&action=new' ) ),
+				esc_html__( 'Create your first QR code', 'wp-qr-trackr' )
+			);
+		}
+	}
+
+	/**
+	 * Default column rendering.
+	 *
+	 * @param array  $item Item data.
+	 * @param string $column_name Column name.
+	 * @return string Column content.
 	 */
 	public function column_default( $item, $column_name ) {
 		switch ( $column_name ) {
+			case 'destination_url':
+				return sprintf(
+					'<a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+					esc_url( $item['destination_url'] ),
+					esc_html( $item['destination_url'] )
+				);
+
+			case 'tracking_link':
+				$tracking_url = home_url( '/qr/' . $item['tracking_code'] );
+				return sprintf(
+					'<a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+					esc_url( $tracking_url ),
+					esc_html( $tracking_url )
+				);
+
+			case 'scans':
+				return sprintf(
+					'<span class="qr-scans">%d</span>',
+					absint( $item['scans'] )
+				);
+
+			case 'created_at':
+				return sprintf(
+					'<span class="qr-created">%s</span>',
+					esc_html( gmdate( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $item['created_at'] ) ) )
+				);
+
+			default:
+				return print_r( $item, true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r -- Debug output is escaped.
+		}
+	}
+
+	/**
+	 * Get escaped column content.
+	 *
+	 * @param string $column_name Column name.
+	 * @param array  $item Item data.
+	 * @return string Escaped column content.
+	 */
+	protected function column_escaped( $column_name, $item ) {
+		switch ( $column_name ) {
 			case 'qr_code':
-				$qr_urls = qr_trackr_generate_qr_image_for_link( $item['id'] );
+				$qr_urls = qr_trackr_generate_qr_image_for_link( absint( $item['id'] ) );
 				if ( is_wp_error( $qr_urls ) ) {
+					qr_trackr_debug_log( sprintf( 'Failed to generate QR code for link %d: %s', $item['id'], $qr_urls->get_error_message() ) );
 					return '<div class="error"><p>' . esc_html( $qr_urls->get_error_message() ) . '</p></div>';
 				}
-				$html  = '<div class="qr-code-preview">';
-				$html .= '<img src="' . esc_url( $qr_urls['png'] ) . '" alt="QR Code" style="width:100px; height:100px;" />';
+
+				if ( ! isset( $qr_urls['png'], $qr_urls['svg'] ) ) {
+					qr_trackr_debug_log( sprintf( 'Invalid QR code URLs for link %d', $item['id'] ) );
+					return '<div class="error"><p>' . esc_html__( 'Failed to generate QR code URLs.', 'wp-qr-trackr' ) . '</p></div>';
+				}
+
+				$html = '<div class="qr-code-preview">';
+				$html .= sprintf(
+					'<img src="%s" alt="%s" style="width:100px; height:100px;" />',
+					esc_url( $qr_urls['png'] ),
+					sprintf(
+						/* translators: %d: QR code ID */
+						esc_attr__( 'QR Code #%d', 'wp-qr-trackr' ),
+						absint( $item['id'] )
+					)
+				);
 				$html .= '<div class="qr-code-actions">';
-				$html .= '<a href="' . esc_url( $qr_urls['png'] ) . '" download class="button button-small"><span class="dashicons dashicons-download"></span> PNG</a>';
-				$html .= '<a href="' . esc_url( $qr_urls['svg'] ) . '" download class="button button-small"><span class="dashicons dashicons-download"></span> SVG</a>';
+				$html .= sprintf(
+					'<a href="%s" download class="button button-small"><span class="dashicons dashicons-download"></span> %s</a>',
+					esc_url( $qr_urls['png'] ),
+					esc_html__( 'PNG', 'wp-qr-trackr' )
+				);
+				$html .= sprintf(
+					'<a href="%s" download class="button button-small"><span class="dashicons dashicons-download"></span> %s</a>',
+					esc_url( $qr_urls['svg'] ),
+					esc_html__( 'SVG', 'wp-qr-trackr' )
+				);
 				$html .= '</div></div>';
 				return $html;
 
-			case 'destination_url':
-				return '<a href="' . esc_url( $item['destination_url'] ) . '" target="_blank">' . esc_html( $item['destination_url'] ) . '</a>';
-
-			case 'tracking_link':
-				$tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $item['id'] );
-				return '<a href="' . esc_url( $tracking_link ) . '" target="_blank">' . esc_html( $tracking_link ) . '</a>';
-
-			case 'scans':
-				return esc_html( number_format_i18n( $item['scans'] ) );
-
-			case 'created_at':
-				return esc_html( gmdate( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $item['created_at'] ) ) );
-
 			case 'actions':
+				if ( ! current_user_can( 'manage_options' ) ) {
+					return '';
+				}
+
 				$actions = array();
 
-				if ( current_user_can( 'manage_options' ) ) {
-					// Edit action.
-					$actions['edit'] = sprintf(
-						'<a href="#" class="edit-qr-code" data-id="%d" data-url="%s">%s</a>',
-						intval( $item['id'] ),
-						esc_attr( $item['destination_url'] ),
-						esc_html__( 'Edit', 'wp-qr-trackr' )
-					);
+				// Edit action.
+				$actions['edit'] = sprintf(
+					'<a href="#" class="edit-qr-code" data-id="%d" data-url="%s">%s</a>',
+					absint( $item['id'] ),
+					esc_attr( $item['destination_url'] ),
+					esc_html__( 'Edit', 'wp-qr-trackr' )
+				);
 
-					// Delete action with nonce.
-					$delete_nonce      = wp_create_nonce( 'delete_qr_code_' . $item['id'] );
-					$actions['delete'] = sprintf(
-						'<a href="#" class="delete-qr-code" data-id="%d" data-nonce="%s">%s</a>',
-						intval( $item['id'] ),
-						esc_attr( $delete_nonce ),
-						esc_html__( 'Delete', 'wp-qr-trackr' )
-					);
+				// Delete action with nonce.
+				$delete_nonce = wp_create_nonce( 'delete_qr_code_' . absint( $item['id'] ) );
+				$actions['delete'] = sprintf(
+					'<a href="#" class="delete-qr-code" data-id="%d" data-nonce="%s">%s</a>',
+					absint( $item['id'] ),
+					esc_attr( $delete_nonce ),
+					esc_html__( 'Delete', 'wp-qr-trackr' )
+				);
 
-					// Regenerate action with nonce.
-					$regenerate_nonce      = wp_create_nonce( 'regenerate_qr_code_' . $item['id'] );
-					$actions['regenerate'] = sprintf(
-						'<a href="#" class="regenerate-qr-code" data-id="%d" data-nonce="%s">%s</a>',
-						intval( $item['id'] ),
-						esc_attr( $regenerate_nonce ),
-						esc_html__( 'Regenerate', 'wp-qr-trackr' )
-					);
-				}
+				// Regenerate action with nonce.
+				$regenerate_nonce = wp_create_nonce( 'regenerate_qr_code_' . absint( $item['id'] ) );
+				$actions['regenerate'] = sprintf(
+					'<a href="#" class="regenerate-qr-code" data-id="%d" data-nonce="%s">%s</a>',
+					absint( $item['id'] ),
+					esc_attr( $regenerate_nonce ),
+					esc_html__( 'Regenerate', 'wp-qr-trackr' )
+				);
 
 				return $this->row_actions( $actions );
 
 			default:
-				// Return a safe, escaped representation of the item for debugging purposes.
-				$item_data = array(
-					'id'            => isset( $item['id'] ) ? absint( $item['id'] ) : 0,
-					'destination'   => isset( $item['destination_url'] ) ? esc_url( $item['destination_url'] ) : '',
-					'created_at'    => isset( $item['created_at'] ) ? sanitize_text_field( $item['created_at'] ) : '',
-					'last_accessed' => isset( $item['last_accessed'] ) ? sanitize_text_field( $item['last_accessed'] ) : '',
-					'access_count'  => isset( $item['access_count'] ) ? absint( $item['access_count'] ) : 0,
-				);
-				return esc_html( wp_json_encode( $item_data, JSON_PRETTY_PRINT ) );
+				return esc_html( $this->column_default( $item, $column_name ) );
 		}
 	}
 
 	/**
-	 * Escape column output for the correct context.
-	 *
-	 * @param string $column_name The column name.
-	 * @param object $item        The current item.
-	 * @return string Escaped column output.
-	 */
-	protected function column_escaped( $column_name, $item ) {
-		switch ( $column_name ) {
-			case 'title':
-				return '<strong>' . esc_html( $item['post_title'] ) . '</strong>';
-			case 'tracking_link':
-				$link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $item['id'] );
-				return '<a href="' . esc_url( $link ) . '" target="_blank">' . esc_html( $link ) . '</a>';
-			case 'destination_url':
-				$actions = array(
-					'edit' => sprintf(
-						'<a href="#" class="edit-destination" data-link-id="%d" data-destination="%s">%s</a>',
-						intval( $item['id'] ),
-						esc_attr( $item['destination_url'] ),
-						esc_html__( 'Edit', 'qr-trackr' )
-					),
-				);
-				return sprintf(
-					'%1$s %2$s',
-					'<a href="' . esc_url( $item['destination_url'] ) . '" target="_blank">' . esc_html( $item['destination_url'] ) . '</a>',
-					$this->row_actions( $actions )
-				);
-			case 'scans':
-				return esc_html( intval( $item['scans'] ) );
-			case 'created_at':
-				return esc_html( gmdate( 'Y-m-d H:i:s', strtotime( $item['created_at'] ) ) );
-			default:
-				return '';
-		}
-	}
-
-	/**
-	 * Display the rows of records in the table.
-	 *
-	 * @return void
+	 * Display rows or placeholder if no items exist.
 	 */
 	public function display_rows() {
+		if ( ! $this->has_items() ) {
+			echo '<tr class="no-items"><td class="colspanchange" colspan="' . esc_attr( $this->get_column_count() ) . '">';
+			$this->no_items();
+			echo '</td></tr>';
+			return;
+		}
+
 		foreach ( $this->items as $item ) {
 			$this->single_row( $item );
 		}
@@ -461,284 +547,451 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	/**
 	 * Display a single row.
 	 *
-	 * @param object $item The current item.
-	 * @return void
+	 * @param array $item Item data.
 	 */
 	public function single_row( $item ) {
-		echo '<tr>';
+		$row_class = '';
+
+		// Add row class for inactive items.
+		if ( isset( $item['is_active'] ) && ! $item['is_active'] ) {
+			$row_class = ' class="inactive"';
+		}
+
+		// Add row class for items with high scan counts.
+		if ( isset( $item['scans'] ) && $item['scans'] > 100 ) {
+			$row_class = ' class="high-traffic"';
+		}
+
+		echo '<tr' . $row_class . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Class is properly escaped above.
 		$this->single_row_columns( $item );
 		echo '</tr>';
 	}
 
 	/**
-	 * Display the list table.
+	 * Display the table.
 	 *
-	 * @return void
+	 * @since 1.0.0
 	 */
 	public function display() {
-		$this->prepare_items();
+		// Verify user capabilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
+		}
 
+		// Add screen option for items per page.
+		add_screen_option(
+			'per_page',
+			array(
+				'label'   => esc_html__( 'QR Codes per page', 'wp-qr-trackr' ),
+				'default' => 20,
+				'option'  => 'qr_trackr_per_page',
+			)
+		);
+
+		// Add filters form.
+		$this->display_filters_form();
+
+		// Add search box.
+		$this->search_box( esc_html__( 'Search QR Codes', 'wp-qr-trackr' ), 'qr-trackr-search' );
+
+		// Display the table.
+		parent::display();
+
+		// Add inline edit form.
+		$this->display_inline_edit_form();
+
+		// Add inline scripts.
+		$this->add_inline_scripts();
+	}
+
+	/**
+	 * Display the filters form.
+	 */
+	private function display_filters_form() {
+		$post_types = get_post_types( array( 'public' => true ), 'objects' );
 		?>
-		<div class="wrap">
-			<h1 class="wp-heading-inline"><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<?php $this->views(); ?>
-			<form method="get">
-				<?php
-				$this->search_box( 'Search', 'search_id' );
-				$this->display_tablenav( 'top' );
-				?>
-				<table class="wp-list-table <?php echo esc_attr( implode( ' ', $this->get_table_classes() ) ); ?>">
-					<thead>
-						<tr>
-							<?php $this->print_column_headers(); ?>
-						</tr>
-					</thead>
+		<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
+			<input type="hidden" name="page" value="qr-trackr" />
+			<?php wp_nonce_field( 'qr_trackr_filter_nonce', '_wpnonce', false ); ?>
 
-					<tbody id="the-list"<?php echo $this->list_table_has_items() ? ' data-wp-lists="list:' . esc_attr( $this->_args['singular'] ) . '"' : ''; ?>>
-						<?php $this->display_rows_or_placeholder(); ?>
-					</tbody>
+			<div class="tablenav top">
+				<div class="alignleft actions">
+					<select name="filter_post_type">
+						<option value=""><?php esc_html_e( 'All post types', 'wp-qr-trackr' ); ?></option>
+						<?php foreach ( $post_types as $post_type ) : ?>
+							<option value="<?php echo esc_attr( $post_type->name ); ?>" <?php selected( $this->post_type_filter, $post_type->name ); ?>>
+								<?php echo esc_html( $post_type->labels->singular_name ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
 
-					<tfoot>
-						<tr>
-							<?php $this->print_column_headers( false ); ?>
-						</tr>
-					</tfoot>
-				</table>
-				<?php
-				$this->display_tablenav( 'bottom' );
-				?>
+					<select name="filter_scans">
+						<option value=""><?php esc_html_e( 'All scan counts', 'wp-qr-trackr' ); ?></option>
+						<option value="10" <?php selected( $this->scans_filter, 10 ); ?>><?php esc_html_e( '10+ scans', 'wp-qr-trackr' ); ?></option>
+						<option value="50" <?php selected( $this->scans_filter, 50 ); ?>><?php esc_html_e( '50+ scans', 'wp-qr-trackr' ); ?></option>
+						<option value="100" <?php selected( $this->scans_filter, 100 ); ?>><?php esc_html_e( '100+ scans', 'wp-qr-trackr' ); ?></option>
+					</select>
+
+					<input type="text" name="filter_destination" value="<?php echo esc_attr( $this->destination_filter ); ?>" placeholder="<?php esc_attr_e( 'Filter by destination URL', 'wp-qr-trackr' ); ?>" />
+
+					<?php submit_button( esc_html__( 'Filter', 'wp-qr-trackr' ), 'button', 'filter_action', false ); ?>
+				</div>
+			</div>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Display the inline edit form.
+	 */
+	private function display_inline_edit_form() {
+		?>
+		<div id="qr-trackr-inline-edit" style="display:none;">
+			<form method="post" action="">
+				<?php wp_nonce_field( 'qr_trackr_inline_edit', 'qr_trackr_inline_edit_nonce' ); ?>
+				<input type="hidden" name="link_id" value="" />
+				<fieldset>
+					<div class="inline-edit-col">
+						<label>
+							<span class="title"><?php esc_html_e( 'Destination URL', 'wp-qr-trackr' ); ?></span>
+							<span class="input-text-wrap">
+								<input type="url" name="destination_url" value="" class="regular-text" required />
+							</span>
+						</label>
+					</div>
+				</fieldset>
+				<p class="submit inline-edit-save">
+					<button type="button" class="button cancel alignleft"><?php esc_html_e( 'Cancel', 'wp-qr-trackr' ); ?></button>
+					<button type="submit" class="button button-primary save alignright"><?php esc_html_e( 'Update', 'wp-qr-trackr' ); ?></button>
+					<span class="spinner"></span>
+					<br class="clear" />
+				</p>
 			</form>
 		</div>
 		<?php
 	}
 
 	/**
+	 * Add inline scripts for table functionality.
+	 *
+	 * @since 1.0.0
+	 */
+	private function add_inline_scripts() {
+		// Verify user capabilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Localize script data.
+		$localized_data = array(
+			'ajaxurl'      => admin_url( 'admin-ajax.php' ),
+			'nonce'        => wp_create_nonce( 'qr_trackr_nonce' ),
+			'deleteText'   => __( 'Are you sure you want to delete this QR code?', 'wp-qr-trackr' ),
+			'errorText'    => __( 'An error occurred. Please try again.', 'wp-qr-trackr' ),
+			'successText'  => __( 'QR code deleted successfully.', 'wp-qr-trackr' ),
+			'loadingText' => __( 'Loading...', 'wp-qr-trackr' ),
+		);
+
+		// Add inline script.
+		wp_add_inline_script(
+			'qr-trackr-admin',
+			sprintf(
+				'var QRTrackr = %s;',
+				wp_json_encode( $localized_data )
+			)
+		);
+
+		// Add inline styles.
+		wp_add_inline_style(
+			'qr-trackr-admin',
+			'
+			.qr-code-preview { text-align: center; margin-bottom: 10px; }
+			.qr-code-actions { margin-top: 5px; }
+			.qr-code-actions .button { margin: 0 2px; }
+			.qr-scans { font-weight: bold; }
+			.qr-created { color: #666; }
+			'
+		);
+	}
+
+	/**
 	 * Render a single row of columns.
 	 *
-	 * @param object $item The current item.
+	 * @since 1.0.0
+	 * @param array $item The current item.
 	 * @return void
 	 */
 	public function single_row_columns( $item ) {
+		if ( ! is_array( $item ) ) {
+			return;
+		}
+
 		list( $columns, $hidden, $sortable, $primary ) = $this->get_column_info();
 
 		foreach ( $columns as $column_name => $column_display_name ) {
-			$attributes         = $this->get_column_attributes( $column_name );
-			$attributes_escaped = esc_attr( $attributes );
-			$column_output      = call_user_func( array( $this, 'column_' . $column_name ), $item );
-			// Output is already escaped for HTML context above.
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped with esc_html() and esc_attr().
-			echo '<td ' . $attributes_escaped . '>' . esc_html( $column_output ) . '</td>';
+			$classes = array( $column_name );
+
+			if ( $primary === $column_name ) {
+				$classes[] = 'column-primary';
+			}
+
+			if ( in_array( $column_name, $hidden, true ) ) {
+				$classes[] = 'hidden';
+			}
+
+			// Check if this column is sortable.
+			if ( isset( $sortable[ $column_name ] ) ) {
+				$classes[] = 'sortable';
+				$classes[] = $sortable[ $column_name ][1] ? 'asc' : 'desc';
+			}
+
+			$attributes = 'class="' . esc_attr( implode( ' ', $classes ) ) . '"';
+
+			if ( 'cb' === $column_name ) {
+				// Special handling for the checkbox column.
+				echo '<th scope="row" class="check-column">';
+				echo $this->column_cb( $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in column_cb().
+				echo '</th>';
+			} else {
+				$column_method = 'column_' . $column_name;
+
+				echo '<td ' . $attributes . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped above.
+
+				if ( method_exists( $this, $column_method ) ) {
+					echo call_user_func( array( $this, $column_method ), $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in column methods.
+				} else {
+					echo $this->column_escaped( $column_name, $item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in column_escaped().
+				}
+
+				if ( $primary === $column_name ) {
+					echo $this->handle_row_actions( $item, $column_name, $primary ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in handle_row_actions().
+				}
+
+				echo '</td>';
+			}
 		}
 	}
 
 	/**
-	 * Verify a nonce for destructive actions.
+	 * Verify nonce for an action.
 	 *
-	 * @param string $action The action name.
-	 * @param string $nonce  The nonce value.
-	 * @return bool True if valid, false otherwise.
+	 * @param string $action Action name.
+	 * @param string $nonce Nonce value.
+	 * @return bool True if nonce is valid, false otherwise.
 	 */
 	public static function verify_action_nonce( $action, $nonce ) {
-		return ( ! empty( $nonce ) && wp_verify_nonce( $nonce, $action ) );
+		if ( empty( $action ) || empty( $nonce ) ) {
+			return false;
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return false;
+		}
+
+		$action = sanitize_key( $action );
+		$nonce = sanitize_key( $nonce );
+
+		return wp_verify_nonce( $nonce, $action );
 	}
 
 	/**
 	 * Handle row actions.
 	 *
-	 * @param object $item        The current item.
-	 * @param string $column_name The column name.
-	 * @param string $primary     The primary column name.
-	 * @return string Row actions HTML.
+	 * @param array  $item Item data.
+	 * @param string $column_name Column name.
+	 * @param string $primary Primary column name.
+	 * @return string Row actions HTML or empty string.
 	 */
 	protected function handle_row_actions( $item, $column_name, $primary ) {
 		if ( $primary !== $column_name ) {
 			return '';
 		}
 
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return '';
+		}
+
 		$actions = array();
 
-		// Add view action.
-		$actions['view'] = sprintf(
-			'<a href="%s" target="_blank">%s</a>',
-			esc_url( $item['destination_url'] ),
-			esc_html__( 'View', 'qr-trackr' )
+		// Edit action.
+		$actions['edit'] = sprintf(
+			'<a href="#" class="edit-qr-code" data-id="%d" data-url="%s">%s</a>',
+			absint( $item['id'] ),
+			esc_attr( $item['destination_url'] ),
+			esc_html__( 'Edit', 'wp-qr-trackr' )
 		);
 
-		// Add delete action with nonce.
-		$delete_url        = wp_nonce_url(
-			add_query_arg(
-				array(
-					'action' => 'delete',
-					'link'   => $item['id'],
-				),
-				admin_url( 'admin.php?page=qr-trackr' )
-			),
-			'delete_qr_trackr_link_' . $item['id']
-		);
+		// Delete action with nonce.
+		$delete_nonce = wp_create_nonce( 'delete_qr_code_' . absint( $item['id'] ) );
 		$actions['delete'] = sprintf(
-			'<a href="%s" class="submitdelete" onclick="return confirm(\'%s\');">%s</a>',
-			esc_url( $delete_url ),
-			esc_js( __( 'Are you sure you want to delete this QR code link?', 'qr-trackr' ) ),
-			esc_html__( 'Delete', 'qr-trackr' )
+			'<a href="#" class="delete-qr-code" data-id="%d" data-nonce="%s">%s</a>',
+			absint( $item['id'] ),
+			esc_attr( $delete_nonce ),
+			esc_html__( 'Delete', 'wp-qr-trackr' )
 		);
+
+		// Regenerate action with nonce.
+		$regenerate_nonce = wp_create_nonce( 'regenerate_qr_code_' . absint( $item['id'] ) );
+		$actions['regenerate'] = sprintf(
+			'<a href="#" class="regenerate-qr-code" data-id="%d" data-nonce="%s">%s</a>',
+			absint( $item['id'] ),
+			esc_attr( $regenerate_nonce ),
+			esc_html__( 'Regenerate', 'wp-qr-trackr' )
+		);
+
+		/**
+		 * Filter the list of row actions.
+		 *
+		 * @since 1.0.0
+		 * @param array $actions Array of row actions.
+		 * @param array $item Item data.
+		 */
+		$actions = apply_filters( 'qr_trackr_row_actions', $actions, $item );
 
 		return $this->row_actions( $actions );
 	}
 
 	/**
-	 * Get a link by post ID.
+	 * Get a QR code link by post ID.
 	 *
-	 * @param int $post_id The post ID.
-	 * @return object|null The link object or null.
+	 * @param int $post_id Post ID.
+	 * @return array|null Link data or null if not found.
 	 */
 	private function get_link_by_post_id( $post_id ) {
 		global $wpdb;
-		$cache_key = 'qr_trackr_link_by_post_' . $post_id;
-		$link      = wp_cache_get( $cache_key );
+
+		$post_id = absint( $post_id );
+		if ( empty( $post_id ) ) {
+			return null;
+		}
+
+		$cache_key = 'qr_trackr_link_' . $post_id;
+		$link = wp_cache_get( $cache_key );
 
 		if ( false === $link ) {
-			$query = $wpdb->prepare(
-				sprintf(
-					'SELECT * FROM %s WHERE post_id = %%d ORDER BY created_at DESC LIMIT 1',
-					$wpdb->prefix . 'qr_trackr_links'
-				),
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
+			$table_name = $this->get_table_name();
+			$sql = $wpdb->prepare(
+				"SELECT * FROM {$table_name} WHERE post_id = %d ORDER BY created_at DESC LIMIT 1", // phpcs:ignore WordPress.DB -- Table name is properly prefixed.
 				$post_id
 			);
-			$link  = $wpdb->get_row( $query );
-			wp_cache_set( $cache_key, $link, 'qr_trackr', 300 ); // Cache for 5 minutes.
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- Result is cached below.
+			$link = $wpdb->get_row( $sql, ARRAY_A );
+
+			if ( $link ) {
+				wp_cache_set( $cache_key, $link, '', HOUR_IN_SECONDS );
+			} else {
+				wp_cache_set( $cache_key, array(), '', HOUR_IN_SECONDS );
+				return null;
+			}
 		}
 
 		return $link;
 	}
 
 	/**
-	 * Get bulk actions.
+	 * Get bulk actions available for the table.
 	 *
-	 * Note: All bulk actions are processed in the admin page handler (module-admin.php),
-	 * which verifies nonces for all destructive actions.
-	 *
-	 * @return array
+	 * @since 1.0.0
+	 * @return array Array of bulk actions with action as key and label as value.
 	 */
 	public function get_bulk_actions() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return array();
 		}
 
-		return array(
-			'delete' => __( 'Delete', 'wp-qr-trackr' ),
+		$actions = array(
+			'delete' => esc_html__( 'Delete', 'wp-qr-trackr' ),
+			'regenerate' => esc_html__( 'Regenerate QR Code', 'wp-qr-trackr' ),
 		);
+
+		/**
+		 * Filter the list of bulk actions.
+		 *
+		 * @since 1.0.0
+		 * @param array $actions Array of bulk actions.
+		 */
+		return apply_filters( 'qr_trackr_bulk_actions', $actions );
 	}
 
 	/**
 	 * Get all QR code links with pagination.
 	 *
+	 * @since 1.0.0
 	 * @param int $per_page Number of items per page.
 	 * @param int $page_number Current page number.
-	 * @return array Array of QR code links.
+	 * @return array|WP_Error Array of QR code links or WP_Error on failure.
 	 */
 	public function get_qr_links( $per_page = 10, $page_number = 1 ) {
 		global $wpdb;
 
-		// Try to get from cache first.
-		$cache_key = 'qr_links_page_' . $page_number . '_' . $per_page;
-		$results   = wp_cache_get( $cache_key, 'wp_qr_trackr' );
+		$per_page = absint( $per_page );
+		$page_number = absint( $page_number );
+
+		if ( empty( $per_page ) || empty( $page_number ) ) {
+			return new WP_Error( 'invalid_pagination', __( 'Invalid pagination parameters.', 'wp-qr-trackr' ) );
+		}
+
+		$cache_key = 'qr_trackr_links_page_' . $page_number . '_' . $per_page;
+		$results = wp_cache_get( $cache_key );
 
 		if ( false === $results ) {
+			$table = $wpdb->prefix . 'qr_trackr_links';
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is hardcoded
+			$sql = "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d OFFSET %d";
+			$offset = ( $page_number - 1 ) * $per_page;
+
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is prepared with $per_page and $offset
 			$results = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT * FROM {$wpdb->prefix}qr_links ORDER BY created_at DESC LIMIT %d OFFSET %d",
-					absint( $per_page ),
-					absint( ( $page_number - 1 ) * $per_page )
-				),
+				$wpdb->prepare( $sql, $per_page, $offset ),
 				ARRAY_A
 			);
 
-			if ( $results ) {
-				wp_cache_set( $cache_key, $results, 'wp_qr_trackr', HOUR_IN_SECONDS );
+			if ( false === $results ) {
+				qr_trackr_debug_log( sprintf( 'Failed to get QR links: %s', $wpdb->last_error ) );
+				return new WP_Error( 'db_error', __( 'Failed to get QR links from database.', 'wp-qr-trackr' ) );
 			}
+
+			wp_cache_set( $cache_key, $results, '', HOUR_IN_SECONDS );
 		}
 
 		return $results;
 	}
 
 	/**
-	 * Get the total count of QR code links.
-	 *
-	 * @return int Total number of QR code links.
-	 */
-	public function record_count() {
-		global $wpdb;
-
-		// Try to get from cache first.
-		$cache_key = 'qr_links_total_count';
-		$count     = wp_cache_get( $cache_key, 'wp_qr_trackr' );
-
-		if ( false === $count ) {
-			$count = $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$wpdb->prefix}qr_links"
-				)
-			);
-
-			if ( false !== $count ) {
-				wp_cache_set( $cache_key, $count, 'wp_qr_trackr', HOUR_IN_SECONDS );
-			}
-		}
-
-		return absint( $count );
-	}
-
-	/**
-	 * Get QR code link data.
-	 *
-	 * @param int $post_id Post ID.
-	 * @return array|null QR code link data or null if not found.
-	 */
-	public function get_qr_link_data( $post_id ) {
-		global $wpdb;
-
-		// Try to get from cache first.
-		$cache_key = 'qr_link_data_' . absint( $post_id );
-		$data      = wp_cache_get( $cache_key, 'wp_qr_trackr' );
-
-		if ( false === $data ) {
-			$data = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT * FROM {$wpdb->prefix}qr_links WHERE post_id = %d ORDER BY created_at DESC LIMIT 1",
-					absint( $post_id )
-				),
-				ARRAY_A
-			);
-
-			if ( $data ) {
-				wp_cache_set( $cache_key, $data, 'wp_qr_trackr', HOUR_IN_SECONDS );
-			}
-		}
-
-		return $data;
-	}
-
-	/**
-	 * Get the table classes.
-	 *
-	 * @return array Array of table classes.
-	 */
-	protected function get_table_classes() {
-		return array( 'widefat', 'fixed', 'striped', 'qr-trackr-list-table' );
-	}
-
-	/**
-	 * Get the SQL for the totals.
+	 * Get CSS classes for the table.
 	 *
 	 * @since 1.0.0
-	 * @param string $where Where clause for the query.
-	 * @return string
+	 * @return array Array of CSS classes.
 	 */
-	private function get_totals_sql( $where ) {
-		global $wpdb;
+	protected function get_table_classes() {
+		$classes = parent::get_table_classes();
+		$classes[] = 'qr-trackr-list-table';
+		$classes[] = 'widefat';
+		$classes[] = 'fixed';
+		$classes[] = 'striped';
+		$classes[] = 'responsive';
+		$classes[] = 'wp-list-table';
 
-		$table = $wpdb->prefix . 'qr_trackr_links';
-		$sql   = $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table );
+		/**
+		 * Filter the list of CSS classes for the table.
+		 *
+		 * @since 1.0.0
+		 * @param array $classes Array of CSS classes.
+		 */
+		return apply_filters( 'qr_trackr_list_table_classes', $classes );
+	}
+
+	/**
+	 * Get SQL for counting total items.
+	 *
+	 * @param string $where WHERE clause.
+	 * @return string SQL query.
+	 */
+	private function get_totals_sql( $where = '' ) {
+		$table_name = $this->get_table_name();
+		$sql = "SELECT COUNT(*) FROM {$table_name}"; // phpcs:ignore WordPress.DB -- Table name is properly prefixed.
 
 		if ( ! empty( $where ) ) {
 			$sql .= ' WHERE ' . $where;
@@ -752,81 +1005,363 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	 *
 	 * @since 1.0.0
 	 * @param string $where Where clause for the query.
-	 * @param string $orderby Order by clause.
+	 * @param string $orderby Order by column.
 	 * @param string $order Order direction.
 	 * @param int    $per_page Number of items per page.
 	 * @param int    $page_number Current page number.
-	 * @return string
+	 * @return string SQL query string.
 	 */
 	private function get_records_sql( $where, $orderby = '', $order = '', $per_page = 20, $page_number = 1 ) {
 		global $wpdb;
 
+		// Build base query.
 		$table = $wpdb->prefix . 'qr_trackr_links';
-		$sql   = $wpdb->prepare( 'SELECT * FROM %i', $table );
-
-		if ( ! empty( $where ) ) {
-			$sql .= ' WHERE ' . $where;
-		}
-
-		if ( ! empty( $orderby ) && ! empty( $order ) ) {
-			$sql .= $wpdb->prepare( ' ORDER BY %s %s', $orderby, $order );
-		}
-
-		$sql .= $wpdb->prepare( ' LIMIT %d OFFSET %d', $per_page, ( $page_number - 1 ) * $per_page );
-
+		$sql = $wpdb->prepare(
+			'SELECT * FROM ' . $table . ' WHERE %1$s ORDER BY %2$s %3$s LIMIT %4$d OFFSET %5$d',
+			$where,
+			esc_sql( $orderby ),
+			esc_sql( $order ),
+			absint( $per_page ),
+			absint( ( $page_number - 1 ) * $per_page )
+		);
 		return $sql;
 	}
 
 	/**
-	 * Delete links by IDs.
+	 * Delete multiple QR code links.
 	 *
-	 * @since 1.0.0
-	 * @param array $ids Array of link IDs to delete.
-	 * @return int|false The number of rows deleted, or false on error.
+	 * @param array $ids Array of link IDs.
+	 * @return int Number of links deleted.
 	 */
 	public function delete_links( $ids ) {
 		global $wpdb;
 
-		if ( empty( $ids ) ) {
-			return false;
+		if ( empty( $ids ) || ! is_array( $ids ) ) {
+			return 0;
 		}
 
-		// Ensure all IDs are integers.
+		// Sanitize IDs.
 		$ids = array_map( 'absint', $ids );
+		$ids = array_filter( $ids );
 
-		// Create placeholders for the number of IDs.
-		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-		$table       = $wpdb->prefix . 'qr_trackr_links';
+		if ( empty( $ids ) ) {
+			return 0;
+		}
 
-		// Prepare and execute the delete query.
+		// Prepare placeholders for the query.
+		$placeholders = array_fill( 0, count( $ids ), '%d' );
+		$placeholders = implode( ',', $placeholders );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct delete needed for admin action.
+		$table_name = $this->get_table_name();
 		$sql = $wpdb->prepare(
-			"DELETE FROM {$table} WHERE id IN ({$placeholders})",
-			...$ids
+			"DELETE FROM {$table_name} WHERE id IN ($placeholders)", // phpcs:ignore WordPress.DB -- Table name is properly prefixed.
+			$ids
 		);
 
-		return $wpdb->query( $sql );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct delete needed for admin action.
+		$result = $wpdb->query( $sql );
+
+		if ( false !== $result ) {
+			foreach ( $ids as $id ) {
+				do_action( 'qr_trackr_link_deleted', $id );
+			}
+			return (int) $result;
+		}
+
+		return 0;
 	}
 
 	/**
-	 * Returns the count of records in the database.
+	 * Get the table name with proper prefix.
 	 *
 	 * @since 1.0.0
-	 * @param string $search Search term for filtering.
-	 * @return int
+	 * @return string The table name with proper prefix.
 	 */
-	public function record_count( $search = '' ) {
+	private function get_table_name() {
+		global $wpdb;
+		return $wpdb->prefix . 'qr_trackr_links';
+	}
+
+	/**
+	 * Get total number of items.
+	 *
+	 * @param string $where WHERE clause.
+	 * @param array  $where_values Values for the WHERE clause.
+	 * @return int Total number of items.
+	 */
+	private function get_total_items( $where, $where_values ) {
 		global $wpdb;
 
-		$where = '';
-		if ( ! empty( $search ) ) {
-			$where = $wpdb->prepare(
-				'url LIKE %s OR title LIKE %s',
-				'%' . $wpdb->esc_like( $search ) . '%',
-				'%' . $wpdb->esc_like( $search ) . '%'
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
+		$table_name = $this->get_table_name();
+		$sql = $wpdb->prepare(
+			"SELECT COUNT(*) FROM {$table_name} WHERE $where", // phpcs:ignore WordPress.DB -- Table name is properly prefixed.
+			$where_values
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- Result is cached at the application level.
+		return absint( $wpdb->get_var( $sql ) );
+	}
+
+	/**
+	 * Get items for the current page.
+	 *
+	 * @param string $where Where clause.
+	 * @param array  $where_values Values for the where clause.
+	 * @param string $orderby Order by column.
+	 * @param string $order Order direction.
+	 * @param int    $per_page Number of items per page.
+	 * @param int    $current_page Current page number.
+	 * @return array Array of items.
+	 */
+	private function get_items( $where, $where_values, $orderby, $order, $per_page, $current_page ) {
+		global $wpdb;
+
+		$offset = ( $current_page - 1 ) * $per_page;
+
+		// Ensure valid order values.
+		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
+		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+
+		// Build the base query.
+		$sql = $wpdb->prepare(
+			'SELECT l.*, COALESCE(s.total_scans, 0) as scans
+			FROM ' . $wpdb->prefix . 'qr_trackr_links l
+			LEFT JOIN (
+				SELECT link_id, COUNT(*) as total_scans
+				FROM ' . $wpdb->prefix . 'qr_trackr_stats
+				GROUP BY link_id
+			) s ON l.id = s.link_id
+			' . ( $where ? $wpdb->prepare( 'WHERE ' . $where, ...$where_values ) : '' ) . '
+			ORDER BY ' . esc_sql( $orderby ) . ' ' . esc_sql( $order ) . '
+			LIMIT %d OFFSET %d',
+			$per_page,
+			$offset
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+		$results = $wpdb->get_results( $sql, ARRAY_A );
+		wp_cache_set( $cache_key, $results, '', 300 ); // Cache for 5 minutes.
+
+		return $results;
+	}
+
+	/**
+	 * Get the SQL query for fetching items by URL.
+	 *
+	 * @param string $url URL to search for.
+	 * @return array Array of items.
+	 */
+	private function get_item_by_url( $url ) {
+		global $wpdb;
+
+		$cache_key = 'qr_trackr_link_by_url_' . md5( $url );
+		$result = wp_cache_get( $cache_key );
+
+		if ( false === $result ) {
+			$sql = $wpdb->prepare(
+				'SELECT *
+				FROM ' . $wpdb->prefix . 'qr_trackr_links
+				WHERE url = %s',
+				$url
 			);
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+			$result = $wpdb->get_row( $sql, ARRAY_A );
+			wp_cache_set( $cache_key, $result, '', 300 ); // Cache for 5 minutes.
 		}
 
-		$sql = $this->get_totals_sql( $where );
-		return absint( $wpdb->get_var( $sql ) );
+		return $result;
+	}
+
+	/**
+	 * Get the SQL query for fetching the most recent item by post ID.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array Array of items.
+	 */
+	private function get_most_recent_item_by_post_id( $post_id ) {
+		global $wpdb;
+
+		$cache_key = 'qr_trackr_link_by_post_id_' . md5( $post_id );
+		$result = wp_cache_get( $cache_key );
+
+		if ( false === $result ) {
+			$sql = $wpdb->prepare(
+				'SELECT *
+				FROM ' . $wpdb->prefix . 'qr_trackr_links
+				WHERE post_id = %d
+				ORDER BY created_at DESC',
+				absint( $post_id )
+			);
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+			$result = $wpdb->get_row( $sql, ARRAY_A );
+			wp_cache_set( $cache_key, $result, '', 300 ); // Cache for 5 minutes.
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Get the SQL query for fetching stats by link ID.
+	 *
+	 * @param int $link_id Link ID.
+	 * @return array Array of stats.
+	 */
+	private function get_stats_by_link_id( $link_id ) {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DATE(created_at) as date, COUNT(*) as count 
+				FROM {$wpdb->prefix}qr_trackr_stats 
+				WHERE link_id = %d 
+				GROUP BY DATE(created_at) 
+				ORDER BY date DESC",
+				absint( $link_id )
+			),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by search term.
+	 *
+	 * @param string $search Search term.
+	 * @return array Array of items.
+	 */
+	private function get_items_by_search( $search ) {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE url LIKE %s OR title LIKE %s",
+				'%' . $wpdb->esc_like( $search ) . '%',
+				'%' . $wpdb->esc_like( $search ) . '%'
+			),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by date range.
+	 *
+	 * @param string $start_date Start date.
+	 * @param string $end_date End date.
+	 * @return array Array of items.
+	 */
+	private function get_items_by_date_range( $start_date, $end_date ) {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE created_at BETWEEN %s AND %s",
+				$start_date,
+				$end_date
+			),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by status.
+	 *
+	 * @param string $status Status.
+	 * @return array Array of items.
+	 */
+	private function get_items_by_status( $status ) {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE status = %s",
+				$status
+			),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by category.
+	 *
+	 * @param string $category Category.
+	 * @return array Array of items.
+	 */
+	private function get_items_by_category( $category ) {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE category = %s",
+				$category
+			),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by tag.
+	 *
+	 * @param string $tag Tag.
+	 * @return array Array of items.
+	 */
+	private function get_items_by_tag( $tag ) {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE FIND_IN_SET(%s, tags)",
+				$tag
+			),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by author.
+	 *
+	 * @param int $author_id Author ID.
+	 * @return array Array of items.
+	 */
+	private function get_items_by_author( $author_id ) {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE author_id = %d",
+				absint( $author_id )
+			),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by scan count range.
+	 *
+	 * @param int $min_scans Minimum scans.
+	 * @param int $max_scans Maximum scans.
+	 * @return array Array of items.
+	 */
+	private function get_items_by_scan_count_range( $min_scans, $max_scans ) {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT l.*, COALESCE(s.total_scans, 0) as scans
+				FROM {$wpdb->prefix}qr_trackr_links l
+				LEFT JOIN (
+					SELECT link_id, COUNT(*) as total_scans
+					FROM {$wpdb->prefix}qr_trackr_stats
+					GROUP BY link_id
+				) s ON l.id = s.link_id
+				HAVING scans BETWEEN %d AND %d",
+				absint( $min_scans ),
+				absint( $max_scans )
+			),
+			ARRAY_A
+		);
 	}
 }
