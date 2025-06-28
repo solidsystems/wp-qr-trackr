@@ -305,4 +305,141 @@ Playwright is only installed and used in the dev Docker image (port 8080). It mu
 - Example:
   ```php
   // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, atomic operation required
-  ``` 
+  ```
+
+# WordPress SQL Query Preparation Best Practices
+
+## Table Name Handling
+- Always store table names in variables with proper prefixes:
+  ```php
+  $table_name = $wpdb->prefix . 'my_table_name';
+  ```
+- Use double-quoted strings with curly braces for table names:
+  ```php
+  "SELECT * FROM {$table_name} WHERE id = %d"
+  ```
+- Never concatenate table names directly into queries
+
+## Query Preparation
+- Use simple placeholders (%s, %d) instead of complex ones (%1$s):
+  ```php
+  // Good
+  $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id = %d", $id );
+  
+  // Bad
+  $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id = %1$d", $id );
+  ```
+- For IN clauses, generate placeholders dynamically:
+  ```php
+  $placeholders = array_fill( 0, count( $ids ), '%d' );
+  $sql = "SELECT * FROM {$table_name} WHERE id IN (" . implode( ',', $placeholders ) . ')';
+  $wpdb->prepare( $sql, ...$ids );
+  ```
+
+## Order and Sort Parameters
+- Validate against whitelists before using in queries:
+  ```php
+  $valid_orderby = array( 'id', 'title', 'date' );
+  $orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+  ```
+- Use esc_sql() only for validated order/sort parameters:
+  ```php
+  $sql .= ' ORDER BY ' . esc_sql( $orderby ) . ' ' . esc_sql( $order );
+  ```
+
+## Dynamic WHERE Clauses
+- Build WHERE clauses with proper placeholders:
+  ```php
+  $where = '';
+  $where_values = array();
+  if ( ! empty( $search ) ) {
+      $where = 'title LIKE %s OR description LIKE %s';
+      $search_like = '%' . $wpdb->esc_like( $search ) . '%';
+      $where_values = array( $search_like, $search_like );
+  }
+  ```
+
+## Caching
+- Cache query results with appropriate timeouts:
+  ```php
+  $cache_key = 'prefix_query_' . md5( $query );
+  $results = wp_cache_get( $cache_key );
+  if ( false === $results ) {
+      $results = $wpdb->get_results( $sql );
+      wp_cache_set( $cache_key, $results, '', 300 ); // Cache for 5 minutes
+  }
+  ```
+
+## PHPCS Compliance
+- Add phpcs:ignore comments only when necessary and with explanations:
+  ```php
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+  ```
+- Never ignore SQL preparation warnings without proper handling
+- Use proper docblocks for all query-related methods:
+  ```php
+  /**
+   * Get items by search term.
+   *
+   * @param string $search Search term.
+   * @return array Array of items.
+   */
+  ```
+
+## Query Builder Pattern
+- Use dedicated query builder classes for complex queries
+- Separate SQL generation from execution
+- Return prepared queries rather than executing them directly
+- Document expected parameter types and formats
+
+## Error Handling
+- Always check for false/null return values from $wpdb methods
+- Log database errors with descriptive messages:
+  ```php
+  if ( false === $result ) {
+      error_log( sprintf(
+          'Database operation failed: %s',
+          $wpdb->last_error
+      ) );
+      return new WP_Error( 'db_error', __( 'Database operation failed.', 'text-domain' ) );
+  }
+  ```
+
+## Security
+- Never trust user input
+- Always use $wpdb->prepare() for queries with variables
+- Use wp_unslash() and appropriate sanitization functions for input:
+  ```php
+  $title = sanitize_text_field( wp_unslash( $_POST['title'] ) );
+  ```
+- Validate and sanitize all parameters before using in queries
+
+## Performance
+- Use LIMIT and OFFSET for pagination
+- Index frequently queried columns
+- Use JOINs sparingly and efficiently
+- Cache complex query results
+- Monitor query performance in debug logs
+
+## Testing
+- Write unit tests for query builders
+- Test edge cases with special characters
+- Test with different table prefixes
+- Test with large datasets for performance
+- Test error conditions and recovery
+
+## Documentation
+- Document table schemas
+- Document expected parameter formats
+- Document cache invalidation strategies
+- Document query builder usage examples
+- Keep inline comments for complex queries
+
+## Maintenance
+- Use version control for schema changes
+- Document database upgrades
+- Keep track of deprecated queries
+- Monitor query performance
+- Regular security audits
+
+These rules are based on lessons learned from implementing WordPress plugin database queries while maintaining PHPCS compliance and following WordPress coding standards. 
