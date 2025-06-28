@@ -738,7 +738,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'qr_trackr_links';
-		$sql = $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table );
+		$sql   = $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table );
 
 		if ( ! empty( $where ) ) {
 			$sql .= ' WHERE ' . $where;
@@ -762,7 +762,7 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'qr_trackr_links';
-		$sql = $wpdb->prepare( 'SELECT * FROM %i', $table );
+		$sql   = $wpdb->prepare( 'SELECT * FROM %i', $table );
 
 		if ( ! empty( $where ) ) {
 			$sql .= ' WHERE ' . $where;
@@ -796,12 +796,12 @@ class QR_Trackr_List_Table extends WP_List_Table {
 
 		// Create placeholders for the number of IDs.
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-		$table = $wpdb->prefix . 'qr_trackr_links';
+		$table       = $wpdb->prefix . 'qr_trackr_links';
 
 		// Prepare and execute the delete query.
 		$sql = $wpdb->prepare(
-			'DELETE FROM %i WHERE id IN (' . $placeholders . ')',
-			array_merge( array( $table ), $ids )
+			"DELETE FROM {$table} WHERE id IN ({$placeholders})",
+			...$ids
 		);
 
 		return $wpdb->query( $sql );

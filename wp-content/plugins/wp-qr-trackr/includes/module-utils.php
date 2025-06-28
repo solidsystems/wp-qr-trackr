@@ -159,14 +159,13 @@ function qrc_get_link_by_id( $id ) {
 	global $wpdb;
 
 	$cache_key = 'qrc_link_' . absint( $id );
-	$link = wp_cache_get( $cache_key );
+	$link      = wp_cache_get( $cache_key );
 
 	if ( false === $link ) {
 		$table = $wpdb->prefix . 'qr_trackr_links';
-		$link = $wpdb->get_row(
+		$link  = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT * FROM %i WHERE id = %d',
-				$table,
+				"SELECT * FROM {$table} WHERE id = %d",
 				absint( $id )
 			)
 		);
@@ -190,14 +189,13 @@ function qrc_get_link_by_url( $url ) {
 	global $wpdb;
 
 	$cache_key = 'qrc_link_url_' . md5( $url );
-	$link = wp_cache_get( $cache_key );
+	$link      = wp_cache_get( $cache_key );
 
 	if ( false === $link ) {
 		$table = $wpdb->prefix . 'qr_trackr_links';
-		$link = $wpdb->get_row(
+		$link  = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT * FROM %i WHERE url = %s',
-				$table,
+				"SELECT * FROM {$table} WHERE url = %s",
 				esc_url_raw( $url )
 			)
 		);
@@ -223,12 +221,11 @@ function qrc_get_link_stats( $link_id ) {
 	$table = $wpdb->prefix . 'qr_trackr_stats';
 	$stats = $wpdb->get_results(
 		$wpdb->prepare(
-			'SELECT DATE(created_at) as date, COUNT(*) as count 
-			FROM %i 
+			"SELECT DATE(created_at) as date, COUNT(*) as count 
+			FROM {$table} 
 			WHERE link_id = %d 
 			GROUP BY DATE(created_at) 
-			ORDER BY date DESC',
-			$table,
+			ORDER BY date DESC",
 			absint( $link_id )
 		)
 	);
@@ -246,7 +243,7 @@ function qrc_get_link_stats( $link_id ) {
 function qrc_create_link( $data ) {
 	global $wpdb;
 
-	$table = $wpdb->prefix . 'qr_trackr_links';
+	$table  = $wpdb->prefix . 'qr_trackr_links';
 	$result = $wpdb->insert(
 		$table,
 		array(
