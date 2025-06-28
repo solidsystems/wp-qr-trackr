@@ -957,10 +957,8 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_totals_sql( $where = '' ) {
 		global $wpdb;
 
-		$sql = sprintf(
-			'SELECT COUNT(*) as total FROM %sqr_trackr_links',
-			$wpdb->prefix
-		);
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+		$sql = "SELECT COUNT(*) as total FROM {$table_name}";
 
 		if ( $where ) {
 			$sql .= ' WHERE ' . $where;
@@ -988,21 +986,15 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		$order         = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
 
 		$offset = ( $page_number - 1 ) * $per_page;
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-		$sql = sprintf(
-			'SELECT * FROM %sqr_trackr_links',
-			$wpdb->prefix
-		);
+		$sql = "SELECT * FROM {$table_name}";
 
 		if ( $where ) {
 			$sql .= ' WHERE ' . $where;
 		}
 
-		$sql .= sprintf(
-			' ORDER BY %s %s LIMIT %%d OFFSET %%d',
-			esc_sql( $orderby ),
-			esc_sql( $order )
-		);
+		$sql .= ' ORDER BY ' . esc_sql( $orderby ) . ' ' . esc_sql( $order ) . ' LIMIT %d OFFSET %d';
 
 		return $wpdb->prepare( $sql, $per_page, $offset );
 	}
@@ -1016,11 +1008,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_item_sql( $id ) {
 		global $wpdb;
 
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
 		return $wpdb->prepare(
-			sprintf(
-				'SELECT * FROM %sqr_trackr_links WHERE id = %%d',
-				$wpdb->prefix
-			),
+			"SELECT * FROM {$table_name} WHERE id = %d",
 			$id
 		);
 	}
@@ -1034,11 +1024,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_items_by_post_id_sql( $post_id ) {
 		global $wpdb;
 
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
 		return $wpdb->prepare(
-			sprintf(
-				'SELECT * FROM %sqr_trackr_links WHERE post_id = %%d ORDER BY created_at DESC',
-				$wpdb->prefix
-			),
+			"SELECT * FROM {$table_name} WHERE post_id = %d ORDER BY created_at DESC",
 			$post_id
 		);
 	}
@@ -1052,11 +1040,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_item_by_url_sql( $url ) {
 		global $wpdb;
 
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
 		return $wpdb->prepare(
-			sprintf(
-				'SELECT * FROM %sqr_trackr_links WHERE url = %%s',
-				$wpdb->prefix
-			),
+			"SELECT * FROM {$table_name} WHERE url = %s",
 			$url
 		);
 	}
@@ -1070,12 +1056,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_items_by_ids_sql( $ids ) {
 		global $wpdb;
 
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
 		$placeholders = array_fill( 0, count( $ids ), '%d' );
-		$sql = sprintf(
-			'SELECT * FROM %sqr_trackr_links WHERE id IN (' . implode( ',', $placeholders ) . ')',
-			$wpdb->prefix
-		);
-
+		$sql = "SELECT * FROM {$table_name} WHERE id IN (" . implode( ',', $placeholders ) . ')';
 		return $wpdb->prepare( $sql, ...$ids );
 	}
 
@@ -1209,12 +1192,10 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_items_by_search_sql( $search ) {
 		global $wpdb;
 
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
 		$search_like = '%' . $wpdb->esc_like( $search ) . '%';
 		return $wpdb->prepare(
-			sprintf(
-				'SELECT * FROM %sqr_trackr_links WHERE url LIKE %%s OR title LIKE %%s',
-				$wpdb->prefix
-			),
+			"SELECT * FROM {$table_name} WHERE url LIKE %s OR title LIKE %s",
 			$search_like,
 			$search_like
 		);
@@ -1230,11 +1211,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_items_by_date_range_sql( $start_date, $end_date ) {
 		global $wpdb;
 
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
 		return $wpdb->prepare(
-			sprintf(
-				'SELECT * FROM %sqr_trackr_links WHERE DATE(created_at) BETWEEN %%s AND %%s',
-				$wpdb->prefix
-			),
+			"SELECT * FROM {$table_name} WHERE DATE(created_at) BETWEEN %s AND %s",
 			$start_date,
 			$end_date
 		);
@@ -1250,18 +1229,11 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_items_by_scan_count_range_sql( $min_scans, $max_scans ) {
 		global $wpdb;
 
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+		$stats_table = $wpdb->prefix . 'qr_trackr_stats';
+
 		return $wpdb->prepare(
-			sprintf(
-				'SELECT l.*, COALESCE(s.total_scans, 0) as scans
-				FROM %1$sqr_trackr_links l
-				LEFT JOIN (
-					SELECT link_id, COUNT(*) as total_scans
-					FROM %1$sqr_trackr_stats
-					GROUP BY link_id
-				) s ON l.id = s.link_id
-				HAVING scans BETWEEN %%d AND %%d',
-				$wpdb->prefix
-			),
+			"SELECT l.*, COALESCE(s.total_scans, 0) as scans FROM {$table_name} l LEFT JOIN (SELECT link_id, COUNT(*) as total_scans FROM {$stats_table} GROUP BY link_id) s ON l.id = s.link_id HAVING scans BETWEEN %d AND %d",
 			$min_scans,
 			$max_scans
 		);
