@@ -278,7 +278,6 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	public function get_links( $search = '', $orderby = 'id', $order = 'DESC', $per_page = 20, $page_number = 1 ) {
 		global $wpdb;
 
-		$table_name = $this->get_table_name();
 		$where = '';
 		$where_values = array();
 
@@ -288,30 +287,18 @@ class QR_Trackr_List_Table extends WP_List_Table {
 			$where_values = array( $search_like, $search_like );
 		}
 
-		// Ensure valid order values.
-		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
-		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
-		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
-
-		// Calculate offset.
 		$offset = ( $page_number - 1 ) * $per_page;
+		$cache_key = 'qr_trackr_links_' . md5( $search . $orderby . $order . $per_page . $page_number );
+		$results = wp_cache_get( $cache_key );
 
-		// Build and prepare the query.
-		$sql = $wpdb->prepare(
-			"SELECT l.*, COALESCE(s.total_scans, 0) as scans
-			FROM {$wpdb->prefix}qr_trackr_links l
-			LEFT JOIN (
-				SELECT link_id, COUNT(*) as total_scans
-				FROM {$wpdb->prefix}qr_trackr_stats
-				GROUP BY link_id
-			) s ON l.id = s.link_id
-			" . ( $where ? $wpdb->prepare( 'WHERE ' . $where, ...$where_values ) : '' ) . "
-			ORDER BY $orderby $order
-			LIMIT %d OFFSET %d",
-			array_merge( $where_values, array( $per_page, $offset ) )
-		);
+		if ( false === $results ) {
+			$sql = QR_Trackr_Query_Builder::get_items_with_where_sql( $where, $where_values, $orderby, $order, $per_page, $offset );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+			$results = $wpdb->get_results( $sql, ARRAY_A );
+			wp_cache_set( $cache_key, $results, '', 300 ); // Cache for 5 minutes.
+		}
 
-		return $wpdb->get_results( $sql, ARRAY_A );
+		return $results;
 	}
 
 	/**
@@ -358,7 +345,6 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		$count = wp_cache_get( $cache_key );
 
 		if ( false === $count ) {
-			$table_name = $this->get_table_name();
 			$where = '';
 			$where_values = array();
 
@@ -368,14 +354,10 @@ class QR_Trackr_List_Table extends WP_List_Table {
 				$where_values = array( $search_like, $search_like );
 			}
 
-			$sql = $wpdb->prepare(
-				'SELECT COUNT(*)
-				FROM ' . $wpdb->prefix . 'qr_trackr_links
-				' . ( $where ? $wpdb->prepare( 'WHERE ' . $where, ...$where_values ) : '' ),
-			);
-
+			$sql = QR_Trackr_Query_Builder::get_count_with_where_sql( $where, $where_values );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
 			$count = (int) $wpdb->get_var( $sql );
-			wp_cache_set( $cache_key, $count, '', 300 );
+			wp_cache_set( $cache_key, $count, '', 300 ); // Cache for 5 minutes.
 		}
 
 		return $count;
@@ -860,34 +842,17 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	private function get_link_by_post_id( $post_id ) {
 		global $wpdb;
 
-		$post_id = absint( $post_id );
-		if ( empty( $post_id ) ) {
-			return null;
+		$cache_key = 'qr_trackr_link_by_post_id_' . absint( $post_id );
+		$result = wp_cache_get( $cache_key );
+
+		if ( false === $result ) {
+			$sql = QR_Trackr_Query_Builder::get_items_by_post_id_sql( $post_id );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+			$result = $wpdb->get_row( $sql, ARRAY_A );
+			wp_cache_set( $cache_key, $result, '', 300 ); // Cache for 5 minutes.
 		}
 
-		$cache_key = 'qr_trackr_link_' . $post_id;
-		$link = wp_cache_get( $cache_key );
-
-		if ( false === $link ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
-			$table_name = $this->get_table_name();
-			$sql = $wpdb->prepare(
-				"SELECT * FROM {$table_name} WHERE post_id = %d ORDER BY created_at DESC LIMIT 1", // phpcs:ignore WordPress.DB -- Table name is properly prefixed.
-				$post_id
-			);
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- Result is cached below.
-			$link = $wpdb->get_row( $sql, ARRAY_A );
-
-			if ( $link ) {
-				wp_cache_set( $cache_key, $link, '', HOUR_IN_SECONDS );
-			} else {
-				wp_cache_set( $cache_key, array(), '', HOUR_IN_SECONDS );
-				return null;
-			}
-		}
-
-		return $link;
+		return $result;
 	}
 
 	/**
@@ -990,10 +955,14 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	 * @return string SQL query.
 	 */
 	private function get_totals_sql( $where = '' ) {
-		$table_name = $this->get_table_name();
-		$sql = "SELECT COUNT(*) FROM {$table_name}"; // phpcs:ignore WordPress.DB -- Table name is properly prefixed.
+		global $wpdb;
 
-		if ( ! empty( $where ) ) {
+		$sql = sprintf(
+			'SELECT COUNT(*) as total FROM %sqr_trackr_links',
+			$wpdb->prefix
+		);
+
+		if ( $where ) {
 			$sql .= ' WHERE ' . $where;
 		}
 
@@ -1001,30 +970,115 @@ class QR_Trackr_List_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Get the SQL for the records.
+	 * Get the SQL query for fetching records with pagination.
 	 *
-	 * @since 1.0.0
-	 * @param string $where Where clause for the query.
-	 * @param string $orderby Order by column.
-	 * @param string $order Order direction.
+	 * @param string $where WHERE clause without 'WHERE' keyword.
+	 * @param string $orderby Column to order by.
+	 * @param string $order Order direction (ASC or DESC).
 	 * @param int    $per_page Number of items per page.
 	 * @param int    $page_number Current page number.
-	 * @return string SQL query string.
+	 * @return string SQL query.
 	 */
 	private function get_records_sql( $where, $orderby = '', $order = '', $per_page = 20, $page_number = 1 ) {
 		global $wpdb;
 
-		// Build base query.
-		$table = $wpdb->prefix . 'qr_trackr_links';
-		$sql = $wpdb->prepare(
-			'SELECT * FROM ' . $table . ' WHERE %1$s ORDER BY %2$s %3$s LIMIT %4$d OFFSET %5$d',
-			$where,
-			esc_sql( $orderby ),
-			esc_sql( $order ),
-			absint( $per_page ),
-			absint( ( $page_number - 1 ) * $per_page )
+		// Validate and sanitize order parameters.
+		$valid_orderby = array( 'id', 'destination_url', 'scans', 'created_at' );
+		$orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+		$order = in_array( strtoupper( $order ), array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+
+		$offset = ( $page_number - 1 ) * $per_page;
+
+		$sql = sprintf(
+			'SELECT * FROM %sqr_trackr_links',
+			$wpdb->prefix
 		);
-		return $sql;
+
+		if ( $where ) {
+			$sql .= ' WHERE ' . $where;
+		}
+
+		$sql .= sprintf(
+			' ORDER BY %s %s LIMIT %%d OFFSET %%d',
+			esc_sql( $orderby ),
+			esc_sql( $order )
+		);
+
+		return $wpdb->prepare( $sql, $per_page, $offset );
+	}
+
+	/**
+	 * Get the SQL query for fetching a single item by ID.
+	 *
+	 * @param int $id Item ID.
+	 * @return string SQL query.
+	 */
+	private function get_item_sql( $id ) {
+		global $wpdb;
+
+		return $wpdb->prepare(
+			sprintf(
+				'SELECT * FROM %sqr_trackr_links WHERE id = %%d',
+				$wpdb->prefix
+			),
+			$id
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by post ID.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string SQL query.
+	 */
+	private function get_items_by_post_id_sql( $post_id ) {
+		global $wpdb;
+
+		return $wpdb->prepare(
+			sprintf(
+				'SELECT * FROM %sqr_trackr_links WHERE post_id = %%d ORDER BY created_at DESC',
+				$wpdb->prefix
+			),
+			$post_id
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by URL.
+	 *
+	 * @param string $url URL to search for.
+	 * @return string SQL query.
+	 */
+	private function get_item_by_url_sql( $url ) {
+		global $wpdb;
+
+		return $wpdb->prepare(
+			sprintf(
+				'SELECT * FROM %sqr_trackr_links WHERE url = %%s',
+				$wpdb->prefix
+			),
+			$url
+		);
+	}
+
+	/**
+	 * Get the SQL query for fetching items by multiple IDs.
+	 *
+	 * @param array $ids Array of item IDs.
+	 * @return string SQL query.
+	 */
+	private function get_items_by_ids_sql( $ids ) {
+		global $wpdb;
+
+		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+		return $wpdb->prepare(
+			sprintf(
+				'SELECT * FROM %sqr_trackr_links WHERE id IN (%s)',
+				$wpdb->prefix,
+				$placeholders
+			),
+			...$ids
+		);
 	}
 
 	/**
@@ -1146,85 +1200,6 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		wp_cache_set( $cache_key, $results, '', 300 ); // Cache for 5 minutes.
 
 		return $results;
-	}
-
-	/**
-	 * Get the SQL query for fetching items by URL.
-	 *
-	 * @param string $url URL to search for.
-	 * @return array Array of items.
-	 */
-	private function get_item_by_url( $url ) {
-		global $wpdb;
-
-		$cache_key = 'qr_trackr_link_by_url_' . md5( $url );
-		$result = wp_cache_get( $cache_key );
-
-		if ( false === $result ) {
-			$sql = $wpdb->prepare(
-				'SELECT *
-				FROM ' . $wpdb->prefix . 'qr_trackr_links
-				WHERE url = %s',
-				$url
-			);
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-			$result = $wpdb->get_row( $sql, ARRAY_A );
-			wp_cache_set( $cache_key, $result, '', 300 ); // Cache for 5 minutes.
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Get the SQL query for fetching the most recent item by post ID.
-	 *
-	 * @param int $post_id Post ID.
-	 * @return array Array of items.
-	 */
-	private function get_most_recent_item_by_post_id( $post_id ) {
-		global $wpdb;
-
-		$cache_key = 'qr_trackr_link_by_post_id_' . md5( $post_id );
-		$result = wp_cache_get( $cache_key );
-
-		if ( false === $result ) {
-			$sql = $wpdb->prepare(
-				'SELECT *
-				FROM ' . $wpdb->prefix . 'qr_trackr_links
-				WHERE post_id = %d
-				ORDER BY created_at DESC',
-				absint( $post_id )
-			);
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-			$result = $wpdb->get_row( $sql, ARRAY_A );
-			wp_cache_set( $cache_key, $result, '', 300 ); // Cache for 5 minutes.
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Get the SQL query for fetching stats by link ID.
-	 *
-	 * @param int $link_id Link ID.
-	 * @return array Array of stats.
-	 */
-	private function get_stats_by_link_id( $link_id ) {
-		global $wpdb;
-
-		return $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT DATE(created_at) as date, COUNT(*) as count 
-				FROM {$wpdb->prefix}qr_trackr_stats 
-				WHERE link_id = %d 
-				GROUP BY DATE(created_at) 
-				ORDER BY date DESC",
-				absint( $link_id )
-			),
-			ARRAY_A
-		);
 	}
 
 	/**
@@ -1363,5 +1338,27 @@ class QR_Trackr_List_Table extends WP_List_Table {
 			),
 			ARRAY_A
 		);
+	}
+
+	/**
+	 * Get links by multiple IDs.
+	 *
+	 * @param array $ids Array of link IDs.
+	 * @return array Array of link data.
+	 */
+	public function get_links_by_ids( $ids ) {
+		global $wpdb;
+
+		$cache_key = 'qr_trackr_links_by_ids_' . md5( implode( ',', $ids ) );
+		$results = wp_cache_get( $cache_key );
+
+		if ( false === $results ) {
+			$sql = QR_Trackr_Query_Builder::get_items_by_ids_sql( $ids );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+			$results = $wpdb->get_results( $sql, ARRAY_A );
+			wp_cache_set( $cache_key, $results, '', 300 ); // Cache for 5 minutes.
+		}
+
+		return $results;
 	}
 }
