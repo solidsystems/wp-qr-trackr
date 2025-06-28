@@ -232,8 +232,7 @@ add_action( 'wp_ajax_qr_trackr_update_destination', 'qr_trackr_ajax_update_desti
  * @return void
  */
 function qr_trackr_create_qr_code() {
-	qr_trackr_debug_log( 'AJAX: qr_trackr_create_qr_code started.', $_POST );
-	check_ajax_referer( 'qr_trackr_nonce', 'nonce' );
+	check_ajax_referer( 'qr_trackr_create', 'nonce' );
 
 	if ( ! current_user_can( 'manage_options' ) ) {
 		qr_trackr_debug_log( 'Permission denied for QR code creation.' );
@@ -344,15 +343,27 @@ function qr_trackr_regenerate_qr_code() {
 	// Get current destination.
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table name is safely interpolated for AJAX. Caching is not used to ensure real-time data for AJAX responses.
-	$destination = $wpdb->get_var( $wpdb->prepare( "SELECT destination_url FROM $table_name WHERE id = %d", $link_id ) );
+	$cache_key  = 'qr_trackr_destination_' . $link_id;
+	$dest       = wp_cache_get( $cache_key );
 
-	if ( ! $destination ) {
+	if ( false === $dest ) {
+		$table = $wpdb->prefix . 'qr_trackr_links';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+		$dest = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT destination_url FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
+				$link_id
+			)
+		);
+		wp_cache_set( $cache_key, $dest, '', 300 ); // Cache for 5 minutes.
+	}
+
+	if ( ! $dest ) {
 		wp_send_json_error( esc_html__( 'Link not found.', 'wp-qr-trackr' ) );
 	}
 
 	// Regenerate QR code.
-	$qr_code = qr_trackr_generate_qr_code( $destination );
+	$qr_code = qr_trackr_generate_qr_code( $dest );
 	if ( is_wp_error( $qr_code ) ) {
 		wp_send_json_error( esc_html( $qr_code->get_error_message() ) );
 	}

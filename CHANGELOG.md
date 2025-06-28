@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2024-03-21
+
+### Security
+- Switched to wp_safe_redirect() for better redirect security
+- Improved SQL query preparation with proper RETURNING clause
+- Replaced serialize() with wp_json_encode() for safer cache key generation
+
+### Performance
+- Enhanced caching implementation for QR code destination URLs
+- Optimized database queries with proper caching strategies
+- Added appropriate caching for frequently accessed data
+
+### Code Quality
+- Fixed whitespace and alignment issues across all files
+- Added proper PHPCS ignore comments with explanations
+- Improved code documentation and inline comments
+- Fixed file formatting and newline issues
+- Added @package tags to file headers
+
+### Added
+- Fallback QR code generation service using QRServer.com
+- Comprehensive input validation for QR code parameters
+- Detailed error logging for QR code generation failures
+- API response validation and error handling
+
+### Changed
+- Enhanced QR code generation with better error handling
+- Improved color validation for QR code customization
+- Updated documentation with detailed parameter descriptions
+
+### Fixed
+- QR code generation failures now handled gracefully with fallback service
+- Invalid color codes now return proper error messages
+- Improved error messages for better user feedback
+
 ## [1.1.2] - 2024-03-20
 
 ### Security

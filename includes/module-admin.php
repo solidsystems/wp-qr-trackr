@@ -120,4 +120,4 @@ function qrc_options_validate( $input ) {
 		$new_input['remove_data_on_deactivation'] = 0;
 	}
 	return $new_input;
-} 
+}

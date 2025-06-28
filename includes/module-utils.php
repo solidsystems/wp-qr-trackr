@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string The path to the QR code directory.
  */
 function qrc_get_qr_code_dir() {
-	$upload_dir = wp_upload_dir();
+	$upload_dir  = wp_upload_dir();
 	$qr_code_dir = $upload_dir['basedir'] . '/qr-codes';
 
 	if ( ! file_exists( $qr_code_dir ) ) {
@@ -33,4 +33,4 @@ function qrc_get_qr_code_dir() {
 function qrc_get_qr_code_url() {
 	$upload_dir = wp_upload_dir();
 	return $upload_dir['baseurl'] . '/qr-codes';
-} 
+}

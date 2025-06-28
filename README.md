@@ -7,6 +7,8 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 - All the "best way to do things"—from code structure to CI, linting, and documentation—are automated and enforced, so you can focus on what makes your plugin unique.
 - Designed for developers who value quality, standards, and a culture of maintainability, whether you're working solo or as part of a team.
 - The engineering mindset here is about empowering you to build with confidence, knowing the fundamentals are handled and the path to production is paved with best practices.
+- Enhanced security with wp_safe_redirect() and proper SQL query preparation.
+- Optimized performance with strategic caching and efficient database operations.
 
 **Build the fun part.** The boilerplate, standards, and guardrails are already in place—just bring your ideas and creativity.
 
@@ -38,6 +40,21 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 - Comprehensive PHPUnit test suite
 - DigitalOcean App Platform compatibility
 - Example project plans and automation scripts
+- Enhanced security with safe redirects and proper data serialization
+- Optimized performance with strategic caching
+- Comprehensive code quality standards enforcement
+
+## QR Code Generation Features
+
+- Multiple error correction levels (L, M, Q, H)
+- Customizable dot styles (square, circle)
+- Custom colors with hex code validation
+- Size control (100-1000 pixels)
+- Margin control (0-50 pixels)
+- Optional logo integration
+- Custom eye shapes and colors
+- Gradient options for modern designs
+- Automatic fallback service if primary generation fails
 
 ---
 
@@ -120,14 +137,6 @@ If you see warnings about multiple lockfiles or npm being used as the package ma
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for more details and a living task tracker.
 
 ### CI/CD Pipeline: A Pre-Built Container Approach
-
-To accelerate testing and improve reliability, this project uses a sophisticated CI/CD architecture based on a pre-built Docker container. Instead of building the testing environment from scratch on every run, the pipeline pulls a stable, versioned CI container from the GitHub Container Registry (GHCR).
-
-This approach provides two key benefits:
-- **Speed:** CI checks start almost instantly, as the time-consuming step of building the Docker image is eliminated from the main workflow.
-- **Reliability:** It completely avoids Docker caching issues and ensures that every test run—whether in CI or locally—uses the exact same, consistent environment.
-
-#### Executive Summary: Containerized CI/CD Architecture
 
 ```mermaid
 graph TD

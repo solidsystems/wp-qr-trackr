@@ -111,7 +111,18 @@ All PHP files (except inline alignment in arrays/comments) must use tabs for ind
 - All conditionals must use Yoda conditions and strict comparison (===, !==) where possible.
 
 # Comment Punctuation
-- All inline comments must end in a period, exclamation mark, or question mark.
+- All inline comments must end in a full-stop (period), exclamation mark, or question mark (PHPCS Error 426).
+- This applies to both single-line (//) and multi-line (/* */) inline comments.
+- Examples:
+  - Correct: // Initialize the database table.
+  - Correct: // Why is this value negative?
+  - Correct: // Database query completed successfully!
+  - Incorrect: // Initialize the database table
+  - Incorrect: // Set default value to null
+- Exception: Code reference comments that are part of a documented pattern do not require ending punctuation.
+  - Example: // ...existing code...
+  - Example: // @codeCoverageIgnore
+  - Example: // phpcs:ignore
 
 # Docblocks
 - All functions, classes, and files must have complete docblocks describing their purpose, parameters, and return values.
@@ -150,4 +161,148 @@ Playwright is only installed and used in the dev Docker image (port 8080). It mu
 - Always restrict PHPCS to PHP files using --extensions=php in CI/CD for all plugin development.
 - Use Cursor as an assistant for troubleshooting, configuration, and documentation.
 - Favor modular configuration (Docker, Composer, PHPCS, etc.) for maintainability and scalability.
-- Define and enforce best practices for development environments (memory, dependencies, code standards) from the start. 
+- Define and enforce best practices for development environments (memory, dependencies, code standards) from the start.
+
+# PHPCS Compliance Rules
+
+## Comment Standards
+- All inline comments must end in a full-stop (period), exclamation mark, or question mark (PHPCS Error 426).
+- This applies to both single-line (//) and multi-line (/* */) inline comments.
+- Examples:
+  - Correct: // Initialize the database table.
+  - Correct: // Why is this value negative?
+  - Correct: // Database query completed successfully!
+  - Incorrect: // Initialize the database table
+  - Incorrect: // Set default value to null
+- Exception: Code reference comments that are part of a documented pattern do not require ending punctuation.
+  - Example: // ...existing code...
+  - Example: // @codeCoverageIgnore
+  - Example: // phpcs:ignore
+
+## Database Query Standards
+- All SQL queries MUST use $wpdb->prepare() for any variables.
+- Table names MUST be constructed using {$wpdb->prefix}table_name format, not string concatenation.
+- Direct database queries require a phpcs:ignore comment explaining why they're necessary.
+- Example:
+  ```php
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
+  $result = $wpdb->get_row(
+      $wpdb->prepare(
+          "SELECT * FROM {$wpdb->prefix}qr_code_links WHERE post_id = %d",
+          $post_id
+      )
+  );
+  ```
+
+## Input/Output Security
+- All user input MUST be sanitized using appropriate WordPress functions:
+  - Text: sanitize_text_field()
+  - URLs: esc_url_raw()
+  - HTML: wp_kses_post()
+  - Integers: absint() or intval()
+- All output MUST be escaped using appropriate WordPress functions:
+  - HTML: esc_html()
+  - URLs: esc_url()
+  - Attributes: esc_attr()
+  - JavaScript: esc_js()
+- Nonce verification is required for all form submissions and AJAX requests.
+- Example:
+  ```php
+  if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'action_name' ) ) {
+      wp_send_json_error( array( 'message' => __( 'Security check failed.', 'text-domain' ) ) );
+      return;
+  }
+  ```
+
+## Code Organization
+- Each file should contain only one class, function, or feature set.
+- Class files must be prefixed with 'class-'.
+- Interface files must be prefixed with 'interface-'.
+- Trait files must be prefixed with 'trait-'.
+- File names should use lowercase and hyphens (not underscores).
+- Example:
+  - Correct: class-qr-code-generator.php
+  - Incorrect: class_qr_code_generator.php
+
+## Function and Variable Naming
+- Function names must use lowercase letters and underscores.
+- Class methods should use camelCase.
+- Variables should use lowercase letters and underscores.
+- Global variables and functions must be prefixed with the plugin prefix.
+- Example:
+  ```php
+  function qr_trackr_generate_code() {
+      $post_id = get_the_ID();
+      $this->generateQRCode( $post_id );
+  }
+  ```
+
+## Error Handling and Logging
+- All database operations must check for errors.
+- Use wp_error_log() for debug logging with descriptive messages.
+- Always return proper error responses for AJAX requests.
+- Example:
+  ```php
+  if ( false === $result ) {
+      error_log( sprintf(
+          'Database operation failed for post %d: %s',
+          $post_id,
+          $wpdb->last_error
+      ) );
+      return new WP_Error( 'db_error', __( 'Database operation failed.', 'text-domain' ) );
+  }
+  ```
+
+## Code Documentation
+- All functions must have complete docblocks with @since, @param, and @return tags.
+- All classes must have complete docblocks with @package and @since tags.
+- All files must have a file-level docblock with @package tag.
+- Example:
+  ```php
+  /**
+   * Generates a QR code for the given post.
+   *
+   * @since 1.0.0
+   * @param int    $post_id The post ID to generate the code for.
+   * @param string $size    Optional. The size of the QR code. Default 'medium'.
+   * @return string|WP_Error The QR code URL or error object.
+   */
+  function qr_trackr_generate_code( $post_id, $size = 'medium' ) {
+  ```
+
+## Performance Considerations
+- Implement caching for expensive operations.
+- Use transients for temporary data storage.
+- Minimize database queries by batching operations.
+- Example:
+  ```php
+  $cache_key = 'qr_code_' . $post_id;
+  $cached_value = wp_cache_get( $cache_key );
+  if ( false !== $cached_value ) {
+      return $cached_value;
+  }
+  // ... generate value ...
+  wp_cache_set( $cache_key, $value, '', 300 ); // Cache for 5 minutes
+  ```
+
+## Internationalization
+- All user-facing strings must use translation functions.
+- Translation functions must include text domain.
+- Use proper escaping with translation functions.
+- Example:
+  ```php
+  // Correct
+  echo esc_html__( 'QR Code generated successfully.', 'wp-qr-trackr' );
+  
+  // Incorrect
+  echo 'QR Code generated successfully.';
+  ```
+
+## PHPCS Ignore Comments
+- PHPCS ignore comments must include explanation.
+- Only ignore specific rules, not entire files.
+- Document why the rule is being ignored.
+- Example:
+  ```php
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, atomic operation required
+  ``` 

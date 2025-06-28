@@ -46,16 +46,27 @@ function qrc_template_redirect() {
 			global $wpdb;
 			$table_name = $wpdb->prefix . 'qr_code_links';
 
-			// Increment access count.
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			// Try to get destination URL from cache first.
+			$cache_key       = 'qrc_destination_' . $link_id;
+			$destination_url = wp_cache_get( $cache_key );
+
+			if ( false === $destination_url ) {
+				// Get destination URL from database.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above.
+				$destination_url = $wpdb->get_var( $wpdb->prepare( "SELECT destination_url FROM {$table_name} WHERE id = %d", $link_id ) );
+
+				if ( ! empty( $destination_url ) ) {
+					// Cache for 5 minutes.
+					wp_cache_set( $cache_key, $destination_url, '', 300 );
+				}
+			}
+
+			// Increment access count (no caching needed for write operation).
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Write operation, caching not applicable.
 			$wpdb->query( $wpdb->prepare( "UPDATE {$table_name} SET access_count = access_count + 1 WHERE id = %d", $link_id ) );
 
-			// Get destination URL.
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-			$destination_url = $wpdb->get_var( $wpdb->prepare( "SELECT destination_url FROM {$table_name} WHERE id = %d", $link_id ) );
-
 			if ( ! empty( $destination_url ) ) {
-				wp_redirect( esc_url_raw( $destination_url ), 301 );
+				wp_safe_redirect( esc_url_raw( $destination_url ), 301 );
 				exit;
 			} else {
 				// Handle not found case.
@@ -67,4 +78,4 @@ function qrc_template_redirect() {
 		}
 	}
 }
-add_action( 'template_redirect', 'qrc_template_redirect' ); 
+add_action( 'template_redirect', 'qrc_template_redirect' );

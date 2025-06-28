@@ -69,6 +69,7 @@ function qrc_deactivate() {
 	$table_name = $wpdb->prefix . 'qr_code_links';
 	// Only drop the table if the user has chosen to remove data upon deactivation.
 	if ( get_option( 'qrc_remove_data_on_deactivation' ) ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema cleanup during deactivation, caching not applicable for table deletion.
 		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $table_name ) );
 	}
 }
@@ -134,4 +135,4 @@ require_once __DIR__ . '/module-admin.php';
 require_once __DIR__ . '/module-qr.php';
 
 // Load the rewrite rules.
-require_once __DIR__ . '/module-rewrite.php'; 
+require_once __DIR__ . '/module-rewrite.php';
