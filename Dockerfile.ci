@@ -19,6 +19,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set the working directory
 WORKDIR /usr/src/app
 
+# Configure Git to trust the directory
+RUN git config --global --add safe.directory /usr/src/app
+
 # Copy dependency definition files first
 COPY composer.json composer.lock package.json yarn.lock ./
 
@@ -35,8 +38,11 @@ RUN composer install --prefer-dist
 # Install Node.js dependencies
 RUN yarn install --frozen-lockfile
 
-# Set PHPCS installed_paths
-RUN php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils
+# Install additional PHPCS standards
+RUN composer require --dev phpcsstandards/phpcsextra:^1.1.0
+
+# Set PHPCS installed_paths to include all standards
+RUN php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra
 
 # Copy utility scripts
 COPY ./scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
@@ -48,7 +54,7 @@ RUN chmod +x /ci.sh
 
 ENTRYPOINT ["/ci.sh"]
 
-# Cache-busting: Force rebuild for dependency fixes #build-ci
+# Cache-busting: Force rebuild for dependency and PHPCS fixes #build-ci
 
 # End of Dockerfile
 # Trigger CI build 

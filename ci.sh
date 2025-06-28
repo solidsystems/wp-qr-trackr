@@ -19,8 +19,8 @@ export COMPOSER_MEMORY_LIMIT=2G
 # Ensure dependencies are installed
 composer install --prefer-dist
 
-# Set PHPCS paths
-php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils
+# Set PHPCS paths to include all standards
+php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra
 
 # Debug: Show PHPCS config and version
 ./vendor/bin/phpcs --config-show
@@ -32,7 +32,7 @@ find wp-content/plugins/wp-qr-trackr -type f | grep -vE 'vendor|node_modules|\.g
 
 # Run PHPCS on plugin files
 echo "Running PHPCS..."
-php -d memory_limit=2G ./vendor/bin/phpcs --standard=WordPress --extensions=php --ignore='vendor/*,build/**,node_modules/**' wp-content/plugins/wp-qr-trackr
+php -d memory_limit=2G ./vendor/bin/phpcs --standard=WordPress-Core --extensions=php --ignore='vendor/*,build/**,node_modules/**' wp-content/plugins/wp-qr-trackr
 
 # Run JS/CSS linting
 echo "Running Stylelint..."
