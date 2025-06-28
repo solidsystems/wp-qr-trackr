@@ -10,4 +10,8 @@ services:
       WORDPRESS_DB_HOST: db-nonprod:3306
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpress 
+      WORDPRESS_DB_PASSWORD: wordpress
+    volumes:
+      - .:/usr/src/app
+      - ./vendor:/usr/src/app/vendor
+      - ./node_modules:/usr/src/app/node_modules 

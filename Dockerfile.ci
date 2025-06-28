@@ -16,29 +16,39 @@ RUN apt-get update && apt-get install -y \
 # Install Composer globally
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set the working directory for the app installation
+# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy dependency definition files first and install
+# Copy dependency definition files first
 COPY composer.json composer.lock package.json yarn.lock ./
-RUN COMPOSER_MEMORY_LIMIT=2G composer install --prefer-dist
-RUN yarn install --frozen-lockfile
 
-# Copy the entire project into the container
+# Install dependencies with proper memory limits
+ENV COMPOSER_MEMORY_LIMIT=2G
+RUN composer install --prefer-dist --no-scripts
+
+# Copy the entire project
 COPY . .
 
-# Set PHPCS installed_paths from the root vendor directory
+# Install dependencies again with scripts (now that all files are present)
+RUN composer install --prefer-dist
+
+# Install Node.js dependencies
+RUN yarn install --frozen-lockfile
+
+# Set PHPCS installed_paths
 RUN php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils
 
-# Copy utility and CI scripts and make them executable
+# Copy utility scripts
 COPY ./scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
-COPY ./ci.sh /ci.sh
 RUN chmod +x /usr/local/bin/wait-for-it.sh
-RUN chmod +x /ci.sh
-RUN chmod +x /usr/src/app/scripts/wait-for-it.sh
 
-# The entrypoint will be the CI script itself
+# The entrypoint will be the CI script
+COPY ci.sh /ci.sh
+RUN chmod +x /ci.sh
+
 ENTRYPOINT ["/ci.sh"]
+
+# Cache-busting: Force rebuild for dependency fixes #build-ci
 
 # End of Dockerfile
 # Trigger CI build 
