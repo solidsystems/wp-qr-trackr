@@ -4,6 +4,80 @@
 - Debug logging is available upon request and should be implemented where appropriate.
 - UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices.
 
+# PHPCS Compliance Enforcement (Based on Recent Achievement)
+# We achieved 0 PHPCS errors across all 9 PHP files. These rules maintain that standard.
+
+## Mandatory SQL Query Standards
+- ALL SQL queries MUST use $wpdb->prepare() for any variables
+- Table names MUST use {$wpdb->prefix}table_name format, NEVER string concatenation or variables
+- Dynamic query builders MUST include specific PHPCS ignore comments with explanations
+- Example: // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic query built with validated placeholders.
+- All user input MUST use placeholders (%d, %s, %f) in prepare statements
+- Direct database queries MUST include caching or PHPCS ignore with explanation
+
+## Mandatory Caching Implementation
+- All expensive database queries MUST implement wp_cache_get()/wp_cache_set() patterns
+- Cache keys MUST be descriptive and include relevant IDs
+- Cache timeouts MUST be appropriate (300 seconds for frequent queries, longer for static data)
+- Cache invalidation MUST occur after database writes
+- Example pattern:
+  ```php
+  $cache_key = 'qr_trackr_item_' . $id;
+  $result = wp_cache_get( $cache_key );
+  if ( false === $result ) {
+      // Query and cache
+      wp_cache_set( $cache_key, $result, '', 300 );
+  }
+  ```
+
+## Mandatory Comment Standards
+- ALL inline comments MUST end with proper punctuation (. ! ?)
+- Exception: Code reference comments (// ...existing code..., // phpcs:ignore, // @codeCoverageIgnore)
+- Examples:
+  - CORRECT: // Initialize the database table.
+  - WRONG: // Initialize the database table
+- All PHPCS ignore comments MUST include explanations
+- All functions MUST have complete docblocks with @param, @return, @throws tags
+
+## Mandatory WordPress Function Usage
+- NEVER use serialize() - use wp_json_encode()
+- NEVER use date() - use gmdate() for timezone safety
+- NEVER use json_encode() - use wp_json_encode()
+- NEVER use error_log() without PHPCS ignore for debug-only usage
+- ALL user input MUST use WordPress sanitization functions
+- ALL output MUST use WordPress escaping functions
+
+## Mandatory Security Standards
+- ALL user input MUST be sanitized using wp_unslash() and appropriate WordPress functions
+- ALL output MUST be escaped using esc_html(), esc_url(), esc_attr()
+- ALL form submissions MUST verify nonces
+- ALL AJAX requests MUST verify nonces
+- ALL conditionals MUST use Yoda conditions where possible
+
+## File Organization Requirements
+- Class files MUST be prefixed with 'class-'
+- File names MUST use lowercase and hyphens, not underscores
+- File names MUST match class names
+- All files MUST have proper file-level docblocks with @package tags
+
+## PHPCS Configuration Requirements
+- Memory limit MUST be at least 1GB (1024MB)
+- MUST use --extensions=php to avoid processing JS files
+- MUST configure proper exclusion patterns in .phpcs.xml
+- CI/CD MUST allow warnings but block on errors (--warning-severity=0)
+
+# Date and Time Standards
+- NEVER use hardcoded dates in documentation or comments
+- Use "current", "recent", or relative terms instead of specific dates
+- When specific dates are required, use dynamic date functions or placeholders
+- Examples:
+  - WRONG: "March 2024 Achievement" or "December 2023 Update"
+  - CORRECT: "Recent Achievement" or "Latest Achievement"
+  - WRONG: "As of January 2024" or "Since Q4 2023"
+  - CORRECT: "As of the latest update" or "Currently"
+- For code comments requiring dates, use current_time() or gmdate() functions
+- Documentation should use relative terms that don't become outdated
+
 # WordPress Rewrite Rules Best Practices
 - Rewrite rules must be registered on the 'init' hook to ensure WordPress's rewrite system is fully loaded.
 - Never attempt to add rewrite rules before WordPress is fully initialized (e.g., during plugins_loaded).

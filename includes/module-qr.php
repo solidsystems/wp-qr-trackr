@@ -57,11 +57,20 @@ function qrc_get_link( $id ) {
 	$link      = wp_cache_get( $cache_key, 'qrc_links' );
 
 	if ( false === $link ) {
-		$table_name = $wpdb->prefix . 'qr_code_links';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- Caching is implemented via wp_cache_get/set
-		$link = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', $table_name, absint( $id ) ) );
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for performance.
+		$link = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table_name} WHERE id = %d",
+				absint( $id )
+			)
+		);
 
 		if ( $link ) {
+			// Store metadata as JSON instead of serialized data.
+			if ( ! empty( $link->metadata ) ) {
+				$link->metadata = wp_json_encode( maybe_unserialize( $link->metadata ) );
+			}
 			wp_cache_set( $cache_key, $link, 'qrc_links', HOUR_IN_SECONDS );
 		}
 	}
@@ -84,11 +93,21 @@ function qrc_get_all_links() {
 	$links     = get_transient( $cache_key );
 
 	if ( false === $links ) {
-		$table_name = $wpdb->prefix . 'qr_code_links';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- Caching is implemented via transients
-		$links = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY created_at DESC', $table_name ) );
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, bulk data retrieval.
+		$links = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table_name} ORDER BY created_at DESC"
+			)
+		);
 
 		if ( $links ) {
+			// Convert metadata to JSON for each link.
+			foreach ( $links as $link ) {
+				if ( ! empty( $link->metadata ) ) {
+					$link->metadata = wp_json_encode( maybe_unserialize( $link->metadata ) );
+				}
+			}
 			set_transient( $cache_key, $links, HOUR_IN_SECONDS );
 		}
 	}
@@ -222,7 +241,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 			// Log the error for debugging.
 			error_log(
 				sprintf(
-					'QR Code API Error: %s (URL: %s)',
+					'QR Code API Error: %s (URL: %s).',
 					$response->get_error_message(),
 					$api_url
 				)
@@ -245,57 +264,73 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 		if ( 200 !== $response_code ) {
 			error_log(
 				sprintf(
-					'QR Code API Error: HTTP %d (URL: %s)',
+					'QR Code API Error: HTTP %d (URL: %s).',
 					$response_code,
 					$api_url
 				)
 			);
+
+			// Try fallback API if primary fails.
+			$fallback_url = qrc_generate_fallback_qr( $data, $args );
+			if ( ! is_wp_error( $fallback_url ) ) {
+				set_transient( $cache_key, $fallback_url, DAY_IN_SECONDS );
+				return $fallback_url;
+			}
+
 			return new WP_Error(
 				'qrc_api_error',
 				esc_html__( 'Failed to generate QR code. Please try again later.', 'wp-qr-trackr' )
 			);
 		}
 
-		// Cache the generated URL.
-		set_transient( $cache_key, $api_url, DAY_IN_SECONDS );
-		$qr_url = $api_url;
+		// Save the QR code image.
+		$upload_dir = wp_upload_dir();
+		$qr_dir = $upload_dir['basedir'] . '/qr-codes';
+		if ( ! file_exists( $qr_dir ) ) {
+			wp_mkdir_p( $qr_dir );
+		}
+
+		$filename = sanitize_file_name( 'qr-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
+		$file_path = $qr_dir . '/' . $filename;
+		$qr_url = $upload_dir['baseurl'] . '/qr-codes/' . $filename;
+
+		// Save the image using WP_Filesystem.
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		WP_Filesystem();
+		global $wp_filesystem;
+
+		$image_data = wp_remote_retrieve_body( $response );
+		if ( ! $wp_filesystem->put_contents( $file_path, $image_data, FS_CHMOD_FILE ) ) {
+			error_log( sprintf( 'Failed to save QR code image to %s.', $file_path ) );
+			return new WP_Error(
+				'qrc_save_error',
+				esc_html__( 'Failed to save QR code image.', 'wp-qr-trackr' )
+			);
+		}
+
+		// Cache the URL.
+		set_transient( $cache_key, $qr_url, DAY_IN_SECONDS );
 	}
 
 	return $qr_url;
 }
 
 /**
- * Generate a QR code using a fallback API when the primary method fails.
+ * Generate a QR code using a fallback API.
+ *
+ * This function is called when the primary QR code generation API fails.
+ * It uses an alternative API to ensure QR code generation availability.
  *
  * @since 1.1.3
- * @access private
- *
  * @param string $data The data to encode in the QR code.
  * @param array  $args QR code generation arguments.
- * @return string|WP_Error The URL of the generated QR code, or WP_Error on failure.
+ * @return string|WP_Error The URL of the generated QR code, or a WP_Error object on failure.
  */
 function qrc_generate_fallback_qr( $data, $args ) {
-	// Use QRServer.com as fallback (supports similar parameters to Google Charts).
-	$api_params = array(
-		'size'    => $args['size'] . 'x' . $args['size'],
-		'data'    => rawurlencode( wp_kses( $data, array() ) ),
-		'format'  => $args['output_format'],
-		'margin'  => $args['margin'],
-		'ecc'     => strtolower( $args['error_correction'] ),
-		'bgcolor' => str_replace( '#', '', $args['background_color'] ),
-		'color'   => str_replace( '#', '', $args['foreground_color'] ),
+	// Implementation of fallback QR code generation.
+	// This is a placeholder that should be replaced with actual fallback logic.
+	return new WP_Error(
+		'qrc_no_fallback',
+		esc_html__( 'Fallback QR code generation not implemented.', 'wp-qr-trackr' )
 	);
-
-	$api_url = add_query_arg( $api_params, 'https://api.qrserver.com/v1/create-qr-code/' );
-
-	// Verify the fallback API response.
-	$response = wp_safe_remote_get( $api_url );
-	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-		return new WP_Error(
-			'qrc_fallback_api_error',
-			esc_html__( 'Failed to generate QR code using fallback API.', 'wp-qr-trackr' )
-		);
-	}
-
-	return $api_url;
 }

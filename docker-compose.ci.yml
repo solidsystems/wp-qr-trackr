@@ -1,6 +1,20 @@
 # This file is for CI/CD environments (GitHub Actions).
 # It overrides the ci-runner service to use a pre-built image from GHCR.
 services:
+  db-nonprod:
+    image: mariadb:10.5
+    restart: always
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   ci-runner:
     image: ghcr.io/solidsystems/wp-qr-trackr/ci-runner:${CI_IMAGE_TAG:-main}
     depends_on:

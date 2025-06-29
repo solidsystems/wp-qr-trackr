@@ -8,7 +8,7 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+	exit; // Exit if accessed directly.
 }
 
 if ( function_exists( 'qr_trackr_debug_log' ) ) {
@@ -18,6 +18,7 @@ if ( function_exists( 'qr_trackr_debug_log' ) ) {
 /**
  * Safely get a value from an array by key.
  *
+ * @since 1.0.0
  * @param array  $arr           The array to search.
  * @param string $key           The key to look for.
  * @param mixed  $default_value Default value if key not found.
@@ -30,6 +31,7 @@ function qr_trackr_array_get( $arr, $key, $default_value = null ) {
 /**
  * Sanitize a string for safe output.
  *
+ * @since 1.0.0
  * @param string $str The string to sanitize.
  * @return string Sanitized string.
  */
@@ -40,6 +42,7 @@ function qr_trackr_sanitize_output( $str ) {
 /**
  * Escape a URL for safe output.
  *
+ * @since 1.0.0
  * @param string $url The URL to escape.
  * @return string Escaped URL.
  */
@@ -50,47 +53,58 @@ function qr_trackr_escape_url( $url ) {
 /**
  * Get the most recent tracking link for a post.
  *
+ * @since 1.0.0
  * @param int $post_id Post ID.
  * @return object|null Most recent tracking link object or null.
  */
 function qr_trackr_get_most_recent_tracking_link( $post_id ) {
 	global $wpdb;
-	$cache_key = 'qr_trackr_most_recent_link_' . $post_id;
-	$link      = wp_cache_get( $cache_key );
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	$cache_key  = 'qrc_link_recent_' . absint( $post_id );
+	$link       = wp_cache_get( $cache_key, 'qrc_links' );
 
-	if ( false !== $link ) {
-		return $link;
+	if ( false === $link ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for display.
+		$link = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d ORDER BY created_at DESC LIMIT 1",
+				absint( $post_id )
+			)
+		);
+
+		if ( $link ) {
+			wp_cache_set( $cache_key, $link, 'qrc_links', HOUR_IN_SECONDS );
+		}
 	}
 
-	$link = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d ORDER BY created_at DESC LIMIT 1",
-			absint( $post_id )
-		)
-	);
-	wp_cache_set( $cache_key, $link );
 	return $link;
 }
 
 /**
  * Render the HTML for the QR code list for a post.
  *
+ * @since 1.0.0
  * @param int $post_id Post ID.
  * @return string HTML output.
  */
 function qr_trackr_render_qr_list_html( $post_id ) {
 	global $wpdb;
-	$cache_key = 'qr_trackr_links_list_' . $post_id;
-	$links     = wp_cache_get( $cache_key );
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	$cache_key  = 'qrc_links_list_' . absint( $post_id );
+	$links      = wp_cache_get( $cache_key, 'qrc_links' );
 
 	if ( false === $links ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, filtered query needed for display.
 		$links = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d ORDER BY created_at DESC",
 				absint( $post_id )
 			)
 		);
-		wp_cache_set( $cache_key, $links, '', 60 ); // Cache for 1 minute.
+
+		if ( $links ) {
+			wp_cache_set( $cache_key, $links, 'qrc_links', HOUR_IN_SECONDS );
+		}
 	}
 
 	if ( empty( $links ) ) {
@@ -100,23 +114,28 @@ function qr_trackr_render_qr_list_html( $post_id ) {
 	$html  = '<div class="qr-trackr-list"><table class="widefat"><thead><tr>';
 	$html .= '<th>' . esc_html__( 'ID', 'wp-qr-trackr' ) . '</th><th>' . esc_html__( 'QR Code', 'wp-qr-trackr' ) . '</th><th>' . esc_html__( 'Tracking Link', 'wp-qr-trackr' ) . '</th>';
 	$html .= '</tr></thead><tbody>';
+
 	foreach ( $links as $link ) {
-		$qr_urls       = qr_trackr_generate_qr_image_for_link( $link->id );
-		$tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . intval( $link->id );
-		$html         .= '<tr>';
-		$html         .= '<td>' . intval( $link->id ) . '</td>';
-		$html         .= '<td>';
+		$qr_urls       = qr_trackr_generate_qr_image_for_link( absint( $link->id ) );
+		$tracking_link = trailingslashit( home_url() ) . 'qr-trackr/redirect/' . absint( $link->id );
+
+		$html .= '<tr>';
+		$html .= '<td>' . absint( $link->id ) . '</td>';
+		$html .= '<td>';
+
 		if ( ! empty( $qr_urls ) && ! empty( $qr_urls['png'] ) ) {
-			$html .= '<img src="' . esc_url( $qr_urls['png'] ) . '" style="max-width:60px; display:block; margin-bottom:4px;" alt="QR Code">';
+			$html .= '<img src="' . esc_url( $qr_urls['png'] ) . '" style="max-width:60px; display:block; margin-bottom:4px;" alt="' . esc_attr__( 'QR Code', 'wp-qr-trackr' ) . '">';
 			$html .= '<span style="font-size:12px; color:#555;">';
 			$html .= '<a href="' . esc_url( $qr_urls['png'] ) . '" download title="' . esc_attr__( 'Download PNG', 'wp-qr-trackr' ) . '" style="margin-right:8px; text-decoration:none;"><span class="dashicons dashicons-media-default" style="vertical-align:middle;"></span> PNG</a>';
 			$html .= '<a href="' . esc_url( $qr_urls['svg'] ) . '" download title="' . esc_attr__( 'Download SVG', 'wp-qr-trackr' ) . '" style="text-decoration:none;"><span class="dashicons dashicons-media-code" style="vertical-align:middle;"></span> SVG</a>';
 			$html .= '</span>';
 		}
+
 		$html .= '</td>';
 		$html .= '<td><a href="' . esc_url( $tracking_link ) . '" target="_blank">' . esc_html( $tracking_link ) . '</a></td>';
 		$html .= '</tr>';
 	}
+
 	$html .= '</tbody></table></div>';
 	return $html;
 }
@@ -124,20 +143,22 @@ function qr_trackr_render_qr_list_html( $post_id ) {
 /**
  * Get all tracking links.
  *
- * @return array
+ * @since 1.0.0
+ * @return array Array of tracking links.
  */
 function qr_trackr_get_all_links() {
 	global $wpdb;
-	$cache_key = 'qr_trackr_all_links';
-	$links     = wp_cache_get( $cache_key );
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	$cache_key  = 'qrc_all_links';
+	$links      = wp_cache_get( $cache_key, 'qrc_links' );
 
 	if ( false === $links ) {
-		$links = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}qr_trackr_links"
-			)
-		);
-		wp_cache_set( $cache_key, $links, '', 300 ); // Cache for 5 minutes.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, full table lookup needed for display.
+		$links = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}qr_trackr_links" );
+
+		if ( $links ) {
+			wp_cache_set( $cache_key, $links, 'qrc_links', HOUR_IN_SECONDS );
+		}
 	}
 
 	return $links;
@@ -152,11 +173,12 @@ function qr_trackr_get_all_links() {
  */
 function qrc_get_link_by_id( $id ) {
 	global $wpdb;
-
-	$cache_key = 'qrc_link_' . absint( $id );
-	$link      = wp_cache_get( $cache_key );
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	$cache_key  = 'qrc_link_' . absint( $id );
+	$link       = wp_cache_get( $cache_key, 'qrc_links' );
 
 	if ( false === $link ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for display.
 		$link = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
@@ -165,7 +187,7 @@ function qrc_get_link_by_id( $id ) {
 		);
 
 		if ( $link ) {
-			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
+			wp_cache_set( $cache_key, $link, 'qrc_links', HOUR_IN_SECONDS );
 		}
 	}
 
@@ -181,11 +203,12 @@ function qrc_get_link_by_id( $id ) {
  */
 function qrc_get_link_by_url( $url ) {
 	global $wpdb;
-
-	$cache_key = 'qrc_link_url_' . md5( $url );
-	$link      = wp_cache_get( $cache_key );
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	$cache_key  = 'qrc_link_url_' . md5( $url );
+	$link       = wp_cache_get( $cache_key, 'qrc_links' );
 
 	if ( false === $link ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for display.
 		$link = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE url = %s",
@@ -194,7 +217,7 @@ function qrc_get_link_by_url( $url ) {
 		);
 
 		if ( $link ) {
-			wp_cache_set( $cache_key, $link, '', 300 ); // Cache for 5 minutes.
+			wp_cache_set( $cache_key, $link, 'qrc_links', HOUR_IN_SECONDS );
 		}
 	}
 
@@ -210,23 +233,22 @@ function qrc_get_link_by_url( $url ) {
  */
 function qrc_get_link_stats( $link_id ) {
 	global $wpdb;
-
-	$cache_key = 'qrc_link_stats_' . absint( $link_id );
-	$stats     = wp_cache_get( $cache_key );
+	$table_name = $wpdb->prefix . 'qr_trackr_stats';
+	$cache_key  = 'qrc_link_stats_' . absint( $link_id );
+	$stats      = wp_cache_get( $cache_key, 'qrc_stats' );
 
 	if ( false === $stats ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, filtered query needed for display.
 		$stats = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT DATE(created_at) as date, COUNT(*) as count 
-				FROM {$wpdb->prefix}qr_trackr_stats 
-				WHERE link_id = %d 
-				GROUP BY DATE(created_at) 
-				ORDER BY date DESC",
+				"SELECT DATE(created_at) as date, COUNT(*) as count FROM {$wpdb->prefix}qr_trackr_stats WHERE link_id = %d GROUP BY DATE(created_at) ORDER BY date DESC",
 				absint( $link_id )
 			)
 		);
 
-		wp_cache_set( $cache_key, $stats, '', 300 ); // Cache for 5 minutes.
+		if ( $stats ) {
+			wp_cache_set( $cache_key, $stats, 'qrc_stats', HOUR_IN_SECONDS );
+		}
 	}
 
 	return $stats;
@@ -241,52 +263,81 @@ function qrc_get_link_stats( $link_id ) {
  */
 function qrc_create_link( $data ) {
 	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	$result = $wpdb->insert(
-		$wpdb->prefix . 'qr_trackr_links',
-		array(
-			'url'        => esc_url_raw( $data['url'] ),
-			'title'      => sanitize_text_field( $data['title'] ),
-			'created_at' => current_time( 'mysql' ),
-			'updated_at' => current_time( 'mysql' ),
-		),
-		array( '%s', '%s', '%s', '%s' )
+	// Sanitize input data.
+	$sanitized_data = array(
+		'url'        => esc_url_raw( $data['url'] ),
+		'title'      => sanitize_text_field( $data['title'] ),
+		'created_at' => current_time( 'mysql' ),
 	);
 
-	return $result ? $wpdb->insert_id : false;
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Write operation, caching not applicable.
+	$result = $wpdb->insert(
+		$table_name,
+		$sanitized_data,
+		array(
+			'%s', // url.
+			'%s', // title.
+			'%s', // created_at.
+		)
+	);
+
+	if ( false === $result ) {
+		qr_trackr_debug_log( sprintf( 'Failed to create link. Error: %s', $wpdb->last_error ) );
+		return false;
+	}
+
+	$link_id = $wpdb->insert_id;
+
+	// Clear cache.
+	wp_cache_delete( 'qrc_all_links', 'qrc_links' );
+	wp_cache_delete( 'qrc_link_url_' . md5( $sanitized_data['url'] ), 'qrc_links' );
+
+	return $link_id;
 }
 
 /**
  * Update an existing link.
  *
  * @since 1.0.0
- * @param int   $id Link ID.
+ * @param int   $id   Link ID.
  * @param array $data Link data.
  * @return bool True on success, false on failure.
  */
 function qrc_update_link( $id, $data ) {
 	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	$result = $wpdb->update(
-		$wpdb->prefix . 'qr_trackr_links',
-		array(
-			'url'        => esc_url_raw( $data['url'] ),
-			'title'      => sanitize_text_field( $data['title'] ),
-			'updated_at' => current_time( 'mysql' ),
-		),
-		array( 'id' => absint( $id ) ),
-		array( '%s', '%s', '%s' ),
-		array( '%d' )
+	// Sanitize input data.
+	$sanitized_data = array(
+		'url'   => esc_url_raw( $data['url'] ),
+		'title' => sanitize_text_field( $data['title'] ),
 	);
 
-	if ( false !== $result ) {
-		wp_cache_delete( 'qrc_link_' . absint( $id ) );
-		wp_cache_delete( 'qrc_link_url_' . md5( $data['url'] ) );
-		wp_cache_delete( 'qr_trackr_all_links' );
-		return true;
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Write operation, caching not applicable.
+	$result = $wpdb->update(
+		$table_name,
+		$sanitized_data,
+		array( 'id' => absint( $id ) ),
+		array(
+			'%s', // url.
+			'%s', // title.
+		),
+		array( '%d' ) // id.
+	);
+
+	if ( false === $result ) {
+		qr_trackr_debug_log( sprintf( 'Failed to update link ID: %d. Error: %s', $id, $wpdb->last_error ) );
+		return false;
 	}
 
-	return false;
+	// Clear cache.
+	wp_cache_delete( 'qrc_link_' . absint( $id ), 'qrc_links' );
+	wp_cache_delete( 'qrc_all_links', 'qrc_links' );
+	wp_cache_delete( 'qrc_link_url_' . md5( $sanitized_data['url'] ), 'qrc_links' );
+
+	return true;
 }
 
 /**
@@ -298,24 +349,35 @@ function qrc_update_link( $id, $data ) {
  */
 function qrc_delete_link( $id ) {
 	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
+	// Get the link first to clear URL-based cache later.
+	$link = qrc_get_link_by_id( $id );
+
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Write operation, caching not applicable.
 	$result = $wpdb->delete(
-		$wpdb->prefix . 'qr_trackr_links',
+		$table_name,
 		array( 'id' => absint( $id ) ),
 		array( '%d' )
 	);
 
-	if ( false !== $result ) {
-		wp_cache_delete( 'qrc_link_' . absint( $id ) );
-		wp_cache_delete( 'qr_trackr_all_links' );
-		return true;
+	if ( false === $result ) {
+		qr_trackr_debug_log( sprintf( 'Failed to delete link ID: %d. Error: %s', $id, $wpdb->last_error ) );
+		return false;
 	}
 
-	return false;
+	// Clear cache.
+	wp_cache_delete( 'qrc_link_' . absint( $id ), 'qrc_links' );
+	wp_cache_delete( 'qrc_all_links', 'qrc_links' );
+	if ( $link && ! empty( $link->url ) ) {
+		wp_cache_delete( 'qrc_link_url_' . md5( $link->url ), 'qrc_links' );
+	}
+
+	return true;
 }
 
 /**
- * Record a visit to a QR code link.
+ * Record a visit to a link.
  *
  * @since 1.0.0
  * @param int $link_id Link ID.
@@ -323,25 +385,38 @@ function qrc_delete_link( $id ) {
  */
 function qrc_record_visit( $link_id ) {
 	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_stats';
 
+	// Get visitor information.
+	$ip_address = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+	$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Write operation, caching not applicable.
 	$result = $wpdb->insert(
-		$wpdb->prefix . 'qr_trackr_stats',
+		$table_name,
 		array(
 			'link_id'    => absint( $link_id ),
+			'ip_address' => $ip_address,
+			'user_agent' => $user_agent,
 			'created_at' => current_time( 'mysql' ),
-			'ip'         => sanitize_text_field( qr_trackr_get_client_ip() ),
-			'user_agent' => sanitize_text_field( qr_trackr_get_user_agent() ),
-			'location'   => sanitize_text_field( qr_trackr_get_location() ),
 		),
-		array( '%d', '%s', '%s', '%s', '%s' )
+		array(
+			'%d', // link_id.
+			'%s', // ip_address.
+			'%s', // user_agent.
+			'%s', // created_at.
+		)
 	);
 
-	if ( false !== $result ) {
-		wp_cache_delete( 'qr_trackr_stats_' . absint( $link_id ) );
-		return true;
+	if ( false === $result ) {
+		qr_trackr_debug_log( sprintf( 'Failed to record visit for link ID: %d. Error: %s', $link_id, $wpdb->last_error ) );
+		return false;
 	}
 
-	return false;
+	// Clear stats cache.
+	wp_cache_delete( 'qrc_link_stats_' . absint( $link_id ), 'qrc_stats' );
+
+	return true;
 }
 
 /**
@@ -516,7 +591,6 @@ add_action(
 
 		// Check if table exists first.
 		$table = $wpdb->prefix . 'qr_trackr_links';
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- No variables used in query
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- One-time migration check, no caching needed
 		$table_exists = $wpdb->get_var(
 			$wpdb->prepare(
@@ -533,11 +607,9 @@ add_action(
 
 		// Get current columns.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- One-time migration check, no caching needed
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- No variables used in query
 		$columns = $wpdb->get_results(
 			$wpdb->prepare(
-				'SHOW COLUMNS FROM %i',
-				$table
+				"SHOW COLUMNS FROM {$wpdb->prefix}qr_trackr_links"
 			),
 			ARRAY_A
 		);

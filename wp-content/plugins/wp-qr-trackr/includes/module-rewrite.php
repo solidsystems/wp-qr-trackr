@@ -58,6 +58,7 @@ function qr_trackr_add_rewrite_rules() {
  *
  * @global wpdb $wpdb WordPress database abstraction object.
  * @return void
+ * @throws Exception If database operations fail.
  */
 function qr_trackr_template_redirect() {
 	global $wpdb;
@@ -81,7 +82,7 @@ function qr_trackr_template_redirect() {
 		);
 
 		if ( $link ) {
-			wp_cache_set( $cache_key, $link, 'qr_trackr', 300 ); // Cache for 5 minutes
+			wp_cache_set( $cache_key, $link, 'qr_trackr', 300 ); // Cache for 5 minutes.
 		}
 	}
 
@@ -202,6 +203,7 @@ function qr_trackr_get_client_ip() {
  *
  * @param string $ip_address IP address to look up.
  * @return string JSON encoded location data or empty string on failure.
+ * @throws Exception If API request fails.
  */
 function qr_trackr_get_location_data( $ip_address ) {
 	if ( ! get_option( 'qr_trackr_track_location', false ) ) {
@@ -295,12 +297,14 @@ function qr_trackr_get_all_tracking_links_for_post( $post_id ) {
 	global $wpdb;
 	$table = $wpdb->prefix . 'qr_trackr_links';
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query required for admin utility. Caching is not used to ensure up-to-date data for admin actions.
+	// Get QR code links by post ID.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Simple query for post-specific data, results not cached due to infrequent usage.
 	$links = $wpdb->get_results(
 		$wpdb->prepare(
-			"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE post_id = %d ORDER BY created_at DESC",
+			"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d ORDER BY created_at DESC",
 			$post_id
-		)
+		),
+		ARRAY_A
 	);
 
 	return ! empty( $links ) ? $links : array();

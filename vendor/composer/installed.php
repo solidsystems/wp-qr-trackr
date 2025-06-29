@@ -1,24 +1,15 @@
 <?php return array(
     'root' => array(
-        'name' => '__root__',
+        'name' => 'solidsystems/wp-qr-trackr',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'b80622a54c07cca27d0cf4297db07d8d5abadac3',
-        'type' => 'library',
+        'reference' => 'a5c9a50847bc556b3a04a3417ef5d363e95e5012',
+        'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
-        '__root__' => array(
-            'pretty_version' => 'dev-main',
-            'version' => 'dev-main',
-            'reference' => 'b80622a54c07cca27d0cf4297db07d8d5abadac3',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../../',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
         'antecedent/patchwork' => array(
             'pretty_version' => '2.2.1',
             'version' => '2.2.1.0',
@@ -369,6 +360,15 @@
             'install_path' => __DIR__ . '/../sebastian/version',
             'aliases' => array(),
             'dev_requirement' => true,
+        ),
+        'solidsystems/wp-qr-trackr' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'a5c9a50847bc556b3a04a3417ef5d363e95e5012',
+            'type' => 'wordpress-plugin',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
         ),
         'squizlabs/php_codesniffer' => array(
             'pretty_version' => '3.13.2',

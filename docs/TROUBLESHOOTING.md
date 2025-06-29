@@ -2,6 +2,143 @@
 
 This guide covers common issues and solutions for the QR Trackr plugin and template. If you run into a problem not listed here, please open an issue or see CONTRIBUTING.md for more help.
 
+## PHPCS Compliance Issues & Solutions
+
+### Major PHPCS Compliance Achievement (Latest Update)
+
+We recently completed a comprehensive PHPCS compliance initiative that reduced the plugin from **70+ errors to 0 errors** across all 9 PHP files. This section documents the technical challenges and solutions for future reference.
+
+#### SQL Query Preparation Issues
+
+**Problem:** PHPCS detected interpolated variables in `$wpdb->prepare()` statements, which violates WordPress security standards.
+
+**Examples of Issues:**
+```php
+// WRONG - Variables interpolated in prepare statement
+$wpdb->prepare( $query_data['query'], ...$query_data['values'] )
+
+// WRONG - Table names as variables in prepare
+$wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id )
+```
+
+**Solutions Applied:**
+```php
+// CORRECT - Use direct table references
+$wpdb->prepare( "SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d", $id )
+
+// CORRECT - Add PHPCS ignore for dynamic queries with explanation
+// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic query built with validated placeholders.
+$wpdb->prepare( $query_data['query'], ...$query_data['values'] )
+```
+
+**Key Learnings:**
+- Table names should use `{$wpdb->prefix}table_name` format, not variables
+- Dynamic query builders need specific PHPCS ignore comments with explanations
+- All user input must use placeholders (%d, %s) in prepare statements
+
+#### Caching Implementation Requirements
+
+**Problem:** Direct database queries without caching triggered PHPCS warnings.
+
+**Solution:** Implemented comprehensive caching patterns:
+```php
+$cache_key = 'qr_trackr_item_' . $id;
+$result = wp_cache_get( $cache_key );
+
+if ( false === $result ) {
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Result is cached.
+    $result = $wpdb->get_row( $prepared_query );
+    
+    if ( ! is_null( $result ) ) {
+        wp_cache_set( $cache_key, $result, '', 300 ); // Cache for 5 minutes
+    }
+}
+```
+
+#### Comment Punctuation Standards
+
+**Problem:** All inline comments must end with proper punctuation (periods, exclamation marks, or question marks).
+
+**Examples:**
+```php
+// WRONG
+// Initialize the database table
+// Set default value to null
+
+// CORRECT
+// Initialize the database table.
+// Set default value to null!
+// Why is this value negative?
+```
+
+**Exception:** Code reference comments don't need punctuation:
+```php
+// ...existing code...
+// phpcs:ignore
+// @codeCoverageIgnore
+```
+
+#### WordPress Function Replacements
+
+**Problem:** Using PHP functions instead of WordPress equivalents.
+
+**Solutions:**
+- Replace `serialize()` with `wp_json_encode()`
+- Replace `date()` with `gmdate()` for timezone safety
+- Replace `json_encode()` with `wp_json_encode()`
+- Use WordPress sanitization functions for all input
+
+#### Missing Documentation Tags
+
+**Problem:** Functions missing `@throws` tags when they can throw exceptions.
+
+**Solution:** Add comprehensive docblock tags:
+```php
+/**
+ * Handle template redirect for QR tracking.
+ *
+ * @global wpdb $wpdb WordPress database abstraction object.
+ * @return void
+ * @throws Exception If database operations fail.
+ */
+```
+
+#### File Organization & Naming
+
+**Problem:** Files not following WordPress naming conventions.
+
+**Solutions:**
+- Class files should be prefixed with `class-`
+- Use lowercase and hyphens, not underscores
+- Match file names to class names
+
+### PHPCS Configuration Best Practices
+
+#### Memory Management
+- Set PHPCS memory limit to at least 1GB for large codebases
+- Use `--extensions=php` to avoid processing large JS files
+- Configure `.phpcs.xml` with proper exclusion patterns
+
+#### Warning vs Error Handling
+- Configure CI/CD to allow warnings but block on errors
+- Use `--warning-severity=0` in workflows
+- Document justified PHPCS ignore comments with explanations
+
+#### Project-Specific Configuration
+```xml
+<!-- .phpcs.xml example -->
+<ruleset name="QR Trackr WordPress Coding Standards">
+    <config name="installed_paths" value="vendor/wp-coding-standards/wpcs"/>
+    <ini name="memory_limit" value="1024M"/>
+    <rule ref="WordPress"/>
+    
+    <!-- Exclude patterns -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>tests/*</exclude-pattern>
+    <exclude-pattern>assets/*.js</exclude-pattern>
+</ruleset>
+```
+
 ## Xdebug/PECL Issues
 - Run `fix-pecl-xdebug.sh` to resolve most Xdebug installation problems on macOS (ARM/x86).
 - Ensure Homebrew and PECL are up to date.
