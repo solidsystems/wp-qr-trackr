@@ -19,6 +19,10 @@ export COMPOSER_MEMORY_LIMIT=2G
 # Ensure dependencies are installed
 composer install --prefer-dist
 
+# Install Node.js dependencies
+echo "Installing Node.js dependencies..."
+yarn install
+
 # Set PHPCS paths to include all standards
 php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra
 
