@@ -293,39 +293,12 @@ function qr_trackr_generate_qr_fallback( $url, $args = array() ) {
 }
 
 /**
- * Get the tracking URL for a link.
- *
- * @param int $link_id The ID of the tracking link.
- * @return string|false The tracking URL, or false on failure.
- */
-function qr_trackr_get_tracking_url( $link_id ) {
-	$tracking_url = home_url( '/qr-trackr/' . $link_id );
-
-	// Check if pretty permalinks are enabled.
-	if ( ! qr_trackr_check_permalinks() ) {
-		$tracking_url = home_url( '/?qr-trackr=' . $link_id );
-	}
-
-	return $tracking_url;
-}
-
-/**
  * Generates a QR code image for a tracking link (legacy function).
  *
  * @param int $link_id The ID of the tracking link.
  * @return string The URL of the generated QR code image.
  */
 function qr_trackr_generate_qr_image( $link_id ) {
-	return qr_trackr_generate_qr_image_for_link( $link_id );
-}
-
-/**
- * Generates a QR code image for a tracking link (legacy function).
- *
- * @param int $link_id The ID of the tracking link.
- * @return string The URL of the generated QR code image.
- */
-function qr_trackr_generate_qr_code( $link_id ) {
 	return qr_trackr_generate_qr_image_for_link( $link_id );
 }
 
@@ -680,4 +653,14 @@ function qr_trackr_get_qr_by_code( $qr_code ) {
 	wp_cache_set( $cache_key, $data, 'qr_trackr', 300 ); // Cache for 5 minutes.
 
 	return $data;
+}
+
+/**
+ * Generates a QR code image for a tracking link (legacy function).
+ *
+ * @param int $link_id The ID of the tracking link.
+ * @return string The URL of the generated QR code image.
+ */
+function qr_trackr_generate_qr_code( $link_id ) {
+	return qr_trackr_generate_qr_image_for_link( $link_id );
 }
