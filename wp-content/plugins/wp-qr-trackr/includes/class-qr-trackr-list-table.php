@@ -288,7 +288,9 @@ class QR_Trackr_List_Table extends WP_List_Table {
 		if ( false === $total ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, count query needed for pagination.
 			if ( ! empty( $where_values ) && ! empty( $where ) ) {
-				$total = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_links WHERE {$where}", $where_values ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- WHERE clause is validated and sanitized before use.
+				$query = "SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_links WHERE {$where}";
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query built with validated WHERE clause and prepared values.
+				$total = $wpdb->get_var( $wpdb->prepare( $query, ...$where_values ) );
 			} else {
 				$total = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_links" );
 			}

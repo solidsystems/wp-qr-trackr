@@ -608,9 +608,7 @@ add_action(
 		// Get current columns.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- One-time migration check, no caching needed
 		$columns = $wpdb->get_results(
-			$wpdb->prepare(
-				"SHOW COLUMNS FROM {$wpdb->prefix}qr_trackr_links"
-			),
+			"SHOW COLUMNS FROM {$wpdb->prefix}qr_trackr_links",
 			ARRAY_A
 		);
 
