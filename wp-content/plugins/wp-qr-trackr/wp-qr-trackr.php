@@ -3,7 +3,7 @@
  * Plugin Name: QR Trackr
  * Plugin URI: https://github.com/michaelerps/wp-qr-trackr
  * Description: A powerful WordPress plugin for creating, managing, and tracking QR codes with detailed analytics.
- * Version: 1.1.1
+ * Version: 1.1.5
  * Author: Michael Erps
  * Author URI: https://github.com/michaelerps
  * License: GPL v2 or later
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QR_TRACKR_VERSION', '1.1.1' );
+define( 'QR_TRACKR_VERSION', '1.1.5' );
 define( 'QR_TRACKR_PLUGIN_FILE', __FILE__ );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
