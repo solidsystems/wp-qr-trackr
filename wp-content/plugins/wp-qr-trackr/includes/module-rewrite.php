@@ -257,21 +257,6 @@ function qr_trackr_get_location_data( $ip_address ) {
 }
 
 /**
- * Check if pretty permalinks are enabled.
- *
- * @return bool True if pretty permalinks are enabled, false otherwise.
- */
-function qr_trackr_check_permalinks() {
-	static $pretty_permalinks = null;
-
-	if ( null === $pretty_permalinks ) {
-		$pretty_permalinks = (bool) get_option( 'permalink_structure' );
-	}
-
-	return $pretty_permalinks;
-}
-
-/**
  * Get tracking URL for a QR code.
  *
  * @param int $link_id Link ID.
