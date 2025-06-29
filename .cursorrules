@@ -66,6 +66,67 @@
 - MUST configure proper exclusion patterns in .phpcs.xml
 - CI/CD MUST allow warnings but block on errors (--warning-severity=0)
 
+## PHPUnit Standards and Function Management (Based on Recent Achievement)
+# We successfully resolved all PHPUnit fatal errors and established these standards.
+
+### Function Declaration Management
+- NEVER declare the same function in multiple modules - each function MUST exist in only one file
+- Before adding a function, search entire codebase to ensure it doesn't already exist
+- Use: grep -r "^function function_name" includes/ to check for duplicates
+- When moving functions between modules, ALWAYS remove from original location
+- Document function location decisions in commit messages
+
+### Function Location Standards
+- Rewrite functions (URL generation, redirects) → module-rewrite.php
+- Requirements checking (permalinks, capabilities) → module-requirements.php  
+- Database table creation/management → module-activation.php
+- QR code generation and processing → module-qr.php
+- Admin interface functions → module-admin.php
+- AJAX handlers → module-ajax.php
+- Utility/helper functions → module-utils.php
+- Debug and logging functions → module-debug.php
+
+### Module Loading Order Requirements
+- Core functionality modules MUST load first (activation, requirements, utils)
+- Feature modules load after core (qr, rewrite, ajax)
+- UI/Admin modules load last (admin)
+- Document loading order in main plugin file
+- Use function_exists() checks for optional cross-module dependencies
+
+### Missing Function Prevention
+- All functions called in code MUST be defined somewhere in the codebase
+- Migration code calling functions MUST ensure those functions exist
+- Extract reusable logic into dedicated functions rather than duplicating code
+- Use descriptive function names that clearly indicate their module/purpose
+
+### PHPUnit Bootstrap Requirements
+- Define ALL required constants before loading modules (e.g., QR_TRACKR_PLUGIN_FILE)
+- Load WordPress test framework before plugin modules
+- Include all plugin modules in correct dependency order
+- Initialize database tables if tests require them
+- Handle missing dependencies gracefully with clear error messages
+
+### Function Implementation Quality Standards
+- Choose the most feature-complete implementation when removing duplicates
+- Prefer implementations with caching, logging, and error handling
+- Keep implementations that use current WordPress standards
+- Remove legacy/outdated implementations
+- Document why specific implementations were chosen
+
+### CI/CD Integration for PHPUnit
+- PHPUnit MUST run after PHPCS in CI pipeline
+- Use correct relative paths: ../../../vendor/bin/phpunit from plugin directory
+- Ensure all dependencies (Composer, WordPress test framework) are installed
+- Configure proper test database connection
+- Run PHPUnit locally before pushing to verify success
+
+### Debugging PHPUnit Issues
+- Use php -l to check syntax of modified files
+- Use grep commands to find duplicate function declarations
+- Run PHPUnit with --verbose for detailed error information
+- Check module loading order if functions are undefined
+- Verify all required constants are defined in bootstrap
+
 # Date and Time Standards
 - NEVER use hardcoded dates in documentation or comments
 - Use "current", "recent", or relative terms instead of specific dates

@@ -481,4 +481,144 @@ This project supports running both dev (8080) and nonprod (8081) WordPress envir
 
 **Lessons Learned:**
 - Always exclude build artifacts from linting to avoid confusing or duplicate errors.
-- Use both config file patterns and command-line flags for maximum reliability. 
+- Use both config file patterns and command-line flags for maximum reliability.
+
+## PHPUnit Issues & Solutions
+
+### PHPUnit Function Redeclaration Errors (Latest Update)
+
+We recently resolved multiple PHPUnit fatal errors caused by duplicate function declarations across modules. This section documents the issues and solutions for future reference.
+
+#### Function Redeclaration Errors
+
+**Problem:** PHPUnit bootstrap failed with "Cannot redeclare function" errors when the same function was defined in multiple modules.
+
+**Examples of Errors:**
+```
+Fatal error: Cannot redeclare qr_trackr_add_rewrite_rules() 
+(previously declared in module-activation.php:256) 
+in module-rewrite.php on line 48
+
+Fatal error: Cannot redeclare qr_trackr_check_permalinks() 
+(previously declared in module-requirements.php:43) 
+in module-rewrite.php on line 264
+```
+
+**Root Cause:** During plugin evolution, functions were moved between modules but duplicates weren't removed, causing conflicts during PHPUnit's include process.
+
+**Solutions Applied:**
+
+1. **Function Location Analysis:** Determined the logical home for each function:
+   - `qr_trackr_add_rewrite_rules()` → Keep in `module-rewrite.php` (rewrite functionality)
+   - `qr_trackr_check_permalinks()` → Keep in `module-requirements.php` (better implementation with caching)
+   - `qr_trackr_get_tracking_url()` → Keep in `module-rewrite.php` (uses correct rewrite rules)
+
+2. **Implementation Quality Assessment:** Chose the more feature-complete versions:
+   - Requirements module version had caching and logging
+   - Rewrite module version used proper URL formats
+   - Activation module versions were basic/legacy
+
+3. **Clean Removal:** Removed duplicates while preserving functionality and backward compatibility.
+
+#### Missing Function Definitions
+
+**Problem:** PHPUnit bootstrap failed with "Call to undefined function qr_trackr_create_tables()" during WordPress initialization.
+
+**Root Cause:** Migration code called `qr_trackr_create_tables()` but the function was never defined.
+
+**Solution:** Created dedicated table creation function:
+```php
+/**
+ * Create database tables for QR Trackr.
+ *
+ * This function can be called independently for migrations or repairs.
+ *
+ * @global wpdb $wpdb WordPress database abstraction object.
+ * @return bool True on success, false on failure.
+ * @throws Exception If table creation fails.
+ */
+function qr_trackr_create_tables() {
+    // Extract table creation logic from qr_trackr_activate()
+    // Use WordPress dbDelta() for safe table creation
+    // Include proper error handling and logging
+}
+```
+
+#### Module Loading Order Issues
+
+**Problem:** Functions called before their containing modules were loaded.
+
+**Best Practices Established:**
+- Core functionality modules should load first
+- Feature modules after core modules  
+- UI/Admin modules last
+- Document module dependencies clearly
+- Use `function_exists()` checks for optional functions
+
+#### PHPUnit Configuration for WordPress Plugins
+
+**Key Configurations:**
+```xml
+<!-- phpunit.xml -->
+<phpunit bootstrap="tests/bootstrap.php">
+    <testsuites>
+        <testsuite name="plugin">
+            <directory>tests/</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
+```
+
+**Bootstrap Requirements:**
+- Load WordPress test framework
+- Include all plugin modules in correct order
+- Define required constants (like `QR_TRACKR_PLUGIN_FILE`)
+- Initialize database tables if needed
+
+#### Debugging PHPUnit Issues
+
+**Useful Commands:**
+```bash
+# Check for duplicate function declarations
+grep -r "^function " includes/ | cut -d: -f2 | sort | uniq -d
+
+# Verify PHP syntax
+php -l includes/module-name.php
+
+# Run PHPUnit with verbose output
+vendor/bin/phpunit --configuration=phpunit.xml --verbose
+```
+
+**Common Fixes:**
+1. Remove duplicate function declarations
+2. Add missing function definitions
+3. Fix module loading order
+4. Define missing constants
+5. Ensure proper WordPress test environment setup
+
+#### CI/CD Integration
+
+**GitHub Actions Configuration:**
+```yaml
+- name: Run PHPUnit Tests
+  run: |
+    cd wp-content/plugins/wp-qr-trackr
+    ../../../vendor/bin/phpunit --configuration=phpunit.xml
+```
+
+**Prerequisites:**
+- Composer dependencies installed
+- WordPress test environment configured
+- Database connection established
+- All plugin modules loaded correctly
+
+### PHPUnit Best Practices for WordPress Plugins
+
+1. **Function Uniqueness:** Ensure each function exists in only one module
+2. **Module Separation:** Keep related functions together in logical modules
+3. **Loading Order:** Load core modules before feature modules
+4. **Error Handling:** Include proper exception handling in functions
+5. **Documentation:** Maintain complete docblocks with @throws tags
+6. **Testing:** Verify PHPUnit runs locally before pushing to CI
+
+## PHPCS Warnings Allowed in Pre-commit and CI/CD 
