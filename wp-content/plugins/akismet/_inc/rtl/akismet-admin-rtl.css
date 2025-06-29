@@ -405,7 +405,7 @@ h3.akismet-enter-api-key-box__header {
 }
 
 .akismet-activate__button,
-.akismet-activate__button:hover, 
+.akismet-activate__button:hover,
 .akismet-activate__button:visited {
 	margin: 0 1em;
 }

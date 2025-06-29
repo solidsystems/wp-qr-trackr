@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit8068a896d7c724f52bbafd6e88a830b5
+class ComposerStaticInita12e5ac05425d52a4d3ce896bfc6ba7c
 {
     public static $files = array (
         '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
@@ -16,6 +16,10 @@ class ComposerStaticInit8068a896d7c724f52bbafd6e88a830b5
     );
 
     public static $prefixLengthsPsr4 = array (
+        'Q' => 
+        array (
+            'QRTrackr\\' => 9,
+        ),
         'P' => 
         array (
             'PhpParser\\' => 10,
@@ -43,6 +47,10 @@ class ComposerStaticInit8068a896d7c724f52bbafd6e88a830b5
     );
 
     public static $prefixDirsPsr4 = array (
+        'QRTrackr\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/includes',
+        ),
         'PhpParser\\' => 
         array (
             0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
@@ -840,9 +848,9 @@ class ComposerStaticInit8068a896d7c724f52bbafd6e88a830b5
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit8068a896d7c724f52bbafd6e88a830b5::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit8068a896d7c724f52bbafd6e88a830b5::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit8068a896d7c724f52bbafd6e88a830b5::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInita12e5ac05425d52a4d3ce896bfc6ba7c::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInita12e5ac05425d52a4d3ce896bfc6ba7c::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInita12e5ac05425d52a4d3ce896bfc6ba7c::$classMap;
 
         }, null, ClassLoader::class);
     }

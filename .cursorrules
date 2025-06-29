@@ -4,6 +4,80 @@
 - Debug logging is available upon request and should be implemented where appropriate.
 - UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices.
 
+# PHPCS Compliance Enforcement (Based on Recent Achievement)
+# We achieved 0 PHPCS errors across all 9 PHP files. These rules maintain that standard.
+
+## Mandatory SQL Query Standards
+- ALL SQL queries MUST use $wpdb->prepare() for any variables
+- Table names MUST use {$wpdb->prefix}table_name format, NEVER string concatenation or variables
+- Dynamic query builders MUST include specific PHPCS ignore comments with explanations
+- Example: // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic query built with validated placeholders.
+- All user input MUST use placeholders (%d, %s, %f) in prepare statements
+- Direct database queries MUST include caching or PHPCS ignore with explanation
+
+## Mandatory Caching Implementation
+- All expensive database queries MUST implement wp_cache_get()/wp_cache_set() patterns
+- Cache keys MUST be descriptive and include relevant IDs
+- Cache timeouts MUST be appropriate (300 seconds for frequent queries, longer for static data)
+- Cache invalidation MUST occur after database writes
+- Example pattern:
+  ```php
+  $cache_key = 'qr_trackr_item_' . $id;
+  $result = wp_cache_get( $cache_key );
+  if ( false === $result ) {
+      // Query and cache
+      wp_cache_set( $cache_key, $result, '', 300 );
+  }
+  ```
+
+## Mandatory Comment Standards
+- ALL inline comments MUST end with proper punctuation (. ! ?)
+- Exception: Code reference comments (// ...existing code..., // phpcs:ignore, // @codeCoverageIgnore)
+- Examples:
+  - CORRECT: // Initialize the database table.
+  - WRONG: // Initialize the database table
+- All PHPCS ignore comments MUST include explanations
+- All functions MUST have complete docblocks with @param, @return, @throws tags
+
+## Mandatory WordPress Function Usage
+- NEVER use serialize() - use wp_json_encode()
+- NEVER use date() - use gmdate() for timezone safety
+- NEVER use json_encode() - use wp_json_encode()
+- NEVER use error_log() without PHPCS ignore for debug-only usage
+- ALL user input MUST use WordPress sanitization functions
+- ALL output MUST use WordPress escaping functions
+
+## Mandatory Security Standards
+- ALL user input MUST be sanitized using wp_unslash() and appropriate WordPress functions
+- ALL output MUST be escaped using esc_html(), esc_url(), esc_attr()
+- ALL form submissions MUST verify nonces
+- ALL AJAX requests MUST verify nonces
+- ALL conditionals MUST use Yoda conditions where possible
+
+## File Organization Requirements
+- Class files MUST be prefixed with 'class-'
+- File names MUST use lowercase and hyphens, not underscores
+- File names MUST match class names
+- All files MUST have proper file-level docblocks with @package tags
+
+## PHPCS Configuration Requirements
+- Memory limit MUST be at least 1GB (1024MB)
+- MUST use --extensions=php to avoid processing JS files
+- MUST configure proper exclusion patterns in .phpcs.xml
+- CI/CD MUST allow warnings but block on errors (--warning-severity=0)
+
+# Date and Time Standards
+- NEVER use hardcoded dates in documentation or comments
+- Use "current", "recent", or relative terms instead of specific dates
+- When specific dates are required, use dynamic date functions or placeholders
+- Examples:
+  - WRONG: "March 2024 Achievement" or "December 2023 Update"
+  - CORRECT: "Recent Achievement" or "Latest Achievement"
+  - WRONG: "As of January 2024" or "Since Q4 2023"
+  - CORRECT: "As of the latest update" or "Currently"
+- For code comments requiring dates, use current_time() or gmdate() functions
+- Documentation should use relative terms that don't become outdated
+
 # WordPress Rewrite Rules Best Practices
 - Rewrite rules must be registered on the 'init' hook to ensure WordPress's rewrite system is fully loaded.
 - Never attempt to add rewrite rules before WordPress is fully initialized (e.g., during plugins_loaded).
@@ -111,7 +185,18 @@ All PHP files (except inline alignment in arrays/comments) must use tabs for ind
 - All conditionals must use Yoda conditions and strict comparison (===, !==) where possible.
 
 # Comment Punctuation
-- All inline comments must end in a period, exclamation mark, or question mark.
+- All inline comments must end in a full-stop (period), exclamation mark, or question mark (PHPCS Error 426).
+- This applies to both single-line (//) and multi-line (/* */) inline comments.
+- Examples:
+  - Correct: // Initialize the database table.
+  - Correct: // Why is this value negative?
+  - Correct: // Database query completed successfully!
+  - Incorrect: // Initialize the database table
+  - Incorrect: // Set default value to null
+- Exception: Code reference comments that are part of a documented pattern do not require ending punctuation.
+  - Example: // ...existing code...
+  - Example: // @codeCoverageIgnore
+  - Example: // phpcs:ignore
 
 # Docblocks
 - All functions, classes, and files must have complete docblocks describing their purpose, parameters, and return values.
@@ -135,4 +220,300 @@ All PHP files (except inline alignment in arrays/comments) must use tabs for ind
 All major documentation files (README, CONTRIBUTING, TROUBLESHOOTING, etc.) must have parallel development and production versions (e.g., README.dev.md and README.prod.md). Both versions must be kept up to date, include all shared sections, and be referenced in the main README or project landing page. This ensures clarity for both development and production users and prevents environment-specific confusion.
 
 # Cursor Project Rule: Plugin-Based Database Migrations
-Always use plugin-based migration routines for database schema changes (never require manual SQL or WP-CLI for schema updates). All schema changes must be handled automatically on plugin activation or upgrade. 
+Always use plugin-based migration routines for database schema changes (never require manual SQL or WP-CLI for schema updates). All schema changes must be handled automatically on plugin activation or upgrade.
+
+# PHPCS Memory Requirement
+phpcs_min_memory_mb = 1024  # PHPCS requires at least 1GB of memory for this project. For large codebases, 4GB (4096MB) is recommended.
+
+# MCP Integration Rule
+# When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), Cursor and agents should use MCP APIs by default for documentation, repository, and cloud operations. This ensures consistent, secure, and agent-friendly workflows across all plugins and environments.
+
+# Playwright Dev-Only Rule
+Playwright is only installed and used in the dev Docker image (port 8080). It must not be present in production or nonprod images. Automated UI testing and screenshot capture are only supported in dev. 
+
+# Platform-Specific Learnings and Best Practices (PHP/WordPress)
+- Always restrict PHPCS to PHP files using --extensions=php in CI/CD for all plugin development.
+- Use Cursor as an assistant for troubleshooting, configuration, and documentation.
+- Favor modular configuration (Docker, Composer, PHPCS, etc.) for maintainability and scalability.
+- Define and enforce best practices for development environments (memory, dependencies, code standards) from the start.
+
+# PHPCS Compliance Rules
+
+## Comment Standards
+- All inline comments must end in a full-stop (period), exclamation mark, or question mark (PHPCS Error 426).
+- This applies to both single-line (//) and multi-line (/* */) inline comments.
+- Examples:
+  - Correct: // Initialize the database table.
+  - Correct: // Why is this value negative?
+  - Correct: // Database query completed successfully!
+  - Incorrect: // Initialize the database table
+  - Incorrect: // Set default value to null
+- Exception: Code reference comments that are part of a documented pattern do not require ending punctuation.
+  - Example: // ...existing code...
+  - Example: // @codeCoverageIgnore
+  - Example: // phpcs:ignore
+
+## Database Query Standards
+- All SQL queries MUST use $wpdb->prepare() for any variables.
+- Table names MUST be constructed using {$wpdb->prefix}table_name format, not string concatenation.
+- Direct database queries require a phpcs:ignore comment explaining why they're necessary.
+- Example:
+  ```php
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
+  $result = $wpdb->get_row(
+      $wpdb->prepare(
+          "SELECT * FROM {$wpdb->prefix}qr_code_links WHERE post_id = %d",
+          $post_id
+      )
+  );
+  ```
+
+## Input/Output Security
+- All user input MUST be sanitized using appropriate WordPress functions:
+  - Text: sanitize_text_field()
+  - URLs: esc_url_raw()
+  - HTML: wp_kses_post()
+  - Integers: absint() or intval()
+- All output MUST be escaped using appropriate WordPress functions:
+  - HTML: esc_html()
+  - URLs: esc_url()
+  - Attributes: esc_attr()
+  - JavaScript: esc_js()
+- Nonce verification is required for all form submissions and AJAX requests.
+- Example:
+  ```php
+  if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'action_name' ) ) {
+      wp_send_json_error( array( 'message' => __( 'Security check failed.', 'text-domain' ) ) );
+      return;
+  }
+  ```
+
+## Code Organization
+- Each file should contain only one class, function, or feature set.
+- Class files must be prefixed with 'class-'.
+- Interface files must be prefixed with 'interface-'.
+- Trait files must be prefixed with 'trait-'.
+- File names should use lowercase and hyphens (not underscores).
+- Example:
+  - Correct: class-qr-code-generator.php
+  - Incorrect: class_qr_code_generator.php
+
+## Function and Variable Naming
+- Function names must use lowercase letters and underscores.
+- Class methods should use camelCase.
+- Variables should use lowercase letters and underscores.
+- Global variables and functions must be prefixed with the plugin prefix.
+- Example:
+  ```php
+  function qr_trackr_generate_code() {
+      $post_id = get_the_ID();
+      $this->generateQRCode( $post_id );
+  }
+  ```
+
+## Error Handling and Logging
+- All database operations must check for errors.
+- Use wp_error_log() for debug logging with descriptive messages.
+- Always return proper error responses for AJAX requests.
+- Example:
+  ```php
+  if ( false === $result ) {
+      error_log( sprintf(
+          'Database operation failed for post %d: %s',
+          $post_id,
+          $wpdb->last_error
+      ) );
+      return new WP_Error( 'db_error', __( 'Database operation failed.', 'text-domain' ) );
+  }
+  ```
+
+## Code Documentation
+- All functions must have complete docblocks with @since, @param, and @return tags.
+- All classes must have complete docblocks with @package and @since tags.
+- All files must have a file-level docblock with @package tag.
+- Example:
+  ```php
+  /**
+   * Generates a QR code for the given post.
+   *
+   * @since 1.0.0
+   * @param int    $post_id The post ID to generate the code for.
+   * @param string $size    Optional. The size of the QR code. Default 'medium'.
+   * @return string|WP_Error The QR code URL or error object.
+   */
+  function qr_trackr_generate_code( $post_id, $size = 'medium' ) {
+  ```
+
+## Performance Considerations
+- Implement caching for expensive operations.
+- Use transients for temporary data storage.
+- Minimize database queries by batching operations.
+- Example:
+  ```php
+  $cache_key = 'qr_code_' . $post_id;
+  $cached_value = wp_cache_get( $cache_key );
+  if ( false !== $cached_value ) {
+      return $cached_value;
+  }
+  // ... generate value ...
+  wp_cache_set( $cache_key, $value, '', 300 ); // Cache for 5 minutes
+  ```
+
+## Internationalization
+- All user-facing strings must use translation functions.
+- Translation functions must include text domain.
+- Use proper escaping with translation functions.
+- Example:
+  ```php
+  // Correct
+  echo esc_html__( 'QR Code generated successfully.', 'wp-qr-trackr' );
+  
+  // Incorrect
+  echo 'QR Code generated successfully.';
+  ```
+
+## PHPCS Ignore Comments
+- PHPCS ignore comments must include explanation.
+- Only ignore specific rules, not entire files.
+- Document why the rule is being ignored.
+- Example:
+  ```php
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, atomic operation required
+  ```
+
+# WordPress SQL Query Preparation Best Practices
+
+## Table Name Handling
+- Always store table names in variables with proper prefixes:
+  ```php
+  $table_name = $wpdb->prefix . 'my_table_name';
+  ```
+- Use double-quoted strings with curly braces for table names:
+  ```php
+  "SELECT * FROM {$table_name} WHERE id = %d"
+  ```
+- Never concatenate table names directly into queries
+
+## Query Preparation
+- Use simple placeholders (%s, %d) instead of complex ones (%1$s):
+  ```php
+  // Good
+  $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id = %d", $id );
+  
+  // Bad
+  $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id = %1$d", $id );
+  ```
+- For IN clauses, generate placeholders dynamically:
+  ```php
+  $placeholders = array_fill( 0, count( $ids ), '%d' );
+  $sql = "SELECT * FROM {$table_name} WHERE id IN (" . implode( ',', $placeholders ) . ')';
+  $wpdb->prepare( $sql, ...$ids );
+  ```
+
+## Order and Sort Parameters
+- Validate against whitelists before using in queries:
+  ```php
+  $valid_orderby = array( 'id', 'title', 'date' );
+  $orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
+  ```
+- Use esc_sql() only for validated order/sort parameters:
+  ```php
+  $sql .= ' ORDER BY ' . esc_sql( $orderby ) . ' ' . esc_sql( $order );
+  ```
+
+## Dynamic WHERE Clauses
+- Build WHERE clauses with proper placeholders:
+  ```php
+  $where = '';
+  $where_values = array();
+  if ( ! empty( $search ) ) {
+      $where = 'title LIKE %s OR description LIKE %s';
+      $search_like = '%' . $wpdb->esc_like( $search ) . '%';
+      $where_values = array( $search_like, $search_like );
+  }
+  ```
+
+## Caching
+- Cache query results with appropriate timeouts:
+  ```php
+  $cache_key = 'prefix_query_' . md5( $query );
+  $results = wp_cache_get( $cache_key );
+  if ( false === $results ) {
+      $results = $wpdb->get_results( $sql );
+      wp_cache_set( $cache_key, $results, '', 300 ); // Cache for 5 minutes
+  }
+  ```
+
+## PHPCS Compliance
+- Add phpcs:ignore comments only when necessary and with explanations:
+  ```php
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+  ```
+- Never ignore SQL preparation warnings without proper handling
+- Use proper docblocks for all query-related methods:
+  ```php
+  /**
+   * Get items by search term.
+   *
+   * @param string $search Search term.
+   * @return array Array of items.
+   */
+  ```
+
+## Query Builder Pattern
+- Use dedicated query builder classes for complex queries
+- Separate SQL generation from execution
+- Return prepared queries rather than executing them directly
+- Document expected parameter types and formats
+
+## Error Handling
+- Always check for false/null return values from $wpdb methods
+- Log database errors with descriptive messages:
+  ```php
+  if ( false === $result ) {
+      error_log( sprintf(
+          'Database operation failed: %s',
+          $wpdb->last_error
+      ) );
+      return new WP_Error( 'db_error', __( 'Database operation failed.', 'text-domain' ) );
+  }
+  ```
+
+## Security
+- Never trust user input
+- Always use $wpdb->prepare() for queries with variables
+- Use wp_unslash() and appropriate sanitization functions for input:
+  ```php
+  $title = sanitize_text_field( wp_unslash( $_POST['title'] ) );
+  ```
+- Validate and sanitize all parameters before using in queries
+
+## Performance
+- Use LIMIT and OFFSET for pagination
+- Index frequently queried columns
+- Use JOINs sparingly and efficiently
+- Cache complex query results
+- Monitor query performance in debug logs
+
+## Testing
+- Write unit tests for query builders
+- Test edge cases with special characters
+- Test with different table prefixes
+- Test with large datasets for performance
+- Test error conditions and recovery
+
+## Documentation
+- Document table schemas
+- Document expected parameter formats
+- Document cache invalidation strategies
+- Document query builder usage examples
+- Keep inline comments for complex queries
+
+## Maintenance
+- Use version control for schema changes
+- Document database upgrades
+- Keep track of deprecated queries
+- Monitor query performance
+- Regular security audits
+
+These rules are based on lessons learned from implementing WordPress plugin database queries while maintaining PHPCS compliance and following WordPress coding standards. 

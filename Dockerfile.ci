@@ -1,22 +1,62 @@
-FROM php:8.4-cli
+FROM wordpress:latest
 
-RUN apt-get update && \
-    apt-get install -y git unzip curl lsb-release ca-certificates && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g yarn && \
-    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Install system dependencies, PHP extensions, and Node.js/Yarn
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libzip-dev \
+    nodejs \
+    npm \
+    default-mysql-client \
+    subversion \
+    && npm install -g yarn \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-install zip
 
-# Install PHP extensions
-RUN apt-get install -y libzip-dev && \
-    docker-php-ext-install zip
+# Install Composer globally
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install PHPCS and WordPress Coding Standards
-RUN composer global require "squizlabs/php_codesniffer=*"
-ENV PATH="/root/.composer/vendor/bin:${PATH}"
-RUN composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-RUN composer global require "wp-coding-standards/wpcs"
-RUN phpcs --config-set installed_paths /root/.composer/vendor/wp-coding-standards/wpcs,/root/.composer/vendor/phpcsstandards/phpcsextra,/root/.composer/vendor/phpcsstandards/phpcsutils
-RUN phpcs -i
+# Set the working directory
+WORKDIR /usr/src/app
 
-WORKDIR /var/www/html/wp-content/plugins/wp-qr-trackr 
+# Configure Git to trust the directory
+RUN git config --global --add safe.directory /usr/src/app
+
+# Copy dependency definition files first
+COPY composer.json composer.lock package.json yarn.lock ./
+
+# Install dependencies with proper memory limits
+ENV COMPOSER_MEMORY_LIMIT=2G
+RUN composer install --prefer-dist --no-scripts
+
+# Copy the entire project
+COPY . .
+
+# Install dependencies again with scripts (now that all files are present)
+RUN composer install --prefer-dist
+
+# Install Node.js dependencies
+RUN yarn install --frozen-lockfile
+
+# Install additional PHPCS standards
+RUN composer require --dev phpcsstandards/phpcsextra:^1.1.0
+
+# Set PHPCS installed_paths to include all standards
+RUN php -d memory_limit=2G ./vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra
+
+# Copy utility scripts
+COPY ./scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
+# The entrypoint will be the CI script
+COPY ci.sh /ci.sh
+RUN chmod +x /ci.sh
+
+ENTRYPOINT ["/ci.sh"]
+
+# Cache-busting: Force rebuild for dependency and PHPCS fixes #build-ci
+
+# End of Dockerfile
+# Trigger CI build 
+
+# CI cache-busting: force rebuild for Dockerfile.ci update #build-ci 

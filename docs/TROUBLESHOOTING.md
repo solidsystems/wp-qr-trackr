@@ -2,6 +2,143 @@
 
 This guide covers common issues and solutions for the QR Trackr plugin and template. If you run into a problem not listed here, please open an issue or see CONTRIBUTING.md for more help.
 
+## PHPCS Compliance Issues & Solutions
+
+### Major PHPCS Compliance Achievement (Latest Update)
+
+We recently completed a comprehensive PHPCS compliance initiative that reduced the plugin from **70+ errors to 0 errors** across all 9 PHP files. This section documents the technical challenges and solutions for future reference.
+
+#### SQL Query Preparation Issues
+
+**Problem:** PHPCS detected interpolated variables in `$wpdb->prepare()` statements, which violates WordPress security standards.
+
+**Examples of Issues:**
+```php
+// WRONG - Variables interpolated in prepare statement
+$wpdb->prepare( $query_data['query'], ...$query_data['values'] )
+
+// WRONG - Table names as variables in prepare
+$wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id )
+```
+
+**Solutions Applied:**
+```php
+// CORRECT - Use direct table references
+$wpdb->prepare( "SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d", $id )
+
+// CORRECT - Add PHPCS ignore for dynamic queries with explanation
+// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic query built with validated placeholders.
+$wpdb->prepare( $query_data['query'], ...$query_data['values'] )
+```
+
+**Key Learnings:**
+- Table names should use `{$wpdb->prefix}table_name` format, not variables
+- Dynamic query builders need specific PHPCS ignore comments with explanations
+- All user input must use placeholders (%d, %s) in prepare statements
+
+#### Caching Implementation Requirements
+
+**Problem:** Direct database queries without caching triggered PHPCS warnings.
+
+**Solution:** Implemented comprehensive caching patterns:
+```php
+$cache_key = 'qr_trackr_item_' . $id;
+$result = wp_cache_get( $cache_key );
+
+if ( false === $result ) {
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Result is cached.
+    $result = $wpdb->get_row( $prepared_query );
+    
+    if ( ! is_null( $result ) ) {
+        wp_cache_set( $cache_key, $result, '', 300 ); // Cache for 5 minutes
+    }
+}
+```
+
+#### Comment Punctuation Standards
+
+**Problem:** All inline comments must end with proper punctuation (periods, exclamation marks, or question marks).
+
+**Examples:**
+```php
+// WRONG
+// Initialize the database table
+// Set default value to null
+
+// CORRECT
+// Initialize the database table.
+// Set default value to null!
+// Why is this value negative?
+```
+
+**Exception:** Code reference comments don't need punctuation:
+```php
+// ...existing code...
+// phpcs:ignore
+// @codeCoverageIgnore
+```
+
+#### WordPress Function Replacements
+
+**Problem:** Using PHP functions instead of WordPress equivalents.
+
+**Solutions:**
+- Replace `serialize()` with `wp_json_encode()`
+- Replace `date()` with `gmdate()` for timezone safety
+- Replace `json_encode()` with `wp_json_encode()`
+- Use WordPress sanitization functions for all input
+
+#### Missing Documentation Tags
+
+**Problem:** Functions missing `@throws` tags when they can throw exceptions.
+
+**Solution:** Add comprehensive docblock tags:
+```php
+/**
+ * Handle template redirect for QR tracking.
+ *
+ * @global wpdb $wpdb WordPress database abstraction object.
+ * @return void
+ * @throws Exception If database operations fail.
+ */
+```
+
+#### File Organization & Naming
+
+**Problem:** Files not following WordPress naming conventions.
+
+**Solutions:**
+- Class files should be prefixed with `class-`
+- Use lowercase and hyphens, not underscores
+- Match file names to class names
+
+### PHPCS Configuration Best Practices
+
+#### Memory Management
+- Set PHPCS memory limit to at least 1GB for large codebases
+- Use `--extensions=php` to avoid processing large JS files
+- Configure `.phpcs.xml` with proper exclusion patterns
+
+#### Warning vs Error Handling
+- Configure CI/CD to allow warnings but block on errors
+- Use `--warning-severity=0` in workflows
+- Document justified PHPCS ignore comments with explanations
+
+#### Project-Specific Configuration
+```xml
+<!-- .phpcs.xml example -->
+<ruleset name="QR Trackr WordPress Coding Standards">
+    <config name="installed_paths" value="vendor/wp-coding-standards/wpcs"/>
+    <ini name="memory_limit" value="1024M"/>
+    <rule ref="WordPress"/>
+    
+    <!-- Exclude patterns -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>tests/*</exclude-pattern>
+    <exclude-pattern>assets/*.js</exclude-pattern>
+</ruleset>
+```
+
 ## Xdebug/PECL Issues
 - Run `fix-pecl-xdebug.sh` to resolve most Xdebug installation problems on macOS (ARM/x86).
 - Ensure Homebrew and PECL are up to date.
@@ -300,4 +437,48 @@ Work through each category and file, applying the recommended fixes. Re-run PHPC
 
 ## Compliance Checklist Reference
 
-A full WordPress Coding Standards compliance checklist is now maintained in the [README.md](./README.md). Please refer to that section for the latest status and any remaining minor issues before release or PR merge. 
+A full WordPress Coding Standards compliance checklist is now maintained in the [README.md](./README.md). Please refer to that section for the latest status and any remaining minor issues before release or PR merge.
+
+## Parallel Docker Environments & Troubleshooting
+
+This project supports running both dev (8080) and nonprod (8081) WordPress environments in parallel using Docker Compose. Use `./scripts/launch-all-docker.sh` to start both environments with full isolation.
+
+### Common Issues
+- **Port Conflicts:**
+  - If you see errors about ports 8080 or 8081 being in use, run `lsof -i :8080` or `lsof -i :8081` to find and stop the conflicting process.
+- **Orphaned Containers:**
+  - The launch script uses `--remove-orphans` to clean up old containers. If you see unexpected containers, run `docker compose -p wpqrdev down` and `docker compose -p wpqrnonprod down`.
+- **Resetting Environments:**
+  - To reset dev: `./scripts/reset-docker.sh dev`
+  - To reset nonprod: `./scripts/reset-docker.sh nonprod`
+- **Accessing Environments:**
+  - Dev: http://localhost:8080
+  - Nonprod: http://localhost:8081
+
+### Best Practices
+- Always use the launch script for parallel environments.
+- Only upload release ZIPs to nonprod; dev is for live code.
+- If in doubt, stop all containers and relaunch.
+
+## Composer/PHPCS Memory & VCS Issues
+- CI/CD enforces a 2G memory limit for Composer and PHPCS to prevent out-of-memory errors. If you see OOM errors locally, set COMPOSER_MEMORY_LIMIT=2G and use php -d memory_limit=2G for PHPCS.
+- Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs (NormalizedArrays, Universal, Modernize) have been removed from PHPCSStandards and should not be referenced.
+- If Composer fails to clone a PHPCS sniff repository, check that the repository exists and is public. Remove any references to unavailable sniffs from composer.json and PHPCS config.
+
+## PHPCS: False Positives or Duplicate Errors from Build Artifacts
+
+**Problem:**
+- PHPCS reports errors for files or lines that do not exist in your source code, or you see duplicate errors for the same file.
+
+**Cause:**
+- The linter is scanning build or generated files (e.g., in `build/`), not just your source code.
+
+**Solution:**
+- Exclude build and generated directories in `.phpcs.xml` using `<exclude-pattern>build/**</exclude-pattern>`.
+- Add `--ignore='vendor/*,build/**'` to all PHPCS invocations in your CI scripts (e.g., `ci.sh`).
+- Restrict `<file>` entries in `.phpcs.xml` to only your actual source code.
+- If you add new build or generated directories, update both `.phpcs.xml` and your CI scripts accordingly.
+
+**Lessons Learned:**
+- Always exclude build artifacts from linting to avoid confusing or duplicate errors.
+- Use both config file patterns and command-line flags for maximum reliability. 

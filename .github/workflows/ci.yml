@@ -2,161 +2,88 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - main
+      - 'feature/**'
   pull_request:
-    branches: [ main, develop ]
 
 jobs:
-  lint:
+  build_image:
+    name: Build and Push CI Image
     runs-on: ubuntu-latest
+    # This job only runs when dependency files are changed.
+    if: |
+      github.event_name == 'push' &&
+      contains(join(github.event.commits.*.message, ' '), '#build-ci') ||
+      (
+        github.event_name == 'push' &&
+        (
+          contains(join(github.event.commits.*.modified, ' '), 'Dockerfile.ci') ||
+          contains(join(github.event.commits.*.modified, ' '), 'composer.json') ||
+          contains(join(github.event.commits.*.modified, ' '), 'composer.lock') ||
+          contains(join(github.event.commits.*.modified, ' '), 'package.json') ||
+          contains(join(github.event.commits.*.modified, ' '), 'yarn.lock') ||
+          contains(join(github.event.commits.*.modified, ' '), 'ci.sh')
+        )
+      )
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          php-version: '8.3'
-          coverage: none
-          tools: composer:v2
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-      - name: Run PHPCS
-        run: ./vendor/bin/phpcs --standard=.phpcs.xml wp-content/plugins/wp-qr-trackr/
-      - name: Run ESLint
-        run: yarn install && yarn lint
-      - name: Run Stylelint
-        run: yarn stylelint
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags and labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/ci-runner
+          tags: |
+            type=ref,event=branch
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.ci
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   test:
+    name: Run All CI Checks
+    needs: build_image
+    if: always() # This ensures the test job always runs, even if the build job is skipped.
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sanitize image tag
+        id: sanitize
+        run: echo "tag=$(echo ${{ github.ref_name }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+
+      - name: Run All CI Checks
         env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: wordpress_test
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          coverage: xdebug
-          tools: composer:v2
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-      - name: Install WP-CLI
-        run: |
-          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-          chmod +x wp-cli.phar
-          sudo mv wp-cli.phar /usr/local/bin/wp
-      - name: Set up WordPress
-        run: |
-          wp core download --version=6.4.3 --path=wp
-          wp config create --dbname=wordpress_test --dbuser=root --dbpass=root --dbhost=127.0.0.1 --path=wp
-          wp db create --path=wp || true
-        shell: /usr/bin/bash -e {0}
-        env:
-          COMPOSER_PROCESS_TIMEOUT: 0
-          COMPOSER_NO_INTERACTION: 1
-          COMPOSER_NO_AUDIT: 1
-      - name: Run PHPUnit tests
-        run: |
-          cd wp-content/plugins/wp-qr-trackr
-          vendor/bin/phpunit --coverage-clover=coverage.xml
-        env:
-          WP_TESTS_DIR: ${{ github.workspace }}/wp-tests-lib
-          WP_CORE_DIR: ${{ github.workspace }}/wp
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: wp-content/plugins/wp-qr-trackr/coverage.xml
-          retention-days: 7
-
-  lint-php:
-    name: PHP Lint & Standards
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        php-version: [8.4]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php-version }}
-          extensions: mbstring, intl, xdebug
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
-      - name: PHP_CodeSniffer (WordPress)
-        run: |
-          composer install --prefer-dist --no-progress
-          cd wp-content/plugins/wp-qr-trackr
-          ../../../vendor/bin/phpcs --standard=../../../.phpcs.xml --report=full --extensions=php --warning-severity=0 .
-      - name: PHP_CodeSniffer (Tests Only)
-        run: |
-          composer install --prefer-dist --no-progress
-          cd wp-content/plugins/wp-qr-trackr
-          ../../../vendor/bin/phpcs --standard=../../../.phpcs.xml --report=full --extensions=php --warning-severity=0 tests
-
-  lint-js:
-    name: JS Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install JS dependencies
-        run: yarn install
-        working-directory: wp-content/plugins/wp-qr-trackr
-      - name: Run ESLint
-        run: yarn lint
-        working-directory: wp-content/plugins/wp-qr-trackr
-
-  lint-css:
-    name: CSS Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install JS dependencies
-        run: yarn install
-        working-directory: wp-content/plugins/wp-qr-trackr
-      - name: Run Stylelint
-        run: yarn stylelint
-        working-directory: wp-content/plugins/wp-qr-trackr
-
-  audit-deps:
-    name: Dependency Audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
-      - name: Composer Audit
-        run: composer audit || true
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install JS dependencies
-        run: yarn install
-        working-directory: wp-content/plugins/wp-qr-trackr
-      - name: Yarn Audit
-        run: yarn audit --groups dependencies --level moderate || true
-
-  build-docker:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: docker compose build 
+          CI_IMAGE_TAG: ${{ steps.sanitize.outputs.tag }}
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm ci-runner 

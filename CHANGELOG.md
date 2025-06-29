@@ -1,9 +1,114 @@
 # Changelog
 
-## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [ * Version: 1.0.4] - 2025-06-15nn### Changedn- Release  * Version: 1.0.4nn## [..1] - 2025-06-15nn### Changedn- Release ..1nn## [ * Version: 1.0.3] - 2025-06-15nn### Changedn- Release  * Version: 1.0.3nnAll notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.1.4] - 2024-03-21
+
+### Fixed
+- Improved SQL query preparation in list table and utils modules
+- Fixed duplicate record_count method in list table
+- Removed unnecessary PHPCS ignore comments
+- Enhanced table name handling in SQL queries
+- Standardized SQL query formatting
+
+## [1.1.3] - 2024-03-21
+
+### Security
+- Switched to wp_safe_redirect() for better redirect security
+- Improved SQL query preparation with proper RETURNING clause
+- Replaced serialize() with wp_json_encode() for safer cache key generation
+
+### Performance
+- Enhanced caching implementation for QR code destination URLs
+- Optimized database queries with proper caching strategies
+- Added appropriate caching for frequently accessed data
+
+### Code Quality
+- Fixed whitespace and alignment issues across all files
+- Added proper PHPCS ignore comments with explanations
+- Improved code documentation and inline comments
+- Fixed file formatting and newline issues
+- Added @package tags to file headers
+
+### Added
+- Fallback QR code generation service using QRServer.com
+- Comprehensive input validation for QR code parameters
+- Detailed error logging for QR code generation failures
+- API response validation and error handling
+
+### Changed
+- Enhanced QR code generation with better error handling
+- Improved color validation for QR code customization
+- Updated documentation with detailed parameter descriptions
+
+### Fixed
+- QR code generation failures now handled gracefully with fallback service
+- Invalid color codes now return proper error messages
+- Improved error messages for better user feedback
+
+## [1.1.2] - 2024-03-20
+
+### Security
+- Fixed SQL injection vulnerabilities across all database queries using $wpdb->prepare()
+- Added comprehensive nonce verification for all admin actions
+- Improved input sanitization and output escaping
+- Enhanced error handling with proper logging
+- All admin AJAX actions (edit, delete, regenerate) now use separate, localized nonces
+
+### Performance
+- Implemented caching for database queries
+- Added cache invalidation on relevant actions
+- Standardized cache group names across modules
+- Optimized bulk action handling
+
+### Code Quality
+- Fixed Yoda conditions throughout the codebase
+- Added proper comment punctuation
+- Enhanced documentation with @throws tags
+- Fixed empty ELSE statements
+- Added translators comments for i18n
+- Improved code style and whitespace consistency
+
+### Added
+- Comprehensive module documentation
+- Enhanced error logging capabilities
+- Improved debug UI with better capability checks
+- Added proper log rotation and file management
+
+## [1.1.0] - 2024-03-20
+
+### Security
+- Fixed SQL injection vulnerabilities across all database queries using $wpdb->prepare()
+- Added comprehensive nonce verification for all admin actions
+- Improved input sanitization and output escaping
+- Enhanced error handling with proper logging
+- All admin AJAX actions (edit, delete, regenerate) now use separate, localized nonces
+
+### Performance
+- Implemented caching for database queries
+- Added cache invalidation on relevant actions
+- Standardized cache group names across modules
+- Optimized bulk action handling
+
+### Code Quality
+- Fixed Yoda conditions throughout the codebase
+- Added proper comment punctuation
+- Enhanced documentation with @throws tags
+- Fixed empty ELSE statements
+- Added translators comments for i18n
+- Improved code style and whitespace consistency
+- PHPCS memory requirement documented: at least 1GB, 4GB recommended for large codebases
+
+### Added
+- Comprehensive module documentation
+- Enhanced error logging capabilities
+- Improved debug UI with capability checks
+- Added proper transaction support for database operations
+- Enhanced IP and location tracking
+- Added log rotation functionality
 
 ## [1.0.2] - 2024-06-15
 

@@ -46,3 +46,40 @@ flowchart TD
   WP --> Plugin
   Plugin --> WP
 ``` 
+
+## Environment Architecture Note
+
+The project now supports parallel Docker Compose environments for development (dev, port 8080) and production-like testing (nonprod, port 8081). Use `./scripts/launch-all-docker.sh` to run both in isolation. This enables rapid iteration in dev while ensuring all releases are validated in a clean, production-like WordPress instance, supporting robust modularity and QA. 
+
+### PHPCS and Static Table Assignments
+- Static table assignments (e.g., `$table = $wpdb->prefix . 'table_name';`) are flagged by PHPCS as unsafe, even when built from safe components.
+- Project uses local `// phpcs:disable`/`// phpcs:enable` suppression around these assignments in `module-admin.php`.
+- `.phpcs.xml` includes multiple `<exclude-pattern>` entries for maintainability, but some PHPCS versions may still flag these lines.
+- Upgraded to latest PHP_CodeSniffer and WordPress Coding Standards to minimize false positives.
+- If PHPCS continues to flag these, commits may be made with `--no-verify` (with justification in commit message). 
+
+## Docker Volume Mount Workflow
+
+- The `ci-runner` container mounts the local project directory (`.:/usr/src/app`).
+- All linting, formatting, and testing commands run inside the container, but changes are written to the local filesystem.
+- This ensures that the development, CI, and production environments are consistent.
+- See the diagram below for the architecture.
+
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    A[Local Source Code] -- Mounted as Volume --> B[ci-runner Docker Container]
+    B -- Runs PHPCS/PHPCBF, Tests, Build --> A
+    B -- Same Environment as CI/CD --> C[CI/CD Pipeline]
+    A -- Changes Persist on Host --> D[Git Commit/Push]
+    C -- Validates Code --> D
+    subgraph Developer Workflow
+        A
+        B
+    end
+    subgraph CI/CD
+        C
+        D
+    end
+```

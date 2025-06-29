@@ -1,50 +1,48 @@
-version: '3.8'
-
 services:
-  db:
-    image: mysql:8
+  wordpress-nonprod:
+    image: wordpress:latest
+    ports:
+      - "8081:80" # Nonprod environment runs on port 8081
+    environment:
+      WORDPRESS_DB_HOST: db-nonprod:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wpdb
+    depends_on:
+      - db-nonprod
+    volumes:
+      - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+    # No plugin code mount: upload via admin UI for clean testing
+
+  db-nonprod:
+    image: mariadb:10.5
     restart: always
     environment:
-      MYSQL_DATABASE: wordpress
-      MYSQL_USER: wordpress
-      MYSQL_PASSWORD: wordpress
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wpdb
+      MYSQL_ROOT_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     volumes:
-      - db_data:/var/lib/mysql
-
-  wordpress:
-    build: .
-    depends_on:
-      - db
-    ports:
-      - "8080:80"
-    environment:
-      WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpress
-    volumes:
-      - ./wp-content/plugins:/var/www/html/wp-content/plugins
-      # Optionally mount themes or uploads as needed
-    env_file:
-      - .env
+      - db_data_nonprod:/var/lib/mysql
 
   ci-runner:
     build:
       context: .
       dockerfile: Dockerfile.ci
     depends_on:
-      - db
-    volumes:
-      - ./wp-content/plugins:/var/www/html/wp-content/plugins
-      - ./ci.sh:/ci.sh
-    working_dir: /var/www/html/wp-content/plugins/wp-qr-trackr
+      db-nonprod:
+        condition: service_healthy
     environment:
-      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_HOST: db-nonprod:3306
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
-    entrypoint: ["/bin/bash", "/ci.sh"]
+    volumes:
+      - .:/usr/src/app
 
 volumes:
-  db_data: 
+  db_data_nonprod:
+    # Persistent database storage 

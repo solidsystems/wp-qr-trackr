@@ -52,23 +52,60 @@ jQuery(document).ready(function($) {
 	// Initialize the correct field visibility on page load
 	$('#destination_type').trigger('change');
 
+	// Enhance post/page search with Select2
+	if ($('#post_id').length) {
+		$('#post_id').select2({
+			placeholder: 'Start typing to search posts/pages...',
+			allowClear: true,
+			ajax: {
+				url: qrTrackrSelect2.ajaxurl,
+				type: 'POST',
+				dataType: 'json',
+				delay: 250,
+				data: function(params) {
+					return {
+						action: 'qr_trackr_search_posts',
+						term: params.term || '',
+						nonce: qrTrackrSelect2.nonce
+					};
+				},
+				processResults: function(data) {
+					if (data.success && data.data) {
+						return {
+							results: data.data.map(function(post) {
+								return {
+									id: post.ID,
+									text: post.title + ' (' + post.ID + ')',
+								};
+							})
+						};
+					}
+					return { results: [] };
+				}
+			},
+			minimumInputLength: 0
+		});
+	}
+
 	// Handle form submission
 	$('#qr-trackr-create-form').on('submit', function(e) {
 		e.preventDefault();
-		
 		var formData = {
 			action: 'qr_trackr_create_qr_code',
 			nonce: qrTrackrAdmin.nonce,
 			destination_type: $('#destination_type').val()
 		};
-
 		if (formData.destination_type === 'post') {
-			var $selected = $('#post_id option:selected');
-			formData.destination = $selected.data('url');
-		} else {
+			formData.post_id = $('#post_id').val();
+			if (!formData.post_id) {
+				alert('Please select a post or page from the dropdown.');
+				return;
+			}
+		} else if (formData.destination_type === 'external') {
 			formData.destination = $('#external_url').val();
+		} else if (formData.destination_type === 'custom') {
+			formData.destination = $('#custom_url').val();
 		}
-
 		$.post(qrTrackrAdmin.ajaxurl, formData, function(response) {
 			if (response.success) {
 				location.reload();

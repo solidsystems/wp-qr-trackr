@@ -7,6 +7,8 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 - All the "best way to do things"—from code structure to CI, linting, and documentation—are automated and enforced, so you can focus on what makes your plugin unique.
 - Designed for developers who value quality, standards, and a culture of maintainability, whether you're working solo or as part of a team.
 - The engineering mindset here is about empowering you to build with confidence, knowing the fundamentals are handled and the path to production is paved with best practices.
+- Enhanced security with wp_safe_redirect() and proper SQL query preparation.
+- Optimized performance with strategic caching and efficient database operations.
 
 **Build the fun part.** The boilerplate, standards, and guardrails are already in place—just bring your ideas and creativity.
 
@@ -21,6 +23,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 6. [For Engineering & IT Leadership](#for-engineering--it-leadership)
 7. [Troubleshooting & FAQ](./TROUBLESHOOTING.md)
 8. [Links & Further Reading](#links--further-reading)
+9. [Reflections from the Creator](docs/REFLECTIONS-FROM-THE-CREATOR.md)
 
 ---
 
@@ -37,6 +40,21 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 - Comprehensive PHPUnit test suite
 - DigitalOcean App Platform compatibility
 - Example project plans and automation scripts
+- Enhanced security with safe redirects and proper data serialization
+- Optimized performance with strategic caching
+- Comprehensive code quality standards enforcement
+
+## QR Code Generation Features
+
+- Multiple error correction levels (L, M, Q, H)
+- Customizable dot styles (square, circle)
+- Custom colors with hex code validation
+- Size control (100-1000 pixels)
+- Margin control (0-50 pixels)
+- Optional logo integration
+- Custom eye shapes and colors
+- Gradient options for modern designs
+- Automatic fallback service if primary generation fails
 
 ---
 
@@ -45,7 +63,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 ### Prerequisites
 - macOS (ARM or x86), Linux, or Windows (see project plans for cross-platform support)
 - [Homebrew](https://brew.sh/) (macOS)
-- [Yarn](https://yarnpkg.com/)
+- [Yarn](https://yarnpkg.com/) (**only supported package manager; do not use npm or pnpm**)
 - [Composer](https://getcomposer.org/)
 - Docker (for local dev/testing)
 
@@ -65,6 +83,7 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
    yarn install
    composer install
    ```
+   > **Note:** Only `yarn.lock` should be present. If you see a `package-lock.json` or `pnpm-lock.yaml`, delete them to avoid conflicts. This project does not support npm or pnpm lockfiles.
 4. **Set up your environment:**
    ```sh
    cp .env.example .env
@@ -80,6 +99,12 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
    ```
 
 > **Note:** Debug mode is enabled by default in the development environment. When using the standard Docker workflow (including `reset-docker.sh`), a `wp-config-dev.php` file is automatically included to enable `WP_DEBUG` and log errors to `wp-content/debug.log`. This ensures all PHP errors and warnings are captured for troubleshooting during development. Do not use this file in production.
+
+### Troubleshooting
+If you see warnings about multiple lockfiles or npm being used as the package manager:
+- Delete `package-lock.json` and/or `pnpm-lock.yaml` if present.
+- Ensure only `yarn.lock` is present in the project root.
+- If using VS Code, set `"npm.packageManager": "yarn"` in `.vscode/settings.json` to enforce Yarn usage.
 
 ---
 
@@ -110,6 +135,77 @@ A modern, production-ready WordPress plugin template—featuring QR Trackr as an
 - Use the provided project plans and automation scripts for team/project management.
 - Run `./scripts/pr-summary-comment.sh <PR_NUMBER> [SUMMARY_TEXT]` to automate PR summary comments.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for more details and a living task tracker.
+
+### CI/CD Pipeline: A Pre-Built Container Approach
+
+```mermaid
+graph TD
+    subgraph "Developer"
+        A[Push Code]
+    end
+
+    subgraph "GitHub Actions"
+        A --> B{Dependency Files Changed?}
+        B -- Yes --> C[Build & Publish CI Docker Image]
+        B -- No --> D[Pull Pre-built CI Image]
+        C --> E[Push to GHCR]
+        E --> F[CI Workflow: Run Tests]
+        D --> F
+        F[Run Linting & Tests in Container]
+    end
+```
+
+#### How It Works
+
+The system is composed of two distinct GitHub Actions workflows:
+
+1.  **`publish-ci-image.yml` (The Builder)**
+    - **Purpose:** To build and publish the CI Docker image.
+    - **Trigger:** This workflow runs *only* when files defining the CI environment are changed on the `main` branch (e.g., `Dockerfile.ci`, `composer.json`, `package.json`).
+    - **Action:** It builds the `ci-runner` image and pushes it to the GitHub Container Registry, where it becomes the new standard for testing.
+
+2.  **`ci.yml` (The Tester)**
+    - **Purpose:** To run all linting and testing checks on the code.
+    - **Trigger:** Runs on every push and pull request.
+    - **Action:**
+        - It logs into the GitHub Container Registry.
+        - It uses `docker-compose.ci.yml` to pull the pre-built `ci-runner` image.
+        - It executes the `ci.sh` script inside the container to run all checks.
+
+This separation of concerns ensures that the time-intensive build process only happens when absolutely necessary, making the day-to-day development and testing cycle fast and efficient.
+
+### Containerized Testing Environment
+
+To ensure maximum portability and consistency, this project has moved away from local dependency requirements for testing and now uses a fully containerized testing environment powered by Docker. This approach eliminates the "it works on my machine" problem and guarantees that tests run in a clean, isolated, and identical environment, whether on a developer's local machine or in a CI/CD pipeline.
+
+**Overview:**
+The entire end-to-end (E2E) testing process is managed by a single script that programmatically generates a `docker-compose.ci.yml` file, brings up a WordPress instance and a database, installs all necessary dependencies (including Node.js, Yarn, and Playwright browsers), runs the tests, and tears down the environment.
+
+**Advantages:**
+- **Zero Local Dependencies:** Apart from Docker, you do not need to install PHP, a web server, a database, Node.js, or even WordPress locally to run the full test suite.
+- **Portability & Consistency:** The testing environment is defined in code and is identical for every developer and every CI run, preventing environment-specific bugs.
+- **Isolation:** Tests run in a pristine, ephemeral environment. There is no risk of interference from local configurations, leftover data, or other projects.
+- **CI/CD Ready:** The script-based approach is designed for automation and can be dropped directly into any CI/CD platform (like GitHub Actions) to run the same checks that are performed locally.
+- **Reliability:** By automating the installation of WordPress and the plugin via `wp-cli`, the tests are more reliable and less prone to failures from manual setup or race conditions.
+
+**Complexities & Challenges Encountered:**
+While powerful, implementing this containerized solution presented several technical challenges:
+- **Service Orchestration:** Ensuring the database container was fully healthy before the WordPress container started was critical to prevent connection errors. This was solved using Docker Compose's `healthcheck` feature.
+- **Automated WordPress Installation:** The initial WordPress setup (running the famous "five-minute install") had to be fully automated with `wp-cli` to create a usable site for the Playwright tests.
+- **In-Container Debugging:** When tests failed due to fatal PHP errors within the plugin, diagnosing the issue was complex. It required exec-ing into the running container to inspect the `debug.log` to find the root cause.
+- **Environment Variable Propagation:** Correctly passing the `SITE_URL` from the host shell into the Docker container and making it available to the Playwright test runner was a crucial step that required careful configuration.
+
+**Disadvantages:**
+- **Performance Overhead:** Docker introduces a minor performance cost compared to running tests natively.
+- **Resource Consumption:** The Docker-based environment naturally consumes more disk space and memory than a traditional local setup.
+- **Complexity:** The setup script and Docker configuration are more complex than a simple `phpunit` command, which may present a learning curve for developers new to containerization.
+
+### Future Containerization Opportunities
+
+To make this a truly portable, dependency-free solution, the following areas can also be containerized:
+1.  **Full Development Environment:** A `docker-compose.dev.yml` could be created to provide a complete, live-reloading development environment. Developers would only need Docker and a code editor, with no requirement to install PHP, Apache/Nginx, or MySQL locally. The plugin source code would be volume-mounted into the container for instant feedback during development.
+2.  **Linting and Static Analysis:** Running tools like `phpcs` and `eslint` inside a container would ensure that the exact same tool versions and configurations are used by every developer and by the CI server, removing `phpcs` and Node from the list of local dependencies.
+3.  **Asset Building & Packaging:** For plugins that require a build step (e.g., compiling SASS/JS), this process could be encapsulated in a multi-stage Docker build. This would create a production-ready, zipped artifact of the plugin without requiring Node.js or other build tools on the host machine.
 
 ### Local CI Workflow (Pre-commit Checks)
 
@@ -248,6 +344,62 @@ If you see different results locally and in CI:
 - Ensure you are running the same commands as the CI workflow (see `.github/workflows/ci.yml`).
 - Reinstall dependencies and hooks with `yarn setup:ci`.
 - Review the troubleshooting section in `TROUBLESHOOTING.md` for more details.
+
+---
+
+## Accidental Innovation: Documentation Orchestrator
+
+One of the most delightful surprises in this project was the creation of a fully automated documentation orchestrator—an innovation that was never on the original roadmap, but has become a favorite feature for both development and documentation.
+
+### What is it?
+A single script, `./scripts/playwright-docs-orchestrator.sh`, gives you foolproof, on-demand, always-up-to-date documentation and accessibility screenshots for the plugin. It:
+- Kills any process or container using port 8087 to avoid resource contention.
+- Ensures a clean, isolated WordPress install on port 8087 (using Docker Compose and a dedicated DB volume).
+- Runs the full WP-CLI setup to guarantee a fresh admin user and site state.
+- Executes a Playwright user flow script that logs in, creates a QR code, and captures screenshots of every step.
+- Outputs all screenshots to `assets/screenshots/` for use in documentation, accessibility reviews, and user guides.
+
+### Why does it matter?
+- **Zero manual steps:** No more worrying about stale screenshots or inconsistent docs—just run the script and everything is rebuilt from scratch.
+- **Accessibility by default:** Every UI flow is captured and ready for Section 508 or WCAG review.
+- **Developer and user friendly:** Anyone can generate the latest docs and screenshots, making onboarding and support easier.
+- **A happy accident:** This workflow emerged from troubleshooting and automation work, and is now a core part of the dev experience.
+
+Curious about the philosophy behind this and other innovations? See [Reflections from the Creator](docs/REFLECTIONS-FROM-THE-CREATOR.md).
+
+**Try it yourself:**
+```sh
+./scripts/playwright-docs-orchestrator.sh
+```
+
+This will produce a complete, up-to-date set of screenshots and documentation assets for the plugin—automatically, every time.
+
+---
+
+## Multi-Project Playwright Documentation Orchestration
+
+This project supports automated documentation and UI testing for multiple plugins/projects using a single orchestrator workflow.
+
+### How It Works
+- The orchestrator script (`scripts/playwright-docs-orchestrator.sh`) uses the `PLUGIN_DIR` environment variable to select which plugin to mount, activate, and test.
+- The Playwright user flow script must be named using the convention: `scripts/playwright-<PLUGIN_DIR>-userflow.js` (e.g., `scripts/playwright-wp-qr-trackr-userflow.js`).
+- The orchestrator will activate the specified plugin and run the corresponding Playwright script.
+
+### Usage Example
+```sh
+PLUGIN_DIR=wp-qr-trackr ./scripts/playwright-docs-orchestrator.sh
+PLUGIN_DIR=another-plugin ./scripts/playwright-docs-orchestrator.sh
+```
+
+### Adding a New Project
+1. Place your plugin code in `wp-content/plugins/<your-plugin-dir>`.
+2. Create a Playwright user flow script named `scripts/playwright-<your-plugin-dir>-userflow.js`.
+3. Run the orchestrator with `PLUGIN_DIR=<your-plugin-dir>`.
+
+### Notes
+- The orchestrator and init scripts will automatically activate the specified plugin.
+- You can add as many projects as you like, as long as you follow the naming convention.
+- Each project can have its own Playwright user flow for custom documentation and UI testing.
 
 ---
 
@@ -568,394 +720,34 @@ See the `.cursorrules` file for the authoritative list. These standards help ens
    ./vendor/bin/phpunit --configuration=wp-content/plugins/wp-qr-trackr/phpunit.xml
    ```
 
-### CI/CD Environment
-The project uses GitHub Actions for continuous integration. The CI environment:
-- Uses PHP 8.4
-- Runs on Ubuntu latest
-- Uses MySQL 8.0 service container
-- Executes PHPUnit tests
-- Generates code coverage reports
+## Containerization & CI/CD: Lessons Learned
 
-### Testing
-Both local and CI environments use the same testing configuration:
-- PHPUnit for unit and integration tests
-- WordPress test suite integration
-- Code coverage reporting via Codecov
+This project uses a pre-built Docker image for CI/CD, pulled from GHCR, to ensure fast, reliable, and consistent test environments. All Composer and PHPCS operations in CI/CD are run with a 2G memory limit to prevent out-of-memory errors. Local development does not enforce these limits by default, but contributors can set them if needed.
 
-To ensure consistency between local and CI environments:
-1. Use Docker Compose for local development
-2. Run tests in the CI container locally:
-   ```bash
-   docker compose run ci-runner
-   ```
+### Key Challenges & Solutions
+- **Composer memory limits:** Enforced 2G memory limit in CI/CD to prevent OOM errors.
+- **Single Composer context:** Removed plugin-level Composer artifacts; all dependencies are managed at the project root.
+- **PHPCS sniffs:** Removed references to unavailable sniffs (NormalizedArrays, Universal, Modernize) after they were removed from PHPCSStandards.
+- **VCS/Composer issues:** Ensured only available sniffs are referenced and correct repository URLs are used.
+- **Docker resource consumption:** CI/CD runners must be provisioned with at least 2G of memory for reliable operation.
 
-### Database Configuration
-The project uses MySQL 8.0 in both environments:
-- Local: Managed via Docker Compose
-- CI: Managed via GitHub Actions service container
+See CONTRIBUTING.md and docs/TROUBLESHOOTING.md for more details.
 
-Database credentials are managed through environment variables:
-- `WORDPRESS_DB_NAME`: Database name
-- `WORDPRESS_DB_USER`: Database user
-- `WORDPRESS_DB_PASSWORD`: Database password
-- `WORDPRESS_DB_ROOT_PASSWORD`: Root password (local only)
+## Lessons Learned
 
-## Development Environment Alignment (PLLFASLPII)
+### Platform-Specific Learnings (PHP/WordPress)
+- **Restrict PHPCS to PHP files:** To prevent out-of-memory errors and unnecessary linting, always use the `--extensions=php` flag with PHPCS in CI/CD. This ensures only PHP files are scanned, which is especially important in WordPress plugins that may include non-PHP files (e.g., Markdown, XML, shell scripts).
+- **Using Cursor as an Assistant:** Leveraging Cursor's AI assistant accelerated troubleshooting, configuration, and documentation, especially for complex CI/CD and linting issues.
+- **Modular Configurations:** Modularizing configuration files (Docker, Composer, PHPCS, etc.) made it easier to maintain, debug, and scale the project.
+- **Defining and Implementing Best Practices:** Establishing and enforcing best practices for development environments (e.g., memory limits, dependency management, code standards) led to more reliable and maintainable workflows.
 
-### Overview
-The Post-Linter Linter Fix and System Level Package Install Independence (PLLFASLPII) process ensures consistent behavior between local development and CI/CD environments. This process was crucial in resolving subtle differences between local and GitHub Actions environments.
+## Security Best Practices
 
-### Key Components
+All forms and data-changing actions in QR Trackr are protected by WordPress nonces and server-side verification:
 
-#### 1. Package Management Alignment
-- Standardized on Yarn as the primary package manager
-- Aligned package versions between root and plugin package.json files
-- Resolved peer dependency conflicts:
-  - ESLint version compatibility with WordPress requirements
-  - Stylelint version alignment with stylelint-config-standard
-  - Husky configuration updates for v9
+- **Admin forms** (e.g., create, edit, delete QR codes) include a nonce field and verify it server-side before processing.
+- **AJAX endpoints** require a valid nonce and verify it using `check_ajax_referer()` or `wp_verify_nonce()`.
+- **Bulk and destructive actions** (such as deleting QR codes) are protected by nonces in both the action link and the handler.
+- **Settings and debug forms** use `wp_nonce_field()` and verify with `check_admin_referer()`.
 
-#### 2. Development Tool Configuration
-- Updated ESLint configuration to use WordPress standards
-- Aligned Stylelint configuration with WordPress requirements
-- Modernized Husky setup using postinstall hooks
-- Ensured consistent module type declarations
-
-#### 3. CI/CD Integration
-- Removed deprecated husky commands from CI scripts
-- Aligned local and CI package installation processes
-- Ensured consistent linting behavior across environments
-
-### Implementation Steps
-1. Identified version mismatches between local and CI environments
-2. Updated package.json files to use compatible versions
-3. Modernized development tool configurations
-4. Verified changes in both local and CI environments
-5. Documented the process for future reference
-
-### Reflections
-
-#### The Reality of Automated Development
-This process highlighted several important aspects of modern development:
-
-1. **Initial Working State ≠ Production Ready**
-   - Tools may work locally but require significant alignment for CI/CD
-   - Automated tools often provide a starting point, not a complete solution
-
-2. **Understanding Fundamentals**
-   - Deep knowledge of development tools is essential
-   - Understanding how tools interact is crucial for troubleshooting
-   - Local success doesn't guarantee CI/CD compatibility
-
-3. **Iterative Improvement**
-   - What seemed like "one commit away" required multiple iterations
-   - Each fix revealed new dependencies and requirements
-   - Continuous testing in both environments was essential
-   - The "it broke differently" phase is a natural part of the process, indicating progress in understanding the system
-
-4. **Documentation Importance**
-   - Clear documentation of the alignment process is crucial
-   - Future developers need to understand the reasoning behind decisions
-   - Version compatibility requirements must be clearly stated
-
-### Best Practices Moving Forward
-
-1. **Version Management**
-   - Keep package versions aligned between environments
-   - Document version compatibility requirements
-   - Regular updates to development tools
-
-2. **CI/CD Integration**
-   - Test changes in CI environment before local deployment
-   - Maintain consistent tooling across environments
-   - Document any environment-specific requirements
-
-3. **Development Workflow**
-   - Regular testing in both local and CI environments
-   - Clear documentation of tool configurations
-   - Version control of all configuration files
-
-## Caching and PHPCS Workflow Improvements
-
-During code review and PHPCS compliance work, the Cursor assistant specifically asked if a short-term cache should be added to the admin table rendering workflow (e.g., in `qr_trackr_render_qr_list_html`). This approach was chosen to make the codebase more robust and to reduce the number of explicit PHPCS ignore comments required for direct database calls. By caching the results of frequent queries for a short period (e.g., 1 minute), we improve performance and maintainability while adhering to WordPress coding standards and best practices.
-
-## Known Issues & TODOs
-
-### Git Workflow Issues
-- **Detached HEAD State**: When running automated scripts or CI/CD jobs, you may encounter a "detached HEAD" error when trying to push changes. This happens because the script is not on a specific branch. To resolve:
-  1. Check out the correct branch: `git checkout docs/harmonize-readme`
-  2. Merge or rebase your changes: `git merge <commit-hash>`
-  3. Push to the branch: `git push origin docs/harmonize-readme`
-  - See `.github/workflows/auto-push-detached-head.yml` for automated handling of this issue.
-
-### Planned Improvements
-- **CI/CD & Automation**
-  - Add notifications to CI workflow (Slack, email, GitHub status checks)
-  - Enforce minimum code coverage in CI
-  - Further customize CI workflow (parallel jobs, artifact uploads, deployment steps)
-
-- **Admin UI & Analytics**
-  - Redesign Admin Dashboard with consistent visual language
-  - Implement responsive & accessible design
-  - Add at-a-glance performance overview
-  - Create sortable & searchable QR code table
-  - Add visual indicators for performance
-  - Implement shortcode for QR code generation
-  - Add frontend QR code analytics (optional)
-  - Add bulk actions for QR codes
-  - Improve admin notices & feedback
-
-- **Documentation & Architecture**
-  - Expand `ARCHITECTURE.md` with:
-    - Sequence diagrams for key flows
-    - Deployment notes
-    - Integration points
-    - Security and scaling considerations
-  - Keep architecture documentation up to date
-
-### Contributing
-- See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines
-- All changes must be made on a feature branch and submitted via PR
-- Documentation and tests are required for all new features
-- Use the provided project plans and automation scripts for team/project management
-- **PHPCS and Schema Migrations:** If you must use direct database calls for schema changes, wrap the relevant code with `// phpcs:disable` and `// phpcs:enable` to suppress warnings. Always include a comment explaining why this is necessary, as this approach is accepted but may be debated among experienced WordPress developers.
-
-## Stuff To Do After It's Done
-
-- **PR #11 has been merged:** The build script and release process improvements have been completed. The automated release workflow is now in place, ensuring robust and repeatable releases.
-
-## Changelog
-
-### Version 1.0.4
-- Resolved constant redeclaration issues.
-- Fixed SQL syntax errors in database operations.
-- Improved overall stability and code quality.
-
-### Version 1.0.3
-- Fixed SQL syntax errors in database operations.
-- Improved code quality and stability.
-
-### Version 1.0.2
-- Initial release to address issues with the plugin.
-
-### Version 1.0.1
-- Initial release of the QR Trackr plugin.
-
-## Summary of Changes
-- **Version Updates**: Released versions 1.0.2, 1.0.3, and 1.0.4 to address various issues and improve functionality.
-- **Code Improvements**: Removed duplicate constants, fixed SQL syntax errors, and improved the activation function.
-- **New Features**: Implemented an automated release process and enhanced documentation.
-- **Bug Fixes**: Resolved fatal errors and warnings related to file inclusion and constant redeclarations.
-- **Documentation Updates**: Updated the README to reflect changes and improvements made to the plugin.
-
-## Post-Foundation Changes and Improvements
-
-### List Table Enhancements
-- Implemented proper column rendering with `single_row()` and `single_row_columns()`
-- Added destination URL editing functionality
-- Fixed SQL queries to use proper table name formatting with backticks
-- Added debug logging for better troubleshooting
-- Improved table display with proper HTML structure
-
-### JavaScript Optimizations
-- Scoped jQuery properly using IIFE pattern
-- Added 'use strict' mode for better error catching
-- Improved event handling for edit functionality
-- Reduced script loading to only QR Trackr admin pages
-- Enhanced debug logging in console
-
-### Performance Improvements
-- Removed unnecessary script loading on post/page creation screens
-- Optimized SQL queries with proper indexing
-- Added caching for frequently accessed data
-- Improved table rendering performance
-- Reduced DOM manipulation overhead
-
-### Security Enhancements
-- Added nonces for all AJAX operations
-- Improved data sanitization and validation
-- Enhanced URL validation for destination links
-- Added proper escaping for all output
-- Implemented secure redirect handling
-
-### UI/UX Improvements
-- Simplified menu structure (renamed to "QR Trackr")
-- Enhanced success message display duration
-- Improved QR code preview and download experience
-- Added clearer instructions for users
-- Mobile-first responsive design improvements
-
-### Database Optimizations
-- Fixed table name formatting in queries
-- Added proper indexing for frequently queried columns
-- Implemented efficient caching strategies
-- Optimized scan recording process
-- Improved query performance for statistics
-
-### Code Quality
-- Added comprehensive debug logging
-- Improved error handling and reporting
-- Enhanced code documentation
-- Fixed deprecated function usage
-- Implemented WordPress coding standards
-
-## Requirements
-
-- WordPress 5.0 or higher
-- PHP 7.4 or higher
-- MySQL 5.6 or higher
-
-## License
-
-This plugin is licensed under the GPL v2 or later.
-
-## Credits
-
-- QR Code generation powered by [Endroid QR Code](https://github.com/endroid/qr-code)
-- Icons by [Dashicons](https://developer.wordpress.org/resource/dashicons/)
-
-## Database Schema
-
-The plugin uses two main database tables:
-
-### qr_trackr_links
-- `id` (bigint) - Primary key, auto-increment
-- `post_id` (bigint) - Associated WordPress post/page ID
-- `destination_url` (varchar) - The URL the QR code redirects to
-- `created_at` (datetime) - When the QR code was created
-- `updated_at` (datetime) - When the QR code was last updated
-
-### qr_trackr_scans
-- `id` (bigint) - Primary key, auto-increment
-- `link_id` (bigint) - Foreign key to qr_trackr_links
-- `user_agent` (varchar) - Browser/device information
-- `ip_address` (varchar) - IP address of the scanner
-- `scanned_at` (datetime) - When the QR code was scanned
-
-## Modular Architecture Philosophy
-
-The QR Trackr plugin is built with a modular architecture to ensure maintainability, scalability, and clean separation of concerns. This approach aligns with WordPress best practices and makes the codebase easier to maintain and extend.
-
-### Core Principles
-
-1. **Separation of Concerns**
-   - Each module handles a specific aspect of functionality
-   - Clear boundaries between different types of operations
-   - Reduced coupling between components
-
-2. **Single Responsibility**
-   - Each module has one primary purpose
-   - Functions are focused and do one thing well
-   - Easier to test and maintain
-
-3. **Progressive Enhancement**
-   - Core functionality works without optional features
-   - Graceful degradation when dependencies are missing
-   - Clear fallback mechanisms
-
-### Module Organization
-
-The plugin is organized into the following modules:
-
-1. **Core Modules** (Loaded First)
-   - `module-requirements.php` - System requirements checking
-   - `module-activation.php` - Plugin activation/deactivation
-   - `module-utils.php` - Utility functions and database helpers
-
-2. **Feature Modules**
-   - `module-qr.php` - QR code generation
-   - `module-rewrite.php` - URL rewriting and redirection
-   - `module-ajax.php` - AJAX handlers
-   - `module-debug.php` - Debug logging
-
-3. **UI/Admin Modules** (Loaded Last)
-   - `module-admin.php` - Admin interface
-   - `class-qr-trackr-list-table.php` - Custom list table
-
-### Benefits of Modular Approach
-
-1. **Maintainability**
-   - Easier to locate and fix issues
-   - Clearer code organization
-   - Simpler testing and debugging
-
-2. **Scalability**
-   - New features can be added as separate modules
-   - Existing modules can be enhanced independently
-   - Reduced risk of conflicts
-
-3. **Testability**
-   - Modules can be tested in isolation
-   - Clearer boundaries for unit tests
-   - Easier to mock dependencies
-
-4. **Security**
-   - Better control over data flow
-   - Clearer permission boundaries
-   - Easier to audit and secure
-
-### Future Development Guidelines
-
-When adding new features or making changes:
-
-1. **Documentation**
-   - Document module purpose and dependencies
-   - Keep README and inline comments up to date
-   - Document any new database schema changes
-
-2. **Code Standards**
-   - Follow WordPress coding standards
-   - Maintain modular structure
-   - Use proper error handling
-
-3. **Testing**
-   - Add tests for new functionality
-   - Update existing tests as needed
-   - Test edge cases and error conditions
-
-4. **User Experience**
-   - Maintain mobile-first approach
-   - Provide clear feedback
-   - Handle errors gracefully
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-This plugin is licensed under the GPL v2 or later.
-
-## Example: Production Configuration (DigitalOcean App Platform)
-
-When deploying your WordPress site and the QR Trackr plugin to a production environment—such as a site created with [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform/)—it is critical to disable debug mode and ensure your configuration is secure and optimized for performance.
-
-**Recommended `wp-config.php` settings for production:**
-
-```php
-// Production configuration example
-
-define( 'WP_DEBUG', false );
-define( 'WP_DEBUG_LOG', false );
-define( 'WP_DEBUG_DISPLAY', false );
-
-define( 'DISALLOW_FILE_EDIT', true ); // Prevents file editing from the admin
-
-define( 'FORCE_SSL_ADMIN', true ); // Enforce SSL for admin
-
-// Set database and other secrets via environment variables (recommended for DigitalOcean App Platform)
-define( 'DB_NAME', getenv('DB_NAME') );
-define( 'DB_USER', getenv('DB_USER') );
-define( 'DB_PASSWORD', getenv('DB_PASSWORD') );
-define( 'DB_HOST', getenv('DB_HOST') );
-// ... other environment-based config ...
-```
-
-> **Important:**
-> - Do **not** include `wp-config-dev.php` or enable debug mode in production.
-> - Ensure all secrets (database credentials, salts, etc.) are set via environment variables in the DigitalOcean App Platform dashboard.
-> - Always use SSL and restrict file editing in the admin for security.
-> - Monitor logs using DigitalOcean's built-in logging or forward to a managed OpenSearch instance as described in the infrastructure section.
+This ensures robust protection against CSRF and other attacks, fully complying with WordPress security standards and project rules. All new features must include nonce protection for any form or data-changing action.

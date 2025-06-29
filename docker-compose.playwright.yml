@@ -1,0 +1,55 @@
+services:
+  wordpress-playwright:
+    image: wordpress:latest
+    ports:
+      - "8087:80" # Playwright doc run on port 8087
+    environment:
+      WORDPRESS_DB_HOST: db-playwright:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wpdb
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME','http://localhost:8087');
+        define('WP_SITEURL','http://localhost:8087');
+        define('WP_ENVIRONMENT_TYPE','development');
+    depends_on:
+      - db-playwright
+    volumes:
+      - wp_core_playwright:/var/www/html
+      - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+      - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+
+  wpcli-playwright:
+    image: wordpress:cli
+    depends_on:
+      - wordpress-playwright
+      - db-playwright
+    environment:
+      WORDPRESS_DB_HOST: db-playwright:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wpdb
+      WP_HOME: http://localhost:8087
+      WP_SITEURL: http://localhost:8087
+    volumes:
+      - wp_core_playwright:/var/www/html
+      - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+    entrypoint: ["tail", "-f", "/dev/null"]
+
+  db-playwright:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - db_data_playwright:/var/lib/mysql
+
+volumes:
+  db_data_playwright:
+    # Persistent database storage for Playwright doc runs 
+  wp_core_playwright:
+    # Persistent WordPress core for Playwright doc runs 

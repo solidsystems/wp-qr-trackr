@@ -1,3 +1,21 @@
+# 🚀 Contributor Onboarding: Use Docker for Everything
+
+**Requirements:**
+- Docker Desktop (latest)
+- Git
+
+**All development, linting, and testing must be done inside the Docker container (`ci-runner`).**
+No need to install PHP, Composer, Node, or CLI tools on your host.
+
+See `README.dev.md` for full onboarding and workflow details.
+
+**Automated onboarding check:**
+- The script `scripts/check-onboarding.sh` runs automatically before every commit (pre-commit hook).
+- You can run it manually with `bash scripts/check-onboarding.sh`.
+- It checks for Docker, Docker running, and Git, and warns if local PHP, Composer, or Node is installed.
+
+---
+
 # Contributing to QR Trackr Plugin Template
 
 Thank you for your interest in contributing! This project is both a production-ready WordPress plugin (QR Trackr) and a modern template for building your own plugins. We welcome improvements, bug fixes, and new features.
@@ -71,4 +89,9 @@ Here are some practical plugin ideas you can build using this modular, standards
 These examples are great starting points for learning, contributing, or building your own production plugins. If you have an idea, open an issue or PR!
 
 ## Questions or Suggestions?
-Open an issue or start a discussion! We're happy to help and open to new ideas. 
+Open an issue or start a discussion! We're happy to help and open to new ideas.
+
+## CI/CD Memory Limits & Composer/PHPCS Troubleshooting
+- CI/CD enforces a 2G memory limit for Composer and PHPCS to prevent out-of-memory errors.
+- Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs have been removed.
+- For memory or VCS issues, see docs/TROUBLESHOOTING.md. 
