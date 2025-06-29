@@ -249,19 +249,6 @@ function qr_trackr_deactivate() {
 }
 
 /**
- * Add rewrite rules for QR code tracking.
- *
- * @return void
- */
-function qr_trackr_add_rewrite_rules() {
-	add_rewrite_rule(
-		'^qr-trackr/redirect/([0-9]+)/?$',
-		'index.php?qr_trackr_redirect=$matches[1]',
-		'top'
-	);
-}
-
-/**
  * Flush rewrite rules and delete the flush flag.
  *
  * @return void
