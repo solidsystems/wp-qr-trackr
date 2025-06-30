@@ -1,15 +1,38 @@
-# 🚀 Onboarding: Zero Host Dependencies
+# 🚀 WP QR Trackr - Quick Start Guide
 
-Welcome to the project! This onboarding guide will get you set up in minutes with a fully containerized workflow.
+Welcome to WP QR Trackr! This guide will get you up and running with a production-ready QR code plugin in minutes.
 
-## Requirements
+## Current Status: Production Ready ✅
+- **Version 1.2.4** - Stable and tested on live WordPress sites
+- **All critical issues resolved** - No more activation errors or URL problems
+- **Full functionality** - QR code generation, tracking, and analytics working
+
+## For WordPress Users (Plugin Installation)
+
+### Direct Installation
+1. **Download** the latest release from GitHub releases page
+2. **Upload** the plugin zip file via WordPress admin → Plugins → Add New → Upload
+3. **Activate** the plugin (no fatal errors in v1.2.4!)
+4. **Access** QR Trackr from your WordPress admin menu
+
+### Manual Installation
+1. **Download** or clone this repository
+2. **Copy** the `wp-content/plugins/wp-qr-trackr/` folder to your WordPress plugins directory
+3. **Activate** the plugin from WordPress admin
+4. **Start creating** QR codes immediately
+
+## For Developers (Local Development)
+
+### Requirements
 - Docker Desktop (latest)
 - Git
+- PHP 8.4+ (for local development)
+- Composer (for dependency management)
 
-## Workflow
-- All development, linting, and testing is done inside the Docker container (`ci-runner`).
-- No need to install PHP, Composer, Node, or CLI tools on your host.
-- All code changes, linting, and tests are performed in the container, but changes persist on your local filesystem via the Docker volume mount.
+### Development Workflow
+- All development, linting, and testing can be done inside Docker containers
+- No need to install PHP, Composer, Node, or CLI tools on your host
+- All code changes persist on your local filesystem via Docker volume mounts
 
 ## Example Commands
 ```sh

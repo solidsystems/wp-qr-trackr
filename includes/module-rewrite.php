@@ -1,3 +1,4 @@
+<?php
 /**
  * Rewrite rules for the QR Trackr plugin.
  *
