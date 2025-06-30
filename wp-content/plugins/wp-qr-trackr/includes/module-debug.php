@@ -369,24 +369,7 @@ function qr_trackr_debug_settings_page() {
 	<?php
 }
 
-// Add debug menu item.
-add_action(
-	'admin_menu',
-	function () {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-
-		add_submenu_page(
-			'qr-trackr',
-			__( 'Debug', 'wp-qr-trackr' ),
-			__( 'Debug', 'wp-qr-trackr' ),
-			'manage_options',
-			'qr-trackr-debug',
-			'qr_trackr_debug_settings_page'
-		);
-	}
-);
+// Debug menu is now registered in module-admin.php to ensure proper load order.
 
 if ( function_exists( 'add_action' ) ) {
 	add_action(

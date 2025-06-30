@@ -59,6 +59,18 @@ function qr_trackr_add_menu() {
 		'qr-trackr-settings',
 		'qr_trackr_settings_page'
 	);
+
+	// Add debug submenu if user has appropriate permissions.
+	if ( current_user_can( 'manage_options' ) && function_exists( 'qr_trackr_debug_settings_page' ) ) {
+		add_submenu_page(
+			'qr-trackr',
+			__( 'Debug', 'wp-qr-trackr' ),
+			__( 'Debug', 'wp-qr-trackr' ),
+			'manage_options',
+			'qr-trackr-debug',
+			'qr_trackr_debug_settings_page'
+		);
+	}
 }
 
 /**

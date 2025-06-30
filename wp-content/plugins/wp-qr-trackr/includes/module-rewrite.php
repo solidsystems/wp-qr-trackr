@@ -91,79 +91,57 @@ function qr_trackr_template_redirect() {
 		exit;
 	}
 
-	try {
-		// Start transaction for scan logging.
-		$wpdb->query( 'START TRANSACTION' );
+	// Record scan with proper sanitization.
+	$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 ) : '';
+	$ip_address = qr_trackr_get_client_ip();
+	$location   = qr_trackr_get_location_data( $ip_address );
 
-		// Record scan with proper sanitization.
-		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 ) : '';
-		$ip_address = qr_trackr_get_client_ip();
-		$location   = qr_trackr_get_location_data( $ip_address );
+	// Insert scan record.
+	$scan_result = $wpdb->insert(
+		$wpdb->prefix . 'qr_trackr_scans',
+		array(
+			'link_id'    => $link_id,
+			'user_agent' => $user_agent,
+			'ip_address' => $ip_address,
+			'location'   => $location,
+			'scanned_at' => current_time( 'mysql', true ),
+		),
+		array(
+			'%d',
+			'%s',
+			'%s',
+			'%s',
+			'%s',
+		)
+	);
 
-		// Insert scan record.
-		$scan_result = $wpdb->insert(
-			$wpdb->prefix . 'qr_trackr_scans',
-			array(
-				'link_id'    => $link_id,
-				'user_agent' => $user_agent,
-				'ip_address' => $ip_address,
-				'location'   => $location,
-				'scanned_at' => current_time( 'mysql', true ),
-			),
-			array(
-				'%d',
-				'%s',
-				'%s',
-				'%s',
-				'%s',
-			)
-		);
-
-		if ( false === $scan_result ) {
-			throw new Exception( 'Failed to record scan.' );
-		}
-
-		// Update scan count.
-		$update_result = $wpdb->query(
+	// Update scan count if scan was recorded successfully.
+	if ( false !== $scan_result ) {
+		$wpdb->query(
 			$wpdb->prepare(
 				"UPDATE {$wpdb->prefix}qr_trackr_links SET scans = scans + 1 WHERE id = %d",
 				$link_id
 			)
 		);
 
-		if ( false === $update_result ) {
-			throw new Exception( 'Failed to update scan count.' );
-		}
-
-		// Commit transaction.
-		$wpdb->query( 'COMMIT' );
-
 		// Clear caches.
 		wp_cache_delete( $cache_key, 'qr_trackr' );
 		wp_cache_delete( 'qr_trackr_stats_' . $link_id, 'qr_trackr' );
 
 		// Log successful scan if debug is enabled.
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+		if ( function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log( sprintf( 'QR code scan recorded for link ID %d from IP %s', $link_id, $ip_address ) );
 		}
-
-		// Redirect to destination.
-		wp_safe_redirect( esc_url_raw( $link->destination_url ), 302 );
-		exit;
-
-	} catch ( Exception $e ) {
-		// Rollback transaction on error.
-		$wpdb->query( 'ROLLBACK' );
-
+	} else {
 		// Log error if debug is enabled.
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-			qr_trackr_debug_log( 'QR code scan error: ' . $e->getMessage() );
+		if ( function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log( 'QR code scan recording failed for link ID ' . $link_id );
 		}
-
-		// Still redirect to destination on error, but log it.
-		wp_safe_redirect( esc_url_raw( $link->destination_url ), 302 );
-		exit;
 	}
+
+	// Always redirect to destination, even if scan recording failed.
+	wp_safe_redirect( esc_url_raw( $link->destination_url ), 302 );
+	exit;
 }
 
 /**
