@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2024-12-19
+
+### Added
+- **Submenus for QR Codes Admin Menu**: Added proper submenus (All QR Codes, Add New, Settings, Help) that appear on hover
+- **QR Code Preview Generation**: Implemented automatic QR code image generation and preview in admin listing
+- **Add New QR Code Interface**: Created comprehensive form for adding new QR codes with multiple destination types
+- **Enhanced Settings Page**: Added QR code size and tracking options to settings
+- **Help Documentation**: Added built-in help page with usage instructions
+
+### Fixed
+- **Missing Submenus**: QR Codes menu now properly shows submenus on hover
+- **Empty QR Code Previews**: QR code images are now automatically generated and displayed in admin listing
+- **Admin Navigation**: Improved admin interface with proper page linking and navigation
+
+### Enhanced
+- **QR Code Generation**: Added robust QR code image generation using Google Charts API
+- **Error Handling**: Improved fallback handling when QR code generation fails
+- **Caching**: Implemented proper caching for QR code images and data
+- **User Interface**: Modern, responsive admin interface with proper WordPress styling
+
+### Technical
+- Added utility functions for unique QR code generation
+- Implemented proper WordPress admin menu structure
+- Added comprehensive error handling and validation
+- Enhanced database schema compatibility
+
 ## [1.2.6] - 2024-12-30
 
 ### Fixed

@@ -175,14 +175,56 @@ class QRC_Links_List_Table extends WP_List_Table {
 				);
 
 			case 'qr_code':
-				return sprintf(
-					'<code>%s</code>',
-					esc_html( $item[ $column_name ] )
-				);
+				return $this->column_qr_code( $item );
 
 			default:
 				return print_r( $item, true );
 		}
+	}
+
+	/**
+	 * Render the QR code column.
+	 *
+	 * @param object $item The current item.
+	 * @return string The column content.
+	 */
+	protected function column_qr_code( $item ) {
+		$qr_image_url = '';
+		$tracking_url = '';
+
+		// Handle both object and array formats
+		$qr_code = is_object( $item ) ? $item->qr_code : $item['qr_code'];
+
+		if ( ! empty( $qr_code ) ) {
+			// Generate QR code image if it doesn't exist yet
+			$qr_image_url = qr_trackr_generate_qr_image( $qr_code, array( 'size' => 80 ) );
+			$tracking_url = home_url( '/qr/' . esc_attr( $qr_code ) );
+		}
+
+		if ( is_wp_error( $qr_image_url ) || empty( $qr_image_url ) ) {
+			// Fallback: show tracking URL instead of image
+			if ( ! empty( $tracking_url ) ) {
+				return sprintf(
+					'<a href="%s" target="_blank" class="button button-small">%s</a><br><small>%s</small>',
+					esc_url( $tracking_url ),
+					esc_html__( 'View QR', 'wp-qr-trackr' ),
+					esc_html( $qr_code )
+				);
+			}
+			return '<span class="dashicons dashicons-warning" title="' . esc_attr__( 'QR code not available', 'wp-qr-trackr' ) . '"></span>';
+		}
+
+		return sprintf(
+			'<div class="qr-code-preview">
+				<img src="%s" alt="%s" style="max-width: 80px; height: auto;" />
+				<br>
+				<small><a href="%s" target="_blank">%s</a></small>
+			</div>',
+			esc_url( $qr_image_url ),
+			esc_attr__( 'QR Code', 'wp-qr-trackr' ),
+			esc_url( $tracking_url ),
+			esc_html( $qr_code )
+		);
 	}
 
 	/**
