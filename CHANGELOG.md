@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2024-12-30
+
+### Fixed
+- **Critical: Fixed 500 error on QR Codes admin page** - Added missing `QRC_Links_List_Table` class that was causing fatal errors
+- **Fixed database schema inconsistencies** - Unified table name from `qr_code_links` to `qr_trackr_links` across all modules
+- **Added missing database columns** - Added `qr_code`, `scans`, `updated_at`, `last_accessed`, and `metadata` columns to support all features
+- **Fixed admin menu functionality** - QR Codes admin page now loads correctly without errors
+
+### Added
+- **Complete WordPress List Table implementation** - Professional admin interface for managing QR code links
+- **Proper database indexing** - Added indexes on `qr_code` and `post_id` columns for better performance
+- **Backward compatibility** - Maintained both `scans` and `access_count` columns for compatibility
+
+### Technical
+- Added `includes/class-qrc-links-list-table.php` with proper WordPress standards
+- Updated database schema in `module-activation.php` with all required columns
+- Fixed table name references across `module-ajax.php` and other modules
+- Added proper caching and pagination to admin list table
+
 ## [1.2.5] - 2024-12-30
 
 ### Fixed

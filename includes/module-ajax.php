@@ -28,12 +28,12 @@ function get_qr_code_image_tag( $post_id ) {
 		return $cached_image;
 	}
 
-	$table_name = $wpdb->prefix . 'qr_code_links';
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
 	$link = $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}qr_code_links WHERE post_id = %d",
+			"SELECT * FROM {$table_name} WHERE post_id = %d",
 			$post_id
 		)
 	);
@@ -119,12 +119,12 @@ function qrc_generate_qr_code_ajax() {
 	}
 
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_code_links';
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented below, direct query needed for atomic operation.
 	$existing_link = $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}qr_code_links WHERE post_id = %d",
+			"SELECT * FROM {$table_name} WHERE post_id = %d",
 			$post_id
 		)
 	);
@@ -210,7 +210,7 @@ function qrc_track_link_click_ajax() {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic operation required, caching not applicable.
 	$result = $wpdb->query(
 		$wpdb->prepare(
-			"UPDATE {$wpdb->prefix}qr_code_links SET access_count = access_count + 1, last_accessed = %s WHERE id = %d RETURNING destination_url AS url",
+			"UPDATE {$wpdb->prefix}qr_trackr_links SET access_count = access_count + 1, last_accessed = %s WHERE id = %d RETURNING destination_url AS url",
 			current_time( 'mysql' ),
 			$link_id
 		)

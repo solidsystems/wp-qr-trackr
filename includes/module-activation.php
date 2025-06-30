@@ -41,16 +41,23 @@ function qrc_add_settings_link( $links ) {
  */
 function qrc_activate() {
 	global $wpdb;
-	$table_name      = $wpdb->prefix . 'qr_code_links';
+	$table_name      = $wpdb->prefix . 'qr_trackr_links';
 	$charset_collate = $wpdb->get_charset_collate();
 
 	$sql = "CREATE TABLE $table_name (
 		id mediumint(9) NOT NULL AUTO_INCREMENT,
-		post_id bigint(20) UNSIGNED NOT NULL,
-		destination_url varchar(255) NOT NULL,
-		created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+		post_id bigint(20) UNSIGNED NULL,
+		destination_url varchar(2048) NOT NULL,
+		qr_code varchar(255) NOT NULL,
+		scans int(11) DEFAULT 0 NOT NULL,
 		access_count int(11) DEFAULT 0 NOT NULL,
-		PRIMARY KEY  (id)
+		created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+		updated_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+		last_accessed datetime DEFAULT NULL,
+		metadata text DEFAULT NULL,
+		PRIMARY KEY  (id),
+		KEY qr_code (qr_code),
+		KEY post_id (post_id)
 	) $charset_collate;";
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -64,7 +71,7 @@ function qrc_activate() {
  */
 function qrc_deactivate() {
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_code_links';
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
 	// Only drop the table if the user has chosen to remove data upon deactivation.
 	if ( get_option( 'qrc_remove_data_on_deactivation' ) ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema cleanup during deactivation, caching not applicable for table deletion.
