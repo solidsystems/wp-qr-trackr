@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2024-12-30
+
+### Fixed
+- Fixed QR code URL rewrite rules to handle correct URL pattern `/qr/{tracking_code}`
+- Updated rewrite rule from `/qr-code/{numeric_id}/` to `/qr/{alphanumeric_code}` pattern
+- Fixed database lookup to use tracking codes instead of numeric IDs
+- Resolved 404 errors for all QR code tracking URLs
+- Updated template redirect function to properly handle alphanumeric tracking codes
+
+### Technical
+- Updated rewrite rule pattern to match actual URL generation format
+- Fixed query variable handling for tracking code parameters
+- Improved URL pattern documentation and error handling
+
 ## [1.2.0] - 2024-12-30
 
 ### Added
