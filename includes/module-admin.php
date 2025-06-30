@@ -43,7 +43,7 @@ function qrc_add_admin_menu() {
 		'qrc_links_page'
 	);
 
-	add_submenu_page(
+	$add_new_page = add_submenu_page(
 		'qrc-links',
 		'Add New QR Code',
 		'Add New',
@@ -72,6 +72,36 @@ function qrc_add_admin_menu() {
 	);
 }
 add_action( 'admin_menu', 'qrc_add_admin_menu' );
+
+// Enqueue admin scripts on admin pages.
+add_action( 'admin_enqueue_scripts', 'qrc_enqueue_admin_scripts' );
+
+/**
+ * Enqueue admin scripts for QR code management.
+ */
+function qrc_enqueue_admin_scripts( $hook ) {
+	// Only load scripts on the QR code admin pages.
+	if ( false === strpos( $hook, 'qrc-' ) ) {
+		return;
+	}
+	wp_enqueue_script( 'jquery' );
+	wp_enqueue_script(
+		'qrc-admin',
+		plugin_dir_url( QRC_PLUGIN_FILE ) . 'assets/qrc-admin.js',
+		array( 'jquery' ),
+		'1.2.8',
+		true
+	);
+
+	wp_localize_script(
+		'qrc-admin',
+		'qrcAjax',
+		array(
+			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'qrc_admin_nonce' ),
+		)
+	);
+}
 
 /**
  * Display the QR code links page.
@@ -185,7 +215,7 @@ function qrc_remove_data_on_deactivation_callback() {
  * Callback for the default QR code size setting.
  */
 function qrc_default_qr_size_callback() {
-	$options = get_option( 'qrc_options' );
+	$options      = get_option( 'qrc_options' );
 	$default_size = isset( $options['default_qr_size'] ) ? $options['default_qr_size'] : 200;
 	?>
 	<select name="qrc_options[default_qr_size]">
@@ -218,17 +248,17 @@ function qrc_enable_tracking_callback() {
  */
 function qrc_options_validate( $input ) {
 	$new_input = array();
-	
+
 	// Validate remove data on deactivation setting.
 	if ( isset( $input['remove_data_on_deactivation'] ) ) {
 		$new_input['remove_data_on_deactivation'] = 1;
 	} else {
 		$new_input['remove_data_on_deactivation'] = 0;
 	}
-	
+
 	// Validate default QR size setting.
 	if ( isset( $input['default_qr_size'] ) ) {
-		$size = absint( $input['default_qr_size'] );
+		$size          = absint( $input['default_qr_size'] );
 		$allowed_sizes = array( 100, 150, 200, 300, 400 );
 		if ( in_array( $size, $allowed_sizes, true ) ) {
 			$new_input['default_qr_size'] = $size;
@@ -238,14 +268,14 @@ function qrc_options_validate( $input ) {
 	} else {
 		$new_input['default_qr_size'] = 200; // Default fallback.
 	}
-	
+
 	// Validate enable tracking setting.
 	if ( isset( $input['enable_tracking'] ) ) {
 		$new_input['enable_tracking'] = 1;
 	} else {
 		$new_input['enable_tracking'] = 0;
 	}
-	
+
 	return $new_input;
 }
 
@@ -276,29 +306,13 @@ function qrc_add_new_page() {
 				</tr>
 				<tr id="post-selector" style="display: none;">
 					<th scope="row">
-						<label for="post_id"><?php esc_html_e( 'Select Post/Page', 'wp-qr-trackr' ); ?></label>
+						<label for="post_search"><?php esc_html_e( 'Select Post/Page', 'wp-qr-trackr' ); ?></label>
 					</th>
 					<td>
-						<select name="post_id" id="post_id" class="regular-text">
-							<option value=""><?php esc_html_e( 'Select a post or page...', 'wp-qr-trackr' ); ?></option>
-							<?php
-							$posts = get_posts( array(
-								'post_type' => array( 'post', 'page' ),
-								'posts_per_page' => 100,
-								'post_status' => 'publish',
-								'orderby' => 'title',
-								'order' => 'ASC'
-							) );
-							foreach ( $posts as $post ) {
-								printf(
-									'<option value="%d">%s (%s)</option>',
-									esc_attr( $post->ID ),
-									esc_html( $post->post_title ),
-									esc_html( $post->post_type )
-								);
-							}
-							?>
-						</select>
+						<input type="text" id="post_search" class="regular-text" placeholder="<?php esc_attr_e( 'Start typing to search posts/pages...', 'wp-qr-trackr' ); ?>" />
+						<div id="post_search_results" style="display: none; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; background: white; position: relative; z-index: 1000;"></div>
+						<input type="hidden" name="post_id" id="post_id" value="" />
+						<p class="description" id="selected_post_info" style="display: none;"></p>
 					</td>
 				</tr>
 				<tr id="url-input">
@@ -315,23 +329,10 @@ function qrc_add_new_page() {
 			<?php submit_button( esc_html__( 'Generate QR Code', 'wp-qr-trackr' ) ); ?>
 		</form>
 		
-		<script>
-		jQuery(document).ready(function($) {
-			$('#destination_type').change(function() {
-				var type = $(this).val();
-				if (type === 'post') {
-					$('#post-selector').show();
-					$('#url-input').hide();
-				} else {
-					$('#post-selector').hide();
-					$('#url-input').show();
-				}
-			}).trigger('change');
-		});
-		</script>
+
 	</div>
 	<?php
-	
+
 	// Handle form submission
 	if ( isset( $_POST['qrc_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['qrc_nonce'] ) ), 'qrc_add_new' ) ) {
 		qrc_handle_add_new_submission();
@@ -343,8 +344,8 @@ function qrc_add_new_page() {
  */
 function qrc_handle_add_new_submission() {
 	$destination_type = isset( $_POST['destination_type'] ) ? sanitize_text_field( wp_unslash( $_POST['destination_type'] ) ) : '';
-	$destination_url = '';
-	$post_id = 0;
+	$destination_url  = '';
+	$post_id          = 0;
 
 	if ( 'post' === $destination_type ) {
 		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
@@ -360,13 +361,13 @@ function qrc_handle_add_new_submission() {
 		return;
 	}
 
-	// Generate unique tracking code
+	// Generate unique tracking code.
 	$tracking_code = qr_trackr_generate_unique_qr_code();
-	
-	// Insert into database
+
+	// Insert into database.
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	
+
 	$result = $wpdb->insert(
 		$table_name,
 		array(
@@ -382,8 +383,30 @@ function qrc_handle_add_new_submission() {
 	);
 
 	if ( $result ) {
+		// Invalidate the admin list cache so new QR codes appear immediately.
+		wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
+
 		echo '<div class="notice notice-success"><p>' . esc_html__( 'QR code created successfully!', 'wp-qr-trackr' ) . '</p></div>';
+
+		// Optionally pre-generate the QR code image for better performance.
+		$qr_image_url = qr_trackr_generate_qr_image( $tracking_code, array( 'size' => 200 ) );
+
+		// Show QR code preview if image generation was successful.
+		if ( ! is_wp_error( $qr_image_url ) ) {
+			echo '<div class="notice notice-info">';
+			echo '<p><strong>' . esc_html__( 'QR Code Preview:', 'wp-qr-trackr' ) . '</strong></p>';
+			echo '<p><img src="' . esc_url( $qr_image_url ) . '" alt="QR Code Preview" style="max-width: 150px; height: auto;" /></p>';
+			echo '<p><strong>' . esc_html__( 'Tracking Code:', 'wp-qr-trackr' ) . '</strong> <code>' . esc_html( $tracking_code ) . '</code></p>';
+			echo '<p><strong>' . esc_html__( 'QR URL:', 'wp-qr-trackr' ) . '</strong> <code>' . esc_url( home_url( '/qr/' . $tracking_code ) ) . '</code></p>';
+			echo '</div>';
+		}
 	} else {
+		error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional debug logging.
+			sprintf(
+				'Failed to create QR code: %s',
+				$wpdb->last_error
+			)
+		);
 		echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to create QR code.', 'wp-qr-trackr' ) . '</p></div>';
 	}
 }
@@ -427,7 +450,12 @@ function qrc_help_page() {
 			</ol>
 			
 			<h3><?php esc_html_e( 'QR Code URLs', 'wp-qr-trackr' ); ?></h3>
-			<p><?php printf( esc_html__( 'Your QR codes will be accessible at: %s/qr/{tracking_code}', 'wp-qr-trackr' ), esc_url( home_url() ) ); ?></p>
+			<p>
+				<?php
+				/* translators: %s: Site home URL */
+				printf( esc_html__( 'Your QR codes will be accessible at: %s/qr/{tracking_code}', 'wp-qr-trackr' ), esc_url( home_url() ) );
+				?>
+			</p>
 			
 			<h3><?php esc_html_e( 'Support', 'wp-qr-trackr' ); ?></h3>
 			<p><?php esc_html_e( 'For support and documentation, please visit the plugin GitHub repository.', 'wp-qr-trackr' ); ?></p>

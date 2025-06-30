@@ -33,7 +33,7 @@ function get_qr_code_image_tag( $post_id ) {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
 	$link = $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT * FROM {$table_name} WHERE post_id = %d",
+			"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 			$post_id
 		)
 	);
@@ -124,7 +124,7 @@ function qrc_generate_qr_code_ajax() {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented below, direct query needed for atomic operation.
 	$existing_link = $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT * FROM {$table_name} WHERE post_id = %d",
+			"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 			$post_id
 		)
 	);
@@ -239,3 +239,69 @@ function qrc_track_link_click_ajax() {
 }
 add_action( 'wp_ajax_qrc_track_link', 'qrc_track_link_click_ajax' );
 add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
+
+/**
+ * AJAX handler for searching posts/pages.
+ *
+ * @since 1.2.8
+ * @return void
+ */
+function qrc_search_posts_ajax() {
+	// Security check.
+	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qrc_admin_nonce' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'Security check failed. Please refresh the page and try again.', 'wp-qr-trackr' ),
+			)
+		);
+		return;
+	}
+
+	// Check user capabilities.
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'You do not have permission to perform this action.', 'wp-qr-trackr' ),
+			)
+		);
+		return;
+	}
+
+	// Get and validate the search term.
+	$search_term = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
+
+	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
+		wp_send_json_error(
+			array(
+				'message' => __( 'Search term must be at least 2 characters long.', 'wp-qr-trackr' ),
+			)
+		);
+		return;
+	}
+
+	// Search for posts/pages.
+	$posts = get_posts(
+		array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => 20,
+			's'              => $search_term,
+			'orderby'        => 'relevance',
+		)
+	);
+
+	$results = array();
+	if ( $posts ) {
+		foreach ( $posts as $post ) {
+			$results[] = array(
+				'id'    => $post->ID,
+				'title' => $post->post_title,
+				'type'  => $post->post_type,
+				'url'   => get_permalink( $post->ID ),
+			);
+		}
+	}
+
+	wp_send_json_success( array( 'posts' => $results ) );
+}
+add_action( 'wp_ajax_qrc_search_posts', 'qrc_search_posts_ajax' );

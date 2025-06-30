@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.8] - 2024-Current
+
+### Fixed
+- **Critical Fix**: QR codes now appear in the admin list immediately after creation (fixed cache invalidation issue)
+- **Enhanced UX**: Add New QR Code page now has AJAX-powered post/page search instead of static dropdown
+- **Performance**: Pre-generate QR code images during creation for faster display
+- **User Experience**: Added detailed QR code preview with tracking code and URL after successful creation
+
+### Added
+- **AJAX Search**: Real-time post/page searching with debounced input (300ms delay)
+- **Interactive Interface**: Click-to-select functionality with hover effects and loading states
+- **Clear Selection**: Added clear button for easy post deselection
+- **Error Handling**: Comprehensive error feedback and validation
+- **Security**: Proper nonce verification and capability checks for all AJAX requests
+
+### Technical Improvements
+- **JavaScript**: Created dedicated `assets/qrc-admin.js` for admin functionality
+- **Code Standards**: Fixed all PHPCS violations and maintained WordPress coding standards
+- **Caching**: Improved cache management for better performance
+- **Input Validation**: Enhanced security with proper sanitization and escaping
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
