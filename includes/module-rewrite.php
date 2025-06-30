@@ -24,11 +24,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @throws WP_Error If rewrite rules cannot be added.
  */
 function qr_trackr_add_rewrite_rules() {
-	// Check if we're in admin or doing AJAX to prevent interference.
-	if ( is_admin() || wp_doing_ajax() ) {
-		return;
-	}
-
 	add_rewrite_rule(
 		'qr/([a-zA-Z0-9]+)/?$',
 		'index.php?qr_tracking_code=$matches[1]',

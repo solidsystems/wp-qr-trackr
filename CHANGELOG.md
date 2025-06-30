@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.11] - 2024-Current
+## [1.2.12] - 2024-Current
+
+### Fixed - CRITICAL ISSUE! 🚨
+- **🔧 Rewrite Rules Registration**: Removed overly restrictive `is_admin()` check that was preventing QR redirect rules from being registered
+- **🚫 404 Errors Resolved**: QR URLs like `/qr/{tracking_code}` now work correctly in all contexts
+- **⚡ Universal Rule Registration**: Rewrite rules now register properly during plugin activation, AJAX requests, and normal operations
+
+### Technical Details
+- Removed problematic `if ( is_admin() || wp_doing_ajax() ) { return; }` check from `qr_trackr_add_rewrite_rules()`
+- This check was blocking rule registration during plugin activation and normal WordPress operations
+- Rules now register on the `init` hook without restrictions, allowing proper URL rewriting
+
+## [1.2.11] - 2024-12-30
 
 ### Fixed
 - **Critical Rewrite Rules Fix**: Fixed activation order so QR redirect rules are registered before flushing
