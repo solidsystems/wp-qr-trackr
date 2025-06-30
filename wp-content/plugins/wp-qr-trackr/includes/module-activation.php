@@ -114,67 +114,64 @@ function qr_trackr_activate() {
 	// Include WordPress upgrade functions.
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-	try {
-		// Start transaction.
-		if ( ! $wpdb->query( 'START TRANSACTION' ) ) {
-			throw new Exception( __( 'Could not start database transaction.', 'wp-qr-trackr' ) );
-		}
+	// Create/update tables using dbDelta (WordPress handles transactions internally).
+	$links_result = dbDelta( $links_sql );
+	$scans_result = dbDelta( $scans_sql );
 
-		// Create/update tables.
-		$links_result = dbDelta( $links_sql );
-		$scans_result = dbDelta( $scans_sql );
+	// Log table creation results for debugging.
+	if ( function_exists( 'qr_trackr_debug_log' ) ) {
+		qr_trackr_debug_log( 'Links table creation result: ' . wp_json_encode( $links_result ) );
+		qr_trackr_debug_log( 'Scans table creation result: ' . wp_json_encode( $scans_result ) );
+	}
 
-		// Check for errors.
-		if ( empty( $links_result ) || empty( $scans_result ) ) {
-			throw new Exception( __( 'Failed to create database tables.', 'wp-qr-trackr' ) );
-		}
+	// Create upload directory.
+	$upload_dir = wp_upload_dir();
+	$qr_dir     = $upload_dir['basedir'] . '/qr-trackr';
 
-		// Create upload directory.
-		$upload_dir = wp_upload_dir();
-		$qr_dir     = $upload_dir['basedir'] . '/qr-trackr';
-
-		if ( ! file_exists( $qr_dir ) ) {
-			if ( ! wp_mkdir_p( $qr_dir ) ) {
-				throw new Exception( __( 'Failed to create QR code upload directory.', 'wp-qr-trackr' ) );
+	if ( ! file_exists( $qr_dir ) ) {
+		if ( ! wp_mkdir_p( $qr_dir ) ) {
+			if ( function_exists( 'qr_trackr_debug_log' ) ) {
+				qr_trackr_debug_log( 'Failed to create QR code upload directory: ' . $qr_dir );
 			}
+			wp_die(
+				esc_html__( 'Failed to create QR code upload directory. Please check file permissions.', 'wp-qr-trackr' ),
+				esc_html__( 'Plugin Activation Error', 'wp-qr-trackr' ),
+				array(
+					'response'  => 500,
+					'back_link' => true,
+				)
+			);
+		}
 
-			// Create .htaccess to protect the directory.
-			$htaccess = $qr_dir . '/.htaccess';
-			if ( ! file_put_contents( $htaccess, "Options -Indexes\nDeny from all\n" ) ) {
-				throw new Exception( __( 'Failed to create .htaccess file.', 'wp-qr-trackr' ) );
+		// Create .htaccess to allow image access but prevent directory browsing.
+		$htaccess_content = "# QR Trackr - Allow image access, prevent directory browsing\n";
+		$htaccess_content .= "Options -Indexes\n";
+		$htaccess_content .= "<FilesMatch \"\\.(png|jpg|jpeg|gif|svg)$\">\n";
+		$htaccess_content .= "    Allow from all\n";
+		$htaccess_content .= "</FilesMatch>\n";
+
+		$htaccess = $qr_dir . '/.htaccess';
+		if ( ! file_put_contents( $htaccess, $htaccess_content ) ) {
+			if ( function_exists( 'qr_trackr_debug_log' ) ) {
+				qr_trackr_debug_log( 'Failed to create .htaccess file: ' . $htaccess );
 			}
+			// Don't fail activation for .htaccess creation failure.
 		}
+	}
 
-		// Initialize plugin options.
-		add_option( 'qr_trackr_version', QR_TRACKR_VERSION );
-		add_option( 'qr_trackr_flush_rewrite_rules', true );
-		add_option( 'qr_trackr_qr_size', 300 );
-		add_option( 'qr_trackr_qr_margin', 10 );
-		add_option( 'qr_trackr_qr_error_correction', 'L' );
-		add_option( 'qr_trackr_track_location', false );
-		add_option( 'qr_trackr_delete_data', false );
+	// Initialize plugin options.
+	add_option( 'qr_trackr_version', QR_TRACKR_VERSION );
+	add_option( 'qr_trackr_flush_rewrite_rules', true );
+	add_option( 'qr_trackr_qr_size', 300 );
+	add_option( 'qr_trackr_qr_margin', 10 );
+	add_option( 'qr_trackr_qr_error_correction', 'L' );
+	add_option( 'qr_trackr_track_location', false );
+	add_option( 'qr_trackr_delete_data', false );
+	add_option( 'qr_trackr_migration_completed', true );
 
-		// Commit transaction.
-		if ( ! $wpdb->query( 'COMMIT' ) ) {
-			throw new Exception( __( 'Could not commit database transaction.', 'wp-qr-trackr' ) );
-		}
-	} catch ( Exception $e ) {
-		// Rollback on error.
-		$wpdb->query( 'ROLLBACK' );
-
-		// Log error.
-		if ( function_exists( 'qr_trackr_debug_log' ) ) {
-			qr_trackr_debug_log( 'Activation Error: ' . $e->getMessage() );
-		}
-
-		wp_die(
-			esc_html( $e->getMessage() ),
-			esc_html__( 'Plugin Activation Error', 'wp-qr-trackr' ),
-			array(
-				'response'  => 500,
-				'back_link' => true,
-			)
-		);
+	// Log successful activation.
+	if ( function_exists( 'qr_trackr_debug_log' ) ) {
+		qr_trackr_debug_log( 'QR Trackr plugin activated successfully' );
 	}
 }
 
@@ -196,51 +193,42 @@ function qr_trackr_deactivate() {
 	if ( get_option( 'qr_trackr_delete_data' ) ) {
 		global $wpdb;
 
-		// Start transaction.
-		$wpdb->query( 'START TRANSACTION' );
+		// Drop tables (WordPress handles this safely).
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}qr_trackr_scans" );
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}qr_trackr_links" );
 
-		try {
-			// Drop tables.
-			$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}qr_trackr_scans" );
-			$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}qr_trackr_links" );
+		// Delete options.
+		delete_option( 'qr_trackr_version' );
+		delete_option( 'qr_trackr_flush_rewrite_rules' );
+		delete_option( 'qr_trackr_qr_size' );
+		delete_option( 'qr_trackr_qr_margin' );
+		delete_option( 'qr_trackr_qr_error_correction' );
+		delete_option( 'qr_trackr_track_location' );
+		delete_option( 'qr_trackr_delete_data' );
+		delete_option( 'qr_trackr_migration_completed' );
 
-			// Delete options.
-			delete_option( 'qr_trackr_version' );
-			delete_option( 'qr_trackr_flush_rewrite_rules' );
-			delete_option( 'qr_trackr_qr_size' );
-			delete_option( 'qr_trackr_qr_margin' );
-			delete_option( 'qr_trackr_qr_error_correction' );
-			delete_option( 'qr_trackr_track_location' );
-			delete_option( 'qr_trackr_delete_data' );
+		// Delete QR code files.
+		$upload_dir = wp_upload_dir();
+		$qr_dir     = $upload_dir['basedir'] . '/qr-trackr';
 
-			// Delete QR code files.
-			$upload_dir = wp_upload_dir();
-			$qr_dir     = $upload_dir['basedir'] . '/qr-trackr';
-
-			if ( file_exists( $qr_dir ) ) {
-				$files = glob( $qr_dir . '/*' );
+		if ( file_exists( $qr_dir ) ) {
+			$files = glob( $qr_dir . '/*' );
+			if ( $files ) {
 				foreach ( $files as $file ) {
 					if ( is_file( $file ) ) {
 						wp_delete_file( $file );
 					}
 				}
-				rmdir( $qr_dir );
 			}
+			rmdir( $qr_dir );
+		}
 
-			// Clear caches.
-			wp_cache_flush();
+		// Clear caches.
+		wp_cache_flush();
 
-			// Commit transaction.
-			$wpdb->query( 'COMMIT' );
-
-		} catch ( Exception $e ) {
-			// Rollback on error.
-			$wpdb->query( 'ROLLBACK' );
-
-			// Log error.
-			if ( function_exists( 'qr_trackr_debug_log' ) ) {
-				qr_trackr_debug_log( 'Deactivation Error: ' . $e->getMessage() );
-			}
+		// Log successful cleanup.
+		if ( function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log( 'QR Trackr plugin data cleaned up successfully' );
 		}
 	}
 
@@ -309,29 +297,29 @@ function qr_trackr_create_tables() {
 	// Include WordPress upgrade functions.
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-	try {
-		// Create/update tables.
-		$links_result = dbDelta( $links_sql );
-		$scans_result = dbDelta( $scans_sql );
+	// Create/update tables using dbDelta.
+	$links_result = dbDelta( $links_sql );
+	$scans_result = dbDelta( $scans_sql );
 
-		// Check for errors.
-		if ( empty( $links_result ) || empty( $scans_result ) ) {
-			throw new Exception( __( 'Failed to create database tables.', 'wp-qr-trackr' ) );
-		}
+	// Log results for debugging.
+	if ( function_exists( 'qr_trackr_debug_log' ) ) {
+		qr_trackr_debug_log( 'Links table creation result: ' . wp_json_encode( $links_result ) );
+		qr_trackr_debug_log( 'Scans table creation result: ' . wp_json_encode( $scans_result ) );
+	}
 
-		// Log success if debug is enabled.
+	// Check if tables exist after creation.
+	$links_exists = $wpdb->get_var( "SHOW TABLES LIKE '{$wpdb->prefix}qr_trackr_links'" );
+	$scans_exists = $wpdb->get_var( "SHOW TABLES LIKE '{$wpdb->prefix}qr_trackr_scans'" );
+
+	if ( $links_exists && $scans_exists ) {
 		if ( function_exists( 'qr_trackr_debug_log' ) ) {
-			qr_trackr_debug_log( 'Database tables created successfully.' );
+			qr_trackr_debug_log( 'Database tables verified successfully.' );
 		}
-
 		return true;
-
-	} catch ( Exception $e ) {
-		// Log error.
+	} else {
 		if ( function_exists( 'qr_trackr_debug_log' ) ) {
-			qr_trackr_debug_log( 'Table Creation Error: ' . $e->getMessage() );
+			qr_trackr_debug_log( 'Database table verification failed. Links: ' . ( $links_exists ? 'exists' : 'missing' ) . ', Scans: ' . ( $scans_exists ? 'exists' : 'missing' ) );
 		}
-
 		return false;
 	}
 }
