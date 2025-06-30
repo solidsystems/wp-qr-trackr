@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.2.1] - 2024-12-30
-## [1.2.2] - 2024-12-30
+## [1.2.3] - 2024-12-30
 ### Fixed
 - Fixed QR code URL rewrite rules to handle correct URL pattern `/qr/{tracking_code}`
 - Updated rewrite rule from `/qr-code/{numeric_id}/` to `/qr/{alphanumeric_code}` pattern
@@ -18,6 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated rewrite rule pattern to match actual URL generation format
 - Fixed query variable handling for tracking code parameters
 - Improved URL pattern documentation and error handling
+
+## [1.2.2] - 2024-12-30
+
+### Fixed
+- **Fixed invalid plugin header** - Corrected WordPress plugin header format and structure
+- **Updated plugin constants** - Changed from QRC_ to QR_TRACKR_ prefix for consistency
+- **Fixed module loading order** - Proper autoloader loading before QR code library usage
+- **Improved plugin initialization** - Better error handling and dependency management
+
+### Technical
+- Recreated main plugin file with proper WordPress standards
+- Fixed constant naming conventions throughout the plugin
+- Improved module loading sequence and error handling
+- Added proper plugin metadata for WordPress compatibility
 
 ## [1.2.1] - 2024-12-30
 
