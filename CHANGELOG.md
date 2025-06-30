@@ -2,7 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.10] - 2024-Current
+## [1.2.11] - 2024-Current
+
+### Fixed
+- **Critical Rewrite Rules Fix**: Fixed activation order so QR redirect rules are registered before flushing
+- **404 Error Resolution**: QR URLs like `/qr/{tracking_code}` now work correctly after plugin activation
+- **Module Loading Order**: Load rewrite module during activation to ensure custom rules are registered
+
+### Added
+- **Debug Script**: Added comprehensive diagnostic script (`qr-debug.php`) for troubleshooting
+- **Activation Diagnostics**: Enhanced debugging capabilities for rewrite rule registration issues
+
+### Technical
+- Fixed plugin activation hook to load `module-rewrite.php` before calling `flush_rewrite_rules()`
+- Added diagnostic script to help identify permalink structure and QR generation issues
+- Enhanced activation process to ensure proper module loading order
+
+## [1.2.10] - 2024-12-30
 
 ### Added
 - **Permalink Structure Check**: Added activation check for pretty permalinks requirement
