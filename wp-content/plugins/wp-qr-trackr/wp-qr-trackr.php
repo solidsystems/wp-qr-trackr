@@ -3,7 +3,7 @@
  * Plugin Name: QR Trackr
  * Plugin URI: https://github.com/michaelerps/wp-qr-trackr
  * Description: A powerful WordPress plugin for creating, managing, and tracking QR codes with detailed analytics.
- * Version: 1.1.8
+ * Version: 1.2.0
  * Author: Michael Erps
  * Author URI: https://github.com/michaelerps
  * License: GPL v2 or later
@@ -23,21 +23,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QR_TRACKR_VERSION', '1.1.8' );
+define( 'QR_TRACKR_VERSION', '1.2.0' );
 define( 'QR_TRACKR_PLUGIN_FILE', __FILE__ );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'QR_TRACKR_DEBUG', defined( 'WP_DEBUG' ) && WP_DEBUG );
 
-// Load modules immediately, in the correct order.
-require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-debug.php';
-require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-requirements.php';
+// Load activation module immediately for hooks.
 require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-activation.php';
-require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-utils.php';
-require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-qr.php';
-require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-admin.php';
-require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-ajax.php';
-require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-rewrite.php';
 
 /**
  * The main plugin initialization function.
@@ -59,6 +52,15 @@ function qr_trackr_init_plugin() {
 		return;
 	}
 	require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
+
+	// Load modules after autoloader, in the correct order.
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-debug.php';
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-requirements.php';
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-utils.php';
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-qr.php';
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-admin.php';
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-ajax.php';
+	require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-rewrite.php';
 
 	// Load text domain for localization.
 	load_plugin_textdomain( 'wp-qr-trackr', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );

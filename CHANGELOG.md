@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2024-12-30
+
+### Added
+- Complete QR code creation and display functionality
+- Endroid QR Code library integration with PNG and SVG support
+- Comprehensive AJAX handlers for QR code management
+- Real-time post/page search with Select2 integration
+- QR code image generation with caching and optimization
+- Proper autoloader management for Composer dependencies
+
+### Fixed
+- Fixed autoloader loading order to ensure QR code library availability
+- Resolved database column name mismatches (scans vs access_count)
+- Fixed variable assignment issues in admin display code
+- Corrected cache key consistency across modules
+- Fixed QR code image accessibility with proper .htaccess configuration
+- Resolved nonce verification issues in AJAX handlers
+
+### Enhanced
+- Improved error handling and user feedback in QR code creation
+- Enhanced database query caching and performance
+- Better module loading architecture with proper dependency management
+- Streamlined admin interface with better UX
+- Comprehensive debugging and logging capabilities
+
+### Security
+- Maintained WordPress security standards with proper nonce verification
+- Enhanced input sanitization and output escaping
+- Secure file handling for QR code image generation
+
 ## [1.1.4] - 2024-03-21
 
 ### Fixed

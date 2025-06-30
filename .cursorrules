@@ -516,4 +516,72 @@ Playwright is only installed and used in the dev Docker image (port 8080). It mu
 - Monitor query performance
 - Regular security audits
 
-These rules are based on lessons learned from implementing WordPress plugin database queries while maintaining PHPCS compliance and following WordPress coding standards. 
+These rules are based on lessons learned from implementing WordPress plugin database queries while maintaining PHPCS compliance and following WordPress coding standards.
+
+# Plugin Release Automation Rule
+
+## Command: "create plugin release for [plugin-name]"
+When the user issues the command "create plugin release for [plugin-name]" (e.g., "create plugin release for wp-qr-trackr"), automatically execute the following workflow using GitHub MCP and available tools:
+
+### 1. Pre-Release Validation
+- Verify the plugin directory exists and contains required files (main plugin file, README.md, CHANGELOG.md)
+- Check that the current working directory is clean (no uncommitted changes)
+- Validate that all required documentation is up to date
+
+### 2. Version Management
+- Read the current version from the main plugin file header
+- Increment the version number (patch version by default, unless specified)
+- Update version in all relevant files:
+  - Main plugin file header (Version: field)
+  - Plugin constants (if any)
+  - README.md (if version referenced)
+  - package.json/composer.json (if present)
+
+### 3. Documentation Updates
+- Update CHANGELOG.md with new version entry and current date
+- Ensure README.md reflects current features and version
+- Update any version-specific documentation
+- Generate/update any API documentation if applicable
+
+### 4. Code Quality Checks
+- Run PHPCS compliance check if .phpcs.xml exists
+- Run any configured tests (PHPUnit, etc.)
+- Verify no linting errors or critical issues
+
+### 5. Git Operations
+- Stage all changes: `git add .`
+- Commit with standardized message: `git commit -m "Release v[version]: [brief description]"`
+- Create annotated git tag: `git tag -a v[version] -m "Release v[version]"`
+- Push commits and tags: `git push origin main && git push origin v[version]`
+
+### 6. GitHub Release Creation
+- Use GitHub MCP to create a new release
+- Set release title: "v[version]"
+- Generate release notes from CHANGELOG.md or commit history
+- Mark as latest release
+- Include download links for plugin zip file
+
+### 7. Release Package Creation (if build script exists)
+- Execute build-release.sh if present
+- Create production-ready plugin zip file
+- Exclude development files (.git, node_modules, tests, etc.)
+- Upload as release asset to GitHub
+
+### 8. Post-Release Actions
+- Create a summary comment on the release with key changes
+- Update any deployment workflows or notifications
+- Log successful release completion
+
+### Error Handling
+- If any step fails, provide clear error message and rollback instructions
+- Preserve git history and don't force-push
+- Suggest manual intervention steps if automation fails
+
+### Example Usage
+User: "create plugin release for wp-qr-trackr"
+Assistant: Executes full release workflow for wp-qr-trackr plugin, incrementing from current version to next patch version, updating all documentation, committing, tagging, and creating GitHub release.
+
+### Customization Options
+- Allow version type specification: "create plugin release for wp-qr-trackr minor" (for minor version bump)
+- Support custom release notes: "create plugin release for wp-qr-trackr with notes 'Major security update'"
+- Enable pre-release flag: "create plugin release for wp-qr-trackr prerelease" 

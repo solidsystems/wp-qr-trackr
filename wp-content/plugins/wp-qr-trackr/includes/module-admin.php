@@ -212,13 +212,13 @@ function qr_trackr_admin_page() {
 		$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 		// Get all QR code links.
-		$results = $wpdb->get_results(
+		$qr_codes = $wpdb->get_results(
 			"SELECT * FROM {$wpdb->prefix}qr_trackr_links ORDER BY created_at DESC",
 			ARRAY_A
 		);
 
-		if ( $results ) {
-			wp_cache_set( $cache_key, $results, 'qr_trackr', HOUR_IN_SECONDS );
+		if ( $qr_codes ) {
+			wp_cache_set( $cache_key, $qr_codes, 'qr_trackr', HOUR_IN_SECONDS );
 		}
 	}
 	?>
@@ -309,8 +309,8 @@ function qr_trackr_admin_page() {
 									</a>
 								</td>
 								<td><?php echo esc_html( $qr_code['created_at'] ); ?></td>
-								<td><?php echo esc_html( $qr_code['access_count'] ); ?></td>
-								<td><?php echo $qr_code['last_accessed'] ? esc_html( $qr_code['last_accessed'] ) : esc_html__( 'Never', 'wp-qr-trackr' ); ?></td>
+								<td><?php echo esc_html( $qr_code['scans'] ); ?></td>
+								<td><?php echo isset( $qr_code['last_accessed'] ) && $qr_code['last_accessed'] ? esc_html( $qr_code['last_accessed'] ) : esc_html__( 'Never', 'wp-qr-trackr' ); ?></td>
 								<td>
 									<button class="button edit-qr" data-id="<?php echo esc_attr( $qr_code['id'] ); ?>">
 										<?php esc_html_e( 'Edit', 'wp-qr-trackr' ); ?>

@@ -233,7 +233,7 @@ function qr_trackr_create_qr_code() {
 	}
 
 	// Generate unique tracking code.
-	$tracking_code = qr_trackr_generate_tracking_code();
+	$tracking_code = qr_trackr_generate_unique_qr_code();
 	
 	// Insert into database.
 	global $wpdb;
