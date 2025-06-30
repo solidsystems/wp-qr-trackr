@@ -32,45 +32,29 @@ print_error() {
 
 # Clean up previous builds
 rm -rf "$BUILD_DIR" "$DIST_DIR"
-mkdir -p "$BUILD_DIR" "$DIST_DIR"
+mkdir -p "$BUILD_DIR/$PLUGIN_NAME" "$DIST_DIR"
 
-# Copy plugin files, excluding unnecessary files and folders, and vendor directory
-rsync -av --exclude='.git' \
-  --exclude='.github' \
-  --exclude='node_modules' \
-  --exclude='vendor' \
-  --exclude='tests' \
-  --exclude='test' \
-  --exclude='docs' \
-  --exclude='*.md' \
-  --exclude='phpunit*' \
-  --exclude='phpcs*' \
-  --exclude='composer.lock' \
-  --exclude='package.json' \
-  --exclude='yarn.lock' \
-  --exclude='build-release.sh' \
-  --exclude='README.*' \
-  --exclude='CHANGELOG.*' \
-  "$PLUGIN_DIR/" "$BUILD_DIR/"
-
-# Copy composer.json and composer.lock to build dir for dependency install
-cp composer.json "$BUILD_DIR/"
+# Copy essential plugin files to the correct folder structure
+cp wp-qr-trackr.php "$BUILD_DIR/$PLUGIN_NAME/"
+cp -r includes "$BUILD_DIR/$PLUGIN_NAME/"
+cp -r assets "$BUILD_DIR/$PLUGIN_NAME/"
+cp LICENSE "$BUILD_DIR/$PLUGIN_NAME/"
+cp composer.json "$BUILD_DIR/$PLUGIN_NAME/"
 if [ -f composer.lock ]; then
-  cp composer.lock "$BUILD_DIR/"
+  cp composer.lock "$BUILD_DIR/$PLUGIN_NAME/"
 fi
 
-# Install only production dependencies in the build directory
-cd "$BUILD_DIR"
+# Install only production dependencies in the plugin directory
+cd "$BUILD_DIR/$PLUGIN_NAME"
 composer install --no-dev --optimize-autoloader
-cd -
+cd - > /dev/null
 
 # Remove any leftover dev files from vendor
-find "$BUILD_DIR/vendor" -type d -name 'tests' -o -name 'test' | xargs rm -rf
-find "$BUILD_DIR/vendor" -type f -name '*.md' -delete
-find "$BUILD_DIR/vendor" -type f -name '*.dist' -delete
+find "$BUILD_DIR/$PLUGIN_NAME/vendor" -type d -name 'tests' -o -name 'test' | xargs rm -rf 2>/dev/null || true
+find "$BUILD_DIR/$PLUGIN_NAME/vendor" -name '*.md' -o -name 'phpunit*' -o -name '.phpcs*' -o -name 'phpcs*' | xargs rm -f 2>/dev/null || true
 
-# Zip the build
-cd "$BUILD_DIR" && zip -r "../$ZIP_NAME" .
+# Create zip with proper folder structure 
+cd "$BUILD_DIR" && zip -r "../$ZIP_NAME" "$PLUGIN_NAME/"
 cd - > /dev/null
 
 # Info

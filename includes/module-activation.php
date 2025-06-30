@@ -61,7 +61,30 @@ function qrc_activate() {
 	) $charset_collate;";
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-	dbDelta( $sql );
+	$result = dbDelta( $sql );
+	
+	// Log activation results for debugging.
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( 'QR Trackr activation: Table creation result: ' . wp_json_encode( $result ) );
+	}
+	
+	// Verify table was created successfully.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table existence check during activation.
+	$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) );
+	
+	if ( $table_exists !== $table_name ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr activation: Failed to create table ' . $table_name . '. Last error: ' . $wpdb->last_error );
+		}
+		// Set an option to indicate activation had issues.
+		update_option( 'qr_trackr_activation_error', 'Failed to create database table: ' . $table_name );
+	} else {
+		// Clear any previous activation errors.
+		delete_option( 'qr_trackr_activation_error' );
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr activation: Table ' . $table_name . ' created successfully' );
+		}
+	}
 }
 
 /**
@@ -75,7 +98,11 @@ function qrc_deactivate() {
 	// Only drop the table if the user has chosen to remove data upon deactivation.
 	if ( get_option( 'qrc_remove_data_on_deactivation' ) ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema cleanup during deactivation, caching not applicable for table deletion.
-		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $table_name ) );
+		$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
+		
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr deactivation: Dropped table ' . $table_name );
+		}
 	}
 }
 

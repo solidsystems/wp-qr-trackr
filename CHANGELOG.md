@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.9] - 2024-Current
+
+### Fixed
+- **Database Table Creation**: Fixed plugin activation to properly create database tables automatically
+- **Error Logging**: Added comprehensive error logging and debugging for activation issues
+- **Table Verification**: Added verification step to ensure database table creation was successful
+- **SQL Preparation**: Fixed incorrect SQL preparation in deactivation function
+
+### Enhanced
+- **Debugging**: Added debug logging for activation process when WP_DEBUG is enabled
+- **Error Handling**: Added activation error tracking to help diagnose table creation issues
+- **User Feedback**: Plugin now stores activation errors for admin notification
+
+### Technical
+- Fixed `$wpdb->prepare()` usage in deactivation function (removed invalid `%i` placeholder)
+- Added table existence verification after creation attempt
+- Enhanced error logging throughout activation process
+- Improved database table creation reliability
+
 ## [1.2.8] - 2024-Current
 
 ### Fixed
