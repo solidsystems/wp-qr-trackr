@@ -16,9 +16,7 @@ function qrc_init() {
 	// Add a settings link to the plugins page.
 	add_filter( 'plugin_action_links_' . plugin_basename( QRC_PLUGIN_FILE ), 'qrc_add_settings_link' );
 
-	// Register activation and deactivation hooks.
-	register_activation_hook( QRC_PLUGIN_FILE, 'qrc_activate' );
-	register_deactivation_hook( QRC_PLUGIN_FILE, 'qrc_deactivate' );
+	// Note: Activation and deactivation hooks are now handled in the main plugin file
 
 	// Create QR code post type.
 	qrc_create_post_type();
@@ -115,9 +113,11 @@ function qrc_create_post_type() {
 }
 
 /**
- * Initialize the plugin.
+ * Initialize the plugin hooks (only if not already initialized).
  */
-add_action( 'plugins_loaded', 'qrc_init' );
+if ( ! has_action( 'plugins_loaded', 'qrc_init' ) ) {
+	add_action( 'plugins_loaded', 'qrc_init' );
+}
 
 /**
  * Flush rewrite rules on activation.
@@ -126,13 +126,5 @@ function qrc_flush_rewrite_rules() {
 	qrc_create_post_type();
 	flush_rewrite_rules();
 }
-register_activation_hook( QRC_PLUGIN_FILE, 'qrc_flush_rewrite_rules' );
 
-// Load the admin menu.
-require_once __DIR__ . '/module-admin.php';
-
-// Load the QR code generation functions.
-require_once __DIR__ . '/module-qr.php';
-
-// Load the rewrite rules.
-require_once __DIR__ . '/module-rewrite.php';
+// Note: Activation hooks are now handled in the main plugin file to avoid conflicts

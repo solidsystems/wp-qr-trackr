@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2024-12-30
+
+### Fixed
+- **Fixed fatal error on plugin activation** - Resolved constant mismatch issues between QRC_ and QR_TRACKR_ prefixes
+- **Fixed conflicting hook registrations** - Prevented duplicate activation/deactivation hook registrations
+- **Fixed module loading conflicts** - Removed automatic module loading from activation module
+- **Added backward compatibility constants** - Defined legacy QRC_ constants for existing module compatibility
+- **Added safe module loading** - Added file existence checks before requiring modules
+- **Fixed activation/deactivation flow** - Proper separation of concerns between main file and activation module
+
+### Technical
+- Added legacy constant definitions for backward compatibility
+- Implemented safe module loading with file existence checks
+- Removed conflicting require_once statements from activation module
+- Fixed hook registration conflicts between main file and modules
+- Added proper error handling for missing files during activation
 ## [1.2.1] - 2024-12-30
 ## [1.2.3] - 2024-12-30
 ### Fixed
