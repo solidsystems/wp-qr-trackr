@@ -85,6 +85,9 @@ function qrc_activate() {
 			error_log( 'QR Trackr activation: Table ' . $table_name . ' created successfully' );
 		}
 	}
+	
+	// Check permalink structure for rewrite rules.
+	qr_trackr_check_permalink_structure();
 }
 
 /**
@@ -160,5 +163,72 @@ function qrc_flush_rewrite_rules() {
 	qrc_create_post_type();
 	flush_rewrite_rules();
 }
+
+/**
+ * Check if pretty permalinks are enabled for rewrite rules.
+ *
+ * QR code tracking URLs require pretty permalinks to function properly.
+ * This function checks the permalink structure and sets appropriate notices.
+ *
+ * @since 1.2.9
+ * @return void
+ */
+function qr_trackr_check_permalink_structure() {
+	$permalink_structure = get_option( 'permalink_structure' );
+	
+	if ( empty( $permalink_structure ) ) {
+		// Plain permalinks are being used - QR codes won't work.
+		$message = sprintf(
+			/* translators: 1: Settings URL, 2: Permalink settings text */
+			__( 'WP QR Trackr requires pretty permalinks to function properly. Please go to <a href="%1$s">%2$s</a> and choose any structure other than "Plain".', 'wp-qr-trackr' ),
+			esc_url( admin_url( 'options-permalink.php' ) ),
+			__( 'Settings → Permalinks', 'wp-qr-trackr' )
+		);
+		
+		update_option( 'qr_trackr_permalink_warning', $message );
+		
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr activation: Plain permalinks detected - QR code redirects will not work' );
+		}
+	} else {
+		// Pretty permalinks are enabled - clear any previous warnings.
+		delete_option( 'qr_trackr_permalink_warning' );
+		
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr activation: Pretty permalinks detected - QR code redirects will work correctly' );
+		}
+	}
+}
+
+/**
+ * Display admin notice for permalink structure requirement.
+ *
+ * @since 1.2.9
+ * @return void
+ */
+function qr_trackr_permalink_admin_notice() {
+	$warning = get_option( 'qr_trackr_permalink_warning' );
+	
+	if ( ! empty( $warning ) && current_user_can( 'manage_options' ) ) {
+		printf(
+			'<div class="notice notice-warning is-dismissible"><p><strong>%s</strong> %s</p></div>',
+			esc_html__( 'QR Trackr Warning:', 'wp-qr-trackr' ),
+			wp_kses_post( $warning )
+		);
+	}
+}
+add_action( 'admin_notices', 'qr_trackr_permalink_admin_notice' );
+
+/**
+ * Clear permalink warning when permalink structure is updated.
+ *
+ * @since 1.2.9
+ * @return void
+ */
+function qr_trackr_permalink_structure_changed() {
+	// Re-check permalink structure when it changes.
+	qr_trackr_check_permalink_structure();
+}
+add_action( 'permalink_structure_changed', 'qr_trackr_permalink_structure_changed' );
 
 // Note: Activation hooks are now handled in the main plugin file to avoid conflicts

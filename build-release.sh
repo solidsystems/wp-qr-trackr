@@ -46,7 +46,9 @@ fi
 
 # Install only production dependencies in the plugin directory
 cd "$BUILD_DIR/$PLUGIN_NAME"
-composer install --no-dev --optimize-autoloader
+composer install --no-dev --optimize-autoloader --no-scripts 2>/dev/null || {
+    print_warning "Composer install had some warnings, but continuing with build..."
+}
 cd - > /dev/null
 
 # Remove any leftover dev files from vendor

@@ -2,7 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.9] - 2024-Current
+## [1.2.10] - 2024-Current
+
+### Added
+- **Permalink Structure Check**: Added activation check for pretty permalinks requirement
+- **Admin Warning Notice**: Users are now warned if plain permalinks are being used
+- **Automatic Monitoring**: Plugin monitors permalink changes and updates warnings accordingly
+- **Smart Navigation**: Direct link to WordPress permalink settings for easy configuration
+
+### Enhanced
+- **User Experience**: Clear guidance when QR code redirects won't work due to permalink structure
+- **Debug Logging**: Enhanced logging for permalink structure detection during activation
+- **Auto-Resolution**: Warning automatically clears when pretty permalinks are enabled
+
+### Technical
+- Added `qr_trackr_check_permalink_structure()` function for activation checks
+- Implemented admin notice system for permalink warnings
+- Added `permalink_structure_changed` hook monitoring
+- Enhanced activation process with comprehensive environment validation
+
+## [1.2.9] - 2024-12-30
 
 ### Fixed
 - **Database Table Creation**: Fixed plugin activation to properly create database tables automatically
