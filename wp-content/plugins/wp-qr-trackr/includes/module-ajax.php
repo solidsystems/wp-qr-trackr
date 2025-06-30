@@ -185,68 +185,99 @@ add_action( 'wp_ajax_qr_trackr_generate_qr', 'qr_trackr_ajax_generate_qr' );
  */
 function qr_trackr_create_qr_code() {
 	// Verify nonce.
-	$nonce = isset( $_POST['qr_trackr_admin_new_qr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['qr_trackr_admin_new_qr_nonce'] ) ) : '';
-	if ( ! wp_verify_nonce( $nonce, 'qr_trackr_admin_new_qr' ) ) {
-		wp_send_json_error( array( 'message' => esc_html__( 'Invalid nonce.', 'wp-qr-trackr' ) ) );
-		return;
-	}
-
-	// Get and validate post ID.
-	$post_id = isset( $_POST['qr_trackr_admin_new_post_id'] ) ? absint( $_POST['qr_trackr_admin_new_post_id'] ) : 0;
-	if ( 0 === $post_id ) {
-		wp_send_json_error( array( 'message' => esc_html__( 'Invalid post ID.', 'wp-qr-trackr' ) ) );
+	$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
+	if ( ! wp_verify_nonce( $nonce, 'qr_trackr_nonce' ) ) {
+		wp_send_json_error( esc_html__( 'Invalid nonce.', 'wp-qr-trackr' ) );
 		return;
 	}
 
 	// Check user capabilities.
 	if ( ! current_user_can( 'manage_options' ) ) {
-		wp_send_json_error( array( 'message' => esc_html__( 'Insufficient permissions.', 'wp-qr-trackr' ) ) );
+		wp_send_json_error( esc_html__( 'Insufficient permissions.', 'wp-qr-trackr' ) );
 		return;
 	}
 
-	qr_trackr_debug_log( 'AJAX: Create QR called.', array( 'post_id' => $post_id ) );
+	// Get destination type.
+	$destination_type = isset( $_POST['destination_type'] ) ? sanitize_text_field( wp_unslash( $_POST['destination_type'] ) ) : '';
+	
+	$destination_url = '';
+	$post_id = 0;
 
-	// Try to get link from cache first.
-	$cache_key = 'qrc_link_post_' . $post_id;
-	$link      = wp_cache_get( $cache_key, 'qrc_links' );
-
-	if ( false === $link ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'qr_trackr_links';
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for display.
-		$link = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d",
-				$post_id
-			),
-			ARRAY_A
-		);
-
-		if ( $link ) {
-			wp_cache_set( $cache_key, $link, 'qrc_links', HOUR_IN_SECONDS );
+	if ( 'post' === $destination_type ) {
+		// Get and validate post ID.
+		$post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+		if ( 0 === $post_id ) {
+			wp_send_json_error( esc_html__( 'Please select a post or page.', 'wp-qr-trackr' ) );
+			return;
 		}
-	}
-
-	if ( $link ) {
-		wp_send_json_error( array( 'message' => esc_html__( 'QR code already exists for this post.', 'wp-qr-trackr' ) ) );
+		$destination_url = get_permalink( $post_id );
+		if ( ! $destination_url ) {
+			wp_send_json_error( esc_html__( 'Invalid post ID.', 'wp-qr-trackr' ) );
+			return;
+		}
+	} elseif ( 'external' === $destination_type ) {
+		$destination_url = isset( $_POST['destination'] ) ? esc_url_raw( wp_unslash( $_POST['destination'] ) ) : '';
+		if ( empty( $destination_url ) ) {
+			wp_send_json_error( esc_html__( 'Please enter a destination URL.', 'wp-qr-trackr' ) );
+			return;
+		}
+	} elseif ( 'custom' === $destination_type ) {
+		$destination_url = isset( $_POST['destination'] ) ? esc_url_raw( wp_unslash( $_POST['destination'] ) ) : '';
+		if ( empty( $destination_url ) ) {
+			wp_send_json_error( esc_html__( 'Please enter a destination URL.', 'wp-qr-trackr' ) );
+			return;
+		}
+	} else {
+		wp_send_json_error( esc_html__( 'Invalid destination type.', 'wp-qr-trackr' ) );
 		return;
 	}
 
-	// Create new QR code.
-	$result = qr_trackr_create_qr_code_for_post( $post_id );
-	if ( is_wp_error( $result ) ) {
-		qr_trackr_debug_log( sprintf( 'Failed to create QR code for post ID: %d. Error: %s', $post_id, $result->get_error_message() ) );
-		wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-		return;
-	}
-
-	wp_send_json_success(
+	// Generate unique tracking code.
+	$tracking_code = qr_trackr_generate_tracking_code();
+	
+	// Insert into database.
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	
+	$result = $wpdb->insert(
+		$table_name,
 		array(
-			'message'     => esc_html__( 'QR code created successfully.', 'wp-qr-trackr' ),
-			'qr_code_url' => esc_url( $result['qr_code_url'] ),
+			'post_id'         => $post_id > 0 ? $post_id : null,
+			'destination_url' => $destination_url,
+			'qr_code'         => $tracking_code,
+			'scans'           => 0,
+			'created_at'      => current_time( 'mysql', true ),
+		),
+		array(
+			'%d',
+			'%s',
+			'%s',
+			'%d',
+			'%s',
 		)
 	);
+
+	if ( false === $result ) {
+		if ( function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log( 'Failed to insert QR code: ' . $wpdb->last_error );
+		}
+		wp_send_json_error( esc_html__( 'Failed to create QR code.', 'wp-qr-trackr' ) );
+		return;
+	}
+
+	$link_id = $wpdb->insert_id;
+
+	// Generate QR code image.
+	$qr_image_url = qr_trackr_generate_qr_image( $link_id );
+	if ( ! $qr_image_url ) {
+		wp_send_json_error( esc_html__( 'Failed to generate QR code image.', 'wp-qr-trackr' ) );
+		return;
+	}
+
+	// Clear any relevant caches.
+	wp_cache_delete( 'qr_trackr_all_codes', 'qr_trackr' );
+
+	wp_send_json_success( esc_html__( 'QR code created successfully!', 'wp-qr-trackr' ) );
 }
 add_action( 'wp_ajax_qr_trackr_create_qr_code', 'qr_trackr_create_qr_code' );
 
@@ -478,22 +509,83 @@ function qr_trackr_ajax_search_posts() {
 		return;
 	}
 
+	// Accept both 'search' and 'term' parameters for compatibility.
 	$search = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
-	if ( '' === $search ) {
-		wp_send_json_error( array( 'message' => esc_html__( 'Search term is required.', 'wp-qr-trackr' ) ) );
+	if ( empty( $search ) ) {
+		$search = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
+	}
+
+	// If still empty, return recent posts.
+	if ( empty( $search ) ) {
+		$args = array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => 10,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		);
+	} else {
+		// Try to get search results from cache first.
+		$cache_key = 'qr_trackr_search_' . md5( $search );
+		$results   = wp_cache_get( $cache_key, 'qr_trackr' );
+
+		if ( false !== $results ) {
+			wp_send_json_success( $results );
+			return;
+		}
+
+		$args = array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
+			's'              => $search,
+			'posts_per_page' => 10,
+		);
+	}
+
+	$query   = new WP_Query( $args );
+	$results = array();
+
+	foreach ( $query->posts as $post ) {
+		$results[] = array(
+			'ID'    => absint( $post->ID ),
+			'title' => esc_html( $post->post_title ),
+			'url'   => esc_url( get_permalink( $post->ID ) ),
+		);
+	}
+
+	// Cache search results.
+	if ( ! empty( $search ) ) {
+		wp_cache_set( $cache_key, $results, 'qr_trackr', HOUR_IN_SECONDS );
+	}
+
+	wp_send_json_success( $results );
+}
+add_action( 'wp_ajax_qr_trackr_search_posts', 'qr_trackr_ajax_search_posts' );
+
+/**
+ * Handle AJAX request to get all posts for dropdown.
+ *
+ * @return void
+ */
+function qr_trackr_ajax_get_posts() {
+	check_ajax_referer( 'qr_trackr_nonce', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( array( 'message' => esc_html__( 'Permission denied.', 'wp-qr-trackr' ) ) );
 		return;
 	}
 
-	// Try to get search results from cache first.
-	$cache_key = 'qr_trackr_search_' . md5( $search );
+	// Try to get posts from cache first.
+	$cache_key = 'qr_trackr_all_posts';
 	$results   = wp_cache_get( $cache_key, 'qr_trackr' );
 
 	if ( false === $results ) {
 		$args = array(
 			'post_type'      => array( 'post', 'page' ),
 			'post_status'    => 'publish',
-			's'              => $search,
-			'posts_per_page' => 10,
+			'posts_per_page' => 100,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
 		);
 
 		$query   = new WP_Query( $args );
@@ -501,18 +593,19 @@ function qr_trackr_ajax_search_posts() {
 
 		foreach ( $query->posts as $post ) {
 			$results[] = array(
-				'id'    => absint( $post->ID ),
-				'title' => esc_html( $post->post_title ),
-				'url'   => esc_url( get_permalink( $post->ID ) ),
+				'ID'          => absint( $post->ID ),
+				'post_title'  => esc_html( $post->post_title ),
+				'post_type'   => esc_html( $post->post_type ),
+				'permalink'   => esc_url( get_permalink( $post->ID ) ),
 			);
 		}
 
 		wp_cache_set( $cache_key, $results, 'qr_trackr', HOUR_IN_SECONDS );
 	}
 
-	wp_send_json_success( array( 'results' => $results ) );
+	wp_send_json_success( $results );
 }
-add_action( 'wp_ajax_qr_trackr_search_posts', 'qr_trackr_ajax_search_posts' );
+add_action( 'wp_ajax_qr_trackr_get_posts', 'qr_trackr_ajax_get_posts' );
 
 /**
  * Handle AJAX request to get QR code link.

@@ -108,11 +108,28 @@ jQuery(document).ready(function($) {
 		}
 		$.post(qrTrackrAdmin.ajaxurl, formData, function(response) {
 			if (response.success) {
-				location.reload();
+				// Show success message first
 				$('#qr-trackr-message').html('<div class="notice notice-success"><p>QR code created successfully!</p></div>');
+				// Reset form
+				$('#qr-trackr-create-form')[0].reset();
+				$('#post_id').val(null).trigger('change'); // Clear Select2
+				$('#destination_type').trigger('change'); // Reset form state
+				// Reload after showing message
+				setTimeout(function() {
+					location.reload();
+				}, 1500);
 			} else {
 				console.log('QR Trackr AJAX error:', response);
-				alert(response.data || 'Error creating QR code');
+				// Handle different error response formats
+				var errorMessage = 'Error creating QR code';
+				if (typeof response.data === 'string') {
+					errorMessage = response.data;
+				} else if (response.data && response.data.message) {
+					errorMessage = response.data.message;
+				} else if (typeof response === 'string') {
+					errorMessage = response;
+				}
+				alert(errorMessage);
 			}
 		}).fail(function() {
 			alert('Server error occurred. Please try again.');
