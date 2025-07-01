@@ -367,21 +367,32 @@ function qr_trackr_ajax_get_qr_details() {
 		}
 	}
 
-	// Get recent scan statistics.
-	$stats_cache_key = 'qr_trackr_stats_' . $qr_id;
-	$recent_scans = wp_cache_get( $stats_cache_key );
+	// Get recent scan statistics (simplified - use access_count for now).
+	// Note: The qr_trackr_stats table may not exist in all installations.
+	$recent_scans = 0;
+	
+	// Check if stats table exists before querying it.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table existence check.
+	$stats_table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $wpdb->prefix . 'qr_trackr_stats' ) );
+	
+	if ( $stats_table_exists ) {
+		$stats_cache_key = 'qr_trackr_stats_' . $qr_id;
+		$recent_scans = wp_cache_get( $stats_cache_key );
 
-	if ( false === $recent_scans ) {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-		$recent_scans = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_stats WHERE link_id = %d AND scan_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
-				$qr_id
-			)
-		);
+		if ( false === $recent_scans ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+			$recent_scans = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_stats WHERE link_id = %d AND scan_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
+					$qr_id
+				)
+			);
 
-		if ( null !== $recent_scans ) {
-			wp_cache_set( $stats_cache_key, $recent_scans, '', HOUR_IN_SECONDS );
+			if ( null !== $recent_scans ) {
+				wp_cache_set( $stats_cache_key, $recent_scans, '', HOUR_IN_SECONDS );
+			} else {
+				$recent_scans = 0;
+			}
 		}
 	}
 
@@ -432,6 +443,23 @@ function qr_trackr_ajax_update_qr_details() {
 	$common_name = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
 	$referral_code = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
 
+	// Check if the QR code exists before trying to update it.
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Validation check before update.
+	$existing_qr = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT id FROM {$table_name} WHERE id = %d",
+			$qr_id
+		)
+	);
+
+	if ( ! $existing_qr ) {
+		wp_send_json_error( esc_html__( 'QR code not found.', 'wp-qr-trackr' ) );
+		return;
+	}
+
 	// Validate referral code (alphanumeric and hyphens only).
 	if ( ! empty( $referral_code ) && ! preg_match( '/^[a-zA-Z0-9\-_]+$/', $referral_code ) ) {
 		wp_send_json_error( esc_html__( 'Referral code can only contain letters, numbers, hyphens, and underscores.', 'wp-qr-trackr' ) );
@@ -440,9 +468,6 @@ function qr_trackr_ajax_update_qr_details() {
 
 	// Check if referral code is unique (if provided).
 	if ( ! empty( $referral_code ) ) {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'qr_trackr_links';
-
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Uniqueness check for validation.
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
@@ -459,8 +484,6 @@ function qr_trackr_ajax_update_qr_details() {
 	}
 
 	// Update the database.
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache invalidated after update.
 	$result = $wpdb->update(
@@ -475,8 +498,12 @@ function qr_trackr_ajax_update_qr_details() {
 		array( '%d' )
 	);
 
+	// Check for database error (false) vs no rows updated (0).
 	if ( false === $result ) {
-		qr_trackr_debug_log( sprintf( 'Failed to update QR code details for ID: %d. Error: %s', $qr_id, $wpdb->last_error ) );
+		$error_message = $wpdb->last_error ? $wpdb->last_error : 'Unknown database error';
+		if ( function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log( sprintf( 'Failed to update QR code details for ID: %d. Error: %s', $qr_id, $error_message ) );
+		}
 		wp_send_json_error( esc_html__( 'Failed to update QR code details.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -484,6 +511,11 @@ function qr_trackr_ajax_update_qr_details() {
 	// Clear relevant caches.
 	wp_cache_delete( 'qr_trackr_details_' . $qr_id );
 	wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
+	
+	// Log successful update for debugging.
+	if ( function_exists( 'qr_trackr_debug_log' ) ) {
+		qr_trackr_debug_log( sprintf( 'Successfully updated QR code details for ID: %d. Rows affected: %d', $qr_id, $result ) );
+	}
 
 	wp_send_json_success( array(
 		'message'       => esc_html__( 'QR code details updated successfully.', 'wp-qr-trackr' ),
