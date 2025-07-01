@@ -159,7 +159,7 @@ function qr_trackr_generate_unique_qr_code( $length = 8 ) {
 /**
  * Generate QR code image URL for a given tracking code.
  *
- * Creates the visual QR code image using the Google Charts API and stores it
+ * Creates the visual QR code image using the QR Server API and stores it
  * in the WordPress uploads directory. Uses caching to avoid regenerating
  * existing QR codes.
  *
@@ -214,16 +214,18 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 		return $image_url;
 	}
 
-	// Generate QR code using Google Charts API.
+	// Generate QR code using QR Server API (modern replacement for deprecated Google Charts API).
 	$api_params = array(
-		'cht' => 'qr',
-		'chs' => absint( $args['size'] ) . 'x' . absint( $args['size'] ),
-		'chl' => rawurlencode( $redirect_url ),
-		'choe' => 'UTF-8',
-		'chld' => sanitize_text_field( $args['error_correction'] ) . '|' . absint( $args['margin'] ),
+		'size' => absint( $args['size'] ) . 'x' . absint( $args['size'] ),
+		'data' => rawurlencode( $redirect_url ),
+		'format' => 'png',
+		'ecc' => sanitize_text_field( strtoupper( $args['error_correction'] ) ),
+		'margin' => absint( $args['margin'] ),
+		'color' => '000000',
+		'bgcolor' => 'ffffff',
 	);
 
-	$api_url = add_query_arg( $api_params, 'https://chart.googleapis.com/chart' );
+	$api_url = add_query_arg( $api_params, 'https://api.qrserver.com/v1/create-qr-code/' );
 
 	// Get the QR code image.
 	$response = wp_safe_remote_get( $api_url, array( 'timeout' => 30 ) );

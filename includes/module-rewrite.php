@@ -29,8 +29,68 @@ function qr_trackr_add_rewrite_rules() {
 		'index.php?qr_tracking_code=$matches[1]',
 		'top'
 	);
+	
+	// Debug logging to track rule registration.
+	if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+		error_log( 'QR Trackr: Rewrite rule registered for qr/([a-zA-Z0-9]+)/?$' );
+	}
 }
 add_action( 'init', 'qr_trackr_add_rewrite_rules' );
+
+/**
+ * Force flush rewrite rules if they appear to be missing.
+ *
+ * This function can be called from the debug page to ensure rewrite rules
+ * are properly registered and flushed.
+ *
+ * @since 1.2.16
+ * @return bool True if rules were flushed, false otherwise.
+ */
+function qr_trackr_force_flush_rewrite_rules() {
+	// Re-register our rewrite rules.
+	qr_trackr_add_rewrite_rules();
+	
+	// Flush all rewrite rules.
+	flush_rewrite_rules();
+	
+	// Log the action for debugging.
+	if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+		error_log( 'QR Trackr: Forced flush of rewrite rules completed.' );
+	}
+	
+	return true;
+}
+
+/**
+ * Check if QR rewrite rules are properly registered.
+ *
+ * @since 1.2.16
+ * @return bool True if QR rules are found, false otherwise.
+ */
+function qr_trackr_check_rewrite_rules() {
+	global $wp_rewrite;
+	
+	if ( ! is_object( $wp_rewrite ) ) {
+		return false;
+	}
+	
+	$rules = get_option( 'rewrite_rules' );
+	
+	if ( ! is_array( $rules ) ) {
+		return false;
+	}
+	
+	// Look for our specific QR rule pattern.
+	$qr_pattern = 'qr/([a-zA-Z0-9]+)/?$';
+	
+	foreach ( $rules as $pattern => $rewrite ) {
+		if ( false !== strpos( $pattern, 'qr/([a-zA-Z0-9]+)' ) && false !== strpos( $rewrite, 'qr_tracking_code' ) ) {
+			return true;
+		}
+	}
+	
+	return false;
+}
 
 /**
  * Add the `qr_tracking_code` query var.

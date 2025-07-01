@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.15] - 2024-Current
+
+### Fixed
+- **🔧 Critical: Rewrite Rules Registration**: Fixed QR URL redirects not working after plugin updates
+- **🚀 Automatic Rule Flushing**: Added version-based automatic rewrite rule flushing on plugin updates
+- **✅ Debug Diagnostics**: Debug page now properly identifies rewrite rule registration issues
+
+### Enhanced  
+- **🛠️ Version Management**: Plugin now automatically detects version changes and refreshes URL rules
+- **📊 Better Monitoring**: Enhanced debug information for rewrite rule troubleshooting
+
+## [1.2.14] - 2024-Current
+
+### Added
+- **🔍 Debug Menu**: Added comprehensive debug page (only visible when WP_DEBUG is enabled)
+- **🛠️ System Diagnostics**: Complete system information panel with WordPress version, PHP version, plugin version, and debug status
+- **💾 Database Status**: Real-time database table checks, field verification, and QR code statistics
+- **🔧 Rewrite Rules Verification**: Detailed rewrite rule registration status and pattern inspection
+- **🖼️ QR Image Generation Test**: Live QR image generation testing with visual preview
+- **📂 File System Check**: Upload directory status, permissions, and QR image counts
+- **🧪 Redirect Testing**: Sample QR code redirect validation with manual test instructions
+
+### Security
+- **🛡️ Debug Mode Gate**: Dangerous "Remove Data on Deactivation" setting now only appears in debug mode
+- **⚠️ Enhanced Warnings**: Added prominent red danger warnings for data removal setting
+- **🔒 Safety Measures**: Debug functionality restricted to WP_DEBUG=true environments
+
+### Improved
+- **🎯 Troubleshooting**: Comprehensive diagnostic tools for identifying QR code issues
+- **👨‍💻 Developer Experience**: Better debugging capabilities with detailed error analysis
+- **📊 Status Monitoring**: Visual indicators (✅/❌/⚠️) for all system components
+
 ## [1.2.13] - 2024-Current
 
 ### Fixed - QR Images Not Showing! 🖼️
@@ -381,3 +413,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WordPress coding standards compliance
 - Comprehensive documentation
 - Security best practices implementation
+
+## [1.2.16] - 2024-12-29
+
+### Fixed
+- **CRITICAL**: Fixed QR image generation by replacing deprecated Google Charts API with QR Server API
+- **CRITICAL**: Enhanced rewrite rules registration with improved detection and manual flush capability
+- Added "Force Flush Rewrite Rules" button to debug page for manual rule registration
+- Improved rewrite rules checking with dedicated validation function
+- Added debug logging for rewrite rule registration tracking
+
+### Technical
+- Replaced `https://chart.googleapis.com/chart` (deprecated since 2019) with `https://api.qrserver.com/v1/create-qr-code/`
+- Updated QR generation parameters to match new API format
+- Added `qr_trackr_check_rewrite_rules()` function for better rule detection
+- Added `qr_trackr_force_flush_rewrite_rules()` function for manual rule flushing
+- Enhanced debug page with interactive rewrite rule management

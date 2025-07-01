@@ -61,6 +61,20 @@ function qrc_add_admin_menu() {
 		'qrc_settings_page'
 	);
 
+	// Add debug submenu (only if WP_DEBUG is enabled or manual override)
+	$options = get_option( 'qrc_options', array() );
+	$enable_debug = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( isset( $options['force_debug'] ) && $options['force_debug'] );
+	if ( $enable_debug ) {
+		add_submenu_page(
+			'qrc-links',
+			'QR Code Debug',
+			'Debug',
+			'manage_options',
+			'qrc-debug',
+			'qrc_debug_page'
+		);
+	}
+
 	// Add help and documentation submenu
 	add_submenu_page(
 		'qrc-links',
@@ -190,6 +204,15 @@ function qrc_register_settings() {
 		'qrc-settings',
 		'qrc_settings_section'
 	);
+
+	// Add force debug mode setting
+	add_settings_field(
+		'qrc_force_debug',
+		'Force Debug Mode',
+		'qrc_force_debug_callback',
+		'qrc-settings',
+		'qrc_settings_section'
+	);
 }
 add_action( 'admin_init', 'qrc_register_settings' );
 
@@ -204,10 +227,24 @@ function qrc_settings_section_callback() {
  * Callback for the remove data on deactivation setting.
  */
 function qrc_remove_data_on_deactivation_callback() {
+	// Only show this dangerous option when WP_DEBUG is enabled or manual override
+	$options = get_option( 'qrc_options', array() );
+	$enable_debug = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( isset( $options['force_debug'] ) && $options['force_debug'] );
+	if ( ! $enable_debug ) {
+		echo '<p><em>' . esc_html__( 'This option is only available in debug mode (WP_DEBUG = true or force debug enabled).', 'wp-qr-trackr' ) . '</em></p>';
+		return;
+	}
+
 	$options = get_option( 'qrc_options' );
 	?>
 	<input type="checkbox" name="qrc_options[remove_data_on_deactivation]" value="1" <?php checked( 1, isset( $options['remove_data_on_deactivation'] ) ? $options['remove_data_on_deactivation'] : 0, true ); ?> />
-	<label for="qrc_options[remove_data_on_deactivation]">Check this box to remove all plugin data when deactivating the plugin.</label>
+	<label for="qrc_options[remove_data_on_deactivation]">
+		<strong style="color: #d63638;"><?php esc_html_e( 'DANGER:', 'wp-qr-trackr' ); ?></strong> 
+		<?php esc_html_e( 'Check this box to remove all plugin data when deactivating the plugin.', 'wp-qr-trackr' ); ?>
+	</label>
+	<p class="description" style="color: #d63638;">
+		<?php esc_html_e( 'WARNING: This will permanently delete all QR codes, tracking data, and plugin settings. This action cannot be undone!', 'wp-qr-trackr' ); ?>
+	</p>
 	<?php
 }
 
@@ -237,6 +274,23 @@ function qrc_enable_tracking_callback() {
 	?>
 	<input type="checkbox" name="qrc_options[enable_tracking]" value="1" <?php checked( 1, isset( $options['enable_tracking'] ) ? $options['enable_tracking'] : 1, true ); ?> />
 	<label for="qrc_options[enable_tracking]">Enable click tracking and analytics for QR codes.</label>
+	<?php
+}
+
+/**
+ * Callback for the force debug mode setting.
+ */
+function qrc_force_debug_callback() {
+	$options = get_option( 'qrc_options' );
+	?>
+	<input type="checkbox" name="qrc_options[force_debug]" value="1" <?php checked( 1, isset( $options['force_debug'] ) ? $options['force_debug'] : 0, true ); ?> />
+	<label for="qrc_options[force_debug]">
+		<strong style="color: #d63638;"><?php esc_html_e( 'Developer Mode:', 'wp-qr-trackr' ); ?></strong> 
+		<?php esc_html_e( 'Enable debug menu and dangerous settings (even when WP_DEBUG is false).', 'wp-qr-trackr' ); ?>
+	</label>
+	<p class="description" style="color: #d63638;">
+		<?php esc_html_e( 'WARNING: This enables access to potentially dangerous settings that can delete all plugin data. Only enable if you know what you are doing!', 'wp-qr-trackr' ); ?>
+	</p>
 	<?php
 }
 
@@ -274,6 +328,13 @@ function qrc_options_validate( $input ) {
 		$new_input['enable_tracking'] = 1;
 	} else {
 		$new_input['enable_tracking'] = 0;
+	}
+
+	// Validate force debug setting.
+	if ( isset( $input['force_debug'] ) ) {
+		$new_input['force_debug'] = 1;
+	} else {
+		$new_input['force_debug'] = 0;
 	}
 
 	return $new_input;
@@ -469,5 +530,420 @@ function qrc_help_page() {
 			<p><?php esc_html_e( 'For support and documentation, please visit the plugin GitHub repository.', 'wp-qr-trackr' ); ?></p>
 		</div>
 	</div>
+	<?php
+}
+
+/**
+ * Display the debug page.
+ */
+function qrc_debug_page() {
+	$options = get_option( 'qrc_options', array() );
+	$enable_debug = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( isset( $options['force_debug'] ) && $options['force_debug'] );
+	if ( ! $enable_debug ) {
+		wp_die( esc_html__( 'Debug mode is not enabled.', 'wp-qr-trackr' ) );
+	}
+
+	// Handle force flush rewrite rules action.
+	if ( isset( $_POST['action'] ) && 'flush_rewrite_rules' === $_POST['action'] ) {
+		if ( ! isset( $_POST['qr_trackr_flush_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['qr_trackr_flush_nonce'] ) ), 'qr_trackr_flush_rules' ) ) {
+			wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
+		}
+
+		qr_trackr_force_flush_rewrite_rules();
+		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Rewrite rules have been flushed and re-registered.', 'wp-qr-trackr' ) . '</p></div>';
+	}
+
+	?>
+	<div class="wrap">
+		<h1><?php esc_html_e( 'QR Trackr Debug Information', 'wp-qr-trackr' ); ?></h1>
+		
+		<div class="card">
+			<h2><?php esc_html_e( '🔍 System Information', 'wp-qr-trackr' ); ?></h2>
+			<?php qrc_display_system_info(); ?>
+		</div>
+
+		<div class="card">
+			<h2><?php esc_html_e( '🗄️ Database Status', 'wp-qr-trackr' ); ?></h2>
+			<?php qrc_display_database_status(); ?>
+		</div>
+
+		<div class="card">
+			<h2><?php esc_html_e( '🔧 Rewrite Rules', 'wp-qr-trackr' ); ?></h2>
+			<?php qrc_display_rewrite_status(); ?>
+		</div>
+
+		<div class="card">
+			<h2><?php esc_html_e( '🖼️ QR Image Generation Test', 'wp-qr-trackr' ); ?></h2>
+			<?php qrc_display_qr_image_test(); ?>
+		</div>
+
+		<div class="card">
+			<h2><?php esc_html_e( '📂 File System Check', 'wp-qr-trackr' ); ?></h2>
+			<?php qrc_display_filesystem_status(); ?>
+		</div>
+
+		<div class="card">
+			<h2><?php esc_html_e( '🧪 Test QR Code Redirect', 'wp-qr-trackr' ); ?></h2>
+			<?php qrc_display_redirect_test(); ?>
+		</div>
+	</div>
+	<?php
+}
+
+/**
+ * Display system information for debugging.
+ */
+function qrc_display_system_info() {
+	$upload_dir = wp_upload_dir();
+	$permalink_structure = get_option( 'permalink_structure' );
+	
+	?>
+	<table class="widefat">
+		<tbody>
+			<tr>
+				<td><strong><?php esc_html_e( 'WordPress Version:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><?php echo esc_html( get_bloginfo( 'version' ) ); ?></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'PHP Version:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><?php echo esc_html( PHP_VERSION ); ?></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Plugin Version:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><?php echo esc_html( QR_TRACKR_VERSION ); ?></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'WP_DEBUG:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><?php echo ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? '✅ Enabled' : '❌ Disabled'; ?></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Permalink Structure:', 'wp-qr-trackr' ); ?></strong></td>
+				<td>
+					<?php if ( empty( $permalink_structure ) ) : ?>
+						<span style="color: #d63638;">❌ Plain permalinks (QR redirects will NOT work)</span>
+					<?php else : ?>
+						<span style="color: #00a32a;">✅ Pretty permalinks: <?php echo esc_html( $permalink_structure ); ?></span>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Upload Directory:', 'wp-qr-trackr' ); ?></strong></td>
+				<td>
+					<?php if ( isset( $upload_dir['error'] ) && ! empty( $upload_dir['error'] ) ) : ?>
+						<span style="color: #d63638;">❌ Error: <?php echo esc_html( $upload_dir['error'] ); ?></span>
+					<?php else : ?>
+						<span style="color: #00a32a;">✅ <?php echo esc_html( $upload_dir['basedir'] ); ?></span>
+					<?php endif; ?>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<?php
+}
+
+/**
+ * Display database status for debugging.
+ */
+function qrc_display_database_status() {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	
+	// Check if table exists
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for table existence check.
+	$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) );
+	
+	?>
+	<table class="widefat">
+		<tbody>
+			<tr>
+				<td><strong><?php esc_html_e( 'Table Name:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><?php echo esc_html( $table_name ); ?></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Table Exists:', 'wp-qr-trackr' ); ?></strong></td>
+				<td>
+					<?php if ( $table_exists === $table_name ) : ?>
+						<span style="color: #00a32a;">✅ Yes</span>
+					<?php else : ?>
+						<span style="color: #d63638;">❌ No - Run plugin activation!</span>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<?php if ( $table_exists === $table_name ) : ?>
+				<?php
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for record count.
+				$total_qr_codes = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
+				
+				// Check for qr_code_url field
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for column existence check.
+				$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
+				$has_qr_code_url = false;
+				foreach ( $columns as $column ) {
+					if ( 'qr_code_url' === $column->Field ) {
+						$has_qr_code_url = true;
+						break;
+					}
+				}
+				?>
+				<tr>
+					<td><strong><?php esc_html_e( 'Total QR Codes:', 'wp-qr-trackr' ); ?></strong></td>
+					<td><?php echo esc_html( $total_qr_codes ); ?></td>
+				</tr>
+				<tr>
+					<td><strong><?php esc_html_e( 'QR Image URL Field:', 'wp-qr-trackr' ); ?></strong></td>
+					<td>
+						<?php if ( $has_qr_code_url ) : ?>
+							<span style="color: #00a32a;">✅ Present</span>
+						<?php else : ?>
+							<span style="color: #d63638;">❌ Missing - Need to update plugin!</span>
+						<?php endif; ?>
+					</td>
+				</tr>
+				<tr>
+					<td><strong><?php esc_html_e( 'QR Codes with Images:', 'wp-qr-trackr' ); ?></strong></td>
+					<td>
+						<?php if ( $has_qr_code_url ) : ?>
+							<?php
+							// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for image count.
+							$qr_codes_with_images = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name} WHERE qr_code_url IS NOT NULL AND qr_code_url != ''" );
+							echo esc_html( $qr_codes_with_images . ' / ' . $total_qr_codes );
+							if ( $qr_codes_with_images < $total_qr_codes ) {
+								echo ' <span style="color: #d63638;">(Some missing images)</span>';
+							}
+							?>
+						<?php else : ?>
+							<span style="color: #d63638;">N/A (Field missing)</span>
+						<?php endif; ?>
+					</td>
+				</tr>
+			<?php endif; ?>
+		</tbody>
+	</table>
+	<?php
+}
+
+/**
+ * Display rewrite rules status for debugging.
+ */
+function qrc_display_rewrite_status() {
+	global $wp_rewrite;
+	$rewrite_rules = get_option( 'rewrite_rules' );
+	$qr_rule_found = qr_trackr_check_rewrite_rules();
+	
+	?>
+	<table class="widefat">
+		<tbody>
+			<tr>
+				<td><strong><?php esc_html_e( 'QR Rewrite Rule Registered:', 'wp-qr-trackr' ); ?></strong></td>
+				<td>
+					<?php if ( $qr_rule_found ) : ?>
+						<span style="color: #00a32a;">✅ Yes</span>
+					<?php else : ?>
+						<span style="color: #d63638;">❌ No - Check module-rewrite.php loading</span>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Total Rewrite Rules:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><?php echo esc_html( is_array( $rewrite_rules ) ? count( $rewrite_rules ) : 0 ); ?></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Query Vars:', 'wp-qr-trackr' ); ?></strong></td>
+				<td>
+					<?php 
+					$query_vars = $wp_rewrite->query_vars ?? array();
+					if ( in_array( 'qr_tracking_code', $query_vars, true ) ) {
+						echo '<span style="color: #00a32a;">✅ qr_tracking_code registered</span>';
+					} else {
+						echo '<span style="color: #d63638;">❌ qr_tracking_code NOT registered</span>';
+					}
+					?>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<?php if ( $qr_rule_found && is_array( $rewrite_rules ) ) : ?>
+		<h4><?php esc_html_e( 'QR-Related Rewrite Rules:', 'wp-qr-trackr' ); ?></h4>
+		<table class="widefat">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Pattern', 'wp-qr-trackr' ); ?></th>
+					<th><?php esc_html_e( 'Replacement', 'wp-qr-trackr' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $rewrite_rules as $pattern => $replacement ) : ?>
+					<?php if ( false !== strpos( $pattern, 'qr' ) || false !== strpos( $replacement, 'qr_tracking_code' ) ) : ?>
+						<tr>
+							<td><code><?php echo esc_html( $pattern ); ?></code></td>
+							<td><code><?php echo esc_html( $replacement ); ?></code></td>
+						</tr>
+					<?php endif; ?>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+	<?php endif; ?>
+	
+	<?php if ( ! $qr_rule_found ) : ?>
+		<div style="margin-top: 10px;">
+			<form method="post" style="display: inline;">
+				<?php wp_nonce_field( 'qr_trackr_flush_rules', 'qr_trackr_flush_nonce' ); ?>
+				<input type="hidden" name="action" value="flush_rewrite_rules" />
+				<input type="submit" class="button button-secondary" value="<?php esc_attr_e( 'Force Flush Rewrite Rules', 'wp-qr-trackr' ); ?>" />
+			</form>
+			<p style="margin-top: 5px;"><em><?php esc_html_e( 'Click this button to force re-register and flush rewrite rules if they appear to be missing.', 'wp-qr-trackr' ); ?></em></p>
+		</div>
+	<?php endif; ?>
+	<?php
+}
+
+/**
+ * Display QR image generation test.
+ */
+function qrc_display_qr_image_test() {
+	$test_code = 'DEBUG123';
+	$test_url = home_url( '/qr/' . $test_code );
+	
+	?>
+	<p><?php esc_html_e( 'Testing QR image generation with sample data...', 'wp-qr-trackr' ); ?></p>
+	
+	<table class="widefat">
+		<tbody>
+			<tr>
+				<td><strong><?php esc_html_e( 'Test QR Code:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><?php echo esc_html( $test_code ); ?></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Test URL:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><a href="<?php echo esc_url( $test_url ); ?>" target="_blank"><?php echo esc_html( $test_url ); ?></a></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'QR Image Generation:', 'wp-qr-trackr' ); ?></strong></td>
+				<td>
+					<?php
+					$test_image = qr_trackr_generate_qr_image( $test_code, array( 'size' => 100 ) );
+					if ( is_wp_error( $test_image ) ) {
+						echo '<span style="color: #d63638;">❌ Failed: ' . esc_html( $test_image->get_error_message() ) . '</span>';
+					} else {
+						echo '<span style="color: #00a32a;">✅ Success</span><br>';
+						echo '<img src="' . esc_url( $test_image ) . '" alt="Test QR Code" style="max-width: 100px; border: 1px solid #ddd; margin-top: 5px;" />';
+					}
+					?>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<?php
+}
+
+/**
+ * Display filesystem status for debugging.
+ */
+function qrc_display_filesystem_status() {
+	$upload_dir = wp_upload_dir();
+	$qr_dir = '';
+	$qr_dir_exists = false;
+	$qr_dir_writable = false;
+	
+	if ( ! isset( $upload_dir['error'] ) || empty( $upload_dir['error'] ) ) {
+		$qr_dir = wp_normalize_path( trailingslashit( $upload_dir['basedir'] ) . 'qr-codes' );
+		$qr_dir_exists = file_exists( $qr_dir );
+		$qr_dir_writable = $qr_dir_exists && is_writable( $qr_dir );
+	}
+	
+	?>
+	<table class="widefat">
+		<tbody>
+			<tr>
+				<td><strong><?php esc_html_e( 'QR Codes Directory:', 'wp-qr-trackr' ); ?></strong></td>
+				<td><?php echo esc_html( $qr_dir ); ?></td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Directory Exists:', 'wp-qr-trackr' ); ?></strong></td>
+				<td>
+					<?php if ( $qr_dir_exists ) : ?>
+						<span style="color: #00a32a;">✅ Yes</span>
+					<?php else : ?>
+						<span style="color: #d63638;">❌ No - Will be created on first QR generation</span>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<td><strong><?php esc_html_e( 'Directory Writable:', 'wp-qr-trackr' ); ?></strong></td>
+				<td>
+					<?php if ( $qr_dir_writable ) : ?>
+						<span style="color: #00a32a;">✅ Yes</span>
+					<?php elseif ( $qr_dir_exists ) : ?>
+						<span style="color: #d63638;">❌ No - Check permissions</span>
+					<?php else : ?>
+						<span style="color: #f0ad4e;">⚠️ Unknown (directory doesn't exist)</span>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<?php if ( $qr_dir_exists ) : ?>
+				<tr>
+					<td><strong><?php esc_html_e( 'QR Images Count:', 'wp-qr-trackr' ); ?></strong></td>
+					<td>
+						<?php
+						$qr_files = glob( $qr_dir . '/qr-*.png' );
+						echo esc_html( is_array( $qr_files ) ? count( $qr_files ) : 0 );
+						?>
+					</td>
+				</tr>
+			<?php endif; ?>
+		</tbody>
+	</table>
+	<?php
+}
+
+/**
+ * Display redirect test for debugging.
+ */
+function qrc_display_redirect_test() {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	
+	// Get a sample QR code from database
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for sample data.
+	$sample_qr = $wpdb->get_row( "SELECT * FROM {$table_name} LIMIT 1" );
+	
+	?>
+	<table class="widefat">
+		<tbody>
+			<?php if ( $sample_qr ) : ?>
+				<?php $test_url = home_url( '/qr/' . $sample_qr->qr_code ); ?>
+				<tr>
+					<td><strong><?php esc_html_e( 'Sample QR URL:', 'wp-qr-trackr' ); ?></strong></td>
+					<td>
+						<a href="<?php echo esc_url( $test_url ); ?>" target="_blank"><?php echo esc_html( $test_url ); ?></a>
+						<br><small><?php esc_html_e( 'Should redirect to:', 'wp-qr-trackr' ); ?> <code><?php echo esc_html( $sample_qr->destination_url ); ?></code></small>
+					</td>
+				</tr>
+				<tr>
+					<td><strong><?php esc_html_e( 'QR Code:', 'wp-qr-trackr' ); ?></strong></td>
+					<td><?php echo esc_html( $sample_qr->qr_code ); ?></td>
+				</tr>
+				<tr>
+					<td><strong><?php esc_html_e( 'Destination:', 'wp-qr-trackr' ); ?></strong></td>
+					<td><a href="<?php echo esc_url( $sample_qr->destination_url ); ?>" target="_blank"><?php echo esc_html( $sample_qr->destination_url ); ?></a></td>
+				</tr>
+			<?php else : ?>
+				<tr>
+					<td colspan="2">
+						<span style="color: #f0ad4e;">⚠️ <?php esc_html_e( 'No QR codes found in database. Create a QR code first to test redirects.', 'wp-qr-trackr' ); ?></span>
+					</td>
+				</tr>
+			<?php endif; ?>
+		</tbody>
+	</table>
+	
+	<p>
+		<strong><?php esc_html_e( 'Manual Test Instructions:', 'wp-qr-trackr' ); ?></strong><br>
+		<?php esc_html_e( '1. Create a new QR code via "Add New"', 'wp-qr-trackr' ); ?><br>
+		<?php esc_html_e( '2. Click the QR tracking URL from the "All QR Codes" page', 'wp-qr-trackr' ); ?><br>
+		<?php esc_html_e( '3. It should redirect to the destination URL', 'wp-qr-trackr' ); ?><br>
+		<?php esc_html_e( '4. If you get a 404, check the permalink structure and rewrite rules above', 'wp-qr-trackr' ); ?>
+	</p>
 	<?php
 }
