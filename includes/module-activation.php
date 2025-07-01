@@ -50,6 +50,8 @@ function qrc_activate() {
 		destination_url varchar(2048) NOT NULL,
 		qr_code varchar(255) NOT NULL,
 		qr_code_url varchar(2048) DEFAULT NULL,
+		common_name varchar(255) DEFAULT NULL,
+		referral_code varchar(100) DEFAULT NULL,
 		scans int(11) DEFAULT 0 NOT NULL,
 		access_count int(11) DEFAULT 0 NOT NULL,
 		created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
@@ -58,11 +60,16 @@ function qrc_activate() {
 		metadata text DEFAULT NULL,
 		PRIMARY KEY  (id),
 		KEY qr_code (qr_code),
-		KEY post_id (post_id)
+		KEY post_id (post_id),
+		KEY common_name (common_name),
+		KEY referral_code (referral_code)
 	) $charset_collate;";
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$result = dbDelta( $sql );
+	
+	// Check if we need to upgrade existing table.
+	qr_trackr_maybe_upgrade_database();
 	
 	// Log activation results for debugging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -89,6 +96,56 @@ function qrc_activate() {
 	
 	// Check permalink structure for rewrite rules.
 	qr_trackr_check_permalink_structure();
+}
+
+/**
+ * Upgrade database if needed for new features.
+ *
+ * @since 1.2.18
+ * @return void
+ */
+function qr_trackr_maybe_upgrade_database() {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	
+	// Check if new fields exist.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Schema check during upgrade.
+	$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
+	
+	$has_common_name = false;
+	$has_referral_code = false;
+	
+	foreach ( $columns as $column ) {
+		if ( 'common_name' === $column->Field ) {
+			$has_common_name = true;
+		}
+		if ( 'referral_code' === $column->Field ) {
+			$has_referral_code = true;
+		}
+	}
+	
+	// Add missing columns.
+	if ( ! $has_common_name ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade during activation.
+		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN common_name varchar(255) DEFAULT NULL AFTER qr_code_url" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Index creation during activation.
+		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY common_name (common_name)" );
+		
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: Added common_name column to database' );
+		}
+	}
+	
+	if ( ! $has_referral_code ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade during activation.
+		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN referral_code varchar(100) DEFAULT NULL AFTER common_name" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Index creation during activation.
+		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY referral_code (referral_code)" );
+		
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: Added referral_code column to database' );
+		}
+	}
 }
 
 /**

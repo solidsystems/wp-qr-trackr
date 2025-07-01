@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.18] - 2024-12-29
+
+### Added
+- **NEW FEATURE**: Clickable QR image modal with detailed views and editing capabilities
+- **NEW FIELD**: Common Name field for user-friendly QR code identification
+- **NEW FIELD**: Referral Code field for enhanced tracking and analytics
+- **NEW FUNCTIONALITY**: Search and filter capabilities in admin QR code list
+- **NEW UI**: Modern responsive modal interface for QR code management
+- Real-time AJAX-powered QR code details editing with validation
+- Comprehensive search across common names, referral codes, QR codes, and destination URLs
+- Referral code filter dropdown for quick filtering
+- Enhanced admin table with new columns and improved organization
+
+### Enhanced
+- Updated database schema with new `common_name` and `referral_code` fields
+- Automatic database migration for existing installations
+- Enhanced "Add New" form with validation for new fields
+- Improved admin list table with 15 items per page and better column organization
+- Mobile-responsive modal design with touch-friendly interactions
+- Real-time form validation with user-friendly error messages
+- Caching optimizations for search and filter operations
+
+### Technical
+- Added AJAX endpoints: `qr_trackr_get_qr_details` and `qr_trackr_update_qr_details`
+- Enhanced JavaScript with comprehensive modal management system
+- Added database indexes for new fields to improve query performance
+- Implemented proper nonce verification for all AJAX operations
+- Added referral code uniqueness validation during creation and editing
+- Enhanced admin script localization with comprehensive string management
+
+### Security
+- All user input properly sanitized and validated
+- Referral code format validation (alphanumeric, hyphens, underscores only)
+- Proper nonce verification for all form submissions and AJAX requests
+- Enhanced SQL query preparation with proper placeholders
+
 ## [1.2.17] - 2024-12-29
 
 ### Fixed
@@ -28,146 +64,137 @@ All notable changes to this project will be documented in this file.
 - Replaced `https://chart.googleapis.com/chart` (deprecated since 2019) with `https://api.qrserver.com/v1/create-qr-code/`
 - Updated QR generation parameters to match new API format
 - Added `qr_trackr_check_rewrite_rules()` function for better rule detection
-- Added `qr_trackr_force_flush_rewrite_rules()` function for manual rule flushing
-- Enhanced debug page with interactive rewrite rule management
+- Added `qr_trackr_force_flush_rewrite_rules()` function for manual rule management
 
-## [1.2.15] - 2024-Current
+## [1.2.15] - 2024-12-29
 
 ### Fixed
-- **🔧 Critical: Rewrite Rules Registration**: Fixed QR URL redirects not working after plugin updates
-- **🚀 Automatic Rule Flushing**: Added version-based automatic rewrite rule flushing on plugin updates
-- **✅ Debug Diagnostics**: Debug page now properly identifies rewrite rule registration issues
+- **CRITICAL**: Fixed automatic rewrite rule flushing when plugin version changes
+- Enhanced version-based detection system for rewrite rule updates
+- Added automatic rule flushing during plugin upgrades
+- Improved debug logging for rewrite rule troubleshooting
 
-### Enhanced  
-- **🛠️ Version Management**: Plugin now automatically detects version changes and refreshes URL rules
-- **📊 Better Monitoring**: Enhanced debug information for rewrite rule troubleshooting
+### Technical  
+- Added version-based rewrite rule flushing in activation module
+- Enhanced debug page with better rewrite rule diagnostics
+- Added automatic detection of plugin version changes requiring rule flush
 
-## [1.2.14] - 2024-Current
+## [1.2.14] - 2024-12-29
 
 ### Added
-- **🔍 Debug Menu**: Added comprehensive debug page (only visible when WP_DEBUG is enabled)
-- **🛠️ System Diagnostics**: Complete system information panel with WordPress version, PHP version, plugin version, and debug status
-- **💾 Database Status**: Real-time database table checks, field verification, and QR code statistics
-- **🔧 Rewrite Rules Verification**: Detailed rewrite rule registration status and pattern inspection
-- **🖼️ QR Image Generation Test**: Live QR image generation testing with visual preview
-- **📂 File System Check**: Upload directory status, permissions, and QR image counts
-- **🧪 Redirect Testing**: Sample QR code redirect validation with manual test instructions
-
-### Security
-- **🛡️ Debug Mode Gate**: Dangerous "Remove Data on Deactivation" setting now only appears in debug mode
-- **⚠️ Enhanced Warnings**: Added prominent red danger warnings for data removal setting
-- **🔒 Safety Measures**: Debug functionality restricted to WP_DEBUG=true environments
-
-### Improved
-- **🎯 Troubleshooting**: Comprehensive diagnostic tools for identifying QR code issues
-- **👨‍💻 Developer Experience**: Better debugging capabilities with detailed error analysis
-- **📊 Status Monitoring**: Visual indicators (✅/❌/⚠️) for all system components
-
-## [1.2.13] - 2024-Current
-
-### Fixed - QR Images Not Showing! 🖼️
-- **🔧 QR Image Storage**: Fixed QR code images not showing in admin table by properly storing `qr_code_url` in database
-- **💾 Database Schema**: Added missing `qr_code_url` field to database table during plugin activation
-- **🎯 Image Generation**: QR code images are now generated and stored during creation instead of on-the-fly
-- **📊 Admin Display**: Updated admin list table to use stored QR image URLs for better performance
+- **NEW FEATURE**: Comprehensive debug page with system diagnostics
+- Debug menu option (visible when WP_DEBUG enabled or force debug setting enabled)
+- System information display (WordPress version, PHP version, plugin version, debug status)
+- Database status verification (table existence, field verification, QR code statistics)
+- Rewrite rules verification (registration status and pattern inspection)
+- QR image generation testing (live test with visual preview)
+- File system check (upload directory permissions, QR image counts)
+- Redirect testing (sample QR code validation)
 
 ### Enhanced
-- **⚡ Performance**: QR images are cached and stored, eliminating repeated generation requests
-- **🔄 Fallback System**: Added smart fallback system to generate missing QR images automatically
-- **🛡️ Error Handling**: Enhanced error handling for QR image generation failures
-
-### Technical Details
-- Added `qr_code_url varchar(2048) DEFAULT NULL` field to `wp_qr_trackr_links` table
-- Modified admin creation process to generate and store QR image URL during QR code creation
-- Updated list table to prioritize stored URLs over on-demand generation
-- Automatic database updates for existing QR codes missing image URLs
-
-## [1.2.12] - 2024-12-30
-
-### Fixed - CRITICAL ISSUE! 🚨
-- **🔧 Rewrite Rules Registration**: Removed overly restrictive `is_admin()` check that was preventing QR redirect rules from being registered
-- **🚫 404 Errors Resolved**: QR URLs like `/qr/{tracking_code}` now work correctly in all contexts
-- **⚡ Universal Rule Registration**: Rewrite rules now register properly during plugin activation, AJAX requests, and normal operations
-
-### Technical Details
-- Removed problematic `if ( is_admin() || wp_doing_ajax() ) { return; }` check from `qr_trackr_add_rewrite_rules()`
-- This check was blocking rule registration during plugin activation and normal WordPress operations
-- Rules now register on the `init` hook without restrictions, allowing proper URL rewriting
-
-## [1.2.11] - 2024-12-30
-
-### Fixed
-- **Critical Rewrite Rules Fix**: Fixed activation order so QR redirect rules are registered before flushing
-- **404 Error Resolution**: QR URLs like `/qr/{tracking_code}` now work correctly after plugin activation
-- **Module Loading Order**: Load rewrite module during activation to ensure custom rules are registered
-
-### Added
-- **Debug Script**: Added comprehensive diagnostic script (`qr-debug.php`) for troubleshooting
-- **Activation Diagnostics**: Enhanced debugging capabilities for rewrite rule registration issues
+- Enhanced security by moving "Remove Data on Deactivation" setting behind debug mode gate
+- Added "Force Debug Mode" setting in plugin settings for enabling debug without WP_DEBUG
+- Improved admin interface organization with conditional menu items
 
 ### Technical
-- Fixed plugin activation hook to load `module-rewrite.php` before calling `flush_rewrite_rules()`
-- Added diagnostic script to help identify permalink structure and QR generation issues
-- Enhanced activation process to ensure proper module loading order
+- Added comprehensive system diagnostics and validation tools
+- Enhanced debug logging capabilities throughout the plugin
+- Added safe debug mode toggle for production environments
 
-## [1.2.10] - 2024-12-30
+## [1.2.13] - 2024-12-29
 
-### Added
-- **Permalink Structure Check**: Added activation check for pretty permalinks requirement
-- **Admin Warning Notice**: Users are now warned if plain permalinks are being used
-- **Automatic Monitoring**: Plugin monitors permalink changes and updates warnings accordingly
-- **Smart Navigation**: Direct link to WordPress permalink settings for easy configuration
+### Fixed
+- **CRITICAL**: Fixed QR code images not displaying in admin table
+- Added `qr_code_url` field to database schema for storing generated QR image URLs
+- Enhanced admin creation process to generate and store QR image URL during QR code creation
+- Updated list table to use stored QR image URLs with smart fallback system for existing codes
+- Improved performance by eliminating repeated QR image generation
 
 ### Enhanced
-- **User Experience**: Clear guidance when QR code redirects won't work due to permalink structure
-- **Debug Logging**: Enhanced logging for permalink structure detection during activation
-- **Auto-Resolution**: Warning automatically clears when pretty permalinks are enabled
+- Added automatic database field addition for existing installations
+- Smart fallback system for QR codes created before this update
+- Enhanced admin list table with proper QR image display
 
 ### Technical
-- Added `qr_trackr_check_permalink_structure()` function for activation checks
-- Implemented admin notice system for permalink warnings
-- Added `permalink_structure_changed` hook monitoring
-- Enhanced activation process with comprehensive environment validation
+- Database schema upgrade with `qr_code_url varchar(2048) DEFAULT NULL` field
+- Enhanced QR creation workflow to store image URLs
+- Improved caching and performance for admin table display
 
-## [1.2.9] - 2024-12-30
+## [1.2.12] - 2024-12-29
 
 ### Fixed
-- **Database Table Creation**: Fixed plugin activation to properly create database tables automatically
-- **Error Logging**: Added comprehensive error logging and debugging for activation issues
-- **Table Verification**: Added verification step to ensure database table creation was successful
-- **SQL Preparation**: Fixed incorrect SQL preparation in deactivation function
-
-### Enhanced
-- **Debugging**: Added debug logging for activation process when WP_DEBUG is enabled
-- **Error Handling**: Added activation error tracking to help diagnose table creation issues
-- **User Feedback**: Plugin now stores activation errors for admin notification
+- **CRITICAL**: Fixed rewrite rules not being registered due to overly restrictive `is_admin()` check
+- Removed problematic conditional that was preventing rewrite rules from being registered during plugin activation
+- Fixed activation order to load `module-rewrite.php` before calling `flush_rewrite_rules()`
+- QR URLs (e.g., `/qr/Snezrw9t`) now work correctly and redirect to destination URLs
 
 ### Technical
-- Fixed `$wpdb->prepare()` usage in deactivation function (removed invalid `%i` placeholder)
-- Added table existence verification after creation attempt
-- Enhanced error logging throughout activation process
-- Improved database table creation reliability
+- Removed `is_admin()` and `wp_doing_ajax()` checks from rewrite rule registration
+- Improved module loading order in activation process
+- Enhanced rewrite rule registration reliability
 
-## [1.2.8] - 2024-Current
+## [1.2.11] - 2024-12-29
 
 ### Fixed
-- **Critical Fix**: QR codes now appear in the admin list immediately after creation (fixed cache invalidation issue)
-- **Enhanced UX**: Add New QR Code page now has AJAX-powered post/page search instead of static dropdown
-- **Performance**: Pre-generate QR code images during creation for faster display
-- **User Experience**: Added detailed QR code preview with tracking code and URL after successful creation
+- Attempted fix for rewrite rules not being registered properly
+- Enhanced rewrite rule debugging and validation
+
+## [1.2.10] - 2024-12-29
 
 ### Added
-- **AJAX Search**: Real-time post/page searching with debounced input (300ms delay)
-- **Interactive Interface**: Click-to-select functionality with hover effects and loading states
-- **Clear Selection**: Added clear button for easy post deselection
-- **Error Handling**: Comprehensive error feedback and validation
-- **Security**: Proper nonce verification and capability checks for all AJAX requests
+- **NEW FEATURE**: Permalink structure validation during plugin activation
+- Admin warning system for incompatible permalink settings (plain permalinks)
+- Automatic detection and user guidance for permalink configuration
+- Enhanced activation process with permalink compatibility checking
 
-### Technical Improvements
-- **JavaScript**: Created dedicated `assets/qrc-admin.js` for admin functionality
-- **Code Standards**: Fixed all PHPCS violations and maintained WordPress coding standards
-- **Caching**: Improved cache management for better performance
-- **Input Validation**: Enhanced security with proper sanitization and escaping
+### Enhanced
+- Improved user experience with clear instructions for permalink setup
+- Added automatic permalink structure change detection
+- Enhanced activation workflow with comprehensive checks
+
+### Technical
+- Added `qr_trackr_check_permalink_structure()` function
+- Added `qr_trackr_permalink_admin_notice()` for user warnings
+- Added `qr_trackr_permalink_structure_changed()` hook handler
+
+## [1.2.9] - 2024-12-29
+
+### Enhanced
+- Improved database table creation with better error handling
+- Enhanced activation process with comprehensive validation
+- Added debug logging for database operations
+- Improved error reporting for troubleshooting
+
+### Technical
+- Enhanced `qrc_activate()` function with better error handling
+- Added table existence verification during activation
+- Improved debug logging throughout activation process
+
+## [1.2.8] - 2024-12-29
+
+### Fixed
+- **CRITICAL**: Fixed cache invalidation issue preventing new QR codes from appearing in admin list
+- **CRITICAL**: Implemented real-time AJAX post/page search functionality for "Add New" page
+- Added comprehensive error handling and user feedback for QR code creation
+- Fixed static dropdown being replaced with dynamic, searchable interface
+
+### Added
+- Real-time post/page search with debounced input for optimal performance
+- Click-to-select interface for intuitive post/page selection
+- Enhanced user experience with loading states and clear feedback
+- Dedicated `assets/qrc-admin.js` file for admin functionality
+
+### Enhanced
+- Improved admin interface responsiveness and usability
+- Added proper cache invalidation after successful QR code creation
+- Enhanced form validation and error messaging
+- Mobile-friendly interface improvements
+
+### Technical
+- Added `qrc_search_posts_ajax()` function for AJAX post search
+- Implemented proper cache management with `wp_cache_delete()`
+- Enhanced JavaScript with debouncing and error handling
+- Added comprehensive AJAX error handling and user feedback
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).

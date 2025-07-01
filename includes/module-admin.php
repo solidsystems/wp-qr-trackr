@@ -109,6 +109,43 @@ function qrc_enqueue_admin_scripts( $hook ) {
 
 	wp_localize_script(
 		'qrc-admin',
+		'qrcAdmin',
+		array(
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'qr_trackr_nonce' ),
+			'strings' => array(
+				'qrCodeDetails'        => esc_html__( 'QR Code Details', 'wp-qr-trackr' ),
+				'loading'              => esc_html__( 'Loading...', 'wp-qr-trackr' ),
+				'saving'               => esc_html__( 'Saving...', 'wp-qr-trackr' ),
+				'close'                => esc_html__( 'Close', 'wp-qr-trackr' ),
+				'saveChanges'          => esc_html__( 'Save Changes', 'wp-qr-trackr' ),
+				'statistics'           => esc_html__( 'Statistics', 'wp-qr-trackr' ),
+				'totalScans'           => esc_html__( 'Total Scans', 'wp-qr-trackr' ),
+				'recentScans'          => esc_html__( 'Recent Scans (30 days)', 'wp-qr-trackr' ),
+				'lastAccessed'         => esc_html__( 'Last Accessed', 'wp-qr-trackr' ),
+				'created'              => esc_html__( 'Created', 'wp-qr-trackr' ),
+				'commonName'           => esc_html__( 'Common Name', 'wp-qr-trackr' ),
+				'referralCode'         => esc_html__( 'Referral Code', 'wp-qr-trackr' ),
+				'qrCode'               => esc_html__( 'QR Code', 'wp-qr-trackr' ),
+				'qrUrl'                => esc_html__( 'QR URL', 'wp-qr-trackr' ),
+				'destinationUrl'       => esc_html__( 'Destination URL', 'wp-qr-trackr' ),
+				'linkedPost'           => esc_html__( 'Linked Post/Page', 'wp-qr-trackr' ),
+				'enterFriendlyName'    => esc_html__( 'Enter a friendly name...', 'wp-qr-trackr' ),
+				'enterReferralCode'    => esc_html__( 'Enter referral code...', 'wp-qr-trackr' ),
+				'commonNameDesc'       => esc_html__( 'A user-friendly name to help identify this QR code.', 'wp-qr-trackr' ),
+				'referralCodeDesc'     => esc_html__( 'A unique code for tracking and analytics (letters, numbers, hyphens, underscores only).', 'wp-qr-trackr' ),
+				'notLinkedToPost'      => esc_html__( 'Not linked to a specific post/page', 'wp-qr-trackr' ),
+				'noNameSet'            => esc_html__( 'No name set', 'wp-qr-trackr' ),
+				'none'                 => esc_html__( 'None', 'wp-qr-trackr' ),
+				'errorLoadingDetails'  => esc_html__( 'Error loading QR code details. Please try again.', 'wp-qr-trackr' ),
+				'errorSavingDetails'   => esc_html__( 'Error saving QR code details. Please try again.', 'wp-qr-trackr' ),
+			)
+		)
+	);
+	
+	// Legacy support for existing AJAX calls
+	wp_localize_script(
+		'qrc-admin',
 		'qrcAjax',
 		array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
@@ -385,6 +422,24 @@ function qrc_add_new_page() {
 						<p class="description"><?php esc_html_e( 'Enter the full URL where this QR code should redirect.', 'wp-qr-trackr' ); ?></p>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row">
+						<label for="common_name"><?php esc_html_e( 'Common Name', 'wp-qr-trackr' ); ?></label>
+					</th>
+					<td>
+						<input type="text" name="common_name" id="common_name" class="regular-text" placeholder="<?php esc_attr_e( 'Enter a friendly name...', 'wp-qr-trackr' ); ?>" />
+						<p class="description"><?php esc_html_e( 'A user-friendly name to help identify this QR code (optional).', 'wp-qr-trackr' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="referral_code"><?php esc_html_e( 'Referral Code', 'wp-qr-trackr' ); ?></label>
+					</th>
+					<td>
+						<input type="text" name="referral_code" id="referral_code" class="regular-text" placeholder="<?php esc_attr_e( 'Enter referral code...', 'wp-qr-trackr' ); ?>" pattern="[a-zA-Z0-9\-_]+" />
+						<p class="description"><?php esc_html_e( 'A unique code for tracking and analytics. Letters, numbers, hyphens, and underscores only (optional).', 'wp-qr-trackr' ); ?></p>
+					</td>
+				</tr>
 			</table>
 			
 			<?php submit_button( esc_html__( 'Generate QR Code', 'wp-qr-trackr' ) ); ?>
@@ -422,6 +477,35 @@ function qrc_handle_add_new_submission() {
 		return;
 	}
 
+	// Get and validate the new fields.
+	$common_name = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
+	$referral_code = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+
+	// Validate referral code format if provided.
+	if ( ! empty( $referral_code ) && ! preg_match( '/^[a-zA-Z0-9\-_]+$/', $referral_code ) ) {
+		echo '<div class="notice notice-error"><p>' . esc_html__( 'Referral code can only contain letters, numbers, hyphens, and underscores.', 'wp-qr-trackr' ) . '</p></div>';
+		return;
+	}
+
+	// Check if referral code is unique if provided.
+	if ( ! empty( $referral_code ) ) {
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Uniqueness check for validation.
+		$existing = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$table_name} WHERE referral_code = %s",
+				$referral_code
+			)
+		);
+
+		if ( $existing ) {
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'Referral code already exists. Please choose a different one.', 'wp-qr-trackr' ) . '</p></div>';
+			return;
+		}
+	}
+
 	// Generate unique tracking code.
 	$tracking_code = qr_trackr_generate_unique_qr_code();
 
@@ -443,12 +527,14 @@ function qrc_handle_add_new_submission() {
 			'destination_url' => $destination_url,
 			'qr_code'         => $tracking_code,
 			'qr_code_url'     => $qr_image_url,
+			'common_name'     => ! empty( $common_name ) ? $common_name : null,
+			'referral_code'   => ! empty( $referral_code ) ? $referral_code : null,
 			'scans'           => 0,
 			'access_count'    => 0,
 			'created_at'      => current_time( 'mysql', true ),
 			'updated_at'      => current_time( 'mysql', true ),
 		),
-		array( '%d', '%s', '%s', '%s', '%d', '%d', '%s', '%s' )
+		array( '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s' )
 	);
 
 	if ( $result ) {
@@ -467,6 +553,12 @@ function qrc_handle_add_new_submission() {
 			echo '<p><img src="' . esc_url( $qr_image_url ) . '" alt="QR Code Preview" style="max-width: 150px; height: auto;" /></p>';
 			echo '<p><strong>' . esc_html__( 'Tracking Code:', 'wp-qr-trackr' ) . '</strong> <code>' . esc_html( $tracking_code ) . '</code></p>';
 			echo '<p><strong>' . esc_html__( 'QR URL:', 'wp-qr-trackr' ) . '</strong> <code>' . esc_url( home_url( '/qr/' . $tracking_code ) ) . '</code></p>';
+			if ( ! empty( $common_name ) ) {
+				echo '<p><strong>' . esc_html__( 'Common Name:', 'wp-qr-trackr' ) . '</strong> ' . esc_html( $common_name ) . '</p>';
+			}
+			if ( ! empty( $referral_code ) ) {
+				echo '<p><strong>' . esc_html__( 'Referral Code:', 'wp-qr-trackr' ) . '</strong> <code>' . esc_html( $referral_code ) . '</code></p>';
+			}
 			echo '</div>';
 		}
 	} else {
