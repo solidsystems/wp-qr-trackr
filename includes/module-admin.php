@@ -751,8 +751,13 @@ function qrc_display_rewrite_status() {
 				<td><strong><?php esc_html_e( 'Query Vars:', 'wp-qr-trackr' ); ?></strong></td>
 				<td>
 					<?php 
-					$query_vars = $wp_rewrite->query_vars ?? array();
-					if ( in_array( 'qr_tracking_code', $query_vars, true ) ) {
+					global $wp;
+					$query_vars_registered = false;
+					if ( isset( $wp->public_query_vars ) && in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+						$query_vars_registered = true;
+					}
+					
+					if ( $query_vars_registered ) {
 						echo '<span style="color: #00a32a;">✅ qr_tracking_code registered</span>';
 					} else {
 						echo '<span style="color: #d63638;">❌ qr_tracking_code NOT registered</span>';
@@ -785,14 +790,22 @@ function qrc_display_rewrite_status() {
 		</table>
 	<?php endif; ?>
 	
-	<?php if ( ! $qr_rule_found ) : ?>
+	<?php 
+	global $wp;
+	$query_vars_registered = false;
+	if ( isset( $wp->public_query_vars ) && in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+		$query_vars_registered = true;
+	}
+	?>
+	
+	<?php if ( ! $qr_rule_found || ! $query_vars_registered ) : ?>
 		<div style="margin-top: 10px;">
 			<form method="post" style="display: inline;">
 				<?php wp_nonce_field( 'qr_trackr_flush_rules', 'qr_trackr_flush_nonce' ); ?>
 				<input type="hidden" name="action" value="flush_rewrite_rules" />
 				<input type="submit" class="button button-secondary" value="<?php esc_attr_e( 'Force Flush Rewrite Rules', 'wp-qr-trackr' ); ?>" />
 			</form>
-			<p style="margin-top: 5px;"><em><?php esc_html_e( 'Click this button to force re-register and flush rewrite rules if they appear to be missing.', 'wp-qr-trackr' ); ?></em></p>
+			<p style="margin-top: 5px;"><em><?php esc_html_e( 'Click this button to force re-register and flush rewrite rules and query variables if they appear to be missing.', 'wp-qr-trackr' ); ?></em></p>
 		</div>
 	<?php endif; ?>
 	<?php

@@ -47,6 +47,12 @@ add_action( 'init', 'qr_trackr_add_rewrite_rules' );
  * @return bool True if rules were flushed, false otherwise.
  */
 function qr_trackr_force_flush_rewrite_rules() {
+	// Re-register our query vars first.
+	global $wp;
+	if ( isset( $wp->public_query_vars ) && ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+		$wp->add_query_var( 'qr_tracking_code' );
+	}
+	
 	// Re-register our rewrite rules.
 	qr_trackr_add_rewrite_rules();
 	
@@ -55,7 +61,7 @@ function qr_trackr_force_flush_rewrite_rules() {
 	
 	// Log the action for debugging.
 	if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
-		error_log( 'QR Trackr: Forced flush of rewrite rules completed.' );
+		error_log( 'QR Trackr: Forced flush of rewrite rules and query vars completed.' );
 	}
 	
 	return true;

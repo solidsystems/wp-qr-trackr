@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.17] - 2024-12-29
+
+### Fixed
+- **CRITICAL**: Fixed query variable registration for QR code redirects
+- Enhanced "Force Flush Rewrite Rules" to also re-register query variables
+- Improved query variable detection in debug page to use correct global variable
+- Fixed rewrite rules working but redirects still failing due to missing query vars
+
+### Technical
+- Updated query variable detection to use `$wp->public_query_vars` instead of `$wp_rewrite->query_vars`
+- Added `$wp->add_query_var( 'qr_tracking_code' )` to force flush function
+- Enhanced debug page to show "Force Flush" button when either rules or query vars are missing
+
+## [1.2.16] - 2024-12-29
+
+### Fixed
+- **CRITICAL**: Fixed QR image generation by replacing deprecated Google Charts API with QR Server API
+- **CRITICAL**: Enhanced rewrite rules registration with improved detection and manual flush capability
+- Added "Force Flush Rewrite Rules" button to debug page for manual rule registration
+- Improved rewrite rules checking with dedicated validation function
+- Added debug logging for rewrite rule registration tracking
+
+### Technical
+- Replaced `https://chart.googleapis.com/chart` (deprecated since 2019) with `https://api.qrserver.com/v1/create-qr-code/`
+- Updated QR generation parameters to match new API format
+- Added `qr_trackr_check_rewrite_rules()` function for better rule detection
+- Added `qr_trackr_force_flush_rewrite_rules()` function for manual rule flushing
+- Enhanced debug page with interactive rewrite rule management
+
 ## [1.2.15] - 2024-Current
 
 ### Fixed
@@ -413,19 +442,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WordPress coding standards compliance
 - Comprehensive documentation
 - Security best practices implementation
-
-## [1.2.16] - 2024-12-29
-
-### Fixed
-- **CRITICAL**: Fixed QR image generation by replacing deprecated Google Charts API with QR Server API
-- **CRITICAL**: Enhanced rewrite rules registration with improved detection and manual flush capability
-- Added "Force Flush Rewrite Rules" button to debug page for manual rule registration
-- Improved rewrite rules checking with dedicated validation function
-- Added debug logging for rewrite rule registration tracking
-
-### Technical
-- Replaced `https://chart.googleapis.com/chart` (deprecated since 2019) with `https://api.qrserver.com/v1/create-qr-code/`
-- Updated QR generation parameters to match new API format
-- Added `qr_trackr_check_rewrite_rules()` function for better rule detection
-- Added `qr_trackr_force_flush_rewrite_rules()` function for manual rule flushing
-- Enhanced debug page with interactive rewrite rule management
