@@ -525,6 +525,57 @@ function qr_trackr_ajax_update_qr_details() {
 }
 add_action( 'wp_ajax_qr_trackr_update_qr_details', 'qr_trackr_ajax_update_qr_details' );
 
+/**
+ * Debug endpoint to test AJAX functionality.
+ * Remove this after troubleshooting.
+ *
+ * @return void
+ */
+function qr_trackr_ajax_debug() {
+	// Verify nonce.
+	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
+		wp_send_json_error( 'Nonce verification failed' );
+		return;
+	}
+
+	// Check user capabilities.
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( 'Insufficient permissions' );
+		return;
+	}
+
+	// Check database table and fields.
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+	
+	// Check if table exists.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
+	$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) );
+	
+	$debug_info = array(
+		'table_exists' => $table_exists ? 'Yes' : 'No',
+		'wpdb_last_error' => $wpdb->last_error,
+		'php_version' => PHP_VERSION,
+		'wp_version' => get_bloginfo( 'version' ),
+	);
+	
+	if ( $table_exists ) {
+		// Check table structure.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
+		$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
+		$column_names = array();
+		foreach ( $columns as $column ) {
+			$column_names[] = $column->Field;
+		}
+		$debug_info['table_columns'] = $column_names;
+		$debug_info['has_common_name'] = in_array( 'common_name', $column_names, true ) ? 'Yes' : 'No';
+		$debug_info['has_referral_code'] = in_array( 'referral_code', $column_names, true ) ? 'Yes' : 'No';
+	}
+	
+	wp_send_json_success( $debug_info );
+}
+add_action( 'wp_ajax_qr_trackr_debug', 'qr_trackr_ajax_debug' );
+
 if ( function_exists( 'qr_trackr_debug_log' ) ) {
 	qr_trackr_debug_log( 'Loaded module-ajax.php.' );
 }
