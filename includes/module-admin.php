@@ -364,6 +364,13 @@ function qrc_handle_add_new_submission() {
 	// Generate unique tracking code.
 	$tracking_code = qr_trackr_generate_unique_qr_code();
 
+	// Generate QR code image URL.
+	$qr_image_url = qr_trackr_generate_qr_image( $tracking_code, array( 'size' => 200 ) );
+	if ( is_wp_error( $qr_image_url ) ) {
+		echo '<div class="notice notice-error"><p>' . esc_html__( 'Failed to generate QR code image.', 'wp-qr-trackr' ) . '</p></div>';
+		return;
+	}
+
 	// Insert into database.
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
@@ -374,12 +381,13 @@ function qrc_handle_add_new_submission() {
 			'post_id'         => $post_id > 0 ? $post_id : null,
 			'destination_url' => $destination_url,
 			'qr_code'         => $tracking_code,
+			'qr_code_url'     => $qr_image_url,
 			'scans'           => 0,
 			'access_count'    => 0,
 			'created_at'      => current_time( 'mysql', true ),
 			'updated_at'      => current_time( 'mysql', true ),
 		),
-		array( '%d', '%s', '%s', '%d', '%d', '%s', '%s' )
+		array( '%d', '%s', '%s', '%s', '%d', '%d', '%s', '%s' )
 	);
 
 	if ( $result ) {

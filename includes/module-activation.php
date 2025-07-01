@@ -49,6 +49,7 @@ function qrc_activate() {
 		post_id bigint(20) UNSIGNED NULL,
 		destination_url varchar(2048) NOT NULL,
 		qr_code varchar(255) NOT NULL,
+		qr_code_url varchar(2048) DEFAULT NULL,
 		scans int(11) DEFAULT 0 NOT NULL,
 		access_count int(11) DEFAULT 0 NOT NULL,
 		created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,

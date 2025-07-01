@@ -2,7 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.12] - 2024-Current
+## [1.2.13] - 2024-Current
+
+### Fixed - QR Images Not Showing! 🖼️
+- **🔧 QR Image Storage**: Fixed QR code images not showing in admin table by properly storing `qr_code_url` in database
+- **💾 Database Schema**: Added missing `qr_code_url` field to database table during plugin activation
+- **🎯 Image Generation**: QR code images are now generated and stored during creation instead of on-the-fly
+- **📊 Admin Display**: Updated admin list table to use stored QR image URLs for better performance
+
+### Enhanced
+- **⚡ Performance**: QR images are cached and stored, eliminating repeated generation requests
+- **🔄 Fallback System**: Added smart fallback system to generate missing QR images automatically
+- **🛡️ Error Handling**: Enhanced error handling for QR image generation failures
+
+### Technical Details
+- Added `qr_code_url varchar(2048) DEFAULT NULL` field to `wp_qr_trackr_links` table
+- Modified admin creation process to generate and store QR image URL during QR code creation
+- Updated list table to prioritize stored URLs over on-demand generation
+- Automatic database updates for existing QR codes missing image URLs
+
+## [1.2.12] - 2024-12-30
 
 ### Fixed - CRITICAL ISSUE! 🚨
 - **🔧 Rewrite Rules Registration**: Removed overly restrictive `is_admin()` check that was preventing QR redirect rules from being registered
