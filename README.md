@@ -2,10 +2,12 @@
 
 A comprehensive, production-ready WordPress QR code generation and tracking plugin. Built with engineering excellence, security best practices, and WordPress standards compliance.
 
-**Current Status: Stable v1.2.4** ✅
-- **Plugin activation issues resolved** - Fixed fatal errors that prevented activation
-- **Production-ready** - Successfully tested and deployed on live WordPress sites
-- **Fully functional** - QR code generation, tracking, and admin interface working
+**Current Status: Stable v1.2.20** ✅
+- **Critical error fixes applied** - Resolved rewrite rule timing issues and fatal activation errors
+- **Enhanced admin interface** - Modal-based QR code management with clickable images
+- **Advanced QR code management** - Common names, referral codes, search, and filtering
+- **Production-ready** - Successfully tested and deployed with comprehensive debugging tools
+- **Debug mode integration** - Built-in system diagnostics and troubleshooting capabilities
 - **Security compliant** - Follows WordPress security standards with proper nonce verification
 - **Performance optimized** - Strategic caching and efficient database operations
 
@@ -24,18 +26,21 @@ A comprehensive, production-ready WordPress QR code generation and tracking plug
 ## Table of Contents
 1. [Project Overview](#project-overview)
 2. [Current Status & Recent Updates](#recent-updates--stability)
-3. [Quick Start / Onboarding](#quick-start--onboarding)
-4. [Usage](#usage)
-5. [Development & Contribution](#development--contribution)
-6. [Infrastructure & Plumbing](#infrastructure--plumbing)
-7. [For Engineering & IT Leadership](#for-engineering--it-leadership)
-8. [Troubleshooting & FAQ](./docs/TROUBLESHOOTING.md)
-9. [Links & Further Reading](#links--further-reading)
-10. [Current Status Dashboard](./STATUS.md)
+3. [Admin Interface Features](#admin-interface-features)
+4. [Quick Start / Onboarding](#quick-start--onboarding)
+5. [Usage](#usage)
+6. [Development & Contribution](#development--contribution)
+7. [Infrastructure & Plumbing](#infrastructure--plumbing)
+8. [For Engineering & IT Leadership](#for-engineering--it-leadership)
+9. [Features Documentation](./docs/FEATURES.md)
+10. [Troubleshooting & FAQ](./docs/TROUBLESHOOTING.md)
+11. [Links & Further Reading](#links--further-reading)
+12. [Current Status Dashboard](./STATUS.md)
 
 **Quick Links:**
 - 📊 [**Current Status Dashboard**](./STATUS.md) - Production readiness and health overview
 - 🚀 [**Quick Start Guide**](./ONBOARDING.md) - Get started in minutes
+- ✨ [**Features Documentation**](./docs/FEATURES.md) - Comprehensive feature guide including modal system, search, and debug mode
 - 🛠️ [**Troubleshooting Guide**](./docs/TROUBLESHOOTING.md) - Solutions for common issues
 
 ---
@@ -46,12 +51,14 @@ A comprehensive, production-ready WordPress QR code generation and tracking plug
 
 **Core Features:**
 - **QR Code Generation** - Create QR codes for posts, pages, and custom URLs
-- **Advanced Customization** - Multiple error correction levels, custom colors, sizes, and styles
-- **Analytics & Tracking** - Monitor QR code scans with detailed analytics
-- **Admin Dashboard** - Intuitive WordPress admin interface for management
+- **Modal-Based Management** - Click QR code images to open detailed management modals
+- **Advanced QR Fields** - Common names and referral codes for enhanced organization
+- **Search & Filter System** - Powerful search across all QR code fields with referral code filtering
+- **Debug Mode Integration** - Comprehensive system diagnostics and troubleshooting tools
+- **Analytics & Tracking** - Monitor QR code scans with detailed analytics and recent scan statistics
+- **Admin Dashboard** - Intuitive WordPress admin interface with modern, mobile-first design
 - **Security First** - Proper nonce verification, input sanitization, and output escaping
-- **Performance Optimized** - Database caching and efficient query strategies
-- **Mobile Responsive** - Mobile-first design for optimal user experience
+- **Performance Optimized** - Database caching and efficient query strategies with automatic migrations
 
 **Technical Excellence:**
 - **Production Tested** - Successfully deployed on live WordPress sites
@@ -62,20 +69,44 @@ A comprehensive, production-ready WordPress QR code generation and tracking plug
 
 ## Recent Updates & Stability
 
-### v1.2.4 - Production Ready ✅
-**Critical Fixes Applied:**
-- ✅ **Fatal activation error resolved** - Fixed constant mismatch issues between QRC_ and QR_TRACKR_ prefixes
-- ✅ **Hook registration conflicts fixed** - Prevented duplicate activation/deactivation hook registrations  
-- ✅ **Safe module loading implemented** - Added file existence checks to prevent fatal errors
-- ✅ **Backward compatibility maintained** - Legacy constants defined for existing module compatibility
-- ✅ **Plugin header standardized** - Simplified WordPress plugin header for universal compatibility
+### v1.2.20 - Enhanced Management Interface ✅
+**Major Features Added:**
+- ✅ **Modal-based QR management** - Click QR images to open detailed editing modals with real-time updates
+- ✅ **Common name & referral code fields** - Enhanced QR code organization and tracking capabilities
+- ✅ **Advanced search & filtering** - Search across all fields with referral code filter dropdown
+- ✅ **Debug mode integration** - Comprehensive system diagnostics accessible in WordPress admin
+- ✅ **UI improvements** - Cleaned up duplicate QR images, modern responsive interface
+- ✅ **Critical error fixes** - Resolved rewrite rule timing issues preventing activation
+- ✅ **Automatic database migrations** - Seamless upgrades with field additions and indexing
 
 **Current Status:**
-- 🟢 **Production Stable** - Successfully tested on live WordPress installations
-- 🟢 **Activation Safe** - No more fatal errors during plugin activation
-- 🟢 **Fully Functional** - All QR code features working correctly
-- 🟢 **Security Compliant** - Passes WordPress security standards
-- 🟢 **Performance Optimized** - Efficient database operations with caching
+- 🟢 **Production Stable** - Successfully tested on live WordPress installations with comprehensive features
+- 🟢 **Activation Safe** - All fatal errors resolved, proper hook timing implemented
+- 🟢 **Feature Complete** - Full QR code lifecycle management with advanced organization tools
+- 🟢 **Debug Ready** - Built-in system diagnostics for troubleshooting and maintenance
+- 🟢 **Security Compliant** - Enhanced nonce verification and input validation throughout
+- 🟢 **Performance Optimized** - Efficient caching with search-aware cache keys and database indexing
+
+## Admin Interface Features
+
+### Modal-Based QR Code Management
+- **Clickable QR Images** - Click any QR code image in the admin list to open detailed management modal
+- **Real-Time Editing** - Edit common names and referral codes with instant validation and feedback
+- **Live Statistics** - View recent scan counts and analytics directly in the modal interface
+- **Mobile-Responsive Design** - Touch-friendly modal interface optimized for all devices
+- **Error Handling** - Comprehensive validation with user-friendly error messages
+
+### Search & Filter System
+- **Global Search** - Search across common names, referral codes, QR codes, and destination URLs
+- **Referral Code Filter** - Dropdown filter to quickly find QR codes by referral code
+- **Real-Time Results** - Instant search results with efficient caching
+- **Pagination** - 15 items per page with smooth navigation
+
+### Debug Mode Integration
+- **System Diagnostics** - Comprehensive health checks for database, rewrite rules, and file system
+- **QR Generation Testing** - Live QR code generation testing with visual preview
+- **Rewrite Rule Validation** - Check and fix rewrite rule registration issues
+- **Force Flush Capability** - Manual rewrite rule flushing for troubleshooting
 
 ## QR Code Generation Features
 
@@ -85,7 +116,7 @@ A comprehensive, production-ready WordPress QR code generation and tracking plug
 - **Logo Integration** - Optional logo embedding with automatic positioning
 - **Format Support** - PNG and SVG output formats
 - **Fallback Service** - Automatic fallback if primary generation fails
-- **URL Tracking** - Built-in analytics and scan tracking
+- **URL Tracking** - Built-in analytics and scan tracking with immediate count updates
 - **Mobile Optimized** - Responsive design for all devices
 
 ---
@@ -130,7 +161,7 @@ A comprehensive, production-ready WordPress QR code generation and tracking plug
    docker compose up --build
    ```
 
-> **Note:** Debug mode is enabled by default in the development environment. When using the standard Docker workflow (including `reset-docker.sh`), a `wp-config-dev.php` file is automatically included to enable `WP_DEBUG` and log errors to `wp-content/debug.log`. This ensures all PHP errors and warnings are captured for troubleshooting during development. Do not use this file in production.
+> **Note:** Debug mode is enabled by default in the development environment. When using the standard Docker workflow (including `reset-docker.sh`), a `wp-config-dev.php` file is automatically included to enable `WP_DEBUG` and log errors to `wp-content/debug.log`. This also enables the QR Trackr Debug page in the WordPress admin (QR Trackr → Debug) with comprehensive system diagnostics, QR generation testing, and troubleshooting tools. Do not use debug mode in production.
 
 ### Troubleshooting
 If you see warnings about multiple lockfiles or npm being used as the package manager:
@@ -143,14 +174,37 @@ If you see warnings about multiple lockfiles or npm being used as the package ma
 ## Usage
 
 ### As a QR Trackr User
-- Access the QR Trackr admin panel in WordPress to generate and track QR codes.
-- Use the `[qr_trackr]` shortcode to generate QR codes on the frontend (see documentation for parameters).
-- View analytics and performance at a glance in the admin dashboard.
+
+#### Basic QR Code Management
+- Access the QR Trackr admin panel in WordPress to generate and track QR codes
+- Use the "Add New" page to create QR codes for posts, pages, or custom URLs
+- Add common names and referral codes for better organization and tracking
+- View all QR codes in the admin list with search and filter capabilities
+
+#### Advanced Management Features
+- **Click any QR code image** in the admin list to open the management modal
+- **Edit details** like common names and referral codes with real-time validation
+- **View scan statistics** including recent 30-day scan counts
+- **Search and filter** QR codes using the search box and referral code dropdown
+- **Debug and troubleshoot** using the Debug page (when debug mode is enabled)
+
+#### Debug Mode Access
+- Enable debug mode by setting `WP_DEBUG = true` in wp-config.php
+- Or use the "Force Debug Mode" setting in the plugin settings
+- Access comprehensive system diagnostics via QR Trackr → Debug in the admin menu
+
+#### Frontend Integration
+- Use the `[qr_trackr]` shortcode to generate QR codes on the frontend
+- QR codes automatically redirect through tracking URLs for analytics
+- Scan tracking updates immediately without wp-cron dependencies
 
 ### As a Plugin Template
-- Use this structure as a starting point for any WordPress plugin.
-- Swap out QR code logic for your own features.
-- Extend with premium/pro features using the provided hooks and filters.
+- Use this structure as a starting point for any WordPress plugin
+- Modular architecture with separate modules for admin, AJAX, rewrite rules, and utilities
+- Comprehensive error handling and debug logging throughout
+- Modern modal-based admin interfaces with AJAX functionality
+- Automatic database migrations and version management
+- Extend with premium/pro features using the provided hooks and filters
 
 ---
 

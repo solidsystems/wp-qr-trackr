@@ -4,11 +4,29 @@
 
 The QR Trackr plugin is designed with a modular, standards-driven architecture that integrates seamlessly into any WordPress environment. At a high level, the system consists of three main domains:
 
-- **WordPress Site:** The core WordPress application, the QR Trackr plugin, the admin UI, the MySQL database, and the uploads/filesystem for QR code images.
-- **User Devices:** End users interact via web browsers or mobile devices, scanning QR codes and accessing tracked content.
+- **WordPress Site:** The core WordPress application, the QR Trackr plugin, the modern modal-based admin UI, the MySQL database with enhanced schema, and the uploads/filesystem for QR code images.
+- **User Devices:** End users interact via web browsers or mobile devices, scanning QR codes and accessing tracked content with immediate scan count updates.
 - **External Services:** Optional integrations such as CDN/static hosting for QR images, email services for notifications, and analytics/logging endpoints for tracking and reporting.
 
-This architecture ensures clear separation of concerns, scalability, and easy integration with both internal and external systems. All major flows—admin management, QR code generation, scan tracking, and reporting—are handled by the plugin, with extensibility points for custom workflows and integrations.
+This architecture ensures clear separation of concerns, scalability, and easy integration with both internal and external systems. All major flows—admin management with modal interfaces, QR code generation, real-time scan tracking, advanced search/filtering, and comprehensive debugging—are handled by the plugin, with extensibility points for custom workflows and integrations.
+
+## Key Architectural Components
+
+### Modal-Based Admin Interface
+- **AJAX-Powered Modals:** Clickable QR images open detailed management modals with real-time editing capabilities
+- **Advanced Search System:** Global search across common names, referral codes, QR codes, and destination URLs
+- **Filter Integration:** Referral code dropdown filtering with search-aware caching
+- **Mobile-Responsive Design:** Touch-friendly interface optimized for all device sizes
+
+### Enhanced Database Schema
+- **New Fields:** Common name and referral code fields with proper indexing for performance
+- **Automatic Migrations:** Version-based database upgrades with seamless field additions
+- **Caching Strategy:** Search-aware cache keys with intelligent invalidation
+
+### Debug Mode Integration
+- **System Diagnostics:** Comprehensive health checks for database, rewrite rules, and file system
+- **Live Testing:** QR generation testing with visual preview and validation
+- **Troubleshooting Tools:** Force flush capabilities and detailed error reporting
 
 ## Architecture Diagram
 
