@@ -140,12 +140,14 @@ function qr_trackr_template_redirect() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// Try to get destination URL from cache first.
-	$cache_key = 'qr_trackr_destination_' . $tracking_code;
-	$destination_url = wp_cache_get( $cache_key );
+	// Try to get link data from cache first (store both URL and ID).
+	$cache_key = 'qr_trackr_link_data_' . $tracking_code;
+	$link_data = wp_cache_get( $cache_key );
+	$link_id = null;
+	$destination_url = '';
 
-	if ( false === $destination_url ) {
-		// Get destination URL from database using tracking code.
+	if ( false === $link_data ) {
+		// Get destination URL and ID from database using tracking code.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for performance.
 		$result = $wpdb->get_row(
 			$wpdb->prepare(
@@ -158,12 +160,20 @@ function qr_trackr_template_redirect() {
 			$destination_url = $result->destination_url;
 			$link_id = $result->id;
 			
-			// Cache for 5 minutes.
-			wp_cache_set( $cache_key, $destination_url, '', 300 );
+			// Cache both URL and ID for 5 minutes.
+			$link_data = array(
+				'destination_url' => $destination_url,
+				'link_id' => $link_id
+			);
+			wp_cache_set( $cache_key, $link_data, '', 300 );
 		}
+	} else {
+		// Extract data from cache.
+		$destination_url = $link_data['destination_url'];
+		$link_id = $link_data['link_id'];
 	}
 
-	if ( empty( $destination_url ) ) {
+	if ( empty( $destination_url ) || empty( $link_id ) ) {
 		qr_trackr_handle_404();
 		return;
 	}
@@ -175,10 +185,9 @@ function qr_trackr_template_redirect() {
 		return;
 	}
 
-	// Update scan count asynchronously to avoid blocking the redirect.
-	if ( isset( $link_id ) ) {
-		wp_schedule_single_event( time(), 'qr_trackr_update_scan_count', array( $link_id ) );
-	}
+	// Update scan count immediately instead of using wp_schedule_single_event.
+	// This ensures reliable tracking and avoids issues with wp-cron.
+	qr_trackr_update_scan_count_immediate( $link_id );
 
 	// Redirect to the destination URL.
 	wp_safe_redirect( esc_url_raw( $destination_url ), 301 );
@@ -187,24 +196,26 @@ function qr_trackr_template_redirect() {
 add_action( 'template_redirect', 'qr_trackr_template_redirect' );
 
 /**
- * Update the scan count for a QR code link.
+ * Update the scan count immediately during redirect.
  *
- * This function is called asynchronously via wp_schedule_single_event
- * to avoid blocking the redirect while updating stats.
+ * This function updates the scan count immediately instead of using wp_schedule_single_event
+ * to ensure reliable tracking without dependency on wp-cron.
  *
- * @since 1.0.0
+ * @since 1.2.18
  * @param int $link_id The ID of the QR code link.
  * @return void
  * @throws WP_Error If database operation fails.
  */
-function qr_trackr_update_scan_count( $link_id ) {
+function qr_trackr_update_scan_count_immediate( $link_id ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
+	// Update both access_count and scans for compatibility, set last_accessed timestamp.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Write operation, caching not applicable.
 	$result = $wpdb->query(
 		$wpdb->prepare(
-			"UPDATE {$table_name} SET scans = scans + 1, updated_at = %s WHERE id = %d",
+			"UPDATE {$table_name} SET access_count = access_count + 1, scans = scans + 1, last_accessed = %s, updated_at = %s WHERE id = %d",
+			current_time( 'mysql', true ),
 			current_time( 'mysql', true ),
 			$link_id
 		)
@@ -212,7 +223,29 @@ function qr_trackr_update_scan_count( $link_id ) {
 
 	if ( false === $result ) {
 		error_log( sprintf( 'QR Trackr: Failed to update scan count for QR code ID %d: %s.', $link_id, $wpdb->last_error ) );
+	} else {
+		// Clear relevant caches after successful update.
+		wp_cache_delete( 'qr_trackr_details_' . $link_id );
+		wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
 	}
+}
+
+/**
+ * Update the scan count for a QR code link.
+ *
+ * This function is called asynchronously via wp_schedule_single_event
+ * to avoid blocking the redirect while updating stats.
+ * 
+ * Note: This is kept for backward compatibility but the immediate function above is preferred.
+ *
+ * @since 1.0.0
+ * @param int $link_id The ID of the QR code link.
+ * @return void
+ * @throws WP_Error If database operation fails.
+ */
+function qr_trackr_update_scan_count( $link_id ) {
+	// Use the immediate function for better reliability.
+	qr_trackr_update_scan_count_immediate( $link_id );
 }
 add_action( 'qr_trackr_update_scan_count', 'qr_trackr_update_scan_count' );
 
