@@ -175,7 +175,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 		'gradient_end'      => '#000000',
 		'gradient_type'     => 'vertical',
 	);
-	$args = wp_parse_args( $args, $defaults );
+	$args     = wp_parse_args( $args, $defaults );
 
 	// Validate size parameters.
 	$args['size'] = absint( $args['size'] );
@@ -221,7 +221,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 	// Generate cache key based on parameters.
 	$cache_key = 'qrc_' . md5( $data . wp_json_encode( $args ) );
-	$qr_url = get_transient( $cache_key );
+	$qr_url    = get_transient( $cache_key );
 
 	if ( false === $qr_url ) {
 		// Build the query parameters for the QR code API.
@@ -285,14 +285,14 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 		// Save the QR code image.
 		$upload_dir = wp_upload_dir();
-		$qr_dir = $upload_dir['basedir'] . '/qr-codes';
+		$qr_dir     = $upload_dir['basedir'] . '/qr-codes';
 		if ( ! file_exists( $qr_dir ) ) {
 			wp_mkdir_p( $qr_dir );
 		}
 
-		$filename = sanitize_file_name( 'qr-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
+		$filename  = sanitize_file_name( 'qr-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
 		$file_path = $qr_dir . '/' . $filename;
-		$qr_url = $upload_dir['baseurl'] . '/qr-codes/' . $filename;
+		$qr_url    = $upload_dir['baseurl'] . '/qr-codes/' . $filename;
 
 		// Save the image using WP_Filesystem.
 		require_once ABSPATH . 'wp-admin/includes/file.php';

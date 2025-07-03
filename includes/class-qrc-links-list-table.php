@@ -90,16 +90,16 @@ class QRC_Links_List_Table extends WP_List_Table {
 	 */
 	protected function referral_filter_dropdown() {
 		global $wpdb;
-		
-		$table_name = $wpdb->prefix . 'qr_trackr_links';
+
+		$table_name     = $wpdb->prefix . 'qr_trackr_links';
 		$current_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
-		
+
 		// Get unique referral codes.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admin filter dropdown, results cached.
-		$referral_codes = $wpdb->get_col( 
+		$referral_codes = $wpdb->get_col(
 			"SELECT DISTINCT referral_code FROM {$table_name} WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
 		);
-		
+
 		if ( ! empty( $referral_codes ) ) {
 			echo '<div class="alignleft actions" style="margin-left: 10px;">';
 			echo '<select name="referral_filter" id="referral-filter">';
@@ -173,37 +173,37 @@ class QRC_Links_List_Table extends WP_List_Table {
 		global $wpdb;
 
 		$table_name = $wpdb->prefix . 'qr_trackr_links';
-		
+
 		// Build search and filter WHERE clause.
 		$where_clause = '';
 		$where_values = array();
-		
+
 		// Handle search.
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 		if ( ! empty( $search ) ) {
-			$search_like = '%' . $wpdb->esc_like( $search ) . '%';
-			$where_clause .= " WHERE (common_name LIKE %s OR referral_code LIKE %s OR qr_code LIKE %s OR destination_url LIKE %s)";
-			$where_values = array( $search_like, $search_like, $search_like, $search_like );
+			$search_like   = '%' . $wpdb->esc_like( $search ) . '%';
+			$where_clause .= ' WHERE (common_name LIKE %s OR referral_code LIKE %s OR qr_code LIKE %s OR destination_url LIKE %s)';
+			$where_values  = array( $search_like, $search_like, $search_like, $search_like );
 		}
-		
+
 		// Handle referral code filter.
 		$referral_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
 		if ( ! empty( $referral_filter ) ) {
 			if ( ! empty( $where_clause ) ) {
-				$where_clause .= " AND referral_code = %s";
+				$where_clause .= ' AND referral_code = %s';
 			} else {
-				$where_clause = " WHERE referral_code = %s";
+				$where_clause = ' WHERE referral_code = %s';
 			}
 			$where_values[] = $referral_filter;
 		}
-		
+
 		// Create cache key based on search and filters.
 		$cache_key = 'qr_trackr_links_' . md5( $search . $referral_filter );
-		$data = wp_cache_get( $cache_key, 'qr_trackr' );
+		$data      = wp_cache_get( $cache_key, 'qr_trackr' );
 
 		if ( false === $data ) {
 			$sql = "SELECT * FROM {$table_name}{$where_clause} ORDER BY created_at DESC";
-			
+
 			if ( ! empty( $where_values ) ) {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
 				$results = $wpdb->get_results(
@@ -285,8 +285,8 @@ class QRC_Links_List_Table extends WP_List_Table {
 	 */
 	protected function column_qr_image( $item ) {
 		$qr_code_url = $item['qr_code_url'];
-		$qr_id = $item['id'];
-		
+		$qr_id       = $item['id'];
+
 		if ( ! empty( $qr_code_url ) ) {
 			return sprintf(
 				'<img src="%s" alt="%s" style="width: 60px; height: 60px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;" 
@@ -312,7 +312,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 	 * @return string The column content.
 	 */
 	protected function column_qr_code( $item ) {
-		$qr_code = $item['qr_code'];
+		$qr_code      = $item['qr_code'];
 		$tracking_url = '';
 
 		if ( ! empty( $qr_code ) ) {
@@ -364,4 +364,4 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 		return -$result;
 	}
-} 
+}

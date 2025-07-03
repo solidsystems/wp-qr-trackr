@@ -29,7 +29,7 @@ function qr_trackr_add_rewrite_rules() {
 		'index.php?qr_tracking_code=$matches[1]',
 		'top'
 	);
-	
+
 	// Debug logging to track rule registration.
 	if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
 		error_log( 'QR Trackr: Rewrite rule registered for qr/([a-zA-Z0-9]+)/?$' );
@@ -45,12 +45,12 @@ function qr_trackr_add_rewrite_rules() {
 function qr_trackr_init_rewrite_rules() {
 	// Always register our rewrite rules
 	qr_trackr_add_rewrite_rules();
-	
+
 	// Check if we have a pending flush from version update
 	if ( get_option( 'qr_trackr_needs_flush' ) ) {
 		flush_rewrite_rules();
 		delete_option( 'qr_trackr_needs_flush' );
-		
+
 		if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
 			error_log( 'QR Trackr: Completed deferred rewrite rules flush on init hook' );
 		}
@@ -73,18 +73,18 @@ function qr_trackr_force_flush_rewrite_rules() {
 	if ( isset( $wp->public_query_vars ) && ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
 		$wp->add_query_var( 'qr_tracking_code' );
 	}
-	
+
 	// Re-register our rewrite rules.
 	qr_trackr_add_rewrite_rules();
-	
+
 	// Flush all rewrite rules.
 	flush_rewrite_rules();
-	
+
 	// Log the action for debugging.
 	if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
 		error_log( 'QR Trackr: Forced flush of rewrite rules and query vars completed.' );
 	}
-	
+
 	return true;
 }
 
@@ -96,26 +96,26 @@ function qr_trackr_force_flush_rewrite_rules() {
  */
 function qr_trackr_check_rewrite_rules() {
 	global $wp_rewrite;
-	
+
 	if ( ! is_object( $wp_rewrite ) ) {
 		return false;
 	}
-	
+
 	$rules = get_option( 'rewrite_rules' );
-	
+
 	if ( ! is_array( $rules ) ) {
 		return false;
 	}
-	
+
 	// Look for our specific QR rule pattern.
 	$qr_pattern = 'qr/([a-zA-Z0-9]+)/?$';
-	
+
 	foreach ( $rules as $pattern => $rewrite ) {
 		if ( false !== strpos( $pattern, 'qr/([a-zA-Z0-9]+)' ) && false !== strpos( $rewrite, 'qr_tracking_code' ) ) {
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -162,9 +162,9 @@ function qr_trackr_template_redirect() {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// Try to get link data from cache first (store both URL and ID).
-	$cache_key = 'qr_trackr_link_data_' . $tracking_code;
-	$link_data = wp_cache_get( $cache_key );
-	$link_id = null;
+	$cache_key       = 'qr_trackr_link_data_' . $tracking_code;
+	$link_data       = wp_cache_get( $cache_key );
+	$link_id         = null;
 	$destination_url = '';
 
 	if ( false === $link_data ) {
@@ -179,19 +179,19 @@ function qr_trackr_template_redirect() {
 
 		if ( $result ) {
 			$destination_url = $result->destination_url;
-			$link_id = $result->id;
-			
+			$link_id         = $result->id;
+
 			// Cache both URL and ID for 5 minutes.
 			$link_data = array(
 				'destination_url' => $destination_url,
-				'link_id' => $link_id
+				'link_id'         => $link_id,
 			);
 			wp_cache_set( $cache_key, $link_data, '', 300 );
 		}
 	} else {
 		// Extract data from cache.
 		$destination_url = $link_data['destination_url'];
-		$link_id = $link_data['link_id'];
+		$link_id         = $link_data['link_id'];
 	}
 
 	if ( empty( $destination_url ) || empty( $link_id ) ) {
@@ -256,7 +256,7 @@ function qr_trackr_update_scan_count_immediate( $link_id ) {
  *
  * This function is called asynchronously via wp_schedule_single_event
  * to avoid blocking the redirect while updating stats.
- * 
+ *
  * Note: This is kept for backward compatibility but the immediate function above is preferred.
  *
  * @since 1.0.0

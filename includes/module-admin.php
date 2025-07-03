@@ -62,7 +62,7 @@ function qrc_add_admin_menu() {
 	);
 
 	// Add debug submenu (only if WP_DEBUG is enabled or manual override)
-	$options = get_option( 'qrc_options', array() );
+	$options      = get_option( 'qrc_options', array() );
 	$enable_debug = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( isset( $options['force_debug'] ) && $options['force_debug'] );
 	if ( $enable_debug ) {
 		add_submenu_page(
@@ -114,35 +114,35 @@ function qrc_enqueue_admin_scripts( $hook ) {
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 			'nonce'   => wp_create_nonce( 'qr_trackr_nonce' ),
 			'strings' => array(
-				'qrCodeDetails'        => esc_html__( 'QR Code Details', 'wp-qr-trackr' ),
-				'loading'              => esc_html__( 'Loading...', 'wp-qr-trackr' ),
-				'saving'               => esc_html__( 'Saving...', 'wp-qr-trackr' ),
-				'close'                => esc_html__( 'Close', 'wp-qr-trackr' ),
-				'saveChanges'          => esc_html__( 'Save Changes', 'wp-qr-trackr' ),
-				'statistics'           => esc_html__( 'Statistics', 'wp-qr-trackr' ),
-				'totalScans'           => esc_html__( 'Total Scans', 'wp-qr-trackr' ),
-				'recentScans'          => esc_html__( 'Recent Scans (30 days)', 'wp-qr-trackr' ),
-				'lastAccessed'         => esc_html__( 'Last Accessed', 'wp-qr-trackr' ),
-				'created'              => esc_html__( 'Created', 'wp-qr-trackr' ),
-				'commonName'           => esc_html__( 'Common Name', 'wp-qr-trackr' ),
-				'referralCode'         => esc_html__( 'Referral Code', 'wp-qr-trackr' ),
-				'qrCode'               => esc_html__( 'QR Code', 'wp-qr-trackr' ),
-				'qrUrl'                => esc_html__( 'QR URL', 'wp-qr-trackr' ),
-				'destinationUrl'       => esc_html__( 'Destination URL', 'wp-qr-trackr' ),
-				'linkedPost'           => esc_html__( 'Linked Post/Page', 'wp-qr-trackr' ),
-				'enterFriendlyName'    => esc_html__( 'Enter a friendly name...', 'wp-qr-trackr' ),
-				'enterReferralCode'    => esc_html__( 'Enter referral code...', 'wp-qr-trackr' ),
-				'commonNameDesc'       => esc_html__( 'A user-friendly name to help identify this QR code.', 'wp-qr-trackr' ),
-				'referralCodeDesc'     => esc_html__( 'A unique code for tracking and analytics (letters, numbers, hyphens, underscores only).', 'wp-qr-trackr' ),
-				'notLinkedToPost'      => esc_html__( 'Not linked to a specific post/page', 'wp-qr-trackr' ),
-				'noNameSet'            => esc_html__( 'No name set', 'wp-qr-trackr' ),
-				'none'                 => esc_html__( 'None', 'wp-qr-trackr' ),
-				'errorLoadingDetails'  => esc_html__( 'Error loading QR code details. Please try again.', 'wp-qr-trackr' ),
-				'errorSavingDetails'   => esc_html__( 'Error saving QR code details. Please try again.', 'wp-qr-trackr' ),
-			)
+				'qrCodeDetails'       => esc_html__( 'QR Code Details', 'wp-qr-trackr' ),
+				'loading'             => esc_html__( 'Loading...', 'wp-qr-trackr' ),
+				'saving'              => esc_html__( 'Saving...', 'wp-qr-trackr' ),
+				'close'               => esc_html__( 'Close', 'wp-qr-trackr' ),
+				'saveChanges'         => esc_html__( 'Save Changes', 'wp-qr-trackr' ),
+				'statistics'          => esc_html__( 'Statistics', 'wp-qr-trackr' ),
+				'totalScans'          => esc_html__( 'Total Scans', 'wp-qr-trackr' ),
+				'recentScans'         => esc_html__( 'Recent Scans (30 days)', 'wp-qr-trackr' ),
+				'lastAccessed'        => esc_html__( 'Last Accessed', 'wp-qr-trackr' ),
+				'created'             => esc_html__( 'Created', 'wp-qr-trackr' ),
+				'commonName'          => esc_html__( 'Common Name', 'wp-qr-trackr' ),
+				'referralCode'        => esc_html__( 'Referral Code', 'wp-qr-trackr' ),
+				'qrCode'              => esc_html__( 'QR Code', 'wp-qr-trackr' ),
+				'qrUrl'               => esc_html__( 'QR URL', 'wp-qr-trackr' ),
+				'destinationUrl'      => esc_html__( 'Destination URL', 'wp-qr-trackr' ),
+				'linkedPost'          => esc_html__( 'Linked Post/Page', 'wp-qr-trackr' ),
+				'enterFriendlyName'   => esc_html__( 'Enter a friendly name...', 'wp-qr-trackr' ),
+				'enterReferralCode'   => esc_html__( 'Enter referral code...', 'wp-qr-trackr' ),
+				'commonNameDesc'      => esc_html__( 'A user-friendly name to help identify this QR code.', 'wp-qr-trackr' ),
+				'referralCodeDesc'    => esc_html__( 'A unique code for tracking and analytics (letters, numbers, hyphens, underscores only).', 'wp-qr-trackr' ),
+				'notLinkedToPost'     => esc_html__( 'Not linked to a specific post/page', 'wp-qr-trackr' ),
+				'noNameSet'           => esc_html__( 'No name set', 'wp-qr-trackr' ),
+				'none'                => esc_html__( 'None', 'wp-qr-trackr' ),
+				'errorLoadingDetails' => esc_html__( 'Error loading QR code details. Please try again.', 'wp-qr-trackr' ),
+				'errorSavingDetails'  => esc_html__( 'Error saving QR code details. Please try again.', 'wp-qr-trackr' ),
+			),
 		)
 	);
-	
+
 	// Legacy support for existing AJAX calls
 	wp_localize_script(
 		'qrc-admin',
@@ -179,7 +179,7 @@ function qrc_links_page() {
 				</p>
 			</div>
 		<?php else : ?>
-		<?php $list_table->display(); ?>
+			<?php $list_table->display(); ?>
 		<?php endif; ?>
 	</div>
 	<?php
@@ -265,7 +265,7 @@ function qrc_settings_section_callback() {
  */
 function qrc_remove_data_on_deactivation_callback() {
 	// Only show this dangerous option when WP_DEBUG is enabled or manual override
-	$options = get_option( 'qrc_options', array() );
+	$options      = get_option( 'qrc_options', array() );
 	$enable_debug = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( isset( $options['force_debug'] ) && $options['force_debug'] );
 	if ( ! $enable_debug ) {
 		echo '<p><em>' . esc_html__( 'This option is only available in debug mode (WP_DEBUG = true or force debug enabled).', 'wp-qr-trackr' ) . '</em></p>';
@@ -478,7 +478,7 @@ function qrc_handle_add_new_submission() {
 	}
 
 	// Get and validate the new fields.
-	$common_name = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
+	$common_name   = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
 	$referral_code = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
 
 	// Validate referral code format if provided.
@@ -629,7 +629,7 @@ function qrc_help_page() {
  * Display the debug page.
  */
 function qrc_debug_page() {
-	$options = get_option( 'qrc_options', array() );
+	$options      = get_option( 'qrc_options', array() );
 	$enable_debug = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || ( isset( $options['force_debug'] ) && $options['force_debug'] );
 	if ( ! $enable_debug ) {
 		wp_die( esc_html__( 'Debug mode is not enabled.', 'wp-qr-trackr' ) );
@@ -686,9 +686,9 @@ function qrc_debug_page() {
  * Display system information for debugging.
  */
 function qrc_display_system_info() {
-	$upload_dir = wp_upload_dir();
+	$upload_dir          = wp_upload_dir();
 	$permalink_structure = get_option( 'permalink_structure' );
-	
+
 	?>
 	<table class="widefat">
 		<tbody>
@@ -739,11 +739,11 @@ function qrc_display_system_info() {
 function qrc_display_database_status() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	
+
 	// Check if table exists
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for table existence check.
-	$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) );
-	
+	$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+
 	?>
 	<table class="widefat">
 		<tbody>
@@ -765,10 +765,10 @@ function qrc_display_database_status() {
 				<?php
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for record count.
 				$total_qr_codes = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
-				
+
 				// Check for qr_code_url field
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for column existence check.
-				$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
+				$columns         = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
 				$has_qr_code_url = false;
 				foreach ( $columns as $column ) {
 					if ( 'qr_code_url' === $column->Field ) {
@@ -821,7 +821,7 @@ function qrc_display_rewrite_status() {
 	global $wp_rewrite;
 	$rewrite_rules = get_option( 'rewrite_rules' );
 	$qr_rule_found = qr_trackr_check_rewrite_rules();
-	
+
 	?>
 	<table class="widefat">
 		<tbody>
@@ -842,13 +842,13 @@ function qrc_display_rewrite_status() {
 			<tr>
 				<td><strong><?php esc_html_e( 'Query Vars:', 'wp-qr-trackr' ); ?></strong></td>
 				<td>
-					<?php 
+					<?php
 					global $wp;
 					$query_vars_registered = false;
 					if ( isset( $wp->public_query_vars ) && in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
 						$query_vars_registered = true;
 					}
-					
+
 					if ( $query_vars_registered ) {
 						echo '<span style="color: #00a32a;">✅ qr_tracking_code registered</span>';
 					} else {
@@ -882,7 +882,7 @@ function qrc_display_rewrite_status() {
 		</table>
 	<?php endif; ?>
 	
-	<?php 
+	<?php
 	global $wp;
 	$query_vars_registered = false;
 	if ( isset( $wp->public_query_vars ) && in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
@@ -908,8 +908,8 @@ function qrc_display_rewrite_status() {
  */
 function qrc_display_qr_image_test() {
 	$test_code = 'DEBUG123';
-	$test_url = home_url( '/qr/' . $test_code );
-	
+	$test_url  = home_url( '/qr/' . $test_code );
+
 	?>
 	<p><?php esc_html_e( 'Testing QR image generation with sample data...', 'wp-qr-trackr' ); ?></p>
 	
@@ -946,17 +946,17 @@ function qrc_display_qr_image_test() {
  * Display filesystem status for debugging.
  */
 function qrc_display_filesystem_status() {
-	$upload_dir = wp_upload_dir();
-	$qr_dir = '';
-	$qr_dir_exists = false;
+	$upload_dir      = wp_upload_dir();
+	$qr_dir          = '';
+	$qr_dir_exists   = false;
 	$qr_dir_writable = false;
-	
+
 	if ( ! isset( $upload_dir['error'] ) || empty( $upload_dir['error'] ) ) {
-		$qr_dir = wp_normalize_path( trailingslashit( $upload_dir['basedir'] ) . 'qr-codes' );
-		$qr_dir_exists = file_exists( $qr_dir );
+		$qr_dir          = wp_normalize_path( trailingslashit( $upload_dir['basedir'] ) . 'qr-codes' );
+		$qr_dir_exists   = file_exists( $qr_dir );
 		$qr_dir_writable = $qr_dir_exists && is_writable( $qr_dir );
 	}
-	
+
 	?>
 	<table class="widefat">
 		<tbody>
@@ -1008,11 +1008,11 @@ function qrc_display_filesystem_status() {
 function qrc_display_redirect_test() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	
+
 	// Get a sample QR code from database
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug query for sample data.
 	$sample_qr = $wpdb->get_row( "SELECT * FROM {$table_name} LIMIT 1" );
-	
+
 	?>
 	<table class="widefat">
 		<tbody>

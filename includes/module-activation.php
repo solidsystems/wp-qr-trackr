@@ -67,19 +67,19 @@ function qrc_activate() {
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 	$result = dbDelta( $sql );
-	
+
 	// Check if we need to upgrade existing table.
 	qr_trackr_maybe_upgrade_database();
-	
+
 	// Log activation results for debugging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log( 'QR Trackr activation: Table creation result: ' . wp_json_encode( $result ) );
 	}
-	
+
 	// Verify table was created successfully.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table existence check during activation.
-	$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) );
-	
+	$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+
 	if ( $table_exists !== $table_name ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr activation: Failed to create table ' . $table_name . '. Last error: ' . $wpdb->last_error );
@@ -93,7 +93,7 @@ function qrc_activate() {
 			error_log( 'QR Trackr activation: Table ' . $table_name . ' created successfully' );
 		}
 	}
-	
+
 	// Check permalink structure for rewrite rules.
 	qr_trackr_check_permalink_structure();
 }
@@ -107,14 +107,14 @@ function qrc_activate() {
 function qr_trackr_maybe_upgrade_database() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	
+
 	// Check if new fields exist.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Schema check during upgrade.
 	$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
-	
-	$has_common_name = false;
+
+	$has_common_name   = false;
 	$has_referral_code = false;
-	
+
 	foreach ( $columns as $column ) {
 		if ( 'common_name' === $column->Field ) {
 			$has_common_name = true;
@@ -123,25 +123,25 @@ function qr_trackr_maybe_upgrade_database() {
 			$has_referral_code = true;
 		}
 	}
-	
+
 	// Add missing columns.
 	if ( ! $has_common_name ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade during activation.
 		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN common_name varchar(255) DEFAULT NULL AFTER qr_code_url" );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Index creation during activation.
 		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY common_name (common_name)" );
-		
+
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr: Added common_name column to database' );
 		}
 	}
-	
+
 	if ( ! $has_referral_code ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade during activation.
 		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN referral_code varchar(100) DEFAULT NULL AFTER common_name" );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Index creation during activation.
 		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY referral_code (referral_code)" );
-		
+
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr: Added referral_code column to database' );
 		}
@@ -160,7 +160,7 @@ function qrc_deactivate() {
 	if ( get_option( 'qrc_remove_data_on_deactivation' ) ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema cleanup during deactivation, caching not applicable for table deletion.
 		$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
-		
+
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr deactivation: Dropped table ' . $table_name );
 		}
@@ -233,7 +233,7 @@ function qrc_flush_rewrite_rules() {
  */
 function qr_trackr_check_permalink_structure() {
 	$permalink_structure = get_option( 'permalink_structure' );
-	
+
 	if ( empty( $permalink_structure ) ) {
 		// Plain permalinks are being used - QR codes won't work.
 		$message = sprintf(
@@ -242,16 +242,16 @@ function qr_trackr_check_permalink_structure() {
 			esc_url( admin_url( 'options-permalink.php' ) ),
 			__( 'Settings → Permalinks', 'wp-qr-trackr' )
 		);
-		
+
 		update_option( 'qr_trackr_permalink_warning', $message );
-		
+
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr activation: Plain permalinks detected - QR code redirects will not work' );
 		}
 	} else {
 		// Pretty permalinks are enabled - clear any previous warnings.
 		delete_option( 'qr_trackr_permalink_warning' );
-		
+
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr activation: Pretty permalinks detected - QR code redirects will work correctly' );
 		}
@@ -266,7 +266,7 @@ function qr_trackr_check_permalink_structure() {
  */
 function qr_trackr_permalink_admin_notice() {
 	$warning = get_option( 'qr_trackr_permalink_warning' );
-	
+
 	if ( ! empty( $warning ) && current_user_can( 'manage_options' ) ) {
 		printf(
 			'<div class="notice notice-warning is-dismissible"><p><strong>%s</strong> %s</p></div>',

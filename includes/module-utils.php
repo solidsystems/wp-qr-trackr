@@ -24,12 +24,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string|WP_Error The path to the QR code directory or WP_Error on failure.
  */
 function qr_trackr_get_qr_code_dir() {
-	$cache_key = 'qr_trackr_qr_code_dir';
+	$cache_key   = 'qr_trackr_qr_code_dir';
 	$qr_code_dir = wp_cache_get( $cache_key );
 
 	if ( false === $qr_code_dir ) {
 		$upload_dir = wp_upload_dir();
-		
+
 		if ( isset( $upload_dir['error'] ) && ! empty( $upload_dir['error'] ) ) {
 			$error_msg = sprintf(
 				/* translators: %s: Upload directory error message */
@@ -74,12 +74,12 @@ function qr_trackr_get_qr_code_dir() {
  * @return string|WP_Error The URL to the QR code directory or WP_Error on failure.
  */
 function qr_trackr_get_qr_code_url() {
-	$cache_key = 'qr_trackr_qr_code_url';
+	$cache_key   = 'qr_trackr_qr_code_url';
 	$qr_code_url = wp_cache_get( $cache_key );
 
 	if ( false === $qr_code_url ) {
 		$upload_dir = wp_upload_dir();
-		
+
 		if ( isset( $upload_dir['error'] ) && ! empty( $upload_dir['error'] ) ) {
 			$error_msg = sprintf(
 				/* translators: %s: Upload directory error message */
@@ -91,7 +91,7 @@ function qr_trackr_get_qr_code_url() {
 		}
 
 		$qr_code_url = esc_url_raw( trailingslashit( $upload_dir['baseurl'] ) . 'qr-codes' );
-		$cache_set = wp_cache_set( $cache_key, $qr_code_url, '', HOUR_IN_SECONDS );
+		$cache_set   = wp_cache_set( $cache_key, $qr_code_url, '', HOUR_IN_SECONDS );
 		if ( ! $cache_set ) {
 			qr_trackr_debug_log( 'Failed to cache QR code directory URL.' );
 		}
@@ -112,7 +112,7 @@ function qr_trackr_get_qr_code_url() {
  */
 function qr_trackr_validate_qr_id( $qr_id ) {
 	$qr_id = absint( $qr_id );
-	
+
 	if ( empty( $qr_id ) ) {
 		return new WP_Error(
 			'invalid_qr_id',
@@ -136,14 +136,14 @@ function qr_trackr_validate_qr_id( $qr_id ) {
 function qr_trackr_generate_unique_qr_code( $length = 8 ) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	
+
 	do {
 		$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-		$code = '';
+		$code       = '';
 		for ( $i = 0; $i < $length; $i++ ) {
 			$code .= $characters[ wp_rand( 0, strlen( $characters ) - 1 ) ];
 		}
-		
+
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Checking for uniqueness, minimal impact.
 		$exists = $wpdb->get_var(
 			$wpdb->prepare(
@@ -152,7 +152,7 @@ function qr_trackr_generate_unique_qr_code( $length = 8 ) {
 			)
 		);
 	} while ( $exists > 0 );
-	
+
 	return $code;
 }
 
@@ -177,17 +177,17 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 	}
 
 	$defaults = array(
-		'size' => 200,
-		'margin' => 0,
+		'size'             => 200,
+		'margin'           => 0,
 		'error_correction' => 'M',
 	);
-	$args = wp_parse_args( $args, $defaults );
+	$args     = wp_parse_args( $args, $defaults );
 
 	// Generate the URL that the QR code will redirect to.
 	$redirect_url = home_url( '/qr/' . sanitize_text_field( $tracking_code ) );
 
 	// Check cache first.
-	$cache_key = 'qr_trackr_image_' . md5( $tracking_code . wp_json_encode( $args ) );
+	$cache_key  = 'qr_trackr_image_' . md5( $tracking_code . wp_json_encode( $args ) );
 	$cached_url = wp_cache_get( $cache_key );
 
 	if ( false !== $cached_url ) {
@@ -200,7 +200,7 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 		return $qr_dir;
 	}
 
-	$filename = sprintf( 'qr-%s.png', sanitize_file_name( $tracking_code ) );
+	$filename  = sprintf( 'qr-%s.png', sanitize_file_name( $tracking_code ) );
 	$file_path = trailingslashit( $qr_dir ) . $filename;
 
 	// Check if file already exists.
@@ -216,12 +216,12 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 
 	// Generate QR code using QR Server API (modern replacement for deprecated Google Charts API).
 	$api_params = array(
-		'size' => absint( $args['size'] ) . 'x' . absint( $args['size'] ),
-		'data' => rawurlencode( $redirect_url ),
-		'format' => 'png',
-		'ecc' => sanitize_text_field( strtoupper( $args['error_correction'] ) ),
-		'margin' => absint( $args['margin'] ),
-		'color' => '000000',
+		'size'    => absint( $args['size'] ) . 'x' . absint( $args['size'] ),
+		'data'    => rawurlencode( $redirect_url ),
+		'format'  => 'png',
+		'ecc'     => sanitize_text_field( strtoupper( $args['error_correction'] ) ),
+		'margin'  => absint( $args['margin'] ),
+		'color'   => '000000',
 		'bgcolor' => 'ffffff',
 	);
 
@@ -290,7 +290,7 @@ function qr_trackr_debug_log( $message, $context = array() ) {
 	}
 
 	$log_message = sprintf( '[WP QR Trackr] %s', $message );
-	
+
 	if ( ! empty( $context ) ) {
 		$log_message .= ' Context: ' . wp_json_encode( $context );
 	}

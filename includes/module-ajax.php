@@ -333,7 +333,7 @@ function qr_trackr_ajax_get_qr_details() {
 
 	// Try to get QR code details from cache first.
 	$cache_key = 'qr_trackr_details_' . $qr_id;
-	$qr_code = wp_cache_get( $cache_key );
+	$qr_code   = wp_cache_get( $cache_key );
 
 	if ( false === $qr_code ) {
 		global $wpdb;
@@ -370,14 +370,14 @@ function qr_trackr_ajax_get_qr_details() {
 	// Get recent scan statistics (simplified - use access_count for now).
 	// Note: The qr_trackr_stats table may not exist in all installations.
 	$recent_scans = 0;
-	
+
 	// Check if stats table exists before querying it.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table existence check.
-	$stats_table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $wpdb->prefix . 'qr_trackr_stats' ) );
-	
+	$stats_table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->prefix . 'qr_trackr_stats' ) );
+
 	if ( $stats_table_exists ) {
 		$stats_cache_key = 'qr_trackr_stats_' . $qr_id;
-		$recent_scans = wp_cache_get( $stats_cache_key );
+		$recent_scans    = wp_cache_get( $stats_cache_key );
 
 		if ( false === $recent_scans ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
@@ -397,18 +397,18 @@ function qr_trackr_ajax_get_qr_details() {
 	}
 
 	$response_data = array(
-		'id'               => absint( $qr_code['id'] ),
-		'qr_code'          => esc_html( $qr_code['qr_code'] ),
-		'common_name'      => esc_html( $qr_code['common_name'] ?? '' ),
-		'referral_code'    => esc_html( $qr_code['referral_code'] ?? '' ),
-		'destination_url'  => esc_url( $qr_code['destination_url'] ),
-		'qr_code_url'      => esc_url( $qr_code['qr_code_url'] ?? '' ),
-		'post_title'       => esc_html( $post_title ),
-		'access_count'     => absint( $qr_code['access_count'] ),
-		'recent_scans'     => absint( $recent_scans ?? 0 ),
-		'created_at'       => esc_html( $qr_code['created_at'] ),
-		'last_accessed'    => esc_html( $qr_code['last_accessed'] ?? __( 'Never', 'wp-qr-trackr' ) ),
-		'qr_url'           => esc_url( home_url( '/qr/' . $qr_code['qr_code'] ) ),
+		'id'              => absint( $qr_code['id'] ),
+		'qr_code'         => esc_html( $qr_code['qr_code'] ),
+		'common_name'     => esc_html( $qr_code['common_name'] ?? '' ),
+		'referral_code'   => esc_html( $qr_code['referral_code'] ?? '' ),
+		'destination_url' => esc_url( $qr_code['destination_url'] ),
+		'qr_code_url'     => esc_url( $qr_code['qr_code_url'] ?? '' ),
+		'post_title'      => esc_html( $post_title ),
+		'access_count'    => absint( $qr_code['access_count'] ),
+		'recent_scans'    => absint( $recent_scans ?? 0 ),
+		'created_at'      => esc_html( $qr_code['created_at'] ),
+		'last_accessed'   => esc_html( $qr_code['last_accessed'] ?? __( 'Never', 'wp-qr-trackr' ) ),
+		'qr_url'          => esc_url( home_url( '/qr/' . $qr_code['qr_code'] ) ),
 	);
 
 	wp_send_json_success( $response_data );
@@ -440,13 +440,13 @@ function qr_trackr_ajax_update_qr_details() {
 		return;
 	}
 
-	$common_name = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
+	$common_name   = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
 	$referral_code = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
 
 	// Check if the QR code exists before trying to update it.
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	
+
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Validation check before update.
 	$existing_qr = $wpdb->get_row(
 		$wpdb->prepare(
@@ -511,17 +511,19 @@ function qr_trackr_ajax_update_qr_details() {
 	// Clear relevant caches.
 	wp_cache_delete( 'qr_trackr_details_' . $qr_id );
 	wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
-	
+
 	// Log successful update for debugging.
 	if ( function_exists( 'qr_trackr_debug_log' ) ) {
 		qr_trackr_debug_log( sprintf( 'Successfully updated QR code details for ID: %d. Rows affected: %d', $qr_id, $result ) );
 	}
 
-	wp_send_json_success( array(
-		'message'       => esc_html__( 'QR code details updated successfully.', 'wp-qr-trackr' ),
-		'common_name'   => esc_html( $common_name ),
-		'referral_code' => esc_html( $referral_code ),
-	) );
+	wp_send_json_success(
+		array(
+			'message'       => esc_html__( 'QR code details updated successfully.', 'wp-qr-trackr' ),
+			'common_name'   => esc_html( $common_name ),
+			'referral_code' => esc_html( $referral_code ),
+		)
+	);
 }
 add_action( 'wp_ajax_qr_trackr_update_qr_details', 'qr_trackr_ajax_update_qr_details' );
 
@@ -547,31 +549,31 @@ function qr_trackr_ajax_debug() {
 	// Check database table and fields.
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	
+
 	// Check if table exists.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
-	$table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) );
-	
+	$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+
 	$debug_info = array(
-		'table_exists' => $table_exists ? 'Yes' : 'No',
+		'table_exists'    => $table_exists ? 'Yes' : 'No',
 		'wpdb_last_error' => $wpdb->last_error,
-		'php_version' => PHP_VERSION,
-		'wp_version' => get_bloginfo( 'version' ),
+		'php_version'     => PHP_VERSION,
+		'wp_version'      => get_bloginfo( 'version' ),
 	);
-	
+
 	if ( $table_exists ) {
 		// Check table structure.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
-		$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
+		$columns      = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
 		$column_names = array();
 		foreach ( $columns as $column ) {
 			$column_names[] = $column->Field;
 		}
-		$debug_info['table_columns'] = $column_names;
-		$debug_info['has_common_name'] = in_array( 'common_name', $column_names, true ) ? 'Yes' : 'No';
+		$debug_info['table_columns']     = $column_names;
+		$debug_info['has_common_name']   = in_array( 'common_name', $column_names, true ) ? 'Yes' : 'No';
 		$debug_info['has_referral_code'] = in_array( 'referral_code', $column_names, true ) ? 'Yes' : 'No';
 	}
-	
+
 	wp_send_json_success( $debug_info );
 }
 add_action( 'wp_ajax_qr_trackr_debug', 'qr_trackr_ajax_debug' );
