@@ -31,6 +31,7 @@ services:
       WORDPRESS_DB_NAME: wpdb
       WP_HOME: http://localhost:8080
       WP_SITEURL: http://localhost:8080
+      PHP_MEMORY_LIMIT: 1024M
     volumes:
       - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini

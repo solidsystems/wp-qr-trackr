@@ -1,6 +1,10 @@
 # WP QR Trackr 🚀
 
-A comprehensive, production-ready WordPress QR code generation and tracking plugin. Built with engineering excellence, security best practices, and WordPress standards compliance.
+What started off as a solution to a QR code request has become an opportunity to showcase modern WordPress development excellence, cross-platform compatibility, and professional engineering practices—while creating a **comprehensive foundation for other developers** to build their own WordPress plugins.
+
+Beyond being a production-ready QR code plugin, **WP QR Trackr serves as a complete development template and environment** that others can clone, customize, and use as the foundation for their own WordPress plugin projects. Every aspect—from the automated Docker setup and cross-platform scripts to the modular code architecture and comprehensive testing framework—has been designed to provide developers with a professional starting point that eliminates the complexity of environment setup and demonstrates WordPress best practices.
+
+**Use this project as your plugin development foundation:** Whether you're building a completely different plugin or extending QR functionality, this repository provides the infrastructure, workflows, and standards you need to start developing immediately on any platform.
 
 **Current Status: Stable v1.2.20** ✅
 - **Critical error fixes applied** - Resolved rewrite rule timing issues and fatal activation errors
@@ -11,37 +15,70 @@ A comprehensive, production-ready WordPress QR code generation and tracking plug
 - **Security compliant** - Follows WordPress security standards with proper nonce verification
 - **Performance optimized** - Strategic caching and efficient database operations
 
-**Why choose WP QR Trackr?**
-- **Rock-solid reliability** - Extensive testing and production validation
-- **Security first** - Proper input sanitization, output escaping, and CSRF protection
-- **Performance focused** - Optimized database queries with caching strategies
-- **Developer friendly** - Clean, modular code structure with comprehensive documentation
-- **Standards compliant** - Follows WordPress coding standards and best practices
-- **Fully featured** - Complete QR code management with analytics and tracking
+**Why choose WP QR Trackr as your development foundation?**
+- **Complete development environment** - Automated Docker setup, cross-platform scripts, and zero-configuration WordPress installation
+- **Professional template structure** - Modular architecture, proper file organization, and WordPress standards compliance
+- **Production-ready examples** - Real-world implementation of security, performance, and best practices
+- **Cross-platform compatibility** - Works identically on macOS (Intel & ARM), Windows, and Linux with automated setup scripts
+- **Comprehensive testing framework** - PHPUnit integration, CI/CD workflows, and debugging tools included
+- **Developer-first documentation** - Extensive guides, troubleshooting resources, and architectural documentation
+- **Proven foundation** - Battle-tested codebase with production validation and extensive feature implementation
 
-**Ready to use.** No complex setup required—just install, activate, and start creating QR codes.
+**Ready to clone and customize.** Fork this repository, rename the plugin, and start building your WordPress plugin with a professional foundation that handles all the complex setup and infrastructure concerns.
 
 ---
 
 ## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Current Status & Recent Updates](#recent-updates--stability)
-3. [Admin Interface Features](#admin-interface-features)
-4. [Quick Start / Onboarding](#quick-start--onboarding)
-5. [Usage](#usage)
-6. [Development & Contribution](#development--contribution)
-7. [Infrastructure & Plumbing](#infrastructure--plumbing)
-8. [For Engineering & IT Leadership](#for-engineering--it-leadership)
-9. [Features Documentation](./docs/FEATURES.md)
-10. [Troubleshooting & FAQ](./docs/TROUBLESHOOTING.md)
-11. [Links & Further Reading](#links--further-reading)
-12. [Current Status Dashboard](./STATUS.md)
+1. [Use as Development Foundation](#-use-as-development-foundation)
+2. [Project Overview](#project-overview)
+3. [Current Status & Recent Updates](#recent-updates--stability)
+4. [Admin Interface Features](#admin-interface-features)
+5. [Quick Start / Onboarding](#quick-start--onboarding)
+6. [Usage](#usage)
+7. [Development & Contribution](#development--contribution)
+8. [Infrastructure & Plumbing](#infrastructure--plumbing)
+9. [For Engineering & IT Leadership](#for-engineering--it-leadership)
+10. [Features Documentation](./docs/FEATURES.md)
+11. [Troubleshooting & FAQ](./docs/TROUBLESHOOTING.md)
+12. [Links & Further Reading](#links--further-reading)
+13. [Current Status Dashboard](./STATUS.md)
 
 **Quick Links:**
 - 📊 [**Current Status Dashboard**](./STATUS.md) - Production readiness and health overview
 - 🚀 [**Quick Start Guide**](./ONBOARDING.md) - Get started in minutes
 - ✨ [**Features Documentation**](./docs/FEATURES.md) - Comprehensive feature guide including modal system, search, and debug mode
 - 🛠️ [**Troubleshooting Guide**](./docs/TROUBLESHOOTING.md) - Solutions for common issues
+
+---
+
+## 🏗️ Use as Development Foundation
+
+**Ready to build your own WordPress plugin?** This repository provides everything you need:
+
+### For New Plugin Development
+1. **Fork or clone this repository**
+2. **Rename the plugin** - Update file names, class names, and text domains to match your plugin
+3. **Customize functionality** - Replace QR code logic with your plugin's core features
+4. **Leverage the infrastructure** - Keep the Docker setup, testing framework, and documentation structure
+
+### What You Get Out of the Box
+- ✅ **Automated development environment** - Docker containers with WordPress, MySQL, and all dependencies
+- ✅ **Cross-platform setup scripts** - Works on macOS, Windows, and Linux with zero manual configuration
+- ✅ **Professional code structure** - Modular architecture following WordPress best practices
+- ✅ **Complete testing framework** - PHPUnit integration with CI/CD workflows
+- ✅ **Security implementations** - Proper nonce verification, input sanitization, and output escaping examples
+- ✅ **Database best practices** - Migration system, caching strategies, and PHPCS-compliant queries
+- ✅ **Admin interface examples** - Modal systems, AJAX handling, and responsive design patterns
+- ✅ **Documentation templates** - Comprehensive guides and troubleshooting resources
+
+### Customization Roadmap
+1. **Update plugin identity** - Change plugin name, description, and author information
+2. **Replace core functionality** - Substitute QR code features with your plugin's logic
+3. **Modify database schema** - Update table structures and migration scripts for your data
+4. **Customize admin interface** - Adapt the admin pages and functionality to your requirements
+5. **Update documentation** - Modify README, feature docs, and troubleshooting guides
+
+**Start developing immediately** - No need to set up Docker, configure WordPress, or establish coding standards. Focus on your plugin's unique features while standing on a proven foundation.
 
 ---
 
@@ -123,12 +160,21 @@ A comprehensive, production-ready WordPress QR code generation and tracking plug
 
 ## Quick Start / Onboarding
 
+### Cross-Platform Support ✅
+**Fully tested and supported on:**
+- **macOS** - Intel (x86_64) and Apple Silicon (ARM64)
+- **Windows** - Windows 10/11 with WSL2, Git Bash, or PowerShell  
+- **Linux** - Ubuntu, Debian, CentOS, RHEL, Fedora, Arch (Intel & ARM)
+
+📖 **Platform-specific instructions:** [Cross-Platform Setup Guide](docs/CROSS_PLATFORM_SETUP.md)
+
 ### Prerequisites
-- macOS (ARM or x86), Linux, or Windows (see project plans for cross-platform support)
-- [Homebrew](https://brew.sh/) (macOS)
+- **Docker Desktop** (Windows/macOS) or **Docker Engine** (Linux)
+- **Docker Compose** v2.x+
+- **Git**
 - [Yarn](https://yarnpkg.com/) (**only supported package manager; do not use npm or pnpm**)
-- [Composer](https://getcomposer.org/)
-- Docker (for local dev/testing)
+- [Composer](https://getcomposer.org/) (for PHP dependencies)
+- [Homebrew](https://brew.sh/) (macOS - optional)
 
 ### Setup Steps
 1. **Clone the repository:**
@@ -156,10 +202,26 @@ A comprehensive, production-ready WordPress QR code generation and tracking plug
    ```sh
    ./vendor/bin/phpunit
    ```
-6. **Start Docker for local WordPress:**
-   ```sh
-   docker compose up --build
+6. **Start WordPress development environment:**
+   ```bash
+   # Start both dev (8080) and nonprod (8081) environments
+   docker-compose -f docker-compose.dev.yml -p wpqrdev up -d
+   docker-compose -f docker-compose.yml -p wpqrnonprod up -d
+   
+   # Auto-setup WordPress with trackr:trackr credentials
+   # macOS/Linux/WSL2:
+   ./scripts/setup-wordpress.sh dev
+   ./scripts/setup-wordpress.sh nonprod
+   
+   # Windows PowerShell:
+   .\scripts\setup-wordpress.ps1 dev
+   .\scripts\setup-wordpress.ps1 nonprod
    ```
+
+7. **Access your environments:**
+   - **Dev Environment:** http://localhost:8080 (live plugin mounting)
+   - **Nonprod Environment:** http://localhost:8081 (clean testing)
+   - **Admin Login:** Username `trackr` / Password `trackr`
 
 > **Note:** Debug mode is enabled by default in the development environment. When using the standard Docker workflow (including `reset-docker.sh`), a `wp-config-dev.php` file is automatically included to enable `WP_DEBUG` and log errors to `wp-content/debug.log`. This also enables the QR Trackr Debug page in the WordPress admin (QR Trackr → Debug) with comprehensive system diagnostics, QR generation testing, and troubleshooting tools. Do not use debug mode in production.
 

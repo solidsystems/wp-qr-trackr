@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP QR Trackr
  * Description: A comprehensive QR code generation and tracking plugin for WordPress with analytics, custom styling, and advanced management features.
- * Version: 1.2.18
+ * Version: 1.2.20
  * Author: Solid Systems
  * Author URI: https://solidsystems.io
  * Plugin URI: https://github.com/solidsystems/wp-qr-trackr
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'QR_TRACKR_VERSION', '1.2.18' );
+define( 'QR_TRACKR_VERSION', '1.2.20' );
 define( 'QR_TRACKR_PLUGIN_FILE', __FILE__ );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -45,13 +45,8 @@ function qr_trackr_activate_plugin() {
 		}
 	}
 	
-	// Load rewrite module so rules are registered before flushing
-	if ( file_exists( QR_TRACKR_PLUGIN_DIR . 'includes/module-rewrite.php' ) ) {
-		require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-rewrite.php';
-	}
-	
-	// Now flush rewrite rules with our custom rules registered
-	flush_rewrite_rules();
+	// Schedule rewrite rules flush for next request when WordPress is fully loaded
+	update_option( 'qr_trackr_needs_flush', true );
 }
 
 /**
@@ -118,41 +113,13 @@ function qr_trackr_maybe_flush_rewrite_rules() {
 	
 	// Check if version changed or if this is a fresh install
 	if ( $stored_version !== $current_version ) {
-		// Ensure rewrite module is loaded before flushing
-		if ( function_exists( 'qr_trackr_add_rewrite_rules' ) ) {
-			// Re-register our rewrite rules first
-			qr_trackr_add_rewrite_rules();
-			
-			// Now flush all rewrite rules
-			flush_rewrite_rules();
-			
-			// Update stored version
-			update_option( 'qr_trackr_version', $current_version );
-			
-			if ( QR_TRACKR_DEBUG ) {
-				$action = empty( $stored_version ) ? 'fresh install' : sprintf( 'version update from %s to %s', $stored_version, $current_version );
-				error_log( sprintf( 'QR Trackr: Flushed rewrite rules after %s', $action ) );
-			}
-		} else {
-			// Rewrite module not loaded yet - schedule for next request
-			if ( QR_TRACKR_DEBUG ) {
-				error_log( 'QR Trackr: Rewrite module not loaded, scheduling flush for next request' );
-			}
-			
-			// Set a flag to flush on next request when modules are loaded
-			update_option( 'qr_trackr_needs_flush', true );
-		}
-	}
-	
-	// Check if we have a pending flush from a previous request
-	if ( get_option( 'qr_trackr_needs_flush' ) && function_exists( 'qr_trackr_add_rewrite_rules' ) ) {
-		qr_trackr_add_rewrite_rules();
-		flush_rewrite_rules();
-		delete_option( 'qr_trackr_needs_flush' );
+		// Set a flag to flush rewrite rules on the init hook when rewrite system is ready
+		update_option( 'qr_trackr_needs_flush', true );
 		update_option( 'qr_trackr_version', $current_version );
 		
 		if ( QR_TRACKR_DEBUG ) {
-			error_log( 'QR Trackr: Completed deferred rewrite rules flush' );
+			$action = empty( $stored_version ) ? 'fresh install' : sprintf( 'version update from %s to %s', $stored_version, $current_version );
+			error_log( sprintf( 'QR Trackr: Scheduled rewrite rules flush after %s', $action ) );
 		}
 	}
 }

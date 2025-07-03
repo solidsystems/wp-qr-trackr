@@ -179,7 +179,7 @@ function qrc_links_page() {
 				</p>
 			</div>
 		<?php else : ?>
-			<?php $list_table->display(); ?>
+		<?php $list_table->display(); ?>
 		<?php endif; ?>
 	</div>
 	<?php

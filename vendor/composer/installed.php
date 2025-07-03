@@ -3,7 +3,7 @@
         'name' => 'solidsystems/wp-qr-trackr',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'f8a1be626e65fc730fdb1a33950e2b94dfdea2d7',
+        'reference' => '21404e217c4567f11c6e7704b7784d34c713901e',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -364,7 +364,7 @@
         'solidsystems/wp-qr-trackr' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'f8a1be626e65fc730fdb1a33950e2b94dfdea2d7',
+            'reference' => '21404e217c4567f11c6e7704b7784d34c713901e',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

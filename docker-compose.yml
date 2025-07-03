@@ -19,6 +19,8 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
       MYSQL_ROOT_PASSWORD: password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]

@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.20] - 2024-12-29
+
+### Fixed
+- **CRITICAL**: Fixed fatal error during plugin activation due to rewrite rules being registered too early
+- Fixed "Call to a member function add_rule() on null" error in WordPress rewrite system
+- Moved rewrite rule registration to proper `init` hook timing
+- Implemented deferred rewrite rules flushing to avoid timing issues
+
+### Technical
+- Updated `qr_trackr_maybe_flush_rewrite_rules()` to defer flush until `init` hook
+- Modified activation hook to schedule rewrite flush instead of immediate execution
+- Added `qr_trackr_init_rewrite_rules()` function for proper hook timing
+- Enhanced error handling for rewrite system initialization
+
+## [1.2.19] - 2024-12-29
+
+### Enhanced
+- **UI IMPROVEMENT**: Cleaned up duplicate QR code images in admin list table
+- Streamlined QR Code column to show only code identifier and "Visit Link" button
+- Eliminated visual duplication between QR Image and QR Code columns
+- Improved admin interface clarity and professional appearance
+
+### Technical
+- Simplified `column_qr_code()` method to remove redundant image display
+- Maintained QR Image column for modal functionality while cleaning up QR Code column
+- Enhanced user experience with cleaner, less cluttered interface
+
 ## [1.2.18] - 2024-12-29
 
 ### Added

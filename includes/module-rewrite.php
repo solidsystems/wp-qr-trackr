@@ -35,7 +35,28 @@ function qr_trackr_add_rewrite_rules() {
 		error_log( 'QR Trackr: Rewrite rule registered for qr/([a-zA-Z0-9]+)/?$' );
 	}
 }
-add_action( 'init', 'qr_trackr_add_rewrite_rules' );
+
+/**
+ * Initialize rewrite rules and handle deferred flush.
+ *
+ * @since 1.2.19
+ * @return void
+ */
+function qr_trackr_init_rewrite_rules() {
+	// Always register our rewrite rules
+	qr_trackr_add_rewrite_rules();
+	
+	// Check if we have a pending flush from version update
+	if ( get_option( 'qr_trackr_needs_flush' ) ) {
+		flush_rewrite_rules();
+		delete_option( 'qr_trackr_needs_flush' );
+		
+		if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+			error_log( 'QR Trackr: Completed deferred rewrite rules flush on init hook' );
+		}
+	}
+}
+add_action( 'init', 'qr_trackr_init_rewrite_rules' );
 
 /**
  * Force flush rewrite rules if they appear to be missing.

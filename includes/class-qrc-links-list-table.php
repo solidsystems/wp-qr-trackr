@@ -319,59 +319,14 @@ class QRC_Links_List_Table extends WP_List_Table {
 			$tracking_url = home_url( '/qr/' . esc_attr( $qr_code ) );
 		}
 
-		// Use stored QR image URL if available
-		if ( ! empty( $qr_code_url ) && ! is_wp_error( $qr_code_url ) ) {
+		// Show QR code identifier and tracking URL without image (image is in qr_image column).
+		if ( ! empty( $qr_code ) && ! empty( $tracking_url ) ) {
 			return sprintf(
-				'<div class="qr-code-preview">
-					<img src="%s" alt="%s" style="max-width: 80px; height: auto;" />
-					<br>
-					<small><a href="%s" target="_blank">%s</a></small>
-				</div>',
-				esc_url( $qr_code_url ),
-				esc_attr__( 'QR Code', 'wp-qr-trackr' ),
+				'<code style="font-size: 12px; padding: 2px 4px; background: #f1f1f1; border-radius: 3px;">%s</code><br>
+				<a href="%s" target="_blank" class="button button-small" style="margin-top: 4px;">%s</a>',
+				esc_html( $qr_code ),
 				esc_url( $tracking_url ),
-				esc_html( $qr_code )
-			);
-		}
-
-		// Fallback: try to generate QR code image if not stored
-		if ( ! empty( $qr_code ) ) {
-			$qr_image_url = qr_trackr_generate_qr_image( $qr_code, array( 'size' => 80 ) );
-			
-			if ( ! is_wp_error( $qr_image_url ) && ! empty( $qr_image_url ) ) {
-				// Update database with generated URL for future use
-				global $wpdb;
-				$item_id = is_object( $item ) ? $item->id : $item['id'];
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache invalidated after update.
-				$wpdb->update(
-					"{$wpdb->prefix}qr_trackr_links",
-					array( 'qr_code_url' => $qr_image_url ),
-					array( 'id' => $item_id ),
-					array( '%s' ),
-					array( '%d' )
-				);
-				
-				return sprintf(
-					'<div class="qr-code-preview">
-						<img src="%s" alt="%s" style="max-width: 80px; height: auto;" />
-						<br>
-						<small><a href="%s" target="_blank">%s</a></small>
-					</div>',
-					esc_url( $qr_image_url ),
-					esc_attr__( 'QR Code', 'wp-qr-trackr' ),
-					esc_url( $tracking_url ),
-					esc_html( $qr_code )
-				);
-			}
-		}
-
-		// Final fallback: show tracking URL button
-		if ( ! empty( $tracking_url ) ) {
-			return sprintf(
-				'<a href="%s" target="_blank" class="button button-small">%s</a><br><small>%s</small>',
-				esc_url( $tracking_url ),
-				esc_html__( 'View QR', 'wp-qr-trackr' ),
-				esc_html( $qr_code )
+				esc_html__( 'Visit Link', 'wp-qr-trackr' )
 			);
 		}
 
