@@ -33,15 +33,16 @@ Beyond being a production-ready QR code plugin, **WP QR Trackr serves as a compl
 2. [Project Overview](#project-overview)
 3. [Current Status & Recent Updates](#recent-updates--stability)
 4. [Admin Interface Features](#admin-interface-features)
-5. [Quick Start / Onboarding](#quick-start--onboarding)
-6. [Usage](#usage)
-7. [Development & Contribution](#development--contribution)
-8. [Infrastructure & Plumbing](#infrastructure--plumbing)
-9. [For Engineering & IT Leadership](#for-engineering--it-leadership)
-10. [Features Documentation](./docs/FEATURES.md)
-11. [Troubleshooting & FAQ](./docs/TROUBLESHOOTING.md)
-12. [Links & Further Reading](#links--further-reading)
-13. [Current Status Dashboard](./STATUS.md)
+5. [Project Management & Automation](#project-management--automation)
+6. [Quick Start / Onboarding](#quick-start--onboarding)
+7. [Usage](#usage)
+8. [Development & Contribution](#development--contribution)
+9. [Infrastructure & Plumbing](#infrastructure--plumbing)
+10. [For Engineering & IT Leadership](#for-engineering--it-leadership)
+11. [Features Documentation](./docs/FEATURES.md)
+12. [Troubleshooting & FAQ](./docs/TROUBLESHOOTING.md)
+13. [Links & Further Reading](#links--further-reading)
+14. [Current Status Dashboard](./STATUS.md)
 
 **Quick Links:**
 - 📊 [**Current Status Dashboard**](./STATUS.md) - Production readiness and health overview
@@ -66,6 +67,7 @@ Beyond being a production-ready QR code plugin, **WP QR Trackr serves as a compl
 - ✅ **Cross-platform setup scripts** - Works on macOS, Windows, and Linux with zero manual configuration
 - ✅ **Professional code structure** - Modular architecture following WordPress best practices
 - ✅ **Complete testing framework** - PHPUnit integration with CI/CD workflows
+- ✅ **Advanced project management** - Cursor todo integration with GitHub Projects sync and automation
 - ✅ **Security implementations** - Proper nonce verification, input sanitization, and output escaping examples
 - ✅ **Database best practices** - Migration system, caching strategies, and PHPCS-compliant queries
 - ✅ **Admin interface examples** - Modal systems, AJAX handling, and responsive design patterns
@@ -155,6 +157,71 @@ Beyond being a production-ready QR code plugin, **WP QR Trackr serves as a compl
 - **Fallback Service** - Automatic fallback if primary generation fails
 - **URL Tracking** - Built-in analytics and scan tracking with immediate count updates
 - **Mobile Optimized** - Responsive design for all devices
+
+---
+
+## Project Management & Automation
+
+### Dual TODO System
+**WP QR Trackr** includes a sophisticated dual project management system that combines modern structured todos with comprehensive documentation:
+
+**🎯 Cursor Structured Todos:**
+- **Real-time task management** with dependency tracking
+- **Status management** (pending, in_progress, completed, cancelled)
+- **Development workflow integration** with Cursor IDE
+- **Automatic updates** as you work on tasks
+
+**📋 Traditional Documentation:**
+- **TODO.md** - Historical tracking and comprehensive task lists
+- **STATUS.md** - High-level project health and version tracking
+- **PROJECT_PLAN_MCP_ENHANCEMENTS.md** - Detailed project phases and roadmap
+
+### GitHub Projects Integration
+**Seamless integration** with GitHub Projects for live task tracking:
+
+- **Automated project creation** with custom fields (Priority, Phase, Effort)
+- **Bidirectional sync** between Cursor todos and GitHub Projects
+- **Task mapping** with proper status and priority management
+- **Automated hooks** for continuous synchronization
+
+### Automation Scripts
+
+**`scripts/update-todo-index.sh`** - TODO Automation
+```bash
+# Updates TODO.md with current project status
+# Syncs between Cursor todos and markdown files
+# Automatic backup and validation
+./scripts/update-todo-index.sh
+```
+
+**`scripts/setup-github-projects.sh`** - GitHub Projects Setup
+```bash
+# Creates GitHub Project with proper field mapping
+# Imports all tasks from Cursor todos
+# Sets up automation hooks and documentation
+./scripts/setup-github-projects.sh
+```
+
+### Project Summary Dashboard
+**Real-time project metrics:**
+- **Total Tasks:** 31
+- **Completed:** 13
+- **Active:** 18
+- **Completion Rate:** 41%
+
+**Benefits for Your Plugin Development:**
+- **Professional project tracking** from day one
+- **Automated synchronization** between tools
+- **Historical documentation** of project progress
+- **Integration with popular development workflows**
+
+**Usage in Your Plugin:**
+1. **Clone the automation scripts** to your project
+2. **Customize task definitions** for your plugin's requirements
+3. **Set up GitHub Projects** for your repository
+4. **Use Cursor todos** for active development tracking
+
+📖 **Detailed Documentation:** [GitHub Projects Sync Guide](docs/GITHUB_PROJECTS_SYNC.md)
 
 ---
 

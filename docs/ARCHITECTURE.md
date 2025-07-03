@@ -101,3 +101,143 @@ flowchart TD
         D
     end
 ```
+
+## Project Management & Automation Architecture
+
+### Dual TODO System Architecture
+The project implements a sophisticated dual TODO system that combines modern structured task management with comprehensive documentation:
+
+**System Components:**
+- **Cursor Structured Todos:** Real-time task management with dependency tracking, status management, and development workflow integration
+- **Traditional Documentation:** Historical tracking via TODO.md, STATUS.md, and PROJECT_PLAN_MCP_ENHANCEMENTS.md
+- **Automation Scripts:** Bidirectional sync between systems with backup and validation
+- **GitHub Projects Integration:** Live project tracking with automated field mapping
+
+### TODO Automation System Architecture
+
+```mermaid
+flowchart TD
+    subgraph "Cursor IDE"
+        CT["Cursor Todos"]
+        CTD["Todo Dependencies"]
+        CTS["Todo Status"]
+    end
+    
+    subgraph "Automation Layer"
+        UTS["update-todo-index.sh"]
+        SGP["setup-github-projects.sh"]
+        BACKUP["Backup System"]
+        VALIDATION["Validation Layer"]
+    end
+    
+    subgraph "Documentation Layer"
+        TODO["TODO.md"]
+        STATUS["STATUS.md"]
+        PLAN["PROJECT_PLAN_MCP_ENHANCEMENTS.md"]
+    end
+    
+    subgraph "GitHub Integration"
+        GP["GitHub Projects"]
+        GPA["GitHub Projects API"]
+        GH["Git Hooks"]
+    end
+    
+    CT --> UTS
+    CTD --> UTS
+    CTS --> UTS
+    
+    UTS --> TODO
+    UTS --> STATUS
+    UTS --> BACKUP
+    UTS --> VALIDATION
+    
+    SGP --> GP
+    SGP --> GPA
+    SGP --> GH
+    
+    GP --> GPA
+    GPA --> CT
+    
+    TODO --> UTS
+    STATUS --> UTS
+    PLAN --> UTS
+    
+    GH --> UTS
+```
+
+### Automation Script Architecture
+
+**`update-todo-index.sh` Components:**
+- **Backup System:** Timestamped backups of TODO.md and STATUS.md
+- **Sync Engine:** Bidirectional sync between Cursor todos and markdown files
+- **Validation Layer:** File integrity checks and error handling
+- **Project Summary:** Real-time metrics calculation and reporting
+- **Status Updates:** Automatic completion tracking and documentation
+
+**`setup-github-projects.sh` Components:**
+- **GitHub CLI Integration:** Authentication and API access management
+- **Project Creation:** Automated GitHub Projects setup with custom fields
+- **Field Mapping:** Priority, Phase, Effort, and Status field configuration
+- **Task Import:** Bulk task creation from Cursor todos with metadata
+- **Automation Hooks:** Git hooks for continuous synchronization
+
+### Data Flow Architecture
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant CT as Cursor Todos
+    participant UTS as Update Script
+    participant DOC as Documentation
+    participant GP as GitHub Projects
+    participant GIT as Git Repository
+    
+    Dev->>CT: Mark task in_progress
+    Dev->>UTS: Run update script
+    UTS->>DOC: Update TODO.md/STATUS.md
+    UTS->>DOC: Create backup
+    UTS->>DOC: Validate changes
+    
+    Dev->>DOC: Review changes
+    Dev->>GIT: Commit changes
+    GIT->>GP: Trigger sync hook
+    GP->>CT: Update task status
+    
+    Dev->>CT: Mark task completed
+    Dev->>UTS: Run update script
+    UTS->>DOC: Update completion status
+    UTS->>GP: Sync via GitHub API
+```
+
+### Integration Benefits
+
+**For Plugin Development:**
+- **Professional project tracking** from day one
+- **Automated synchronization** eliminates manual maintenance
+- **Historical documentation** preserves project evolution
+- **Cross-platform compatibility** works with any development environment
+- **Comprehensive error handling** ensures data integrity
+- **Modular design** allows easy customization for different projects
+
+**For Development Workflow:**
+- **Real-time updates** as work progresses
+- **Dependency tracking** ensures proper task ordering
+- **Status management** provides clear project visibility
+- **Automated backups** prevent data loss
+- **Validation systems** catch errors early
+- **Integration hooks** maintain consistency across tools
+
+### Scalability Considerations
+
+**System Design:**
+- **Modular architecture** allows independent component updates
+- **Standardized interfaces** enable easy integration with other tools
+- **Comprehensive logging** supports debugging and monitoring
+- **Error recovery** handles failure scenarios gracefully
+- **Performance optimization** with efficient file operations and caching
+
+**Future Extensibility:**
+- **Plugin-agnostic design** supports any WordPress plugin project
+- **API-first approach** enables integration with additional tools
+- **Configuration-driven** behavior allows customization without code changes
+- **Documentation-first** approach ensures maintainability and knowledge transfer

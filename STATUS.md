@@ -37,6 +37,8 @@
 
 1. **TODO Automation** - Implemented sync between Cursor todos and markdown files
 
+1. **TODO Automation** - Implemented sync between Cursor todos and markdown files
+
 1. **Backward Compatibility** - Added legacy QRC_ constants alongside QR_TRACKR_ prefixes
 2. **Safe Module Loading** - File existence checks before requiring modules
 3. **Hook Separation** - Removed conflicting activation/deactivation registrations

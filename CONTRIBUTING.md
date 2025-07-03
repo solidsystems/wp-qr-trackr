@@ -26,10 +26,59 @@ Thank you for your interest in contributing! This project is both a production-r
 
 - Make sure your environment and secrets are set up as described to avoid CI failures.
 
+## Project Management Workflow
+
+### TODO System & Task Tracking
+This project uses a **dual TODO system** that combines structured task management with comprehensive documentation:
+
+**🎯 Cursor Structured Todos (Active Development):**
+- Use for tasks you're actively working on
+- Provides dependency tracking and status management
+- Real-time updates as you complete work
+- Integration with development workflow
+
+**📋 Traditional Documentation (Historical & Planning):**
+- TODO.md - Comprehensive task lists and achievements
+- STATUS.md - High-level project health and version tracking
+- PROJECT_PLAN_MCP_ENHANCEMENTS.md - Detailed project phases
+
+### Using the TODO Automation System
+
+**For Contributors:**
+1. **Mark tasks as in-progress** when you start working on them
+2. **Update task status** as you complete work
+3. **Run the automation script** to sync both systems:
+   ```bash
+   ./scripts/update-todo-index.sh
+   ```
+
+**For Maintainers:**
+1. **Set up GitHub Projects integration** (first time only):
+   ```bash
+   ./scripts/setup-github-projects.sh
+   ```
+2. **Use GitHub Projects** for project planning and tracking
+3. **Sync between systems** regularly for consistency
+
+### GitHub Projects Integration
+- **Automated project creation** with proper field mapping
+- **Task synchronization** between Cursor todos and GitHub Projects
+- **Status tracking** with Priority, Phase, and Effort fields
+- **Automated hooks** for continuous sync
+
+**Benefits:**
+- **Professional project tracking** from day one
+- **No manual todo maintenance** required
+- **Historical documentation** of progress
+- **Integration with popular development tools**
+
 ## How to Contribute
 - Fork the repository and create a feature branch for your changes.
+- **Check the TODO system** for available tasks or add new ones
+- **Mark tasks as in-progress** when you start working
 - Ensure your code follows project standards (see `.cursorrules`).
 - Update or add documentation and tests as needed.
+- **Complete tasks in the TODO system** as you finish work
 - Submit a pull request (PR) with a clear description of your changes.
 - For larger changes, open an issue or discussion first.
 

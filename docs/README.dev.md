@@ -85,4 +85,87 @@ PLUGIN_DIR=another-plugin ./scripts/playwright-docs-orchestrator.sh
 To add a new project:
 1. Place your plugin in `wp-content/plugins/<your-plugin-dir>`.
 2. Create a Playwright script named `scripts/playwright-<your-plugin-dir>-userflow.js`.
-3. Run the orchestrator with `PLUGIN_DIR=<your-plugin-dir>`. 
+3. Run the orchestrator with `PLUGIN_DIR=<your-plugin-dir>`.
+
+## Project Management & TODO Automation
+
+### Dual TODO System for Development
+This project includes a sophisticated project management system that combines modern structured todos with comprehensive documentation:
+
+**🎯 Cursor Structured Todos (Active Development):**
+- Real-time task management with dependency tracking
+- Status management (pending, in_progress, completed, cancelled)
+- Integration with Cursor IDE development workflow
+- Automatic updates as you complete work
+
+**📋 Traditional Documentation (Historical & Planning):**
+- **TODO.md** - Comprehensive task lists and project achievements
+- **STATUS.md** - High-level project health and version tracking
+- **PROJECT_PLAN_MCP_ENHANCEMENTS.md** - Detailed project phases and roadmap
+
+### TODO Automation Scripts
+
+**Update TODO Index:**
+```bash
+# Syncs between Cursor todos and markdown files
+# Includes automatic backup and validation
+./scripts/update-todo-index.sh
+```
+
+**Setup GitHub Projects Integration:**
+```bash
+# Creates GitHub Project with proper field mapping
+# Imports tasks from Cursor todos
+# Sets up automation hooks
+./scripts/setup-github-projects.sh
+```
+
+### Development Workflow with TODO System
+
+**Starting Development:**
+1. **Check available tasks** in Cursor todos or TODO.md
+2. **Mark task as in-progress** when you start working
+3. **Use dependency tracking** to work on tasks in proper order
+4. **Update task status** as you complete work
+
+**Maintaining Project State:**
+1. **Run automation script** to sync both systems:
+   ```bash
+   ./scripts/update-todo-index.sh
+   ```
+2. **Commit changes** including updated documentation
+3. **Review project summary** for completion tracking
+
+**GitHub Projects Integration:**
+- **Automated project creation** with custom fields (Priority, Phase, Effort)
+- **Bidirectional sync** between Cursor todos and GitHub Projects
+- **Status tracking** with proper field mapping
+- **Automated hooks** for continuous synchronization
+
+### Project Summary Dashboard
+The automation system provides real-time project metrics:
+- **Total Tasks:** Current count of all tasks
+- **Completed:** Number of finished tasks
+- **Active:** Current work in progress
+- **Completion Rate:** Overall project progress percentage
+
+### Benefits for Plugin Development
+- **Professional project tracking** from day one
+- **No manual todo maintenance** required
+- **Historical documentation** of all project progress
+- **Integration with popular development tools**
+- **Automated backup** of all project documentation
+- **Comprehensive error handling** and validation
+
+### Usage in Your Plugin Projects
+1. **Copy automation scripts** to your plugin project
+2. **Customize task definitions** for your specific requirements
+3. **Set up GitHub Projects** for your repository
+4. **Use Cursor todos** for daily development workflow
+5. **Maintain documentation** automatically with scripts
+
+**Documentation Links:**
+- 📖 [GitHub Projects Sync Guide](GITHUB_PROJECTS_SYNC.md)
+- 📊 [Current Status Dashboard](../STATUS.md)
+- 📋 [Project TODO List](../TODO.md)
+- 🗺️ [MCP Enhancements Roadmap](../PROJECT_PLAN_MCP_ENHANCEMENTS.md) 
