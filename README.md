@@ -39,14 +39,17 @@ Beyond being a production-ready QR code plugin, **WP QR Trackr serves as a compl
 8. [Development & Contribution](#development--contribution)
 9. [Infrastructure & Plumbing](#infrastructure--plumbing)
 10. [For Engineering & IT Leadership](#for-engineering--it-leadership)
-11. [Features Documentation](./docs/FEATURES.md)
-12. [Troubleshooting & FAQ](./docs/TROUBLESHOOTING.md)
-13. [Links & Further Reading](#links--further-reading)
-14. [Current Status Dashboard](./STATUS.md)
+11. [Cursor Plugin Development Guide](./docs/CURSOR_PLUGIN_DEVELOPMENT_GUIDE.md)
+12. [Features Documentation](./docs/FEATURES.md)
+13. [Troubleshooting & FAQ](./docs/TROUBLESHOOTING.md)
+14. [Links & Further Reading](#links--further-reading)
+15. [Current Status Dashboard](./STATUS.md)
 
 **Quick Links:**
 - 📊 [**Current Status Dashboard**](./STATUS.md) - Production readiness and health overview
 - 🚀 [**Quick Start Guide**](./ONBOARDING.md) - Get started in minutes
+- 🎯 [**Cursor Plugin Development Guide**](./docs/CURSOR_PLUGIN_DEVELOPMENT_GUIDE.md) - Complete guide for building plugins with Cursor AI
+- ⚡ [**Cursor Quick Reference**](./docs/CURSOR_QUICK_REFERENCE.md) - Essential prompts cheat sheet
 - ✨ [**Features Documentation**](./docs/FEATURES.md) - Comprehensive feature guide including modal system, search, and debug mode
 - 🛠️ [**Troubleshooting Guide**](./docs/TROUBLESHOOTING.md) - Solutions for common issues
 
@@ -222,6 +225,24 @@ Beyond being a production-ready QR code plugin, **WP QR Trackr serves as a compl
 4. **Use Cursor todos** for active development tracking
 
 📖 **Detailed Documentation:** [GitHub Projects Sync Guide](docs/GITHUB_PROJECTS_SYNC.md)
+
+### 🎯 **Cursor AI Development Guide**
+**New to plugin development with Cursor?** We've created a comprehensive guide specifically for Cursor users:
+
+**[📖 Cursor Plugin Development Guide](docs/CURSOR_PLUGIN_DEVELOPMENT_GUIDE.md)**
+
+This guide includes:
+- **Step-by-step instructions** for using wp-qr-trackr as your plugin foundation
+- **Specific Cursor prompts** for planning, architecture, and implementation
+- **Design consideration workflows** with AI collaboration best practices
+- **Common plugin development patterns** and examples
+- **Quality assurance checklists** and testing strategies
+
+**Perfect for developers who want to:**
+- Build WordPress plugins using AI assistance
+- Leverage the wp-qr-trackr foundation effectively
+- Follow best practices for AI-assisted development
+- Create production-ready plugins quickly and efficiently
 
 ---
 
