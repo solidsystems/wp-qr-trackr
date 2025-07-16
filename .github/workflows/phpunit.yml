@@ -43,7 +43,7 @@ jobs:
       - name: Install Node.js dependencies
         run: |
           if [ -f package.json ]; then
-            npm install
+            yarn install
           fi
 
       - name: Install SVN
