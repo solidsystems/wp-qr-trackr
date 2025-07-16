@@ -1,0 +1,65 @@
+services:
+  wordpress-playwright:
+    build:
+      context: .
+      dockerfile: Dockerfile.wordpress
+    restart: always
+    ports:
+      - "8087:80"
+    environment:
+      WORDPRESS_DB_HOST: db-playwright
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wpdb
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_DEBUG', true);
+        define('WP_DEBUG_LOG', true);
+        define('WP_DEBUG_DISPLAY', false);
+        define('WP_HOME', 'http://wordpress-playwright');
+        define('WP_SITEURL', 'http://wordpress-playwright');
+    volumes:
+      - ../wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - wordpress_data:/var/www/html
+    depends_on:
+      db-playwright:
+        condition: service_healthy
+
+  db-playwright:
+    image: mariadb:10.6
+    platform: linux/arm64/v8
+    restart: always
+    environment:
+      MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "wpuser", "--password=wppass"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+  # Dedicated Playwright/Node.js E2E test runner
+  playwright-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    working_dir: /usr/src/app/wp-content/plugins/wp-qr-trackr
+    entrypoint: ["/usr/src/app/docker/scripts/playwright-entrypoint.sh"]
+    command: []
+    volumes:
+      - ../wp-content/plugins/wp-qr-trackr:/usr/src/app/wp-content/plugins/wp-qr-trackr
+      - ../:/usr/src/app
+      - ../vendor:/usr/src/app/vendor
+    depends_on:
+      - wordpress-playwright
+      - db-playwright
+    environment:
+      - DEBUG=pw:*
+    # No ports exposed; for E2E test execution only
+
+volumes:
+  wordpress_data:
+  db_data: 

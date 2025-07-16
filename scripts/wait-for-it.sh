@@ -143,7 +143,7 @@ WAITFORIT_QUIET=${WAITFORIT_QUIET:-0}
 
 # Check to see if timeout is from busybox?
 WAITFORIT_TIMEOUT_PATH=$(type -p timeout)
-WAITFORIT_TIMEOUT_PATH=$(realpath $WAITFORIT_TIMEOUT_PATH 2>/dev/null || readlink -f $WAITFORIT_TIMEOUT_PATH)
+WAITFORIT_TIMEOUT_PATH=$(realpath $WAITFORIT_TIMEOUT_PATH 2>/dev/null || echo $WAITFORIT_TIMEOUT_PATH)
 
 WAITFORIT_BUSYTIMEFLAG=""
 if [[ $WAITFORIT_TIMEOUT_PATH =~ "busybox" ]]; then

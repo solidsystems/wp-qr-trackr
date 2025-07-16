@@ -42,13 +42,10 @@ function qrc_get_dot_styles() {
 }
 
 /**
- * Get a specific QR code link from the database.
+ * Get QR code by ID.
  *
- * Uses WordPress object cache to improve performance on repeated lookups.
- *
- * @since 1.0.0
- * @param int $id The ID of the link to retrieve.
- * @return object|null The link object, or null if not found.
+ * @param int $id The QR code ID.
+ * @return object|null The QR code object or null if not found.
  */
 function qrc_get_link( $id ) {
 	global $wpdb;
@@ -57,11 +54,10 @@ function qrc_get_link( $id ) {
 	$link      = wp_cache_get( $cache_key, 'qrc_links' );
 
 	if ( false === $link ) {
-		$table_name = $wpdb->prefix . 'qr_trackr_links';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for performance.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
 		$link = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$table_name} WHERE id = %d",
+				"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` WHERE id = %d",
 				absint( $id )
 			)
 		);
@@ -79,12 +75,9 @@ function qrc_get_link( $id ) {
 }
 
 /**
- * Get all QR code links from the database.
+ * Get all QR codes.
  *
- * Uses WordPress transients for caching to improve performance.
- *
- * @since 1.0.0
- * @return array Array of link objects.
+ * @return array Array of QR code objects.
  */
 function qrc_get_all_links() {
 	global $wpdb;
@@ -93,11 +86,10 @@ function qrc_get_all_links() {
 	$links     = get_transient( $cache_key );
 
 	if ( false === $links ) {
-		$table_name = $wpdb->prefix . 'qr_trackr_links';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, bulk data retrieval.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
 		$links = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$table_name} ORDER BY created_at DESC"
+				"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` ORDER BY created_at DESC"
 			)
 		);
 

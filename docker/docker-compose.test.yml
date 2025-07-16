@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  db-playwright:
+    image: mariadb:10.6
+    environment:
+      MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "wpuser", "--password=wppass"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+  wp-tests:
+    image: wordpressdevelop/phpunit:latest
+    environment:
+      - WP_VERSION=6.4.3
+      - DB_HOST=db-playwright
+      - DB_NAME=wpdb
+      - DB_USER=wpuser
+      - DB_PASS=wppass
+    volumes:
+      - ../wp-content/plugins/wp-qr-trackr:/var/www/src/wp-content/plugins/wp-qr-trackr
+      - ../:/usr/src/app
+    depends_on:
+      - db-playwright
+    working_dir: /var/www/html/wp-content/plugins/wp-qr-trackr 

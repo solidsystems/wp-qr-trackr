@@ -79,6 +79,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install Lefthook
+        run: curl -s https://raw.githubusercontent.com/evilmartians/lefthook/master/scripts/install.sh | bash
+      - name: Run Lefthook pre-push
+        run: lefthook run pre-push
+
       - name: Sanitize image tag
         id: sanitize
         run: echo "tag=$(echo ${{ github.ref_name }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
@@ -86,4 +91,4 @@ jobs:
       - name: Run All CI Checks
         env:
           CI_IMAGE_TAG: ${{ steps.sanitize.outputs.tag }}
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm ci-runner 
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm ci-runner

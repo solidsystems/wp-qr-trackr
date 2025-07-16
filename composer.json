@@ -1,43 +1,26 @@
 {
-    "name": "solidsystems/wp-qr-trackr",
-    "description": "WordPress plugin for creating and tracking QR codes",
+    "name": "wp-qr-trackr/wp-qr-trackr",
+    "description": "WordPress QR Code Tracking Plugin",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
-    "autoload": {
-        "psr-4": {
-            "QRTrackr\\": "includes/"
-        }
-    },
-    "authors": [
-        {
-            "name": "Solid Systems",
-            "email": "info@solidsystems.com"
-        }
-    ],
-    "minimum-stability": "stable",
     "require": {
-        "php": ">=7.4",
-        "endroid/qr-code": "^5.0"
+        "php": ">=7.4"
     },
     "require-dev": {
-        "squizlabs/php_codesniffer": "^3.7",
+        "phpunit/phpunit": "^9.0",
         "wp-coding-standards/wpcs": "^3.0",
-        "phpcsstandards/phpcsutils": "^1.0",
-        "phpcsstandards/phpcsextra": "^1.1",
-        "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "phpcsstandards/phpcsextra": "^1.1.0",
+        "yoast/phpunit-polyfills": "^2.0"
     },
     "config": {
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
-    "phpcs": "vendor/bin/phpcs --standard=wp-content/plugins/wp-qr-trackr/phpcs.xml --report=full wp-content/plugins/wp-qr-trackr",
     "scripts": {
-        "post-install-cmd": [
-            "vendor/bin/phpcs --config-set installed_paths vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra,vendor/wp-coding-standards/wpcs"
-        ],
-        "post-update-cmd": [
-            "vendor/bin/phpcs --config-set installed_paths vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra,vendor/wp-coding-standards/wpcs"
-        ]
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf",
+        "test": "phpunit"
     }
 }

@@ -1,50 +1,58 @@
 <?xml version="1.0"?>
-<ruleset name="QR Trackr WordPress Coding Standards">
-    <description>WordPress Coding Standards for QR Trackr plugin.</description>
+<ruleset name="WordPress Plugin">
+    <description>WordPress Plugin Coding Standards</description>
 
-    <!-- Configure installed standards paths -->
-    <config name="installed_paths" value="vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra"/>
-
-    <!-- Memory limit as per project requirements -->
-    <ini name="memory_limit" value="1024M"/>
-
-    <!-- Use WordPress as the base -->
-    <rule ref="WordPress"/>
-    
-    <!-- Exclude deprecated sniffs -->
-    <exclude name="Generic.Functions.CallTimePassByReference"/>
-    
-    <!-- Only lint plugin files -->
+    <!-- What to scan -->
     <file>.</file>
-    
-    <!-- Exclude patterns -->
-    <exclude-pattern>*/vendor/*</exclude-pattern>
-    <exclude-pattern>vendor/*</exclude-pattern>
-    <exclude-pattern>**/vendor/*</exclude-pattern>
-    <exclude-pattern>node_modules/*</exclude-pattern>
-    <exclude-pattern>**/node_modules/*</exclude-pattern>
-    <exclude-pattern>tests/*</exclude-pattern>
-    <exclude-pattern>assets/*.js</exclude-pattern>
-    <exclude-pattern>assets/*.css</exclude-pattern>
-    <exclude-pattern>coverage/*</exclude-pattern>
-    <exclude-pattern>build/*</exclude-pattern>
-    
-    <!-- Ignore specific rules for admin/stats code -->
-    <rule ref="WordPress.DB.DirectDatabaseQuery.DirectQuery">
-        <exclude-pattern>includes/module-*.php</exclude-pattern>
+    <exclude-pattern>/vendor/</exclude-pattern>
+    <exclude-pattern>/node_modules/</exclude-pattern>
+    <exclude-pattern>/tests/</exclude-pattern>
+    <exclude-pattern>/build/</exclude-pattern>
+    <exclude-pattern>*.js</exclude-pattern>
+    <exclude-pattern>*.css</exclude-pattern>
+    <exclude-pattern>wp-content/plugins/</exclude-pattern>
+
+    <!-- How to scan -->
+    <arg value="sp"/> <!-- Show sniff and progress -->
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+    <arg name="parallel" value="8"/>
+    <arg name="cache"/>
+
+    <!-- Rules: WordPress Coding Standards -->
+    <config name="minimum_supported_wp_version" value="6.0"/>
+    <config name="testVersion" value="7.4-"/>
+
+    <rule ref="WordPress-Core"/>
+    <rule ref="WordPress-Docs"/>
+    <rule ref="WordPress-Extra"/>
+
+    <!-- Allow . in hook names -->
+    <rule ref="WordPress.NamingConventions.ValidHookName">
+        <properties>
+            <property name="additionalWordDelimiters" value="."/>
+        </properties>
     </rule>
 
-    <!-- Exclude false positives for table assignments -->
-    <rule ref="WordPress.DB.PreparedSQL.InterpolatedNotPrepared">
-        <exclude-pattern>includes/module-*.php</exclude-pattern>
+    <!-- Verify that no WP functions are used which are deprecated or removed -->
+    <rule ref="WordPress.WP.DeprecatedFunctions"/>
+
+    <!-- Enforce file names -->
+    <rule ref="WordPress.Files.FileName">
+        <properties>
+            <property name="strict_class_file_names" value="true"/>
+        </properties>
     </rule>
 
-    <!-- Enforce Yoda conditions -->
-    <rule ref="WordPress.PHP.YodaConditions"/>
+    <!-- Check text domain -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="wp-qr-trackr"/>
+            </property>
+        </properties>
+    </rule>
 
-    <!-- Enforce proper escaping -->
-    <rule ref="WordPress.Security.EscapeOutput"/>
-
-    <!-- Enforce proper sanitization -->
-    <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
+    <!-- Memory limit -->
+    <ini name="memory_limit" value="1024M"/>
 </ruleset> 

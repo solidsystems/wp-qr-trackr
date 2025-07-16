@@ -1,0 +1,400 @@
+{
+  "config": {
+    "configFile": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/playwright.config.ts",
+    "rootDir": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/global-setup.ts",
+    "globalTeardown": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 1,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/test-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests",
+        "testIgnore": [
+          "**/node_modules/**/*"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.53.2",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "qr-code.spec.ts",
+      "file": "qr-code.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "WordPress site is accessible and login works",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3629,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "Attempting login...\n"
+                    },
+                    {
+                      "text": "Login form found, filling credentials...\n"
+                    },
+                    {
+                      "text": "Submitting login form...\n"
+                    },
+                    {
+                      "text": "Waiting for admin bar...\n"
+                    },
+                    {
+                      "text": "Login successful.\n"
+                    },
+                    {
+                      "text": "Verifying page load for: /wp-admin\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2025-07-09T00:47:03.347Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-WordPress-site-is-accessible-and-login-works-chromium/test-finished-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-WordPress-site-is-accessible-and-login-works-chromium/video.webm"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-WordPress-site-is-accessible-and-login-works-chromium/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "98dc7f4e3976c67a88d5-61b6094ba37c48e7aaa6",
+          "file": "qr-code.spec.ts",
+          "line": 314,
+          "column": 5
+        },
+        {
+          "title": "Can generate QR code in post editor",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 99889,
+                  "error": {
+                    "message": "TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.",
+                    "stack": "TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.\n    at generateQRCode (/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:246:16)\n    at /Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:404:5",
+                    "location": {
+                      "file": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts",
+                      "column": 16,
+                      "line": 246
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 244 |\u001b[39m     \n \u001b[90m 245 |\u001b[39m     \u001b[90m// Wait for destination URL to be set\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 246 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForFunction(() \u001b[33m=>\u001b[39m {\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 247 |\u001b[39m       \u001b[36mconst\u001b[39m input \u001b[33m=\u001b[39m document\u001b[33m.\u001b[39mquerySelector(\u001b[32m'#destination_url'\u001b[39m) \u001b[36mas\u001b[39m \u001b[33mHTMLInputElement\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 248 |\u001b[39m       \u001b[36mreturn\u001b[39m input \u001b[33m&&\u001b[39m input\u001b[33m.\u001b[39mvalue \u001b[33m&&\u001b[39m input\u001b[33m.\u001b[39mvalue\u001b[33m.\u001b[39mlength \u001b[33m>\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 249 |\u001b[39m     }\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m90000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts",
+                        "column": 16,
+                        "line": 246
+                      },
+                      "message": "TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.\n\n\u001b[0m \u001b[90m 244 |\u001b[39m     \n \u001b[90m 245 |\u001b[39m     \u001b[90m// Wait for destination URL to be set\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 246 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForFunction(() \u001b[33m=>\u001b[39m {\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 247 |\u001b[39m       \u001b[36mconst\u001b[39m input \u001b[33m=\u001b[39m document\u001b[33m.\u001b[39mquerySelector(\u001b[32m'#destination_url'\u001b[39m) \u001b[36mas\u001b[39m \u001b[33mHTMLInputElement\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 248 |\u001b[39m       \u001b[36mreturn\u001b[39m input \u001b[33m&&\u001b[39m input\u001b[33m.\u001b[39mvalue \u001b[33m&&\u001b[39m input\u001b[33m.\u001b[39mvalue\u001b[33m.\u001b[39mlength \u001b[33m>\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 249 |\u001b[39m     }\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m90000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at generateQRCode (/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:246:16)\u001b[22m\n\u001b[2m    at /Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:404:5\u001b[22m"
+                    }
+                  ],
+                  "stdout": [
+                    {
+                      "text": "Attempting login...\n"
+                    },
+                    {
+                      "text": "Login form found, filling credentials...\n"
+                    },
+                    {
+                      "text": "Submitting login form...\n"
+                    },
+                    {
+                      "text": "Waiting for admin bar...\n"
+                    },
+                    {
+                      "text": "Login successful.\n"
+                    },
+                    {
+                      "text": "Navigating to new post page...\n"
+                    },
+                    {
+                      "text": "Verifying page load for: /wp-admin/post-new.php\n"
+                    },
+                    {
+                      "text": "Detecting which editor is loaded...\n"
+                    },
+                    {
+                      "text": "Classic editor detected.\n"
+                    },
+                    {
+                      "text": "Filling post title...\n"
+                    },
+                    {
+                      "text": "Filling TinyMCE content...\n"
+                    },
+                    {
+                      "text": "Content filled successfully.\n"
+                    },
+                    {
+                      "text": "Post ID: 39\n"
+                    },
+                    {
+                      "text": "Generating QR code...\n"
+                    },
+                    {
+                      "text": "Verifying page load for: /wp-admin/admin.php?page=qrc-add-new\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "Error generating QR code: page.waitForFunction: Timeout 90000ms exceeded.\n    at generateQRCode \u001b[90m(/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/\u001b[39mtests/qr-code.spec.ts:246:16\u001b[90m)\u001b[39m\n    at \u001b[90m/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/\u001b[39mtests/qr-code.spec.ts:404:5 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  \u001b[32mSymbol(step)\u001b[39m: {\n    stepId: \u001b[32m'pw:api@48'\u001b[39m,\n    location: {\n      file: \u001b[32m'/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts'\u001b[39m,\n      line: \u001b[33m246\u001b[39m,\n      column: \u001b[33m16\u001b[39m,\n      function: \u001b[32m'generateQRCode'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m'Wait for function'\u001b[39m,\n    apiName: \u001b[32m'page.waitForFunction'\u001b[39m,\n    params: {\n      pollingInterval: \u001b[90mundefined\u001b[39m,\n      expression: \u001b[32m'() => {\\n'\u001b[39m +\n        \u001b[32m\"      const input = document.querySelector('#destination_url');\\n\"\u001b[39m +\n        \u001b[32m'      return input && input.value && input.value.length > 0;\\n'\u001b[39m +\n        \u001b[32m'    }'\u001b[39m,\n      isFunction: \u001b[33mtrue\u001b[39m,\n      arg: \u001b[36m[Object]\u001b[39m,\n      timeout: \u001b[33m90000\u001b[39m\n    },\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@48'\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1752022126940\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'    at generateQRCode (/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:246:16)\\n'\u001b[39m +\n        \u001b[32m'    at /Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:404:5'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                    },
+                    {
+                      "text": "Test failed: page.waitForFunction: Timeout 90000ms exceeded.\n    at generateQRCode \u001b[90m(/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/\u001b[39mtests/qr-code.spec.ts:246:16\u001b[90m)\u001b[39m\n    at \u001b[90m/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/\u001b[39mtests/qr-code.spec.ts:404:5 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  \u001b[32mSymbol(step)\u001b[39m: {\n    stepId: \u001b[32m'pw:api@48'\u001b[39m,\n    location: {\n      file: \u001b[32m'/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts'\u001b[39m,\n      line: \u001b[33m246\u001b[39m,\n      column: \u001b[33m16\u001b[39m,\n      function: \u001b[32m'generateQRCode'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m'Wait for function'\u001b[39m,\n    apiName: \u001b[32m'page.waitForFunction'\u001b[39m,\n    params: {\n      pollingInterval: \u001b[90mundefined\u001b[39m,\n      expression: \u001b[32m'() => {\\n'\u001b[39m +\n        \u001b[32m\"      const input = document.querySelector('#destination_url');\\n\"\u001b[39m +\n        \u001b[32m'      return input && input.value && input.value.length > 0;\\n'\u001b[39m +\n        \u001b[32m'    }'\u001b[39m,\n      isFunction: \u001b[33mtrue\u001b[39m,\n      arg: \u001b[36m[Object]\u001b[39m,\n      timeout: \u001b[33m90000\u001b[39m\n    },\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@48'\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1752022126940\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'    at generateQRCode (/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:246:16)\\n'\u001b[39m +\n        \u001b[32m'    at /Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:404:5'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2025-07-09T00:47:07.415Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-Can-generate-QR-code-in-post-editor-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-Can-generate-QR-code-in-post-editor-chromium/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-Can-generate-QR-code-in-post-editor-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-Can-generate-QR-code-in-post-editor-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts",
+                    "column": 16,
+                    "line": 246
+                  }
+                },
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 100660,
+                  "error": {
+                    "message": "TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.",
+                    "stack": "TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.\n    at generateQRCode (/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:246:16)\n    at /Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:404:5",
+                    "location": {
+                      "file": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts",
+                      "column": 16,
+                      "line": 246
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 244 |\u001b[39m     \n \u001b[90m 245 |\u001b[39m     \u001b[90m// Wait for destination URL to be set\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 246 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForFunction(() \u001b[33m=>\u001b[39m {\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 247 |\u001b[39m       \u001b[36mconst\u001b[39m input \u001b[33m=\u001b[39m document\u001b[33m.\u001b[39mquerySelector(\u001b[32m'#destination_url'\u001b[39m) \u001b[36mas\u001b[39m \u001b[33mHTMLInputElement\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 248 |\u001b[39m       \u001b[36mreturn\u001b[39m input \u001b[33m&&\u001b[39m input\u001b[33m.\u001b[39mvalue \u001b[33m&&\u001b[39m input\u001b[33m.\u001b[39mvalue\u001b[33m.\u001b[39mlength \u001b[33m>\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 249 |\u001b[39m     }\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m90000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts",
+                        "column": 16,
+                        "line": 246
+                      },
+                      "message": "TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.\n\n\u001b[0m \u001b[90m 244 |\u001b[39m     \n \u001b[90m 245 |\u001b[39m     \u001b[90m// Wait for destination URL to be set\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 246 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForFunction(() \u001b[33m=>\u001b[39m {\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 247 |\u001b[39m       \u001b[36mconst\u001b[39m input \u001b[33m=\u001b[39m document\u001b[33m.\u001b[39mquerySelector(\u001b[32m'#destination_url'\u001b[39m) \u001b[36mas\u001b[39m \u001b[33mHTMLInputElement\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 248 |\u001b[39m       \u001b[36mreturn\u001b[39m input \u001b[33m&&\u001b[39m input\u001b[33m.\u001b[39mvalue \u001b[33m&&\u001b[39m input\u001b[33m.\u001b[39mvalue\u001b[33m.\u001b[39mlength \u001b[33m>\u001b[39m \u001b[35m0\u001b[39m\u001b[33m;\u001b[39m\n \u001b[90m 249 |\u001b[39m     }\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m90000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at generateQRCode (/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:246:16)\u001b[22m\n\u001b[2m    at /Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:404:5\u001b[22m"
+                    }
+                  ],
+                  "stdout": [
+                    {
+                      "text": "Attempting login...\n"
+                    },
+                    {
+                      "text": "Login form found, filling credentials...\n"
+                    },
+                    {
+                      "text": "Submitting login form...\n"
+                    },
+                    {
+                      "text": "Waiting for admin bar...\n"
+                    },
+                    {
+                      "text": "Login successful.\n"
+                    },
+                    {
+                      "text": "Navigating to new post page...\n"
+                    },
+                    {
+                      "text": "Verifying page load for: /wp-admin/post-new.php\n"
+                    },
+                    {
+                      "text": "Detecting which editor is loaded...\n"
+                    },
+                    {
+                      "text": "Classic editor detected.\n"
+                    },
+                    {
+                      "text": "Filling post title...\n"
+                    },
+                    {
+                      "text": "Filling TinyMCE content...\n"
+                    },
+                    {
+                      "text": "Content filled successfully.\n"
+                    },
+                    {
+                      "text": "Post ID: 41\n"
+                    },
+                    {
+                      "text": "Generating QR code...\n"
+                    },
+                    {
+                      "text": "Verifying page load for: /wp-admin/admin.php?page=qrc-add-new\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "Error generating QR code: page.waitForFunction: Timeout 90000ms exceeded.\n    at generateQRCode \u001b[90m(/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/\u001b[39mtests/qr-code.spec.ts:246:16\u001b[90m)\u001b[39m\n    at \u001b[90m/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/\u001b[39mtests/qr-code.spec.ts:404:5 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  \u001b[32mSymbol(step)\u001b[39m: {\n    stepId: \u001b[32m'pw:api@50'\u001b[39m,\n    location: {\n      file: \u001b[32m'/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts'\u001b[39m,\n      line: \u001b[33m246\u001b[39m,\n      column: \u001b[33m16\u001b[39m,\n      function: \u001b[32m'generateQRCode'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m'Wait for function'\u001b[39m,\n    apiName: \u001b[32m'page.waitForFunction'\u001b[39m,\n    params: {\n      pollingInterval: \u001b[90mundefined\u001b[39m,\n      expression: \u001b[32m'() => {\\n'\u001b[39m +\n        \u001b[32m\"      const input = document.querySelector('#destination_url');\\n\"\u001b[39m +\n        \u001b[32m'      return input && input.value && input.value.length > 0;\\n'\u001b[39m +\n        \u001b[32m'    }'\u001b[39m,\n      isFunction: \u001b[33mtrue\u001b[39m,\n      arg: \u001b[36m[Object]\u001b[39m,\n      timeout: \u001b[33m90000\u001b[39m\n    },\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@50'\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1752022229868\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'    at generateQRCode (/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:246:16)\\n'\u001b[39m +\n        \u001b[32m'    at /Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:404:5'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                    },
+                    {
+                      "text": "Test failed: page.waitForFunction: Timeout 90000ms exceeded.\n    at generateQRCode \u001b[90m(/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/\u001b[39mtests/qr-code.spec.ts:246:16\u001b[90m)\u001b[39m\n    at \u001b[90m/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/\u001b[39mtests/qr-code.spec.ts:404:5 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  \u001b[32mSymbol(step)\u001b[39m: {\n    stepId: \u001b[32m'pw:api@50'\u001b[39m,\n    location: {\n      file: \u001b[32m'/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts'\u001b[39m,\n      line: \u001b[33m246\u001b[39m,\n      column: \u001b[33m16\u001b[39m,\n      function: \u001b[32m'generateQRCode'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m'Wait for function'\u001b[39m,\n    apiName: \u001b[32m'page.waitForFunction'\u001b[39m,\n    params: {\n      pollingInterval: \u001b[90mundefined\u001b[39m,\n      expression: \u001b[32m'() => {\\n'\u001b[39m +\n        \u001b[32m\"      const input = document.querySelector('#destination_url');\\n\"\u001b[39m +\n        \u001b[32m'      return input && input.value && input.value.length > 0;\\n'\u001b[39m +\n        \u001b[32m'    }'\u001b[39m,\n      isFunction: \u001b[33mtrue\u001b[39m,\n      arg: \u001b[36m[Object]\u001b[39m,\n      timeout: \u001b[33m90000\u001b[39m\n    },\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@50'\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1752022229868\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: page.waitForFunction: Timeout 90000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'    at generateQRCode (/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:246:16)\\n'\u001b[39m +\n        \u001b[32m'    at /Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts:404:5'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                    }
+                  ],
+                  "retry": 1,
+                  "startTime": "2025-07-09T00:48:47.818Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-Can-generate-QR-code-in-post-editor-chromium-retry1/test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-Can-generate-QR-code-in-post-editor-chromium-retry1/video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-Can-generate-QR-code-in-post-editor-chromium-retry1/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/test-results/qr-code-Can-generate-QR-code-in-post-editor-chromium-retry1/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/michaelerps/github/wp-qr-trackr/wp-content/plugins/wp-qr-trackr/tests/e2e/playwright/tests/qr-code.spec.ts",
+                    "column": 16,
+                    "line": 246
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "98dc7f4e3976c67a88d5-5ee493bfd4cdb8d74973",
+          "file": "qr-code.spec.ts",
+          "line": 324,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "message": "\u001b[31mTesting stopped early after 1 maximum allowed failures.\u001b[39m"
+    }
+  ],
+  "stats": {
+    "startTime": "2025-07-09T00:47:01.323Z",
+    "duration": 209870.49599999998,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

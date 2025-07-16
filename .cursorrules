@@ -1,3 +1,29 @@
+# .cursorrules Index
+
+**This file contains all enforced project rules. It MUST be reviewed as part of every pre-commit and pre-merge check.**
+
+## Index
+- WordPress Plugin Development Standards
+- PHPCS Compliance Enforcement
+- SQL Query and Caching Standards
+- Comment and Docblock Standards
+- WordPress Function Usage
+- Security and Input/Output Handling
+- File Organization and Naming
+- PHPCS and CI/CD Configuration
+- Date and Time Standards
+- Rewrite Rules Best Practices
+- Modular Setup and Module Design
+- Module Documentation, Testing, Security, and Performance
+- Contribution Workflow and PR Automation
+- Environment Variable and Tooling Standards
+- Xdebug/PECL and Linter Memory
+- Cursor Project Rules (Yarn-Only, Indentation, etc.)
+- WordPress Coding Standards (Security, Output, Comments, etc.)
+- Yarn-Only Package Management (NO npm/npx/pnpm)
+
+---
+
 # WordPress Plugin Development Standards
 - All plugins are developed with professional WordPress best practices and excellent security standards.
 - Functionality is implemented in an elegant, maintainable, and efficient manner.
@@ -259,7 +285,7 @@ Playwright is only installed and used in the dev Docker image (port 8080). It mu
 - Direct database queries require a phpcs:ignore comment explaining why they're necessary.
 - Example:
   ```php
-  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, atomic operation required
   $result = $wpdb->get_row(
       $wpdb->prepare(
           "SELECT * FROM {$wpdb->prefix}qr_code_links WHERE post_id = %d",
@@ -585,3 +611,152 @@ Assistant: Executes full release workflow for wp-qr-trackr plugin, incrementing 
 - Allow version type specification: "create plugin release for wp-qr-trackr minor" (for minor version bump)
 - Support custom release notes: "create plugin release for wp-qr-trackr with notes 'Major security update'"
 - Enable pre-release flag: "create plugin release for wp-qr-trackr prerelease" 
+
+# WP QR Trackr Development Standards
+
+## Development Environment Setup
+- Only Docker Desktop and Git are required on the host machine
+- All development must be done inside Docker containers
+- No local PHP, Composer, Node.js, or other tools should be installed
+- Use provided scripts for all operations
+
+## Required Tools
+- Docker Desktop (latest)
+- Git
+- Terminal (macOS default terminal or iTerm2)
+
+## Prohibited Tools
+- Local PHP installation
+- Local Composer installation
+- Local Node.js/npm/yarn installation
+- Local WordPress installation
+- Manual PHPCS/PHPCBF installation
+
+## Development Workflow Scripts
+
+### Environment Setup
+- Use `scripts/check-onboarding.sh` to validate environment
+- Use `scripts/setup-wordpress.sh dev` to start development environment (port 8080)
+- Use `scripts/setup-wordpress.sh nonprod` to start testing environment (port 8081)
+
+### Code Validation
+- Use `make validate` or `docker compose run --rm ci-runner bash scripts/validate.sh`
+- Never run PHPCS, PHPCBF, or tests directly on host machine
+
+### Container Management
+- Use provided Docker Compose files only
+- Never modify container configurations directly
+- Use volume mounts defined in docker-compose.*.yml files
+
+### WordPress Configuration
+- Use WP-CLI through containers only
+- Never modify wp-config.php directly
+- Use environment variables in docker-compose files
+
+## Directory Structure
+- All plugin code must be in wp-content/plugins/wp-qr-trackr/
+- All development tools must be in Docker containers
+- All scripts must be in scripts/ directory
+
+## Testing Standards
+- All tests must run in ci-runner container
+- Use `make test` for running test suite
+- Use `make lint` for code style checks
+
+## Documentation Standards
+- All commands must reference provided scripts
+- No direct Docker commands in documentation
+- Always use relative paths from project root
+
+## Script Usage Examples
+```bash
+# Check environment setup
+bash scripts/check-onboarding.sh
+
+# Start development environment
+bash scripts/setup-wordpress.sh dev
+
+# Start testing environment
+bash scripts/setup-wordpress.sh nonprod
+
+# Run all tests and validation
+make validate
+
+# Run specific tests in container
+docker compose run --rm ci-runner vendor/bin/phpunit
+```
+
+## Access URLs
+- Development: http://localhost:8080
+- Testing: http://localhost:8081
+- Admin credentials: trackr/trackr
+
+## Common Issues
+- If containers fail to start, check Docker Desktop is running
+- If plugin not found, check volume mounts
+- If tests fail, ensure running in ci-runner container
+
+## Prohibited Practices
+- Manual plugin installation through WordPress admin
+- Direct database manipulation
+- Local tool installation
+- Manual container configuration
+- Direct wp-config.php modification
+
+## Best Practices
+- Always use provided scripts
+- Keep Docker Desktop updated
+- Use ci-runner for all development tasks
+- Follow WordPress coding standards
+- Use container shells for debugging
+
+## Maintenance
+- Keep scripts up to date
+- Document any script modifications
+- Test scripts in clean environment
+- Update documentation with script changes 
+
+# Cursor Project Rule: Yarn-Only Package Management
+
+- Only Yarn is allowed as the package manager for this project.
+- npm, npx, pnpm, and other package managers are prohibited in all scripts, Dockerfiles, and documentation.
+- All dependency installation, script execution, and package management must use Yarn exclusively.
+- All contributors and CI/CD must use Yarn for all Node.js workflows.
+- Any reference to npm, npx, or other package managers in code, scripts, or documentation is a violation of project policy. 
+
+# PHPCS & WordPress Coding Standards Guardrails (Auto-Generated)
+
+## Inline Comments
+- All inline comments must end with a period, exclamation mark, or question mark.
+- Example: // This is a comment.
+
+## Docblocks
+- All files, classes, and functions must have complete docblocks with @package, @param, @return, and @throws (if applicable).
+- File-level docblocks must use /** ... */ style and include @package.
+
+## SQL Queries
+- All SQL queries must use $wpdb->prepare() with placeholders for variables.
+- Table names must be injected using {$wpdb->prefix}table_name, never direct interpolation.
+- Add PHPCS ignore comments with explanations only when absolutely necessary.
+
+## Error Logging
+- Do not use error_log() or print_r() in production code.
+- If used for debugging, add a PHPCS ignore comment with an explanation and remove before release.
+
+## Nonce Verification
+- All form data and AJAX requests must verify nonces before processing input.
+
+## Variable Naming
+- Object properties and variables must use snake_case.
+
+## Output Escaping & Input Sanitization
+- All output must be escaped using esc_html(), esc_url(), esc_attr(), etc.
+- All input must be sanitized using sanitize_text_field(), esc_url_raw(), absint(), etc.
+
+## Deprecated/Discouraged Patterns
+- Do not override WordPress globals (e.g., $table_prefix) directly.
+- Do not use ini_set('display_errors', 1); use WP_DEBUG_DISPLAY instead.
+
+## PHPCS Automation
+- Run PHPCS and PHPCBF in CI and local E2E workflows.
+- Auto-fix what can be fixed, and require manual review for the rest. 

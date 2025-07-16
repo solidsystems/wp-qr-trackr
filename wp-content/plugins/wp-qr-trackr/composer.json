@@ -1,0 +1,6 @@
+{
+  "name": "wp-qr-trackr/plugin",
+  "description": "Minimal composer.json for E2E runner compatibility.",
+  "type": "project",
+  "require": {}
+} 

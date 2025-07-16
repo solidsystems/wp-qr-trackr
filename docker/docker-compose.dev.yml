@@ -1,0 +1,80 @@
+services:
+  wordpress-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.wordpress
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db-dev:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wpdb
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME','http://localhost:8080');
+        define('WP_SITEURL','http://localhost:8080');
+        define('WP_ENVIRONMENT_TYPE','development');
+        define('WP_DEBUG', true);
+        define('WP_DEBUG_LOG', true);
+        define('WP_DEBUG_DISPLAY', false);
+      WORDPRESS_ADMIN_USER: trackr
+      WORDPRESS_ADMIN_PASSWORD: trackr
+      WORDPRESS_ADMIN_EMAIL: dev@example.com
+    depends_on:
+      - db-dev
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+      - ../wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+
+  wpcli-dev:
+    image: wordpress:cli
+    depends_on:
+      - wordpress-dev
+      - db-dev
+    environment:
+      WORDPRESS_DB_HOST: db-dev:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wpdb
+      WP_HOME: http://localhost:8080
+      WP_SITEURL: http://localhost:8080
+      PHP_MEMORY_LIMIT: 1024M
+      WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
+    volumes:
+      - wordpress_data:/var/www/html
+      - ../wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+    entrypoint: ["tail", "-f", "/dev/null"]
+
+  db-dev:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - db_data_dev:/var/lib/mysql
+
+  ci-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    depends_on:
+      - db-dev
+    volumes:
+      - ../:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - ./ci.sh:/ci.sh
+    working_dir: /var/www/html/wp-content/plugins/wp-qr-trackr
+    environment:
+      WORDPRESS_DB_HOST: db-dev:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+    entrypoint: ["/bin/bash", "/ci.sh"]
+
+volumes:
+  db_data_dev:
+  wordpress_data: 

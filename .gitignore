@@ -60,15 +60,10 @@ build/
 dist/
 
 # Dependencies
-/vendor/
-/node_modules/
-/.yarn/
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+/node_modules
+/vendor
+yarn-error.log
+npm-debug.log
 
 # IDE and editor files
 .idea/
@@ -108,3 +103,59 @@ htmlcov/
 *.tmp
 *.temp
 .cache/
+
+# Development
+/.vscode
+/.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# WordPress
+/wp-content/*
+!/wp-content/plugins/
+/wp-content/plugins/*
+!/wp-content/plugins/wp-qr-trackr/
+
+# Build
+/dist
+/build
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Testing
+/coverage
+/tests/coverage
+phpunit.xml
+.phpunit.result.cache
+
+# Docker
+/docker/*
+!/docker/Dockerfile*
+!/docker/docker-compose*.yml
+!/docker/php.ini
+!/docker/docker-entrypoint-custom.sh
+
+# Temporary files
+*.log
+*.cache
+*.tmp
+.sass-cache
+
+# Config backups
+/config/*.bak
+/config/*.old
+/config/local*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

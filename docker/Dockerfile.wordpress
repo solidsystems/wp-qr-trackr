@@ -1,0 +1,21 @@
+# This Dockerfile is for production/nonprod environments ONLY.
+# It does NOT include Playwright or dev/test tools.
+# Automated E2E tests should not be run in containers built from this Dockerfile.
+FROM wordpress:latest
+
+# Install WP-CLI
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp
+
+# Install less for WP-CLI
+RUN apt-get update && apt-get install -y less && rm -rf /var/lib/apt/lists/*
+
+# Set up wp-cli configuration
+RUN mkdir -p /var/www/.wp-cli/cache \
+    && chown -R www-data:www-data /var/www/.wp-cli
+
+# Add wp-cli config
+COPY wp-cli.yml /var/www/.wp-cli/config.yml
+
+USER www-data 

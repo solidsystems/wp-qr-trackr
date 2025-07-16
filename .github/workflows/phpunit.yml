@@ -1,0 +1,41 @@
+name: Run PHPUnit tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php: [8.0, 8.1, 8.2]
+        wp: [6.4, latest]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install Node.js dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Run WP-CLI scaffolded tests
+        run: |
+          bash ./wp-content/plugins/wp-qr-trackr/scripts/install-wp-tests.sh wpdb wpuser wppass 127.0.0.1 ${{ matrix.wp }}
+          ./vendor/bin/phpunit 

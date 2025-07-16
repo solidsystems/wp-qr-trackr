@@ -43,6 +43,19 @@ function qr_trackr_add_rewrite_rules() {
  * @return void
  */
 function qr_trackr_init_rewrite_rules() {
+	global $wp;
+
+	// Register query var first
+	if ( isset( $wp->public_query_vars ) ) {
+		if ( ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+			$wp->public_query_vars[] = 'qr_tracking_code';
+
+			if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+				error_log( 'QR Trackr: Added qr_tracking_code to public_query_vars directly' );
+			}
+		}
+	}
+
 	// Always register our rewrite rules
 	qr_trackr_add_rewrite_rules();
 
@@ -56,7 +69,56 @@ function qr_trackr_init_rewrite_rules() {
 		}
 	}
 }
-add_action( 'init', 'qr_trackr_init_rewrite_rules' );
+// Move to higher priority to ensure early registration
+remove_action( 'init', 'qr_trackr_init_rewrite_rules' );
+add_action( 'init', 'qr_trackr_init_rewrite_rules', 1 );
+
+// Add a late check to ensure query var is registered
+add_action(
+	'wp_loaded',
+	function () {
+		global $wp;
+		if ( isset( $wp->public_query_vars ) && ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+			$wp->public_query_vars[] = 'qr_tracking_code';
+
+			if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+				error_log( 'QR Trackr: Late registration of qr_tracking_code query var' );
+			}
+		}
+	},
+	1
+);
+
+// Ensure query var is registered
+add_filter(
+	'query_vars',
+	function ( $vars ) {
+		if ( ! in_array( 'qr_tracking_code', $vars, true ) ) {
+			$vars[] = 'qr_tracking_code';
+
+			if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+				error_log( 'QR Trackr: Added qr_tracking_code via query_vars filter' );
+			}
+		}
+		return $vars;
+	},
+	1
+);
+
+// Add a very late check to ensure query var is registered
+add_action(
+	'parse_request',
+	function ( $wp ) {
+		if ( ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+			$wp->public_query_vars[] = 'qr_tracking_code';
+
+			if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+				error_log( 'QR Trackr: Very late registration of qr_tracking_code query var' );
+			}
+		}
+	},
+	1
+);
 
 /**
  * Force flush rewrite rules if they appear to be missing.
@@ -118,21 +180,6 @@ function qr_trackr_check_rewrite_rules() {
 
 	return false;
 }
-
-/**
- * Add the `qr_tracking_code` query var.
- *
- * Registers the qr_tracking_code query variable with WordPress to allow URL parsing.
- *
- * @since 1.0.0
- * @param array $vars The array of query variables.
- * @return array The modified array of query variables.
- */
-function qr_trackr_add_query_vars( $vars ) {
-	$vars[] = 'qr_tracking_code';
-	return $vars;
-}
-add_filter( 'query_vars', 'qr_trackr_add_query_vars' );
 
 /**
  * Handle the QR code redirect.

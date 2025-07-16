@@ -139,6 +139,7 @@ jQuery(document).ready(function($) {
 	function selectPost(id, title, type, url) {
 		$postId.val(id);
 		$postSearch.val(title);
+		$('#destination_url').val(url); // Set the destination URL
 		$postResults.hide();
 		
 		$selectedPostInfo
@@ -152,6 +153,7 @@ jQuery(document).ready(function($) {
 	function clearPostSelection() {
 		$postId.val('');
 		$postSearch.val('');
+		$('#destination_url').val(''); // Clear the destination URL
 		$postResults.hide().empty();
 		$selectedPostInfo.hide();
 	}

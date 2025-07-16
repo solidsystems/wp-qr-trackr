@@ -1,0 +1,17 @@
+{
+  "name": "wp-qr-trackr",
+  "version": "1.0.0",
+  "description": "WordPress QR Code Tracking Plugin",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "PWDEBUG=1 playwright test",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:single": "PWDEBUG=1 playwright test -g 'can access QR code admin page'"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.2",
+    "@types/node": "^24.0.10",
+    "typescript": "^5.8.3"
+  }
+} 

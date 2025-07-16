@@ -1,0 +1,85 @@
+services:
+  wordpress-nonprod:
+    build:
+      context: .
+      dockerfile: Dockerfile.wordpress
+    ports:
+      - "8081:80" # Nonprod environment runs on port 8081
+    environment:
+      WORDPRESS_DB_HOST: db-nonprod:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wpdb
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME','http://localhost:8081');
+        define('WP_SITEURL','http://localhost:8081');
+        define('WP_ENVIRONMENT_TYPE','nonprod');
+      WORDPRESS_ADMIN_USER: trackr
+      WORDPRESS_ADMIN_PASSWORD: trackr
+      WORDPRESS_ADMIN_EMAIL: nonprod@example.com
+    depends_on:
+      - db-nonprod
+    volumes:
+      - wordpress_data_nonprod:/var/www/html # Mount WordPress files
+      - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+      - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr # Mount plugin for testing
+
+  # Sidecar WP-CLI container for setup and automation
+  wpcli-nonprod:
+    image: wordpress:cli
+    depends_on:
+      - wordpress-nonprod
+      - db-nonprod
+    environment:
+      WORDPRESS_DB_HOST: db-nonprod:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+      WORDPRESS_DB_NAME: wpdb
+      WP_HOME: http://localhost:8081
+      WP_SITEURL: http://localhost:8081
+      PHP_MEMORY_LIMIT: 1024M
+      WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
+    volumes:
+      - wordpress_data_nonprod:/var/www/html # Mount WordPress files
+      - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+    entrypoint: ["tail", "-f", "/dev/null"] # Idle by default; run commands with 'docker compose exec wpcli-nonprod ...'
+
+  db-nonprod:
+    image: mariadb:10.5
+    restart: always
+    environment:
+      MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+      MYSQL_ROOT_PASSWORD: rootpass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - db_data_nonprod:/var/lib/mysql
+
+  ci-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    depends_on:
+      - db-nonprod
+    volumes:
+      - ./wp-content/plugins:/var/www/html/wp-content/plugins
+      - ./ci.sh:/ci.sh
+    working_dir: /var/www/html/wp-content/plugins/wp-qr-trackr
+    environment:
+      WORDPRESS_DB_HOST: db-nonprod:3306
+      WORDPRESS_DB_NAME: wpdb
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+    entrypoint: ["/bin/bash", "/ci.sh"]
+
+volumes:
+  db_data_nonprod:
+    # Persistent database storage
+  wordpress_data_nonprod:
+    # Persistent WordPress files 
