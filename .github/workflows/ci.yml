@@ -25,6 +25,28 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: List workspace files
+        run: |
+          echo "Root directory:"
+          ls -l
+          echo "scripts directory:"
+          ls -l scripts
+
+      - name: Check for required files
+        run: |
+          for f in ci.sh composer.json composer.lock package.json yarn.lock; do
+            if [ -f "$f" ]; then
+              echo "Found $f"
+            else
+              echo "Missing $f"
+            fi
+          done
+          if [ -f scripts/wait-for-it.sh ]; then
+            echo "Found scripts/wait-for-it.sh"
+          else
+            echo "Missing scripts/wait-for-it.sh"
+          fi
+
       - name: Extract metadata (tags and labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
