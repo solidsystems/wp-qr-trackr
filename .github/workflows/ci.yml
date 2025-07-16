@@ -79,6 +79,10 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
       - name: Install Lefthook
         run: curl -s https://raw.githubusercontent.com/evilmartians/lefthook/master/scripts/install.sh | bash
       - name: Run Lefthook pre-push
