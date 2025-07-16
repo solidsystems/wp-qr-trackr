@@ -35,6 +35,9 @@ jobs:
             npm install
           fi
 
+      - name: Install SVN
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
       - name: Run WP-CLI scaffolded tests
         run: |
           bash scripts/install-wp-tests.sh wpdb wpuser wppass 127.0.0.1 ${{ matrix.wp }}
