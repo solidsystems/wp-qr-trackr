@@ -47,6 +47,11 @@ jobs:
             echo "Missing scripts/wait-for-it.sh"
           fi
 
+      - name: List all files in workspace
+        run: |
+          echo "Full workspace file tree:"
+          find . -type f | sort
+
       - name: Extract metadata (tags and labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
