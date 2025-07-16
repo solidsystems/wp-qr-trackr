@@ -255,7 +255,7 @@ phpcs_min_memory_mb = 1024  # PHPCS requires at least 1GB of memory for this pro
 # When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), Cursor and agents should use MCP APIs by default for documentation, repository, and cloud operations. This ensures consistent, secure, and agent-friendly workflows across all plugins and environments.
 
 # Playwright Dev-Only Rule
-Playwright is only installed and used in the dev Docker image (port 8080). It must not be present in production or nonprod images. Automated UI testing and screenshot capture are only supported in dev. 
+Playwright is only installed and used in the dev Docker image (port 8080). It must not be present in production or nonprod images. Automated UI testing and screenshot capture are only supported in dev.
 
 # Platform-Specific Learnings and Best Practices (PHP/WordPress)
 - Always restrict PHPCS to PHP files using --extensions=php in CI/CD for all plugin development.
@@ -393,7 +393,7 @@ Playwright is only installed and used in the dev Docker image (port 8080). It mu
   ```php
   // Correct
   echo esc_html__( 'QR Code generated successfully.', 'wp-qr-trackr' );
-  
+
   // Incorrect
   echo 'QR Code generated successfully.';
   ```
@@ -425,7 +425,7 @@ Playwright is only installed and used in the dev Docker image (port 8080). It mu
   ```php
   // Good
   $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id = %d", $id );
-  
+
   // Bad
   $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id = %1$d", $id );
   ```
@@ -610,7 +610,7 @@ Assistant: Executes full release workflow for wp-qr-trackr plugin, incrementing 
 ### Customization Options
 - Allow version type specification: "create plugin release for wp-qr-trackr minor" (for minor version bump)
 - Support custom release notes: "create plugin release for wp-qr-trackr with notes 'Major security update'"
-- Enable pre-release flag: "create plugin release for wp-qr-trackr prerelease" 
+- Enable pre-release flag: "create plugin release for wp-qr-trackr prerelease"
 
 # WP QR Trackr Development Standards
 
@@ -714,7 +714,7 @@ docker compose run --rm ci-runner vendor/bin/phpunit
 - Keep scripts up to date
 - Document any script modifications
 - Test scripts in clean environment
-- Update documentation with script changes 
+- Update documentation with script changes
 
 # Cursor Project Rule: Yarn-Only Package Management
 
@@ -722,7 +722,21 @@ docker compose run --rm ci-runner vendor/bin/phpunit
 - npm, npx, pnpm, and other package managers are prohibited in all scripts, Dockerfiles, and documentation.
 - All dependency installation, script execution, and package management must use Yarn exclusively.
 - All contributors and CI/CD must use Yarn for all Node.js workflows.
-- Any reference to npm, npx, or other package managers in code, scripts, or documentation is a violation of project policy. 
+- Any reference to npm, npx, or other package managers in code, scripts, or documentation is a violation of project policy.
+
+# PR Creation CLI Formatting Rule
+- When creating pull requests via CLI (e.g., gh pr create), always use single quotes for multi-line --body arguments, or escape newlines properly.
+- Never use unescaped double quotes for multi-line PR bodies, as this will trigger an interactive shell prompt (dquote>).
+- Example (correct):
+  gh pr create --title 'My PR Title' --body 'Line 1
+
+Line 2
+
+Line 3' --base main --head my-feature-branch
+- Example (incorrect):
+  gh pr create --title "My PR Title" --body "Line 1
+Line 2" --base main --head my-feature-branch
+- This rule is enforced to ensure all PRs can be created non-interactively and reliably in automation and scripts.
 
 # PHPCS & WordPress Coding Standards Guardrails (Auto-Generated)
 
@@ -759,4 +773,4 @@ docker compose run --rm ci-runner vendor/bin/phpunit
 
 ## PHPCS Automation
 - Run PHPCS and PHPCBF in CI and local E2E workflows.
-- Auto-fix what can be fixed, and require manual review for the rest. 
+- Auto-fix what can be fixed, and require manual review for the rest.
