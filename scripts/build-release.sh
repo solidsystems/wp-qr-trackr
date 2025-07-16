@@ -55,7 +55,7 @@ cd - > /dev/null
 find "$BUILD_DIR/$PLUGIN_NAME/vendor" -type d -name 'tests' -o -name 'test' | xargs rm -rf 2>/dev/null || true
 find "$BUILD_DIR/$PLUGIN_NAME/vendor" -name '*.md' -o -name 'phpunit*' -o -name '.phpcs*' -o -name 'phpcs*' | xargs rm -f 2>/dev/null || true
 
-# Create zip with proper folder structure 
+# Create zip with proper folder structure
 cd "$BUILD_DIR" && zip -r "../$ZIP_NAME" "$PLUGIN_NAME/"
 cd - > /dev/null
 
@@ -65,4 +65,11 @@ if [ -f "$ZIP_NAME" ]; then
   print_status "Zip file created at: $ZIP_NAME"
 else
   print_error "Build failed. Zip file not found."
-fi 
+fi
+
+# Dry run notice and guard for future publishing/tagging steps
+if [ "$DRY_RUN" = "true" ]; then
+  print_warning "Dry run enabled: No publishing, tagging, or pushing will be performed."
+  # Place any future publishing/tagging steps below, wrapped in:
+  # if [ "$DRY_RUN" != "true" ]; then ... fi
+fi
