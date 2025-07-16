@@ -1,30 +1,14 @@
 services:
-  db-nonprod:
-    image: mariadb:10.5
-    restart: always
-    environment:
-      MYSQL_DATABASE: wordpress
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_USER: wordpress
-      MYSQL_PASSWORD: wordpress
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
   ci-runner:
     image: ghcr.io/solidsystems/wp-qr-trackr/ci-runner:${CI_IMAGE_TAG:-main}
-    depends_on:
-      db-nonprod:
-        condition: service_healthy
     environment:
-      WORDPRESS_DB_HOST: db-nonprod:3306
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpress
+      # If you need a DB, define a minimal db service and update these vars accordingly
+      # WORDPRESS_DB_HOST: db:3306
+      # WORDPRESS_DB_NAME: wpdb
+      # WORDPRESS_DB_USER: wpuser
+      # WORDPRESS_DB_PASSWORD: wppass
       CI: 1
     volumes:
       - .:/usr/src/app
       - ./vendor:/usr/src/app/vendor
-      - ~/.config/gh:/root/.config/gh 
+      - ~/.config/gh:/root/.config/gh
