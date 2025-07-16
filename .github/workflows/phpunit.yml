@@ -37,5 +37,5 @@ jobs:
 
       - name: Run WP-CLI scaffolded tests
         run: |
-          bash ./wp-content/plugins/wp-qr-trackr/scripts/install-wp-tests.sh wpdb wpuser wppass 127.0.0.1 ${{ matrix.wp }}
-          ./vendor/bin/phpunit 
+          bash scripts/install-wp-tests.sh wpdb wpuser wppass 127.0.0.1 ${{ matrix.wp }}
+          ./vendor/bin/phpunit
