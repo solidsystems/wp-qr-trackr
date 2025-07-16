@@ -11,21 +11,6 @@ jobs:
   build_image:
     name: Build and Push CI Image
     runs-on: ubuntu-latest
-    # This job only runs when dependency files are changed.
-    if: |
-      github.event_name == 'push' &&
-      contains(join(github.event.commits.*.message, ' '), '#build-ci') ||
-      (
-        github.event_name == 'push' &&
-        (
-          contains(join(github.event.commits.*.modified, ' '), 'Dockerfile.ci') ||
-          contains(join(github.event.commits.*.modified, ' '), 'composer.json') ||
-          contains(join(github.event.commits.*.modified, ' '), 'composer.lock') ||
-          contains(join(github.event.commits.*.modified, ' '), 'package.json') ||
-          contains(join(github.event.commits.*.modified, ' '), 'yarn.lock') ||
-          contains(join(github.event.commits.*.modified, ' '), 'ci.sh')
-        )
-      )
     permissions:
       contents: read
       packages: write
