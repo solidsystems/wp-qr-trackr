@@ -87,10 +87,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-      - name: Install Lefthook
-        run: |
-          curl -1sLf 'https://dl.cloudsmith.io/public/evilmartians/lefthook/setup.sh' | bash
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Run Lefthook pre-push
         run: |
           export PATH="$HOME/.local/bin:$PATH"
