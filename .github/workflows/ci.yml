@@ -3,8 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - main
-      - 'feature/**'
+      - '**'
   pull_request:
 
 jobs:
@@ -41,8 +40,10 @@ jobs:
           context: .
           file: ./Dockerfile.ci
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ghcr.io/${{ github.repository }}/ci-runner:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/ci-runner:latest
+          cache-to: type=inline
+          provenance: false
 
   test:
     name: Run All CI Checks
