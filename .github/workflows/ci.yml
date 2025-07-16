@@ -103,4 +103,4 @@ jobs:
       - name: Run All CI Checks
         env:
           CI_IMAGE_TAG: ${{ steps.sanitize.outputs.tag }}
-        run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.ci.yml run --rm ci-runner
+        run: docker compose -f docker/docker-compose.ci.yml run --rm ci-runner
