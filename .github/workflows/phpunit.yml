@@ -52,4 +52,16 @@ jobs:
       - name: Run WP-CLI scaffolded tests
         run: |
           bash scripts/install-wp-tests.sh wpdb wpuser wppass mysql ${{ matrix.wp }}
-          ./vendor/bin/phpunit
+
+      - name: Debug: List WordPress test suite directory
+        run: |
+          if [ -d /tmp/wordpress-tests-lib ]; then
+            echo "Found /tmp/wordpress-tests-lib"
+            ls -l /tmp/wordpress-tests-lib
+            ls -l /tmp/wordpress-tests-lib/includes
+          else
+            echo "Missing /tmp/wordpress-tests-lib"
+          fi
+
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit
