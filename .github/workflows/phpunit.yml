@@ -9,6 +9,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: wpdb
+          MYSQL_USER: wpuser
+          MYSQL_PASSWORD: wppass
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     strategy:
       matrix:
@@ -40,5 +55,5 @@ jobs:
 
       - name: Run WP-CLI scaffolded tests
         run: |
-          bash scripts/install-wp-tests.sh wpdb wpuser wppass 127.0.0.1 ${{ matrix.wp }}
+          bash scripts/install-wp-tests.sh wpdb wpuser wppass mysql ${{ matrix.wp }}
           ./vendor/bin/phpunit
