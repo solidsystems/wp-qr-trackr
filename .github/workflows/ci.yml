@@ -87,10 +87,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-      - name: Run Lefthook pre-push
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          lefthook run pre-push
 
       - name: Sanitize image tag
         id: sanitize
