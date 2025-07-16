@@ -92,7 +92,9 @@ jobs:
           curl -1sLf 'https://dl.cloudsmith.io/public/evilmartians/lefthook/setup.sh' | bash
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Run Lefthook pre-push
-        run: lefthook run pre-push
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          lefthook run pre-push
 
       - name: Sanitize image tag
         id: sanitize
