@@ -47,7 +47,7 @@ jobs:
           fi
 
       - name: Install SVN
-        run: sudo apt-get update && sudo apt-get install -y subversion
+        run: apt-get update && apt-get install -y subversion
 
       - name: Run WP-CLI scaffolded tests
         run: |
