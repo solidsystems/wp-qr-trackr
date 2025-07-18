@@ -32,7 +32,7 @@ fi
 
 # Install WordPress test suite
 echo "Installing WordPress test suite..."
-bash scripts/install-wp-tests.sh wpdb wpuser wppass localhost latest
+bash scripts/install-wp-tests.sh wpdb wpuser wppass db latest
 
 # PHPCS temporarily disabled to unblock E2E testing
 # echo "Running PHPCS..."
