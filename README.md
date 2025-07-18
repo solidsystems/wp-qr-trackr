@@ -121,3 +121,14 @@ See `.cursorrules` and the Makefile for details.
 - Lefthook is installed and runs only in the container/CI environment. Contributors do not need to install Lefthook locally.
 - All pre-commit and pre-push hooks are enforced in the container and CI workflows.
 - For local checks, use `make fix`, `make lint`, and `make validate`.
+
+## Continuous Integration Testing Matrix
+
+All code is automatically tested in CI against the following combinations:
+
+- PHP 8.1 + WordPress 6.4
+- PHP 8.1 + WordPress latest
+- PHP 8.2 + WordPress 6.4
+- PHP 8.2 + WordPress latest
+
+This ensures the plugin is compatible with all currently supported PHP and WordPress versions, and helps catch issues early as new versions are released.
