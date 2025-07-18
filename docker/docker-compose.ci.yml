@@ -1,6 +1,6 @@
 services:
   ci-runner:
-    image: ghcr.io/solidsystems/wp-qr-trackr/ci-runner:${CI_IMAGE_TAG:-main}
+    image: ghcr.io/solidsystems/wp-qr-trackr/ci-runner:${CI_IMAGE_TAG:-latest}
     environment:
       # If you need a DB, define a minimal db service and update these vars accordingly
       # WORDPRESS_DB_HOST: db:3306

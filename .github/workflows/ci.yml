@@ -98,7 +98,7 @@ jobs:
 
       - name: Sanitize image tag
         id: sanitize
-        run: echo "tag=$(echo ${{ github.ref_name }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+        run: echo "tag=latest" >> $GITHUB_OUTPUT
 
       - name: Run All CI Checks
         env:
