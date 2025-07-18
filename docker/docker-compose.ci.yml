@@ -10,5 +10,4 @@ services:
       CI: 1
     volumes:
       - .:/usr/src/app
-      - ./vendor:/usr/src/app/vendor
       - ~/.config/gh:/root/.config/gh
