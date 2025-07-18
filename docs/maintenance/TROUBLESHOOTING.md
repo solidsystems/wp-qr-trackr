@@ -21,7 +21,7 @@ This guide covers common issues and solutions for the WP QR Trackr plugin. If yo
 - ✅ **Error Handling** - Added proper error handling for missing files and dependencies
 - ✅ **Simplified Plugin Header** - Standardized WordPress plugin header format
 
-**Current Status:** 
+**Current Status:**
 - 🟢 **RESOLVED** - Plugin now activates successfully on all WordPress installations
 - 🟢 **Production Tested** - Verified working on live WordPress sites
 - 🟢 **Backward Compatible** - Existing installations continue to work
@@ -90,7 +90,7 @@ $result = wp_cache_get( $cache_key );
 if ( false === $result ) {
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Result is cached.
     $result = $wpdb->get_row( $prepared_query );
-    
+
     if ( ! is_null( $result ) ) {
         wp_cache_set( $cache_key, $result, '', 300 ); // Cache for 5 minutes
     }
@@ -173,7 +173,7 @@ if ( false === $result ) {
     <config name="installed_paths" value="vendor/wp-coding-standards/wpcs"/>
     <ini name="memory_limit" value="1024M"/>
     <rule ref="WordPress"/>
-    
+
     <!-- Exclude patterns -->
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>tests/*</exclude-pattern>
@@ -198,37 +198,199 @@ if ( false === $result ) {
 - Use `yarn setup:ci` to reinstall all dependencies and Husky hooks.
 - Ensure `.env` and `.env.example` are up to date and match your environment.
 
-## CI/CD & GitHub Actions Issues
+## CI/CD Workflow Issues
 
-### PHP CodeSniffer Path Error: "No such file or directory"
-**Error:** GitHub Actions workflow fails with `/vendor/bin/phpcs: No such file or directory` when running from the plugin directory.
+### WordPress Bootstrap Errors
 
-**Cause:** The workflow changes to the plugin directory (`wp-content/plugins/wp-qr-trackr/`) but uses an incorrect relative path to access the `phpcs` binary in the repository root.
+**Problem:** `Call to undefined function add_action()` error in PHPUnit tests.
 
-**Solution:** Update the GitHub Actions workflow (`.github/workflows/ci.yml`) to use the correct relative path:
-- **Wrong:** `../../vendor/bin/phpcs` (only goes up 2 levels)
-- **Correct:** `../../../vendor/bin/phpcs` (goes up 3 levels: plugin → plugins → wp-content → root)
+**Root Cause:** The bootstrap file calls WordPress functions before WordPress is loaded.
 
-**Directory Structure:**
+**Solution:** Ensure WordPress is loaded before calling WordPress functions in `tests/phpunit/bootstrap.php`:
+
+```php
+// CORRECT ORDER:
+require $_tests_dir . '/includes/bootstrap.php';  // Load WordPress first
+add_action( 'muplugins_loaded', '_manually_load_plugin' );  // Then call WordPress functions
+
+// WRONG ORDER:
+add_action( 'muplugins_loaded', '_manually_load_plugin' );  // Error: WordPress not loaded
+require $_tests_dir . '/includes/bootstrap.php';
 ```
-root/
-├── vendor/bin/phpcs          # Root-level Composer dependencies
-└── wp-content/
-    └── plugins/
-        └── wp-qr-trackr/     # Plugin directory (3 levels deep from root)
+
+### Database Connection Issues
+
+**Problem:** `Can't connect to server on 'localhost'` error in CI.
+
+**Root Cause:** CI environment uses Docker services, not localhost.
+
+**Solution:** Use the correct database host in `ci.sh`:
+
+```bash
+# CORRECT - Use Docker service name
+bash scripts/install-wp-tests.sh wpdb wpuser wppass db latest
+
+# WRONG - Use localhost
+bash scripts/install-wp-tests.sh wpdb wpuser wppass localhost latest
 ```
 
-**Fixed workflow step example:**
+### PHPUnit Not Found
+
+**Problem:** `./vendor/bin/phpunit: No such file or directory` error.
+
+**Root Cause:** Composer dependencies not installed or PHPUnit not in expected location.
+
+**Solutions:**
+1. **Check PHPUnit location:**
+   ```bash
+   find . -name "phpunit"
+   ls -la vendor/bin/
+   ```
+
+2. **Reinstall dependencies:**
+   ```bash
+   composer install --no-interaction
+   ```
+
+3. **Use robust detection in CI script:**
+   ```bash
+   if [ -f "./vendor/bin/phpunit" ]; then
+       ./vendor/bin/phpunit
+   elif [ -f "/usr/src/app/vendor/bin/phpunit" ]; then
+       /usr/src/app/vendor/bin/phpunit
+   else
+       composer install --no-interaction
+       ./vendor/bin/phpunit
+   fi
+   ```
+
+### WordPress Test Suite Not Installed
+
+**Problem:** `Failed opening required '/tmp/wordpress-tests-lib/includes/functions.php'`
+
+**Root Cause:** WordPress test suite not installed or files missing.
+
+**Solutions:**
+1. **Install WordPress test suite:**
+   ```bash
+   bash scripts/install-wp-tests.sh wpdb wpuser wppass db latest
+   ```
+
+2. **Verify installation:**
+   ```bash
+   ls -la /tmp/wordpress-tests-lib/includes/
+   cat /tmp/wordpress-tests-lib/wp-tests-config.php
+   ```
+
+3. **Check SVN availability:**
+   ```bash
+   which svn
+   svn --version
+   ```
+
+### MariaDB/MySQL Compatibility Issues
+
+**Problem:** MySQL image not compatible with ARM64 architecture.
+
+**Root Cause:** MySQL Docker image lacks ARM64 support.
+
+**Solution:** Use MariaDB in `docker-compose.ci.yml`:
+
 ```yaml
-- name: PHP_CodeSniffer (WordPress)
-  run: |
-    cd wp-content/plugins/wp-qr-trackr
-    ../../../vendor/bin/phpcs --standard=../../../.phpcs.xml --report=full --extensions=php .
+services:
+  db:
+    image: mariadb:10.5  # ARM64 compatible
+    environment:
+      MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+      MYSQL_ROOT_PASSWORD: root
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 ```
 
-**Note:** Also ensure you're using:
-- `--standard=../../../.phpcs.xml` (correct config file path with leading dot)
-- `--extensions=php` (to avoid memory issues with large JS files in node_modules)
+### Container Build Failures
+
+**Problem:** Docker build fails with missing files or dependencies.
+
+**Solutions:**
+1. **Check file paths in Dockerfile:**
+   ```bash
+   docker build -f docker/Dockerfile.ci . --no-cache
+   ```
+
+2. **Verify required files exist:**
+   ```bash
+   ls -la ci.sh composer.json package.json
+   ```
+
+3. **Check Docker context:**
+   ```bash
+   # Ensure .dockerignore doesn't exclude needed files
+   cat .dockerignore
+   ```
+
+### Local CI Testing
+
+**Before pushing to GitHub Actions, always test locally:**
+
+```bash
+# Test complete CI workflow
+docker compose -f docker/docker-compose.ci.yml run --rm ci-runner
+
+# Test individual components
+docker compose -f docker/docker-compose.ci.yml run --rm ci-runner bash -c "bash scripts/install-wp-tests.sh wpdb wpuser wppass db latest && ./vendor/bin/phpunit"
+
+# Debug CI environment
+docker compose -f docker/docker-compose.ci.yml run --rm --entrypoint bash ci-runner
+```
+
+### Common CI Debug Commands
+
+```bash
+# Check CI container contents
+docker compose -f docker/docker-compose.ci.yml run --rm ci-runner ls -la
+
+# Verify dependencies
+docker compose -f docker/docker-compose.ci.yml run --rm ci-runner bash -c "which composer && which yarn && which php"
+
+# Check WordPress test environment
+docker compose -f docker/docker-compose.ci.yml run --rm ci-runner bash -c "ls -la /tmp/wordpress*"
+
+# Test database connectivity
+docker compose -f docker/docker-compose.ci.yml run --rm ci-runner bash -c "mysqladmin ping --user=wpuser --password=wppass --host=db"
+
+# Check MariaDB service
+docker compose -f docker/docker-compose.ci.yml ps
+docker compose -f docker/docker-compose.ci.yml logs db
+```
+
+### CI Workflow Best Practices
+
+1. **Always test locally first** before pushing changes
+2. **Use descriptive commit messages** with `ci:` prefix
+3. **Monitor CI logs** for specific error messages
+4. **Keep dependencies updated** regularly
+5. **Document PHPCS ignore comments** with explanations
+
+### CI/CD Troubleshooting Checklist
+
+When CI fails:
+
+- [ ] **Test locally first:** `docker compose -f docker/docker-compose.ci.yml run --rm ci-runner`
+- [ ] **Check error message:** Look for specific file paths or commands
+- [ ] **Verify dependencies:** Ensure all required files are in repository
+- [ ] **Test database:** Verify MariaDB service is running and accessible
+- [ ] **Check WordPress test suite:** Ensure test files are properly installed
+- [ ] **Verify PHPUnit:** Check if PHPUnit is installed and accessible
+- [ ] **Review bootstrap file:** Ensure WordPress is loaded before calling functions
+- [ ] **Check Docker build:** Verify container builds successfully
+- [ ] **Monitor GitHub Actions:** Check workflow logs for detailed errors
+
+For more detailed CI/CD information, see [CI/CD Workflow Documentation](development/CI_CD_WORKFLOW.md).
 
 ## PHPCS Warnings Allowed in Pre-commit and CI/CD
 
@@ -523,4 +685,4 @@ This project supports running both dev (8080) and nonprod (8081) WordPress envir
 
 **Lessons Learned:**
 - Always exclude build artifacts from linting to avoid confusing or duplicate errors.
-- Use both config file patterns and command-line flags for maximum reliability. 
+- Use both config file patterns and command-line flags for maximum reliability.

@@ -105,4 +105,144 @@ wp-qr-trackr is a modular, robust WordPress plugin for QR code generation and tr
   - Robust QA and modularity, as both environments are fully isolated and can run simultaneously.
 - This workflow is now a best practice for all future plugin projects.
 
---- 
+## CI/CD Workflow Evolution: Major Achievement
+
+### Initial Challenges
+- **WordPress Test Suite Integration:** Initially struggled with WordPress test environment setup in containers
+- **Database Compatibility:** MySQL Docker image lacked ARM64 support, causing build failures on macOS
+- **PHPUnit Detection:** Inconsistent PHPUnit location and installation across environments
+- **Bootstrap File Issues:** WordPress functions called before WordPress was loaded
+
+### Key Fixes Implemented
+
+#### 1. WordPress Bootstrap Fix
+**Problem:** `Call to undefined function add_action()` error in PHPUnit tests.
+
+**Root Cause:** Bootstrap file called WordPress functions before WordPress was loaded.
+
+**Solution:** Reordered bootstrap file to load WordPress first:
+```php
+// CORRECT ORDER:
+require $_tests_dir . '/includes/bootstrap.php';  // Load WordPress first
+add_action( 'muplugins_loaded', '_manually_load_plugin' );  // Then call WordPress functions
+```
+
+**Learning:** Always ensure WordPress core is loaded before calling any WordPress functions in test environments.
+
+#### 2. Database Host Configuration
+**Problem:** WordPress test suite couldn't connect to database using `localhost`.
+
+**Root Cause:** CI environment uses Docker services, not localhost.
+
+**Solution:** Updated to use Docker service name:
+```bash
+# CORRECT:
+bash scripts/install-wp-tests.sh wpdb wpuser wppass db latest
+
+# WRONG:
+bash scripts/install-wp-tests.sh wpdb wpuser wppass localhost latest
+```
+
+**Learning:** Containerized environments require service-based networking, not localhost references.
+
+#### 3. MariaDB Integration
+**Problem:** MySQL image not compatible with ARM64 architecture.
+
+**Root Cause:** MySQL Docker image lacks ARM64 support.
+
+**Solution:** Switched to MariaDB for cross-platform compatibility:
+```yaml
+services:
+  db:
+    image: mariadb:10.5  # ARM64 compatible
+    environment:
+      MYSQL_DATABASE: wpdb
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass
+```
+
+**Learning:** Always test Docker images on target architectures, especially for CI/CD pipelines.
+
+#### 4. Robust PHPUnit Detection
+**Problem:** `./vendor/bin/phpunit: No such file or directory` error.
+
+**Root Cause:** Inconsistent PHPUnit installation and location.
+
+**Solution:** Implemented robust detection with fallbacks:
+```bash
+if [ -f "./vendor/bin/phpunit" ]; then
+    ./vendor/bin/phpunit
+elif [ -f "/usr/src/app/vendor/bin/phpunit" ]; then
+    /usr/src/app/vendor/bin/phpunit
+else
+    composer install --no-interaction
+    ./vendor/bin/phpunit
+fi
+```
+
+**Learning:** Always provide fallback mechanisms for dependency detection in CI environments.
+
+### CI/CD Best Practices Established
+
+#### 1. Local Testing First
+- **Rule:** Always test CI workflow locally before pushing
+- **Command:** `docker compose -f docker/docker-compose.ci.yml run --rm ci-runner`
+- **Benefit:** Catches issues before they reach GitHub Actions
+
+#### 2. Descriptive Commit Messages
+- **Rule:** Use `ci:` prefix for CI-related changes
+- **Example:** `ci: fix WordPress bootstrap file to load WordPress before calling add_action`
+- **Benefit:** Clear history of CI improvements and fixes
+
+#### 3. Comprehensive Documentation
+- **Rule:** Document all CI fixes and troubleshooting steps
+- **Files:** `docs/development/CI_CD_WORKFLOW.md`, troubleshooting guides
+- **Benefit:** Future contributors can quickly resolve similar issues
+
+#### 4. Container Isolation
+- **Rule:** All CI operations run in isolated containers
+- **Benefit:** Consistent environment across all contributors and platforms
+
+### Technical Achievements
+
+#### Containerized Testing Environment
+- **Self-contained:** No local PHP, Composer, or Node.js required
+- **Cross-platform:** Works on ARM64 and x86 architectures
+- **Reproducible:** Identical environment for all contributors
+
+#### WordPress Test Suite Integration
+- **Automated setup:** WordPress test environment installed automatically
+- **Database integration:** MariaDB service with health checks
+- **PHPUnit integration:** Full WordPress plugin testing capabilities
+
+#### Error Handling and Debugging
+- **Comprehensive logging:** Detailed output for troubleshooting
+- **Fallback mechanisms:** Multiple detection and installation strategies
+- **Local testing:** Full CI workflow can be tested locally
+
+### Future CI/CD Improvements
+
+#### Planned Enhancements
+1. **Re-enable Playwright Tests:** Add full WordPress environment for E2E testing
+2. **PHPCS Integration:** Re-enable code style checking in CI
+3. **Performance Optimization:** Cache dependencies and test artifacts
+4. **Multi-Platform Testing:** Test on different architectures
+5. **Security Scanning:** Add vulnerability scanning to CI pipeline
+
+#### Monitoring and Metrics
+- Track CI build times
+- Monitor test coverage
+- Alert on CI failures
+- Track dependency updates
+
+### Key Learnings for Future Projects
+
+1. **Always test locally first** - Never push CI changes without local validation
+2. **Use service-based networking** - Avoid localhost references in containers
+3. **Implement robust fallbacks** - Multiple detection and installation strategies
+4. **Document everything** - CI fixes and troubleshooting steps
+5. **Consider architecture compatibility** - Test on target platforms
+6. **Isolate environments** - Use containers for consistent testing
+7. **Monitor and iterate** - Continuously improve CI/CD pipeline
+
+This CI/CD implementation represents a major milestone in the project's evolution, providing a robust, containerized testing environment that ensures code quality and consistency across all contributors and platforms.

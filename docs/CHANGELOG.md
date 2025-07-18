@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.22] - 2025-07-18
+
+### Enhanced
+- **CI/CD WORKFLOW**: Comprehensive containerized CI/CD pipeline implementation
+- **TESTING**: Robust WordPress test suite integration with PHPUnit
+- **DATABASE**: MariaDB integration for ARM64 compatibility
+- **DOCUMENTATION**: Complete CI/CD workflow documentation and troubleshooting guides
+
+### Added
+- **NEW CI ENVIRONMENT**: Containerized testing environment with Docker Compose
+- **NEW TESTING**: WordPress test suite integration with automated setup
+- **NEW DATABASE**: MariaDB service for reliable database testing
+- **NEW DOCUMENTATION**: CI/CD Workflow Documentation (`docs/development/CI_CD_WORKFLOW.md`)
+- **NEW TROUBLESHOOTING**: Comprehensive CI/CD troubleshooting section
+
+### Fixed
+- **CRITICAL**: Fixed WordPress bootstrap file to load WordPress before calling `add_action()`
+- **CRITICAL**: Fixed database host configuration to use `db` service instead of `localhost`
+- **CRITICAL**: Added robust PHPUnit detection and fallback installation mechanisms
+- **CRITICAL**: Switched from MySQL to MariaDB for ARM64 architecture compatibility
+- **CRITICAL**: Fixed WordPress test suite installation in CI environment
+
+### Technical
+- Implemented containerized CI environment with self-contained testing
+- Added WordPress test suite installation to CI script
+- Enhanced error handling and debugging output throughout CI pipeline
+- Improved PHPUnit detection with multiple fallback locations
+- Added comprehensive local testing capabilities for CI workflow
+- Enhanced Docker Compose configuration for CI environment
+
+### Security
+- All CI operations run in isolated containers
+- Database credentials properly configured for test environment
+- WordPress test environment properly isolated from production
+
 ## [1.2.21] - 2025-07-03
 
 ### Enhanced
@@ -129,7 +164,7 @@ All notable changes to this project will be documented in this file.
 - Added automatic rule flushing during plugin upgrades
 - Improved debug logging for rewrite rule troubleshooting
 
-### Technical  
+### Technical
 - Added version-based rewrite rule flushing in activation module
 - Enhanced debug page with better rewrite rule diagnostics
 - Added automatic detection of plugin version changes requiring rule flush
