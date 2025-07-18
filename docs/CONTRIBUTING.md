@@ -109,13 +109,13 @@ _Add your name in parentheses if you start working on an item!_
 
 ## Coding Standards
 
-- All PHP code must comply with the project's `.phpcs.xml` ruleset.
+- All PHP code must comply with the project's `config/ci/.phpcs.xml` ruleset.
 - The `vendor/` directory is excluded from all linting and auto-fixing.
 - Never manually edit files in `vendor/`.
 - To auto-fix most issues, use:
 
 ```sh
-./vendor/bin/phpcbf --standard=.phpcs.xml --extensions=php .
+./vendor/bin/phpcbf --standard=config/ci/.phpcs.xml --extensions=php .
 ```
 
 - Pre-commit hooks and CI will enforce these rules automatically.
@@ -143,4 +143,4 @@ Open an issue or start a discussion! We're happy to help and open to new ideas.
 ## CI/CD Memory Limits & Composer/PHPCS Troubleshooting
 - CI/CD enforces a 2G memory limit for Composer and PHPCS to prevent out-of-memory errors.
 - Only supported PHPCS sniffs (wpcs, phpcsutils) are used; legacy sniffs have been removed.
-- For memory or VCS issues, see docs/TROUBLESHOOTING.md. 
+- For memory or VCS issues, see docs/TROUBLESHOOTING.md.

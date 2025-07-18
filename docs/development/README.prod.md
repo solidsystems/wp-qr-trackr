@@ -202,19 +202,19 @@ This ensures robust protection against CSRF and other attacks, fully complying w
 
 ### PHP_CodeSniffer (PHPCS) Setup
 
-- PHPCS is configured via `.phpcs.xml` at the project root.
+- PHPCS is configured via `config/ci/.phpcs.xml` in the config directory.
 - Only source files in `wp-content/plugins/wp-qr-trackr/qr-trackr.php` and `wp-content/plugins/wp-qr-trackr/includes/` are explicitly included for linting.
-- The `build/` directory and all its subdirectories are excluded using `<exclude-pattern>build/**</exclude-pattern>` in `.phpcs.xml`.
+- The `build/` directory and all its subdirectories are excluded using `<exclude-pattern>build/**</exclude-pattern>` in `config/ci/.phpcs.xml`.
 - The CI script (`ci.sh`) uses the `--ignore='vendor/*,build/**'` flag in all PHPCS invocations to ensure build artifacts are never linted, preventing duplicate or false-positive errors.
 - This setup avoids issues where PHPCS would lint both source and build output, causing confusing or duplicate errors, especially for files that are copied or transformed during the build process.
-- If you add new directories for build or generated files, update both `.phpcs.xml` and the `--ignore` flags in your scripts.
+- If you add new directories for build or generated files, update both `config/ci/.phpcs.xml` and the `--ignore` flags in your scripts.
 
 ### Lessons Learned
 
 - Always exclude build and generated directories from PHPCS to avoid false positives and duplicate errors.
-- Use both `.phpcs.xml` patterns and explicit `--ignore` flags in CI scripts for maximum reliability across environments.
+- Use both `config/ci/.phpcs.xml` patterns and explicit `--ignore` flags in CI scripts for maximum reliability across environments.
 - If you see errors referencing files or lines that don't exist in your source, check if build artifacts are being linted.
-- Restrict `<file>` entries in `.phpcs.xml` to only your actual source code.
+- Restrict `<file>` entries in `config/ci/.phpcs.xml` to only your actual source code.
 
 ---
 

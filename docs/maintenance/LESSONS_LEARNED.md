@@ -55,7 +55,7 @@ wp-qr-trackr is a modular, robust WordPress plugin for QR code generation and tr
 - **Mid-Project:**
   - Introduced robust debug logging and AJAX-based troubleshooting for admin pages.
   - Added Docker-based dev and nonprod environments for safe, reproducible testing.
-  - Automated build and release process with `.distignore` and `build-release.sh` for precise packaging.
+  - Automated build and release process with `config/build/.distignore` and `build-release.sh` for precise packaging.
   - Implemented automated release verification to prevent incomplete/broken releases.
 
 - **Recent Improvements:**

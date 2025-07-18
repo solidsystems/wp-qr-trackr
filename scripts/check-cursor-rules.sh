@@ -15,7 +15,8 @@ fi
 
 # Placeholder: Add more .cursorrules checks here as needed
 
-REQUIRED_FILES=(".cursorrules" ".editorconfig" "Makefile" "lefthook.yml" ".github/PULL_REQUEST_TEMPLATE.md")
+# Required files for Cursor project rules
+REQUIRED_FILES=(".cursorrules" "config/editor/.editorconfig" "Makefile" "config/ci/lefthook.yml" ".github/PULL_REQUEST_TEMPLATE.md")
 
 for file in "${REQUIRED_FILES[@]}"; do
   if [ ! -f "$file" ]; then
@@ -29,8 +30,9 @@ for file in "${REQUIRED_FILES[@]}"; do
     grep -q 'PHPCS & WordPress Coding Standards Guardrails' .cursorrules || {
       echo "[ERROR] .cursorrules missing guardrails section."; exit 1; }
   fi
-  if [ "$file" = ".editorconfig" ]; then
-    grep -q 'indent_style = tab' .editorconfig || {
+  # Check .editorconfig for PHP tab rule
+  if [ "$file" = "config/editor/.editorconfig" ]; then
+    grep -q 'indent_style = tab' config/editor/.editorconfig || {
       echo "[ERROR] .editorconfig missing PHP tab rule."; exit 1; }
   fi
   # Add more content checks as needed

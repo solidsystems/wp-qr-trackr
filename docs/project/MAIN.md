@@ -14,7 +14,7 @@ This plan tracks the automation of setup, testing, documentation, onboarding, an
   - **Status:** ⬜ Not started
 
 - [ ] **Automated Dependency Installation**
-  - **Description:** Script installs Yarn, Composer, PHP dependencies, and copies `.env.example` to `.env` if missing.
+  - **Description:** Script installs Yarn, Composer, PHP dependencies, and copies `config/.env.example` to `config/.env` if missing.
   - **Deliverable:** Update setup scripts.
   - **Assigned to:** _(unassigned)_
   - **Status:** ⬜ Not started

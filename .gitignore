@@ -82,10 +82,10 @@ wp-content/backup-db/
 wp-content/cache/
 wp-content/backups/
 
-# Environment files
-.env
-.env.*
-!.env.example
+# Environment files (alternative patterns)
+config/.env
+config/.env.*
+!config/.env.example
 
 # Logs
 *.log

@@ -72,8 +72,8 @@ All tools run inside the container, ensuring a consistent, reproducible environm
    ```
 4. **Set up your environment:**
    ```sh
-   cp .env.example .env
-   # Edit .env as needed
+   cp config/.env.example config/.env
+   # Edit config/.env as needed
    ```
 5. **Run tests:**
    ```sh
@@ -375,44 +375,31 @@ See [docs/TROUBLESHOOTING.dev.md](docs/TROUBLESHOOTING.dev.md) for help with com
 
 ---
 
-## Release Packaging: rsync + .distignore Exclude List
+## Release Packaging: rsync + config/build/.distignore Exclude List
 
-To guarantee that only the required files and production dependencies are included in the plugin release ZIP (and nothing else), the release process uses `rsync` with an exclude list from `.distignore`.
+The release process uses `rsync` with an exclude list from `config/build/.distignore`.
 
-### Why rsync + .distignore?
-- **Speed:** Only the needed files are copied, never copied and then deleted.
-- **Reliability:** No risk of accidentally shipping dev files, secrets, or large unnecessary files.
-- **Single source of truth:** `.distignore` is the only place you need to update to add/remove files from the release.
-- **Industry standard:** This is the approach used by many professional open source projects.
+### Why rsync + config/build/.distignore?
+
+- **Precise control:** Only include files that should be in the release.
+- **Single source of truth:** `config/build/.distignore` is the only place you need to update to add/remove files from the release.
+- **Consistent builds:** Every release includes exactly the same files.
+- **Easy maintenance:** Edit `config/build/.distignore` in the config directory. It works like `.gitignore` (one pattern per line).
 
 ### How to maintain the exclude list
-- Edit `.distignore` in the project root. It works like `.gitignore` (one pattern per line).
-- Example entries:
-  ```
-  .git/
-  node_modules/
-  tests/
-  .DS_Store
-  *.md
-  *.sh
-  docker-compose.yml
-  php.ini
-  scripts/
-  wp-content/plugins/wp-qr-trackr/.env
-  wp-content/plugins/wp-qr-trackr/.env.example
-  ```
-- To add or remove files from the release, just update `.distignore` and re-run the release script.
+
+- Edit `config/build/.distignore` in the config directory. This file controls what is excluded from the release ZIP.
+- If you add new files or directories that shouldn't be in the release:
+  - Add them to `config/build/.distignore` if they should not be shipped to users.
+- Common exclusions: `node_modules/`, `tests/`, `docs/`, `*.log`, `*.tmp`, `.env*`
+- To add or remove files from the release, just update `config/build/.distignore` and re-run the release script.
 
 ### How to build a release
-Run:
-```sh
-./scripts/build-release.sh [major|minor|patch|prerelease [type] N]
-```
-This will:
-- Bump the version and update the changelog
-- Copy only the required files (using rsync and .distignore)
-- Install production dependencies
-- Create a minimal, production-ready ZIP in the project root
+
+1. **Copy only the required files** (using rsync and config/build/.distignore)
+2. **Install production dependencies** (composer install --no-dev)
+3. **Create the ZIP file** with proper folder structure
+4. **Verify the build** contains only production files
 
 ---
 
@@ -577,19 +564,19 @@ This ensures robust protection against CSRF and other attacks, fully complying w
 
 ### PHP_CodeSniffer (PHPCS) Setup
 
-- PHPCS is configured via `.phpcs.xml` at the project root.
+- PHPCS is configured via `config/ci/.phpcs.xml` in the config directory.
 - Only source files in `wp-content/plugins/wp-qr-trackr/qr-trackr.php` and `wp-content/plugins/wp-qr-trackr/includes/` are explicitly included for linting.
-- The `build/` directory and all its subdirectories are excluded using `<exclude-pattern>build/**</exclude-pattern>` in `.phpcs.xml`.
+- The `build/` directory and all its subdirectories are excluded using `<exclude-pattern>build/**</exclude-pattern>` in `config/ci/.phpcs.xml`.
 - The CI script (`ci.sh`) uses the `--ignore='vendor/*,build/**'` flag in all PHPCS invocations to ensure build artifacts are never linted, preventing duplicate or false-positive errors.
 - This setup avoids issues where PHPCS would lint both source and build output, causing confusing or duplicate errors, especially for files that are copied or transformed during the build process.
-- If you add new directories for build or generated files, update both `.phpcs.xml` and the `--ignore` flags in your scripts.
+- If you add new directories for build or generated files, update both `config/ci/.phpcs.xml` and the `--ignore` flags in your scripts.
 
 ### Lessons Learned
 
 - Always exclude build and generated directories from PHPCS to avoid false positives and duplicate errors.
-- Use both `.phpcs.xml` patterns and explicit `--ignore` flags in CI scripts for maximum reliability across environments.
+- Use both `config/ci/.phpcs.xml` patterns and explicit `--ignore` flags in CI scripts for maximum reliability across environments.
 - If you see errors referencing files or lines that don't exist in your source, check if build artifacts are being linted.
-- Restrict `<file>` entries in `.phpcs.xml` to only your actual source code.
+- Restrict `<file>` entries in `config/ci/.phpcs.xml` to only your actual source code.
 
 ## Containerized Development & Linting
 
@@ -635,7 +622,7 @@ The `ci.sh` script will:
 
 - **PHP Tests**: Located in `tests/` directory, using PHPUnit
 - **Coding Standards**: PHPCS configuration in `.phpcs.xml`
-- **JavaScript/CSS Linting**: Configuration in `eslint.config.js` and `.stylelintrc.json`
+- **JavaScript/CSS Linting**: Configuration in `config/editor/eslint.config.js` and `config/ci/.stylelintrc.json`
 
 ### Troubleshooting
 
@@ -660,7 +647,7 @@ docker-compose -f docker-compose.yml -f docker-compose.ci.yml down
 
 To ensure consistency and minimal local dependencies, all end-to-end (E2E) tests are run using Docker Compose and a central configuration file.
 
-- **Config file:** `e2e.config.json` tracks the Docker Compose file, service, Playwright config, test directory, environment variables, and dependencies.
+- **Config file:** `config/testing/e2e.config.json` tracks the Docker Compose file, service, Playwright config, test directory, environment variables, and dependencies.
 - **Wrapper script:** `run-e2e.sh` reads the config and runs Playwright E2E tests in Docker using the correct settings.
 
 ### How to Run E2E Tests
@@ -671,7 +658,7 @@ To ensure consistency and minimal local dependencies, all end-to-end (E2E) tests
    bash run-e2e.sh
    ```
 3. The script will:
-   - Parse `e2e.config.json` for all required paths and settings.
+   - Parse `config/testing/e2e.config.json` for all required paths and settings.
    - Export any environment variables defined in the config.
    - Run Playwright E2E tests in the correct Docker container and environment (**ci-runner** only).
 
@@ -684,4 +671,4 @@ To ensure consistency and minimal local dependencies, all end-to-end (E2E) tests
 - All contributors and CI/CD use the same workflow.
 - Easy to update dependencies and paths in one place.
 
-For more details, see the comments in `e2e.config.json` and `run-e2e.sh`.
+For more details, see the comments in `config/testing/e2e.config.json` and `run-e2e.sh`.

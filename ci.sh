@@ -34,10 +34,10 @@ fi
 echo "Installing WordPress test suite..."
 bash scripts/install-wp-tests.sh wpdb wpuser wppass db latest
 
-# PHPCS temporarily disabled to unblock E2E testing
+# Run PHPCS (code style check)
 # echo "Running PHPCS..."
 # cd /usr/src/app
-# ./vendor/bin/phpcs --standard=.phpcs.xml .
+# ./vendor/bin/phpcs --standard=config/ci/.phpcs.xml .
 
 # Run PHPUnit tests from project root
 echo "Running PHPUnit tests..."

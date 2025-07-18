@@ -25,7 +25,7 @@ set -e
 # fi
 
 echo "[INFO] Parsing E2E config values..."
-CONFIG_FILE="e2e.config.json"
+CONFIG_FILE="config/testing/e2e.config.json"
 
 # Parse config values using jq
 COMPOSE_FILE=$(jq -r .docker_compose_file $CONFIG_FILE)

@@ -159,7 +159,7 @@ if ( false === $result ) {
 #### Memory Management
 - Set PHPCS memory limit to at least 1GB for large codebases
 - Use `--extensions=php` to avoid processing large JS files
-- Configure `.phpcs.xml` with proper exclusion patterns
+- Configure `config/ci/.phpcs.xml` with proper exclusion patterns
 
 #### Warning vs Error Handling
 - Configure CI/CD to allow warnings but block on errors
@@ -168,7 +168,7 @@ if ( false === $result ) {
 
 #### Project-Specific Configuration
 ```xml
-<!-- .phpcs.xml example -->
+<!-- config/ci/.phpcs.xml example -->
 <ruleset name="QR Trackr WordPress Coding Standards">
     <config name="installed_paths" value="vendor/wp-coding-standards/wpcs"/>
     <ini name="memory_limit" value="1024M"/>
@@ -186,7 +186,7 @@ if ( false === $result ) {
 - Ensure Homebrew and PECL are up to date.
 
 ## Database/Logging Issues
-- Double-check your `.env` file for correct DigitalOcean PostgreSQL and OpenSearch credentials.
+- Double-check your `config/.env` file for correct DigitalOcean PostgreSQL and OpenSearch credentials.
 - Confirm your database is accessible from your local or CI environment.
 - Review logs in OpenSearch for error details.
 
@@ -196,7 +196,7 @@ if ( false === $result ) {
 
 ## Environment & Dependency Issues
 - Use `yarn setup:ci` to reinstall all dependencies and Husky hooks.
-- Ensure `.env` and `.env.example` are up to date and match your environment.
+- Ensure `config/.env` and `config/.env.example` are up to date and match your environment.
 
 ## CI/CD Workflow Issues
 
@@ -403,13 +403,13 @@ Local pre-commit linting (via Husky/Docker) and GitHub Actions (GHA) CI/CD workf
 ### Why Results May Differ
 - **Environment:** Local hooks run in your dev environment (often via Docker), while GHA runs in a clean GitHub VM.
 - **Paths:** Local scripts may use relative paths that work on your machine but not in CI. GHA requires paths relative to the workflow's working directory.
-- **Config:** Both use `.phpcs.xml`, but if the path is wrong in CI, the wrong ruleset/files may be checked.
+- **Config:** Both use `config/ci/.phpcs.xml`, but if the path is wrong in CI, the wrong ruleset/files may be checked.
 - **Exclusions:** Test files, `node_modules`, and other non-source files are excluded from PHPCS in both local and CI runs, but misconfigured paths can cause these to be included/excluded incorrectly.
 
 ### What Was Done to Fix This Project
 - **PHPCS Path Fixes:** The GHA workflow was updated to use the correct path to the `phpcs` binary and config file, matching the local setup (e.g., `../../../vendor/bin/phpcs`).
 - **Warning Handling:** Both local and CI runs now use `--warning-severity=0` to allow warnings but block on errors only.
-- **Exclusions:** `.phpcs.xml` excludes test files, `node_modules`, and other non-source code from linting in both environments.
+- **Exclusions:** `config/ci/.phpcs.xml` excludes test files, `node_modules`, and other non-source code from linting in both environments.
 - **Documentation:** This section and the README were updated to help contributors understand and resolve discrepancies.
 
 ### Troubleshooting Steps
@@ -490,7 +490,7 @@ After running PHPCBF and PHPCS with the WordPress Coding Standards, the followin
 - **Parameter and return tags:** Added missing `@return` tags and improved parameter documentation for all methods.
 - **Nonce verification:** Confirmed that form data is sanitized and escaped, and noted where nonce verification should be considered for future improvements.
 - **Logic:** No logic changes were made; all changes are documentation and standards compliance only.
-- **[DONE] includes/class-qr-trackr-list-table.php:** All SQL queries now construct table names outside of `prepare()` and use placeholders for values only. User input in `$where`, `$join`, `$orderby`, and `$order` is sanitized. Comments clarify table name safety.
+- **[DONE] includes/class-qr-trackr-list-table.php:** All SQL queries now construct table names outside of `prepare()` and use placeholders only for values. User input in `$where`, `$join`, `$orderby`, and `$order` is sanitized. Comments clarify table name safety.
 
 #### 5. `includes/module-admin.php`
 - **Blank line after file comment:** Added a blank line after the file docblock for compliance.
@@ -678,10 +678,10 @@ This project supports running both dev (8080) and nonprod (8081) WordPress envir
 - The linter is scanning build or generated files (e.g., in `build/`), not just your source code.
 
 **Solution:**
-- Exclude build and generated directories in `.phpcs.xml` using `<exclude-pattern>build/**</exclude-pattern>`.
+- Exclude build and generated directories in `config/ci/.phpcs.xml` using `<exclude-pattern>build/**</exclude-pattern>`.
 - Add `--ignore='vendor/*,build/**'` to all PHPCS invocations in your CI scripts (e.g., `ci.sh`).
-- Restrict `<file>` entries in `.phpcs.xml` to only your actual source code.
-- If you add new build or generated directories, update both `.phpcs.xml` and your CI scripts accordingly.
+- Restrict `<file>` entries in `config/ci/.phpcs.xml` to only your actual source code.
+- If you add new build or generated directories, update both `config/ci/.phpcs.xml` and your CI scripts accordingly.
 
 **Lessons Learned:**
 - Always exclude build artifacts from linting to avoid confusing or duplicate errors.

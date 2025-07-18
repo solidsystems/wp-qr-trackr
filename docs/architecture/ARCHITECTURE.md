@@ -72,7 +72,7 @@ The project now supports parallel Docker Compose environments for development (d
 ### PHPCS and Static Table Assignments
 - Static table assignments (e.g., `$table = $wpdb->prefix . 'table_name';`) are flagged by PHPCS as unsafe, even when built from safe components.
 - Project uses local `// phpcs:disable`/`// phpcs:enable` suppression around these assignments in `module-admin.php`.
-- `.phpcs.xml` includes multiple `<exclude-pattern>` entries for maintainability, but some PHPCS versions may still flag these lines.
+- `config/ci/.phpcs.xml` includes multiple `<exclude-pattern>` entries for maintainability, but some PHPCS versions may still flag these lines.
 - Upgraded to latest PHP_CodeSniffer and WordPress Coding Standards to minimize false positives.
 - If PHPCS continues to flag these, commits may be made with `--no-verify` (with justification in commit message). 
 
