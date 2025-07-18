@@ -7,6 +7,11 @@ on:
         description: 'Version to release (e.g., 1.0.1)'
         required: true
         type: string
+      dry_run:
+        description: 'Dry run (no actual release)'
+        required: false
+        default: 'false'
+        type: string
 
 jobs:
   release:
@@ -32,8 +37,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ github.event.inputs.version }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: ./scripts/build-release.sh
 
 # Prereleases (with -rcN) are supported and will be marked as prereleases on GitHub.
 # To use email notifications, set the following secrets in your repo:
-# SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, RELEASE_EMAIL_TO, RELEASE_EMAIL_FROM 
+# SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, RELEASE_EMAIL_TO, RELEASE_EMAIL_FROM

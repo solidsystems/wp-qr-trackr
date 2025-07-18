@@ -21,7 +21,8 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Install Lefthook for container-based git hooks
-RUN curl -s https://raw.githubusercontent.com/evilmartians/lefthook/master/scripts/install.sh | bash
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/evilmartians/lefthook/setup.sh' | bash
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Set the working directory
 WORKDIR /usr/src/app

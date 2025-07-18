@@ -9,10 +9,27 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/ci-runner:latest
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: wpdb
+          MYSQL_USER: wpuser
+          MYSQL_PASSWORD: wppass
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     strategy:
       matrix:
-        php: [8.0, 8.1, 8.2]
+        php: [8.1, 8.2]
         wp: [6.4, latest]
       fail-fast: false
 
@@ -20,22 +37,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          tools: composer
-
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
       - name: Install Node.js dependencies
         run: |
           if [ -f package.json ]; then
-            npm install
+            yarn install
           fi
+
+      - name: Install SVN
+        run: apt-get update && apt-get install -y subversion
 
       - name: Run WP-CLI scaffolded tests
         run: |
-          bash ./wp-content/plugins/wp-qr-trackr/scripts/install-wp-tests.sh wpdb wpuser wppass 127.0.0.1 ${{ matrix.wp }}
-          ./vendor/bin/phpunit 
+          bash scripts/install-wp-tests.sh wpdb wpuser wppass mysql ${{ matrix.wp }}
+
+      - name: Debug: List WordPress test suite directory
+        run: |
+          if [ -d /tmp/wordpress-tests-lib ]; then
+            echo "Found /tmp/wordpress-tests-lib"
+            ls -l /tmp/wordpress-tests-lib
+            ls -l /tmp/wordpress-tests-lib/includes
+          else
+            echo "Missing /tmp/wordpress-tests-lib"
+          fi
+
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit

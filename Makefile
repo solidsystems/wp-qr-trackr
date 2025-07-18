@@ -20,3 +20,10 @@ clean:
 	docker compose -f docker/docker-compose.dev.yml down -v
 	docker compose -f docker/docker-compose.yml down -v
 	rm -rf node_modules vendor
+
+pr:
+	@if [ -z "$(BRANCH)" ] || [ -z "$(TITLE)" ] || [ -z "$(BODY)" ]; then \
+		echo "Usage: make pr BRANCH=<branch> TITLE='<title>' BODY=<body-file>"; \
+		exit 1; \
+	fi; \
+	bash scripts/create-pr.sh $(BRANCH) "$(TITLE)" $(BODY)

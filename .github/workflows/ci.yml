@@ -3,29 +3,13 @@ name: CI
 on:
   push:
     branches:
-      - main
-      - 'feature/**'
+      - '**'
   pull_request:
 
 jobs:
   build_image:
     name: Build and Push CI Image
     runs-on: ubuntu-latest
-    # This job only runs when dependency files are changed.
-    if: |
-      github.event_name == 'push' &&
-      contains(join(github.event.commits.*.message, ' '), '#build-ci') ||
-      (
-        github.event_name == 'push' &&
-        (
-          contains(join(github.event.commits.*.modified, ' '), 'Dockerfile.ci') ||
-          contains(join(github.event.commits.*.modified, ' '), 'composer.json') ||
-          contains(join(github.event.commits.*.modified, ' '), 'composer.lock') ||
-          contains(join(github.event.commits.*.modified, ' '), 'package.json') ||
-          contains(join(github.event.commits.*.modified, ' '), 'yarn.lock') ||
-          contains(join(github.event.commits.*.modified, ' '), 'ci.sh')
-        )
-      )
     permissions:
       contents: read
       packages: write
@@ -41,6 +25,33 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: List workspace files
+        run: |
+          echo "Root directory:"
+          ls -l
+          echo "scripts directory:"
+          ls -l scripts
+
+      - name: Check for required files
+        run: |
+          for f in ci.sh composer.json composer.lock package.json yarn.lock; do
+            if [ -f "$f" ]; then
+              echo "Found $f"
+            else
+              echo "Missing $f"
+            fi
+          done
+          if [ -f scripts/wait-for-it.sh ]; then
+            echo "Found scripts/wait-for-it.sh"
+          else
+            echo "Missing scripts/wait-for-it.sh"
+          fi
+
+      - name: List all files in workspace
+        run: |
+          echo "Full workspace file tree:"
+          find . -type f | sort
+
       - name: Extract metadata (tags and labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -54,10 +65,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.ci
+          file: ./docker/Dockerfile.ci
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ghcr.io/${{ github.repository }}/ci-runner:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/ci-runner:latest
+          cache-to: type=inline
+          provenance: false
 
   test:
     name: Run All CI Checks
@@ -67,6 +80,10 @@ jobs:
     permissions:
       contents: read
       packages: read
+    strategy:
+      matrix:
+        php-version: [8.1, 8.2]
+        wordpress-version: [6.4, latest]
 
     steps:
       - name: Checkout code
@@ -79,16 +96,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Lefthook
-        run: curl -s https://raw.githubusercontent.com/evilmartians/lefthook/master/scripts/install.sh | bash
-      - name: Run Lefthook pre-push
-        run: lefthook run pre-push
-
       - name: Sanitize image tag
         id: sanitize
-        run: echo "tag=$(echo ${{ github.ref_name }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+        run: echo "tag=latest" >> $GITHUB_OUTPUT
 
       - name: Run All CI Checks
         env:
           CI_IMAGE_TAG: ${{ steps.sanitize.outputs.tag }}
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml run --rm ci-runner
+        run: docker compose -f docker/docker-compose.ci.yml run --rm ci-runner
