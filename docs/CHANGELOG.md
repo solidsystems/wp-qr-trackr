@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.23] - 2025-07-18
+
+### Enhanced
+- **REPOSITORY STRUCTURE**: Comprehensive reorganization of configuration files for cleaner public consumption
+- **MAINTAINABILITY**: Improved project organization with logical file grouping
+- **DEVELOPER EXPERIENCE**: Enhanced discoverability and easier configuration management
+
+### Added
+- **NEW CONFIG ORGANIZATION**: Created organized `config/` directory structure
+- **NEW CI CONFIG**: `config/ci/` for all CI/CD configuration files
+- **NEW EDITOR CONFIG**: `config/editor/` for editor and IDE settings
+- **NEW BUILD CONFIG**: `config/build/` for build and release configuration
+- **NEW TESTING CONFIG**: `config/testing/` for all testing configuration files
+- **NEW DOCUMENTATION**: Comprehensive `config/README.md` explaining the organization
+
+### Fixed
+- **CLEANER ROOT DIRECTORY**: Moved all configuration files from root to organized subdirectories
+- **UPDATED REFERENCES**: All scripts, documentation, and CI/CD workflows updated to use new file paths
+- **IMPROVED NAVIGATION**: Contributors can now easily find relevant configuration files
+
+### Technical
+- Moved `.phpcs.xml`, `lefthook.yml`, and related CI files to `config/ci/`
+- Moved `.editorconfig`, `.vscode/`, `eslint.config.js` to `config/editor/`
+- Moved `.distignore` to `config/build/`
+- Moved `e2e.config.json`, `phpunit.xml.dist` to `config/testing/`
+- Moved `.env` and `.env.example` to `config/`
+- Updated all file references throughout the codebase
+- Removed empty `mysql.cnf/` directory
+
+### Security
+- Environment files properly organized and referenced
+- Configuration files logically separated by purpose
+- No functional changes to security or functionality
+
 ## [1.2.22] - 2025-07-18
 
 ### Enhanced
