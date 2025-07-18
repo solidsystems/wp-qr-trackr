@@ -30,6 +30,10 @@ if [ ! -d "node_modules" ]; then
     yarn install --frozen-lockfile
 fi
 
+# Install WordPress test suite
+echo "Installing WordPress test suite..."
+bash scripts/install-wp-tests.sh wpdb wpuser wppass localhost latest
+
 # PHPCS temporarily disabled to unblock E2E testing
 # echo "Running PHPCS..."
 # cd /usr/src/app
