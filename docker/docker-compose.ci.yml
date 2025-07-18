@@ -10,5 +10,5 @@ services:
       # WORDPRESS_DB_PASSWORD: wppass
       CI: 1
     volumes:
-      - .:/usr/src/app
+      - ..:/usr/src/app
       - ~/.config/gh:/root/.config/gh
