@@ -43,10 +43,10 @@ function qr_trackr_add_rewrite_rules() {
  * @return void
  */
 function qr_trackr_init_rewrite_rules() {
-	// Always register our rewrite rules
+	// Always register our rewrite rules.
 	qr_trackr_add_rewrite_rules();
 
-	// Check if we have a pending flush from version update
+	// Check if we have a pending flush from version update.
 	if ( get_option( 'qr_trackr_needs_flush' ) ) {
 		flush_rewrite_rules();
 		delete_option( 'qr_trackr_needs_flush' );
@@ -172,7 +172,7 @@ function qr_trackr_template_redirect() {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for performance.
 		$result = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT destination_url, id FROM {$table_name} WHERE qr_code = %s",
+				"SELECT destination_url, id FROM {$wpdb->prefix}qr_trackr_links WHERE qr_code = %s",
 				$tracking_code
 			)
 		);
@@ -235,7 +235,7 @@ function qr_trackr_update_scan_count_immediate( $link_id ) {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Write operation, caching not applicable.
 	$result = $wpdb->query(
 		$wpdb->prepare(
-			"UPDATE {$table_name} SET access_count = access_count + 1, scans = scans + 1, last_accessed = %s, updated_at = %s WHERE id = %d",
+			"UPDATE {$wpdb->prefix}qr_trackr_links SET access_count = access_count + 1, scans = scans + 1, last_accessed = %s, updated_at = %s WHERE id = %d",
 			current_time( 'mysql', true ),
 			current_time( 'mysql', true ),
 			$link_id

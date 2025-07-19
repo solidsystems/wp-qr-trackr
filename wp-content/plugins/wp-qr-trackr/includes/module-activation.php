@@ -17,14 +17,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function qrc_init() {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log('QR Trackr: Initializing plugin hooks...');
+		qr_trackr_debug_log( 'QR Trackr: Initializing plugin hooks...' );
 	}
 
 	// Add a settings link to the plugins page.
 	add_filter( 'plugin_action_links_' . plugin_basename( QRC_PLUGIN_FILE ), 'qrc_add_settings_link' );
 
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log('QR Trackr: Added settings link filter');
+		qr_trackr_debug_log( 'QR Trackr: Added settings link filter' );
 	}
 
 	// Create QR code post type.
@@ -121,16 +121,16 @@ function qr_trackr_maybe_upgrade_database() {
 
 	// Check if new fields exist.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Schema check during upgrade.
-	$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
+	$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$wpdb->prefix}qr_trackr_links" );
 
 	$has_common_name   = false;
 	$has_referral_code = false;
 
 	foreach ( $columns as $column ) {
-		if ( 'common_name' === $column->Field ) {
+		if ( 'common_name' === $column->field ) {
 			$has_common_name = true;
 		}
-		if ( 'referral_code' === $column->Field ) {
+		if ( 'referral_code' === $column->field ) {
 			$has_referral_code = true;
 		}
 	}
@@ -138,9 +138,9 @@ function qr_trackr_maybe_upgrade_database() {
 	// Add missing columns.
 	if ( ! $has_common_name ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade during activation.
-		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN common_name varchar(255) DEFAULT NULL AFTER qr_code_url" );
+		$wpdb->query( "ALTER TABLE {$wpdb->prefix}qr_trackr_links ADD COLUMN common_name varchar(255) DEFAULT NULL AFTER qr_code_url" );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Index creation during activation.
-		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY common_name (common_name)" );
+		$wpdb->query( "ALTER TABLE {$wpdb->prefix}qr_trackr_links ADD KEY common_name (common_name)" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log( 'QR Trackr: Added common_name column to database' );
@@ -149,9 +149,9 @@ function qr_trackr_maybe_upgrade_database() {
 
 	if ( ! $has_referral_code ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade during activation.
-		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN referral_code varchar(100) DEFAULT NULL AFTER common_name" );
+		$wpdb->query( "ALTER TABLE {$wpdb->prefix}qr_trackr_links ADD COLUMN referral_code varchar(100) DEFAULT NULL AFTER common_name" );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Index creation during activation.
-		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY referral_code (referral_code)" );
+		$wpdb->query( "ALTER TABLE {$wpdb->prefix}qr_trackr_links ADD KEY referral_code (referral_code)" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log( 'QR Trackr: Added referral_code column to database' );
@@ -172,7 +172,7 @@ function qrc_deactivate() {
 	// Only drop the table if the user has chosen to remove data upon deactivation.
 	if ( get_option( 'qrc_remove_data_on_deactivation' ) ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema cleanup during deactivation, caching not applicable for table deletion.
-		$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}qr_trackr_links" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log( 'QR Trackr deactivation: Dropped table ' . $table_name );
@@ -312,4 +312,4 @@ function qr_trackr_permalink_structure_changed() {
 }
 add_action( 'permalink_structure_changed', 'qr_trackr_permalink_structure_changed' );
 
-// Note: Activation hooks are now handled in the main plugin file to avoid conflicts
+// Note: Activation hooks are now handled in the main plugin file to avoid conflicts.

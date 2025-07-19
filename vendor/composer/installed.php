@@ -3,7 +3,7 @@
         'name' => 'wp-qr-trackr/wp-qr-trackr',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '2c84b3f5d02ce95a84977e26e7d4c5cdf60f3808',
+        'reference' => 'b43905967da9564de567fddeba4893c7d769549f',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -310,7 +310,7 @@
         'wp-qr-trackr/wp-qr-trackr' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '2c84b3f5d02ce95a84977e26e7d4c5cdf60f3808',
+            'reference' => 'b43905967da9564de567fddeba4893c7d769549f',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

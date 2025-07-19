@@ -22,7 +22,7 @@ if ( ! is_admin() ) {
  */
 function qrc_admin_menu() {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log('QR Trackr: qrc_admin_menu() called. Hook: ' . current_filter() . ', User: ' . get_current_user_id());
+		qr_trackr_debug_log( 'QR Trackr: qrc_admin_menu() called. Hook: ' . current_filter() . ', User: ' . get_current_user_id() );
 	}
 
 	// Add main menu item.
@@ -35,7 +35,7 @@ function qrc_admin_menu() {
 		'dashicons-admin-links'
 	);
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log('QR Trackr: Menu page added with hook: ' . ($hook ? $hook : 'failed'));
+		qr_trackr_debug_log( 'QR Trackr: Menu page added with hook: ' . ( $hook ? $hook : 'failed' ) );
 	}
 
 	// Add submenu items.
@@ -48,7 +48,7 @@ function qrc_admin_menu() {
 		'qrc_settings_page'
 	);
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log('QR Trackr: Settings page added with hook: ' . ($settings ? $settings : 'failed'));
+		qr_trackr_debug_log( 'QR Trackr: Settings page added with hook: ' . ( $settings ? $settings : 'failed' ) );
 	}
 }
 
@@ -60,7 +60,7 @@ function qrc_admin_menu() {
  */
 function qrc_register_settings() {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log('QR Trackr: qrc_register_settings() called');
+		qr_trackr_debug_log( 'QR Trackr: qrc_register_settings() called' );
 	}
 
 	// Register a new settings section.
@@ -134,15 +134,15 @@ function qrc_tracking_enabled_field_callback() {
  */
 function qrc_admin_page() {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log('QR Trackr: qrc_admin_page() called');
+		qr_trackr_debug_log( 'QR Trackr: qrc_admin_page() called' );
 	}
 
 	// Load list table class if not already loaded.
 	if ( ! class_exists( 'QRC_Links_List_Table' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-			qr_trackr_debug_log('QR Trackr: Loading list table class.');
+			qr_trackr_debug_log( 'QR Trackr: Loading list table class.' );
 		}
-		require_once dirname( __FILE__ ) . '/class-qrc-links-list-table.php';
+		require_once __DIR__ . '/class-qrc-links-list-table.php';
 	}
 
 	// Create an instance of our list table class.
@@ -150,7 +150,7 @@ function qrc_admin_page() {
 	$list_table->prepare_items();
 
 	// Include the admin page template.
-	include dirname( dirname( __FILE__ ) ) . '/templates/admin-page.php';
+	include dirname( __DIR__ ) . '/templates/admin-page.php';
 }
 
 /**
@@ -161,21 +161,21 @@ function qrc_admin_page() {
  */
 function qrc_settings_page() {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log('QR Trackr: qrc_settings_page() called');
+		qr_trackr_debug_log( 'QR Trackr: qrc_settings_page() called' );
 	}
 
 	// Include the settings page template.
-	include dirname( dirname( __FILE__ ) ) . '/templates/settings-page.php';
+	include dirname( __DIR__ ) . '/templates/settings-page.php';
 }
 
 // Register admin menu items.
 add_action( 'admin_menu', 'qrc_admin_menu' );
 if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-	qr_trackr_debug_log('QR Trackr: Added admin_menu action');
+	qr_trackr_debug_log( 'QR Trackr: Added admin_menu action' );
 }
 
 // Register settings.
 add_action( 'admin_init', 'qrc_register_settings' );
 if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-	qr_trackr_debug_log('QR Trackr: Added admin_init action');
+	qr_trackr_debug_log( 'QR Trackr: Added admin_init action' );
 }

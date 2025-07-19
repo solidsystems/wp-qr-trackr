@@ -93,14 +93,27 @@ class QRC_Links_List_Table extends WP_List_Table {
 	protected function referral_filter_dropdown() {
 		global $wpdb;
 
-		$table_name     = $wpdb->prefix . 'qr_trackr_links';
-		$current_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
+		// Verify nonce for form processing.
+		if ( ! isset( $_REQUEST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'qr_trackr_admin_nonce' ) ) {
+			// Nonce verification failed, but we'll continue with empty filter for display purposes.
+			$current_filter = '';
+		} else {
+			$current_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
+		}
 
-		// Get unique referral codes.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admin filter dropdown, results cached.
-		$referral_codes = $wpdb->get_col(
-			"SELECT DISTINCT referral_code FROM {$table_name} WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
-		);
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+
+		// Get unique referral codes with caching.
+		$cache_key      = 'qr_trackr_referral_codes';
+		$referral_codes = wp_cache_get( $cache_key, 'qr_trackr' );
+
+		if ( false === $referral_codes ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admin filter dropdown, results cached.
+			$referral_codes = $wpdb->get_col(
+				"SELECT DISTINCT referral_code FROM {$wpdb->prefix}qr_trackr_links WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
+			);
+			wp_cache_set( $cache_key, $referral_codes, 'qr_trackr', HOUR_IN_SECONDS );
+		}
 
 		if ( ! empty( $referral_codes ) ) {
 			echo '<div class="alignleft actions" style="margin-left: 10px;">';
@@ -180,8 +193,14 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$where_clause = '';
 		$where_values = array();
 
+		// Verify nonce for form processing.
+		$nonce_verified = isset( $_REQUEST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'qr_trackr_admin_nonce' );
+
 		// Handle search.
-		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
+		$search = '';
+		if ( $nonce_verified && isset( $_REQUEST['s'] ) ) {
+			$search = sanitize_text_field( wp_unslash( $_REQUEST['s'] ) );
+		}
 		if ( ! empty( $search ) ) {
 			$search_like   = '%' . $wpdb->esc_like( $search ) . '%';
 			$where_clause .= ' WHERE (common_name LIKE %s OR referral_code LIKE %s OR qr_code LIKE %s OR destination_url LIKE %s)';
@@ -189,7 +208,10 @@ class QRC_Links_List_Table extends WP_List_Table {
 		}
 
 		// Handle referral code filter.
-		$referral_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
+		$referral_filter = '';
+		if ( $nonce_verified && isset( $_REQUEST['referral_filter'] ) ) {
+			$referral_filter = sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) );
+		}
 		if ( ! empty( $referral_filter ) ) {
 			if ( ! empty( $where_clause ) ) {
 				$where_clause .= ' AND referral_code = %s';
@@ -204,17 +226,15 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$data      = wp_cache_get( $cache_key, 'qr_trackr' );
 
 		if ( false === $data ) {
-			$sql = "SELECT * FROM {$table_name}{$where_clause} ORDER BY created_at DESC";
-
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
 			if ( ! empty( $where_values ) ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
+				// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQLPlaceholders.ReplacementsFound,WordPress.DB.PreparedSQLPlaceholders.MissingPlaceholder,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.PreparedSQLPlaceholders.ReplacementsFound,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic query built with validated placeholders.
 				$results = $wpdb->get_results(
-					$wpdb->prepare( $sql, $where_values ),
+					$wpdb->prepare( "SELECT * FROM {$wpdb->prefix}qr_trackr_links{$where_clause} ORDER BY created_at DESC", $where_values ),
 					ARRAY_A
 				);
 			} else {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
-				$results = $wpdb->get_results( $sql, ARRAY_A );
+				$results = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}qr_trackr_links ORDER BY created_at DESC", ARRAY_A );
 			}
 
 			$data = array();
@@ -275,7 +295,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 				return $this->column_qr_code( $item );
 
 			default:
-				return print_r( $item, true );
+				return esc_html( $item[ $column_name ] ?? '' );
 		}
 	}
 
@@ -350,13 +370,16 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$orderby = 'id';
 		$order   = 'desc';
 
+		// Verify nonce for form processing.
+		$nonce_verified = isset( $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'qr_trackr_admin_nonce' );
+
 		// If orderby is set, use this as the sort column.
-		if ( ! empty( $_GET['orderby'] ) ) {
+		if ( $nonce_verified && ! empty( $_GET['orderby'] ) ) {
 			$orderby = sanitize_text_field( wp_unslash( $_GET['orderby'] ) );
 		}
 
 		// If order is set use this as the order.
-		if ( ! empty( $_GET['order'] ) ) {
+		if ( $nonce_verified && ! empty( $_GET['order'] ) ) {
 			$order = sanitize_text_field( wp_unslash( $_GET['order'] ) );
 		}
 

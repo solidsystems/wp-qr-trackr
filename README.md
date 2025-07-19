@@ -1,6 +1,45 @@
 # WP QR Trackr
 
-A professional WordPress plugin for QR code generation and tracking.
+A WordPress plugin for QR code generation and tracking that demonstrates what can be achieved through strict coding standards and automated quality guardrails.
+
+## Project Philosophy
+
+This project is a thought exercise in **standards compliance and best practices**. It aims to show what's possible when someone with an idea and understanding of how something might work—but who doesn't necessarily know how to code—can create a robust, production-ready WordPress plugin.
+
+The key insight is that **strict guardrails and automated quality enforcement can compensate for lack of coding expertise**. By implementing comprehensive code quality systems, documentation standards, and automated testing, this project demonstrates that:
+
+- **Quality can be enforced through tooling** rather than relying solely on developer expertise
+- **Consistent standards** can be maintained regardless of who contributes code
+- **Best practices** can be automated and enforced at every step
+- **Production-ready code** can emerge from a systematic approach to quality
+
+## Standards & Best Practices
+
+This project enforces the following standards and practices:
+
+### Code Quality Standards
+- **WordPress Coding Standards**: Full compliance with PHPCS WordPress-Extra and WordPress-Docs standards
+- **Security Best Practices**: Nonce verification, input sanitization, output escaping, SQL injection prevention
+- **Performance Standards**: Database query optimization, caching implementation, memory management
+- **Documentation Requirements**: Complete docblocks, inline comments, README maintenance
+
+### Development Workflow Standards
+- **Containerized Development**: All development happens in Docker containers for consistency
+- **Automated Testing**: PHPUnit tests, E2E tests with Playwright, code coverage requirements
+- **Pre-commit Validation**: Automated checks before code is committed or pushed
+- **Code Review Standards**: Structured PR templates, automated validation requirements
+
+### Quality Enforcement Mechanisms
+- **Automated Linting**: PHPCS and PHPCBF run automatically on all code changes
+- **Style Enforcement**: EditorConfig, automated formatting, consistent indentation
+- **Security Scanning**: Automated detection of common security vulnerabilities
+- **Performance Monitoring**: Automated performance regression detection
+
+### Documentation Standards
+- **Living Documentation**: All changes require documentation updates
+- **API Documentation**: Complete documentation for all public functions and hooks
+- **User Guides**: Comprehensive guides for both developers and end users
+- **Architecture Documentation**: Clear explanation of system design and decisions
 
 ## Quick Start
 
@@ -44,7 +83,7 @@ A professional WordPress plugin for QR code generation and tracking.
 - Generate QR codes for any post, page, or custom URL
 - Track QR code scans with detailed analytics
 - Mobile-first admin interface
-- Secure and efficient codebase
+- Standards-compliant and secure codebase
 - Extensive developer API
 
 ## License

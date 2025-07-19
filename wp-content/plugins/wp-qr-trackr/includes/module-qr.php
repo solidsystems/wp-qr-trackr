@@ -236,12 +236,12 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 		if ( is_wp_error( $response ) ) {
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 				qr_trackr_debug_log(
-				sprintf(
-					'QR Code API Error: %s (URL: %s).',
-					$response->get_error_message(),
-					$api_url
-				)
-			);
+					sprintf(
+						'QR Code API Error: %s (URL: %s).',
+						$response->get_error_message(),
+						$api_url
+					)
+				);
 			}
 
 			// Try fallback API if primary fails.
@@ -261,12 +261,12 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 		if ( 200 !== $response_code ) {
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 				qr_trackr_debug_log(
-				sprintf(
-					'QR Code API Error: HTTP %d (URL: %s).',
-					$response_code,
-					$api_url
-				)
-			);
+					sprintf(
+						'QR Code API Error: HTTP %d (URL: %s).',
+						$response_code,
+						$api_url
+					)
+				);
 			}
 
 			// Try fallback API if primary fails.

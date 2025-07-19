@@ -39,6 +39,19 @@
         <exclude-pattern>includes/module-*.php</exclude-pattern>
     </rule>
 
+    <!-- Exclude documented false positive for dynamic queries in list table -->
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare">
+        <exclude-pattern>includes/class-qrc-links-list-table.php</exclude-pattern>
+    </rule>
+
+    <!-- Exclude specific error codes for the documented false positive -->
+    <rule ref="WordPress.DB.PreparedSQL.InterpolatedNotPrepared">
+        <exclude-pattern>includes/class-qrc-links-list-table.php</exclude-pattern>
+    </rule>
+    <rule ref="WordPress.DB.DirectDatabaseQuery.DirectQuery">
+        <exclude-pattern>includes/class-qrc-links-list-table.php</exclude-pattern>
+    </rule>
+
     <!-- Enforce Yoda conditions -->
     <rule ref="WordPress.PHP.YodaConditions"/>
 

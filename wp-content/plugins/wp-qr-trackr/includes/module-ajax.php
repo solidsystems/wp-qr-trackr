@@ -104,12 +104,12 @@ function qrc_generate_qr_code_ajax() {
 		// Log the error for debugging.
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log(
-			sprintf(
-				'QR Code generation failed for post %d: %s',
-				$post_id,
-				$qr_code_url->get_error_message()
-			)
-		);
+				sprintf(
+					'QR Code generation failed for post %d: %s',
+					$post_id,
+					$qr_code_url->get_error_message()
+				)
+			);
 		}
 
 		wp_send_json_error(
@@ -123,13 +123,20 @@ function qrc_generate_qr_code_ajax() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented below, direct query needed for atomic operation.
-	$existing_link = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
-			$post_id
-		)
-	);
+	// Check cache first.
+	$cache_key = 'qr_trackr_link_' . $post_id;
+	$existing_link = wp_cache_get( $cache_key, 'qr_trackr' );
+
+	if ( false === $existing_link ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for atomic operation.
+		$existing_link = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE post_id = %d",
+				$post_id
+			)
+		);
+		wp_cache_set( $cache_key, $existing_link, 'qr_trackr', HOUR_IN_SECONDS );
+	}
 
 	if ( null !== $existing_link ) {
 		// Update existing record.
@@ -162,12 +169,12 @@ function qrc_generate_qr_code_ajax() {
 	if ( false === $result ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log(
-			sprintf(
-				'Database operation failed for post %d: %s',
-				$post_id,
-				$wpdb->last_error
-			)
-		);
+				sprintf(
+					'Database operation failed for post %d: %s',
+					$post_id,
+					$wpdb->last_error
+				)
+			);
 		}
 
 		wp_send_json_error(
@@ -180,6 +187,7 @@ function qrc_generate_qr_code_ajax() {
 
 	// Clear the cache.
 	wp_cache_delete( 'qr_code_image_' . $post_id );
+	wp_cache_delete( 'qr_trackr_link_' . $post_id );
 
 	wp_send_json_success(
 		array(
@@ -223,12 +231,12 @@ function qrc_track_link_click_ajax() {
 	if ( false === $result ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log(
-			sprintf(
-				'Failed to track QR code click for link ID %d: %s',
-				$link_id,
-				$wpdb->last_error
-			)
-		);
+				sprintf(
+					'Failed to track QR code click for link ID %d: %s',
+					$link_id,
+					$wpdb->last_error
+				)
+			);
 		}
 		wp_die( esc_html__( 'Failed to process link.', 'wp-qr-trackr' ), 500 );
 	}
@@ -349,7 +357,7 @@ function qr_trackr_ajax_get_qr_details() {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
 		$qr_code = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$table_name} WHERE id = %d",
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
 				$qr_id
 			),
 			ARRAY_A
@@ -458,7 +466,7 @@ function qr_trackr_ajax_update_qr_details() {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Validation check before update.
 	$existing_qr = $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT id FROM {$table_name} WHERE id = %d",
+			"SELECT id FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
 			$qr_id
 		)
 	);
@@ -479,7 +487,7 @@ function qr_trackr_ajax_update_qr_details() {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Uniqueness check for validation.
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT id FROM {$table_name} WHERE referral_code = %s AND id != %d",
+				"SELECT id FROM {$wpdb->prefix}qr_trackr_links WHERE referral_code = %s AND id != %d",
 				$referral_code,
 				$qr_id
 			)
@@ -573,10 +581,10 @@ function qr_trackr_ajax_debug() {
 	if ( $table_exists ) {
 		// Check table structure.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
-		$columns      = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
+		$columns      = $wpdb->get_results( "SHOW COLUMNS FROM {$wpdb->prefix}qr_trackr_links" );
 		$column_names = array();
 		foreach ( $columns as $column ) {
-			$column_names[] = $column->Field;
+			$column_names[] = $column->field;
 		}
 		$debug_info['table_columns']     = $column_names;
 		$debug_info['has_common_name']   = in_array( 'common_name', $column_names, true ) ? 'Yes' : 'No';
