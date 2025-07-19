@@ -17,7 +17,8 @@ services:
       WORDPRESS_ADMIN_EMAIL: nonprod@example.com
       WORDPRESS_SKIP_INSTALL: "no"
     depends_on:
-      - db-nonprod
+      db-nonprod:
+        condition: service_healthy
     volumes:
       - wordpress_data_nonprod:/var/www/html
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
@@ -26,8 +27,10 @@ services:
   wpcli-nonprod:
     image: wordpress:cli
     depends_on:
-      - wordpress-nonprod
-      - db-nonprod
+      wordpress-nonprod:
+        condition: service_started
+      db-nonprod:
+        condition: service_healthy
     environment:
       WORDPRESS_DB_HOST: db-nonprod:3306
       WORDPRESS_DB_USER: wpuser
@@ -42,12 +45,17 @@ services:
     entrypoint: ["tail", "-f", "/dev/null"]
 
   db-nonprod:
-    image: mysql:8
+    image: mariadb:10.5
     environment:
       MYSQL_DATABASE: wpdb
       MYSQL_USER: wpuser
       MYSQL_PASSWORD: wppass
       MYSQL_ROOT_PASSWORD: rootpass
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     volumes:
       - db_data_nonprod:/var/lib/mysql
 
