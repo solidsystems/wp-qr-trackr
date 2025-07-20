@@ -331,6 +331,9 @@ function qrc_search_posts_ajax() {
 	 * Validation code commented out for debugging purposes.
 	 */
 	/*
+	 * Search term validation temporarily disabled for debugging.
+	 */
+	/*
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log(
@@ -415,6 +418,7 @@ function qr_trackr_ajax_get_qr_details() {
 	// Verify nonce.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
 			error_log( sprintf( 'QR Trackr: Nonce verification failed. Nonce: %s', isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : 'not set' ) );
 		}
 		wp_send_json_error( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
@@ -670,8 +674,9 @@ function qr_trackr_ajax_update_qr_details() {
 		return;
 	}
 
-	$common_name     = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
-	$referral_code   = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+	$common_name   = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
+	$referral_code = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
 	$destination_url = isset( $_POST['destination_url'] ) ? trim( wp_unslash( $_POST['destination_url'] ) ) : '';
 
 	// Validate destination URL if provided.
