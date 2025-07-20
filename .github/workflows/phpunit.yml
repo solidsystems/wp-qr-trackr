@@ -58,5 +58,8 @@ jobs:
             echo "Missing /tmp/wordpress-tests-lib"
           fi
 
+      - name: Run PHPCS
+        run: ./vendor/bin/phpcs --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
+
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit
