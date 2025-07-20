@@ -268,8 +268,8 @@ function qrc_search_posts_ajax() {
 		qr_trackr_debug_log(
 			sprintf(
 				'QR Trackr: AJAX search request - nonce: %s, term: %s',
-				isset( $_POST['nonce'] ) ? $_POST['nonce'] : 'not set',
-				isset( $_POST['term'] ) ? $_POST['term'] : 'not set'
+				isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : 'not set',
+				isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set'
 			)
 		);
 	}
@@ -310,7 +310,7 @@ function qrc_search_posts_ajax() {
 		qr_trackr_debug_log(
 			sprintf(
 				'QR Trackr: Search term validation - raw: "%s", sanitized: "%s", length: %d, empty: %s, POST data: %s',
-				isset( $_POST['term'] ) ? $_POST['term'] : 'not set',
+				isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set',
 				$search_term,
 				strlen( $search_term ),
 				empty( $search_term ) ? 'true' : 'false',
@@ -406,7 +406,7 @@ function qr_trackr_ajax_get_qr_details() {
 	// Verify nonce.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( 'QR Trackr: Nonce verification failed. Nonce: %s', isset( $_POST['nonce'] ) ? $_POST['nonce'] : 'not set' ) );
+			error_log( sprintf( 'QR Trackr: Nonce verification failed. Nonce: %s', isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : 'not set' ) );
 		}
 		wp_send_json_error( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
 		return;
@@ -771,7 +771,7 @@ function qr_trackr_ajax_update_qr_details() {
 	wp_cache_delete( 'qrc_link_' . $qr_id, 'qrc_links' );
 	delete_transient( 'qrc_all_links' );
 
-	// Regenerate QR code if destination URL changed
+	// Regenerate QR code if destination URL changed.
 	$qr_code_regenerated = false;
 	if ( ! empty( $destination_url ) && $destination_url !== $existing_qr->destination_url && function_exists( 'qrc_generate_qr_code' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -817,7 +817,7 @@ function qr_trackr_ajax_update_qr_details() {
 		qr_trackr_debug_log( sprintf( 'Successfully updated QR code details for ID: %d. Rows affected: %d. Post unlinked: %s', $qr_id, $result, $post_unlinked ? 'Yes' : 'No' ) );
 	}
 
-	// Create appropriate message
+	// Create appropriate message.
 	$message = esc_html__( 'QR code details updated successfully.', 'wp-qr-trackr' );
 	if ( $post_unlinked ) {
 		$message = esc_html__( 'QR code details updated successfully. The linked post has been unlinked since the destination URL was changed.', 'wp-qr-trackr' );
@@ -829,7 +829,7 @@ function qr_trackr_ajax_update_qr_details() {
 		$message = esc_html__( 'QR code details updated successfully. The linked post has been unlinked and QR code image has been regenerated for the new destination URL.', 'wp-qr-trackr' );
 	}
 
-	// Get the updated record to return complete data
+	// Get the updated record to return complete data.
 	$updated_record = $wpdb->get_row(
 		$wpdb->prepare(
 			"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
