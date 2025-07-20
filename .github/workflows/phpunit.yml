@@ -48,18 +48,8 @@ jobs:
         run: |
           bash scripts/install-wp-tests.sh wpdb wpuser wppass mysql ${{ matrix.wp }}
 
-      - name: Debug: List WordPress test suite directory
-        run: |
-          if [ -d /tmp/wordpress-tests-lib ]; then
-            echo "Found /tmp/wordpress-tests-lib"
-            ls -l /tmp/wordpress-tests-lib
-            ls -l /tmp/wordpress-tests-lib/includes
-          else
-            echo "Missing /tmp/wordpress-tests-lib"
-          fi
-
       - name: Run PHPCS
         run: ./vendor/bin/phpcs --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
 
       - name: Run PHPUnit
-        run: ./vendor/bin/phpunit
+        run: ./vendor/bin/phpunit --configuration=config/testing/phpunit.xml.dist

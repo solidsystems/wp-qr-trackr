@@ -69,6 +69,52 @@ This project enforces the following standards and practices:
    - Username: trackr
    - Password: trackr
 
+## Development Workflow
+
+### Feature Branch Workflow
+
+**Never push directly to main!** Always use feature branches and pull requests:
+
+```bash
+# Create a new feature branch
+./scripts/create-feature-branch.sh fix/phpcs-issues "Fix remaining PHPCS errors"
+
+# Make your changes, then validate
+make validate
+
+# Commit and push
+git add .
+git commit -m "Fix PHPCS errors in module-ajax.php"
+git push origin fix/phpcs-issues
+
+# Create a pull request
+gh pr create --title "Fix PHPCS errors" --body "Description of changes" --base main --head fix/phpcs-issues
+```
+
+### Code Quality Checks
+
+```bash
+# Auto-fix code style issues
+make fix
+
+# Check for PHPCS errors
+make lint
+
+# Run full validation suite
+make validate
+
+# Run e2e tests locally (not in CI)
+cd wp-content/plugins/wp-qr-trackr
+yarn test:e2e
+```
+
+### Pre-commit Validation
+
+The project uses lefthook for automated pre-commit validation:
+- PHPCS checks run automatically before commits
+- PHPCBF auto-fixes what it can
+- Validation blocks commits with errors
+
 ## Documentation
 
 - [Plugin User Guide](docs/USER_GUIDE.md)
