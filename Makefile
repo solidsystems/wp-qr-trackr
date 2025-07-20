@@ -4,14 +4,13 @@
 .PHONY: validate test lint clean
 
 lint:
-	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcs
+	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcs --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
 
 fix:
-	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcbf
+	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcbf --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
 
 validate:
-	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcs
-	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner yarn playwright test
+	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner bash scripts/validate.sh
 
 test:
 	docker compose -f docker/docker-compose.dev.yml run --rm ci-runner vendor/bin/phpunit

@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-const BASE_URL = 'http://wordpress-playwright';
+const BASE_URL = 'http://localhost:8080';
 
 // Helper: Wait for network idle with timeout
 async function waitForNetworkIdle(page: Page, timeout = 15000) {

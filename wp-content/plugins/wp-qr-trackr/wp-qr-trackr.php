@@ -40,10 +40,10 @@ define( 'QR_TRACKR_DEBUG', defined( 'WP_DEBUG' ) && WP_DEBUG );
  * @return void
  */
 function qr_trackr_load_autoloader() {
-	// Try the plugin vendor directory first (for Docker environments)
+	// Try the plugin vendor directory first (for Docker environments).
 	$autoload_path = QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
 
-	// Fallback to root vendor directory if plugin vendor doesn't exist
+	// Fallback to root vendor directory if plugin vendor doesn't exist.
 	if ( ! file_exists( $autoload_path ) ) {
 		$autoload_path = dirname( dirname( dirname( QR_TRACKR_PLUGIN_DIR ) ) ) . '/vendor/autoload.php';
 	}
@@ -83,16 +83,16 @@ function qr_trackr_activate_plugin() {
 	// Load required modules during activation.
 	if ( file_exists( QR_TRACKR_PLUGIN_DIR . 'includes/module-activation.php' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-			qr_trackr_debug_log( 'QR Trackr: Loading activation module' );
+			qr_trackr_debug_log( 'QR Trackr: Loading activation module.' );
 		}
 		require_once QR_TRACKR_PLUGIN_DIR . 'includes/module-activation.php';
 		if ( function_exists( 'qrc_activate' ) ) {
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-				qr_trackr_debug_log( 'QR Trackr: Running activation function' );
+				qr_trackr_debug_log( 'QR Trackr: Running activation function.' );
 			}
 			qrc_activate();
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-				qr_trackr_debug_log( 'QR Trackr: Activation function completed' );
+				qr_trackr_debug_log( 'QR Trackr: Activation function completed.' );
 			}
 		} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 				qr_trackr_debug_log( 'QR Trackr: ERROR - qrc_activate function not found!' );

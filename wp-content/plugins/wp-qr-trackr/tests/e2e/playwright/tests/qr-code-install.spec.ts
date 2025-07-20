@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-const WP_ADMIN_URL = 'http://wordpress-playwright/wp-admin';
+const WP_ADMIN_URL = 'http://localhost:8080/wp-admin';
 const USERNAME = 'trackr';
 const PASSWORD = 'trackr';
 

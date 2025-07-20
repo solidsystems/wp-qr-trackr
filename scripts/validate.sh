@@ -11,11 +11,11 @@ fi
 
 # Lint PHP
 echo "Running PHPCS..."
-vendor/bin/phpcs
+vendor/bin/phpcs --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
 
 # Auto-fix (optional, comment out if not desired)
-# echo "Running PHPCBF..."
-# vendor/bin/phpcbf
+echo "Running PHPCBF..."
+vendor/bin/phpcbf --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
 
 # Run tests
 if [ -f vendor/bin/phpunit ]; then
