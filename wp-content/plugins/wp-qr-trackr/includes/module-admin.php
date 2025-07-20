@@ -331,6 +331,7 @@ function qrc_handle_delete_action() {
 
 	// Debug logging (only to error log, not output).
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
 		error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : 'not set', isset( $_GET['action'] ) ? wp_unslash( $_GET['action'] ) : 'not set' ) );
 	}
 

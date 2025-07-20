@@ -278,8 +278,10 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging after nonce verification.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
 		$nonce = isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : 'not set';
-		$term  = isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
+		$term = isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set';
 		qr_trackr_debug_log(
 			sprintf(
 				'QR Trackr: AJAX search request - nonce: %s, term: %s',
@@ -309,6 +311,7 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging for search term validation.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
 		$raw_term = isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set';
 		qr_trackr_debug_log(
 			sprintf(
@@ -323,6 +326,10 @@ function qrc_search_posts_ajax() {
 
 	// Temporarily bypass validation for debugging.
 	// Validation code commented out for debugging purposes.
+
+	/*
+	 * Validation code commented out for debugging purposes.
+	 */
 	/*
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
