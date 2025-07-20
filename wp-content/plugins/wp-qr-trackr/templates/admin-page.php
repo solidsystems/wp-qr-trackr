@@ -43,4 +43,3 @@ var qr_trackr_ajax = {
 <!-- QR Trackr Admin JavaScript -->
 <script type="text/javascript" src="<?php echo esc_url( plugin_dir_url( __FILE__ ) . '../assets/qrc-admin.js' ); ?>"></script>
 
- 

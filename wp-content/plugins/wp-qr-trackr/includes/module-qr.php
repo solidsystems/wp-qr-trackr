@@ -119,10 +119,10 @@ function qrc_get_all_links() {
  */
 function qrc_cleanup_invalid_cache() {
 	global $wpdb;
-	
+
 	$cleaned_count = 0;
-	$transients = $wpdb->get_results( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE '_transient_qrc_%'" );
-	
+	$transients    = $wpdb->get_results( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE '_transient_qrc_%'" );
+
 	foreach ( $transients as $transient ) {
 		$url = $transient->option_value;
 		if ( ! empty( $url ) && strpos( $url, '/wp-content/uploads/qr-codes/' ) !== false ) {
@@ -130,12 +130,12 @@ function qrc_cleanup_invalid_cache() {
 			if ( ! file_exists( $file_path ) ) {
 				$cache_key = str_replace( '_transient_', '', $transient->option_name );
 				delete_transient( $cache_key );
-				$cleaned_count++;
+				++$cleaned_count;
 				error_log( 'QR Trackr: Cleaned up invalid cache entry: ' . $cache_key . ' -> ' . $url );
 			}
 		}
 	}
-	
+
 	return $cleaned_count;
 }
 
@@ -182,51 +182,61 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 	// Check if Endroid QR Code library is available.
 	$endroid_class_exists = false;
-	
+
 	// Suppress deprecation warnings during class check
 	$old_error_reporting = error_reporting();
 	error_reporting( $old_error_reporting & ~E_DEPRECATED );
-	
+
 	$endroid_class_exists = class_exists( 'Endroid\QrCode\QrCode' );
-	
+
 	// Restore error reporting
 	error_reporting( $old_error_reporting );
-	
-			if ( ! $endroid_class_exists ) {
-			// Try to load the autoloader manually if it's not already loaded.
-			$autoload_path = QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
-			
-			// Fallback to root vendor directory if plugin vendor doesn't exist
-			if ( ! file_exists( $autoload_path ) ) {
+
+	if ( ! $endroid_class_exists ) {
+		// Try to load the autoloader manually if it's not already loaded.
+		$autoload_path = QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
+
+		// Fallback to root vendor directory if plugin vendor doesn't exist
+		if ( ! file_exists( $autoload_path ) ) {
 				$autoload_path = dirname( dirname( dirname( QR_TRACKR_PLUGIN_DIR ) ) ) . '/vendor/autoload.php';
-			}
-			
-			if ( file_exists( $autoload_path ) ) {
-				require_once $autoload_path;
-			}
-			
-			// Check again after attempting to load.
-			$endroid_class_exists = class_exists( 'Endroid\QrCode\QrCode' );
-			
-			if ( ! $endroid_class_exists ) {
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-					error_log( 'QR Trackr: ERROR - Endroid\QrCode\QrCode class not found. Autoloader path: ' . $autoload_path . ', File exists: ' . ( file_exists( $autoload_path ) ? 'YES' : 'NO' ) );
-					error_log( 'QR Trackr: ERROR - Available classes containing "Endroid": ' . implode( ', ', array_filter( get_declared_classes(), function($class) { return strpos($class, 'Endroid') !== false; } ) ) );
-				}
-				return new WP_Error(
-					'qrc_library_missing',
-					esc_html__( 'QR code generation library not available. Please run composer install.', 'wp-qr-trackr' )
-					);
-			}
 		}
 
+		if ( file_exists( $autoload_path ) ) {
+			require_once $autoload_path;
+		}
+
+				// Check again after attempting to load.
+				$endroid_class_exists = class_exists( 'Endroid\QrCode\QrCode' );
+
+		if ( ! $endroid_class_exists ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'QR Trackr: ERROR - Endroid\QrCode\QrCode class not found. Autoloader path: ' . $autoload_path . ', File exists: ' . ( file_exists( $autoload_path ) ? 'YES' : 'NO' ) );
+				error_log(
+					'QR Trackr: ERROR - Available classes containing "Endroid": ' . implode(
+						', ',
+						array_filter(
+							get_declared_classes(),
+							function ( $class ) {
+								return strpos( $class, 'Endroid' ) !== false;
+							}
+						)
+					)
+				);
+			}
+			return new WP_Error(
+				'qrc_library_missing',
+				esc_html__( 'QR code generation library not available. Please run composer install.', 'wp-qr-trackr' )
+			);
+		}
+	}
+
 	$defaults = array(
-		'size'              => 200,
-		'margin'            => 10,
-		'error_correction'  => 'M',
-		'foreground_color'  => '#000000',
-		'background_color'  => '#ffffff',
-		'output_format'     => 'png',
+		'size'             => 200,
+		'margin'           => 10,
+		'error_correction' => 'M',
+		'foreground_color' => '#000000',
+		'background_color' => '#ffffff',
+		'output_format'    => 'png',
 	);
 	$args     = wp_parse_args( $args, $defaults );
 
@@ -274,14 +284,14 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 	if ( false === $qr_url ) {
 		try {
 			error_log( 'QR Trackr: Starting QR code generation for data: ' . $data );
-			
+
 			// Create QR code using Endroid library.
 			$qr_code = new \Endroid\QrCode\QrCode( $data );
-			
+
 			// Set QR code options.
 			$qr_code->setSize( $args['size'] );
 			$qr_code->setMargin( $args['margin'] );
-			
+
 			// Set error correction level.
 			$error_correction_level = new \Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelMedium();
 			switch ( $args['error_correction'] ) {
@@ -296,30 +306,30 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 					break;
 			}
 			$qr_code->setErrorCorrectionLevel( $error_correction_level );
-			
+
 			// Set colors.
 			$foreground_rgb = sscanf( $args['foreground_color'], '#%02x%02x%02x' );
 			$background_rgb = sscanf( $args['background_color'], '#%02x%02x%02x' );
 			$qr_code->setForegroundColor( new \Endroid\QrCode\Color\Color( $foreground_rgb[0], $foreground_rgb[1], $foreground_rgb[2] ) );
 			$qr_code->setBackgroundColor( new \Endroid\QrCode\Color\Color( $background_rgb[0], $background_rgb[1], $background_rgb[2] ) );
-			
+
 			// Create writer for PNG format.
 			$writer = new \Endroid\QrCode\Writer\PngWriter();
 			$result = $writer->write( $qr_code );
-			
+
 			// Get the QR code image data.
 			$image_data = $result->getString();
-			
+
 			error_log( 'QR Trackr: QR code image data generated, size: ' . strlen( $image_data ) . ' bytes' );
-			
+
 			// Save the QR code image.
 			$upload_dir = wp_upload_dir();
 			$qr_dir     = $upload_dir['basedir'] . '/qr-codes';
-			
+
 			error_log( 'QR Trackr: Upload directory: ' . $upload_dir['basedir'] );
 			error_log( 'QR Trackr: QR directory: ' . $qr_dir );
 			error_log( 'QR Trackr: QR directory exists: ' . ( file_exists( $qr_dir ) ? 'YES' : 'NO' ) );
-			
+
 			if ( ! file_exists( $qr_dir ) ) {
 				$mkdir_result = wp_mkdir_p( $qr_dir );
 				error_log( 'QR Trackr: Created QR directory: ' . ( $mkdir_result ? 'SUCCESS' : 'FAILED' ) );
@@ -328,7 +338,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 			$filename  = sanitize_file_name( 'qr-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
 			$file_path = $qr_dir . '/' . $filename;
 			$qr_url    = $upload_dir['baseurl'] . '/qr-codes/' . $filename;
-			
+
 			error_log( 'QR Trackr: File path: ' . $file_path );
 			error_log( 'QR Trackr: QR URL: ' . $qr_url );
 
@@ -346,7 +356,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 					esc_html__( 'Failed to save QR code image.', 'wp-qr-trackr' )
 				);
 			}
-			
+
 			error_log( 'QR Trackr: QR code image saved successfully to ' . $file_path );
 			error_log( 'QR Trackr: File exists after save: ' . ( file_exists( $file_path ) ? 'YES' : 'NO' ) );
 
@@ -361,7 +371,6 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 					esc_html__( 'QR code file was not created successfully.', 'wp-qr-trackr' )
 				);
 			}
-			
 		} catch ( Exception $e ) {
 			error_log( 'QR Trackr: QR code generation failed with exception: ' . $e->getMessage() );
 			return new WP_Error(
@@ -379,5 +388,3 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 	return $qr_url;
 }
-
-

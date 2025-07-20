@@ -53,8 +53,6 @@ function qrc_admin_menu() {
 		'qrc_add_new_page'
 	);
 
-
-
 	$settings = add_submenu_page(
 		'qr-code-links',
 		__( 'Settings', 'wp-qr-trackr' ),
@@ -198,11 +196,11 @@ function qrc_admin_enqueue_scripts( $hook ) {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log( sprintf( 'QR Trackr: Script enqueue function called with hook: %s', $hook ) );
 	}
-	
+
 	// Temporarily load on ALL admin pages for debugging.
 	// Check if we're on a QR Trackr page by looking at the hook.
 	$qr_trackr_hooks = array( 'toplevel_page_qr-code-links', 'qr-codes_page_qr-code-add-new', 'qr-codes_page_qr-code-settings' );
-	
+
 	// For debugging, load on any page that might be related.
 	if ( ! in_array( $hook, $qr_trackr_hooks, true ) && strpos( $hook, 'qr-code' ) === false ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -220,37 +218,45 @@ function qrc_admin_enqueue_scripts( $hook ) {
 		error_log( sprintf( 'QR Trackr: Enqueuing admin script for hook: %s', $hook ) );
 	}
 	wp_enqueue_script( 'qr-trackr-admin', plugin_dir_url( __FILE__ ) . '../assets/qrc-admin.js', array( 'jquery', 'select2' ), QR_TRACKR_VERSION, true );
-	
+
 	// Localize script for AJAX and admin strings.
-	wp_localize_script( 'qr-trackr-admin', 'qr_trackr_ajax', array(
-		'ajaxurl' => admin_url( 'admin-ajax.php' ),
-		'nonce'   => wp_create_nonce( 'qr_trackr_nonce' ),
-	) );
+	wp_localize_script(
+		'qr-trackr-admin',
+		'qr_trackr_ajax',
+		array(
+			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'qr_trackr_nonce' ),
+		)
+	);
 
 	// Localize script for admin strings.
-	wp_localize_script( 'qr-trackr-admin', 'qrcAdmin', array(
-		'strings' => array(
-			'qrCodeDetails'    => __( 'QR Code Details', 'wp-qr-trackr' ),
-			'loading'          => __( 'Loading...', 'wp-qr-trackr' ),
-			'statistics'       => __( 'Statistics', 'wp-qr-trackr' ),
-			'totalScans'       => __( 'Total Scans', 'wp-qr-trackr' ),
-			'recentScans'      => __( 'Recent Scans (30 days)', 'wp-qr-trackr' ),
-			'lastAccessed'     => __( 'Last Accessed', 'wp-qr-trackr' ),
-			'created'          => __( 'Created', 'wp-qr-trackr' ),
-			'commonName'       => __( 'Common Name', 'wp-qr-trackr' ),
-			'enterFriendlyName' => __( 'Enter a friendly name', 'wp-qr-trackr' ),
-			'commonNameDesc'   => __( 'A friendly name to help you identify this QR code.', 'wp-qr-trackr' ),
-			'referralCode'     => __( 'Referral Code', 'wp-qr-trackr' ),
-			'enterReferralCode' => __( 'Enter a referral code', 'wp-qr-trackr' ),
-			'referralCodeDesc' => __( 'A referral code for tracking and analytics.', 'wp-qr-trackr' ),
-			'qrCode'           => __( 'QR Code', 'wp-qr-trackr' ),
-			'qrUrl'            => __( 'QR URL', 'wp-qr-trackr' ),
-			'destinationUrl'   => __( 'Destination URL', 'wp-qr-trackr' ),
-			'linkedPost'       => __( 'Linked Post', 'wp-qr-trackr' ),
-			'close'            => __( 'Close', 'wp-qr-trackr' ),
-			'saveChanges'      => __( 'Save Changes', 'wp-qr-trackr' ),
-		),
-	) );
+	wp_localize_script(
+		'qr-trackr-admin',
+		'qrcAdmin',
+		array(
+			'strings' => array(
+				'qrCodeDetails'     => __( 'QR Code Details', 'wp-qr-trackr' ),
+				'loading'           => __( 'Loading...', 'wp-qr-trackr' ),
+				'statistics'        => __( 'Statistics', 'wp-qr-trackr' ),
+				'totalScans'        => __( 'Total Scans', 'wp-qr-trackr' ),
+				'recentScans'       => __( 'Recent Scans (30 days)', 'wp-qr-trackr' ),
+				'lastAccessed'      => __( 'Last Accessed', 'wp-qr-trackr' ),
+				'created'           => __( 'Created', 'wp-qr-trackr' ),
+				'commonName'        => __( 'Common Name', 'wp-qr-trackr' ),
+				'enterFriendlyName' => __( 'Enter a friendly name', 'wp-qr-trackr' ),
+				'commonNameDesc'    => __( 'A friendly name to help you identify this QR code.', 'wp-qr-trackr' ),
+				'referralCode'      => __( 'Referral Code', 'wp-qr-trackr' ),
+				'enterReferralCode' => __( 'Enter a referral code', 'wp-qr-trackr' ),
+				'referralCodeDesc'  => __( 'A referral code for tracking and analytics.', 'wp-qr-trackr' ),
+				'qrCode'            => __( 'QR Code', 'wp-qr-trackr' ),
+				'qrUrl'             => __( 'QR URL', 'wp-qr-trackr' ),
+				'destinationUrl'    => __( 'Destination URL', 'wp-qr-trackr' ),
+				'linkedPost'        => __( 'Linked Post', 'wp-qr-trackr' ),
+				'close'             => __( 'Close', 'wp-qr-trackr' ),
+				'saveChanges'       => __( 'Save Changes', 'wp-qr-trackr' ),
+			),
+		)
+	);
 }
 
 /**
@@ -309,8 +315,6 @@ function qrc_register_admin_hooks() {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log( 'QR Trackr: Added admin_enqueue_scripts action' );
 	}
-	
-
 }
 
 /**
@@ -391,9 +395,9 @@ function qrc_handle_delete_action() {
 
 	// Delete QR code image file if it exists.
 	if ( ! empty( $qr_code->qr_code_url ) ) {
-		$upload_dir = wp_upload_dir();
+		$upload_dir   = wp_upload_dir();
 		$qr_file_path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $qr_code->qr_code_url );
-		
+
 		if ( file_exists( $qr_file_path ) ) {
 			unlink( $qr_file_path );
 		}
@@ -402,7 +406,7 @@ function qrc_handle_delete_action() {
 	// Redirect back to the QR codes list with success message.
 	$redirect_url = add_query_arg(
 		array(
-			'page' => 'qr-code-links',
+			'page'    => 'qr-code-links',
 			'deleted' => '1',
 		),
 		admin_url( 'admin.php' )

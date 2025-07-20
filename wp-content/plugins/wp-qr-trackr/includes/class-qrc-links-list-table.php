@@ -406,7 +406,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 	 * @return string The column content.
 	 */
 	protected function column_actions( $item ) {
-		$qr_id = $item['id'];
+		$qr_id   = $item['id'];
 		$actions = array();
 
 		// Edit action (opens modal).
@@ -417,12 +417,12 @@ class QRC_Links_List_Table extends WP_List_Table {
 		);
 
 			// Delete action (AJAX).
-	$actions['delete'] = sprintf(
-		'<button type="button" class="button button-small button-link-delete qr-delete-btn" data-qr-id="%d" data-nonce="%s">%s</button>',
-		absint( $qr_id ),
-		esc_attr( wp_create_nonce( 'qr_trackr_nonce' ) ),
-		esc_html__( 'Delete', 'wp-qr-trackr' )
-	);
+		$actions['delete'] = sprintf(
+			'<button type="button" class="button button-small button-link-delete qr-delete-btn" data-qr-id="%d" data-nonce="%s">%s</button>',
+			absint( $qr_id ),
+			esc_attr( wp_create_nonce( 'qr_trackr_nonce' ) ),
+			esc_html__( 'Delete', 'wp-qr-trackr' )
+		);
 
 		return implode( ' ', $actions );
 	}

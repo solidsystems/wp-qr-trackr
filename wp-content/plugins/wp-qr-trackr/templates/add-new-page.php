@@ -23,7 +23,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	// Use custom URL if provided, otherwise use dropdown selection.
 	if ( ! empty( $custom_url ) ) {
 		$destination_url = $custom_url;
-		$post_id = 0; // Clear post ID if custom URL is used
+		$post_id         = 0; // Clear post ID if custom URL is used
 		error_log( 'QR Trackr: Using custom URL: ' . $destination_url );
 	} elseif ( ! empty( $post_id ) ) {
 		// If post ID is provided, get the post URL
@@ -49,27 +49,30 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 
 		// Generate QR code image URL.
 		$qr_code_url = '';
-		
+
 		// Debug: Check if function exists and Endroid library is available.
 		error_log( 'QR Trackr: Checking if qrc_generate_qr_code function exists: ' . ( function_exists( 'qrc_generate_qr_code' ) ? 'YES' : 'NO' ) );
 		error_log( 'QR Trackr: Checking if Endroid QR Code library is available: ' . ( class_exists( 'Endroid\QrCode\QrCode' ) ? 'YES' : 'NO' ) );
 		error_log( 'QR Trackr: About to generate QR code for destination: ' . $destination_url );
-		
+
 		if ( function_exists( 'qrc_generate_qr_code' ) ) {
 			// Debug logging for QR code generation.
 			error_log( sprintf( 'QR Trackr: Generating QR code for URL: %s', $destination_url ) );
-			
+
 			// Generate QR code with consistent parameters
-			$qr_code_url = qrc_generate_qr_code( $destination_url, array(
-				'size'              => 200,
-				'margin'            => 10,
-				'error_correction'  => 'M',
-				'foreground_color'  => '#000000',
-				'background_color'  => '#ffffff',
-			) );
-			
+			$qr_code_url = qrc_generate_qr_code(
+				$destination_url,
+				array(
+					'size'             => 200,
+					'margin'           => 10,
+					'error_correction' => 'M',
+					'foreground_color' => '#000000',
+					'background_color' => '#ffffff',
+				)
+			);
+
 			error_log( 'QR Trackr: Initial QR generation result: ' . ( is_wp_error( $qr_code_url ) ? 'ERROR: ' . $qr_code_url->get_error_message() : $qr_code_url ) );
-			
+
 			if ( is_wp_error( $qr_code_url ) ) {
 				$error_message = $qr_code_url->get_error_message();
 				error_log( sprintf( 'QR Trackr: QR code generation failed: %s', $error_message ) );
@@ -77,16 +80,19 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 				$qr_code_url = '';
 			} else {
 				error_log( sprintf( 'QR Trackr: QR code generated successfully: %s', $qr_code_url ) );
-				
+
 				// Debug: Check if the generated URL is accessible.
 				$upload_dir = wp_upload_dir();
-				$qr_dir = $upload_dir['basedir'] . '/qr-codes';
-				error_log( sprintf( 'QR Trackr: Upload directory: %s, QR directory: %s, QR directory exists: %s, QR directory writable: %s', 
-					$upload_dir['basedir'], 
-					$qr_dir, 
-					file_exists( $qr_dir ) ? 'YES' : 'NO',
-					is_writable( $qr_dir ) ? 'YES' : 'NO'
-				) );
+				$qr_dir     = $upload_dir['basedir'] . '/qr-codes';
+				error_log(
+					sprintf(
+						'QR Trackr: Upload directory: %s, QR directory: %s, QR directory exists: %s, QR directory writable: %s',
+						$upload_dir['basedir'],
+						$qr_dir,
+						file_exists( $qr_dir ) ? 'YES' : 'NO',
+						is_writable( $qr_dir ) ? 'YES' : 'NO'
+					)
+				);
 			}
 		} else {
 			error_log( 'QR Trackr: qrc_generate_qr_code function not found' );
@@ -116,15 +122,15 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		);
 
 		if ( $result ) {
-			$qr_id = $wpdb->insert_id;
+			$qr_id           = $wpdb->insert_id;
 			$success_message = __( 'QR code created successfully!', 'wp-qr-trackr' );
-			
+
 			error_log( 'QR Trackr: Database insert successful, ID: ' . $qr_id );
-			
+
 			// Clear relevant caches after successful creation.
 			wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
 			delete_transient( 'qrc_all_links' );
-			
+
 			// Get the created QR code details for display.
 			$created_qr = $wpdb->get_row(
 				$wpdb->prepare(
@@ -133,10 +139,10 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 				),
 				ARRAY_A
 			);
-			
+
 			// Debug: Log the created QR code details
 			error_log( 'QR Trackr: Created QR code details: ' . wp_json_encode( $created_qr ) );
-			
+
 		} else {
 			$error_message = __( 'Failed to create QR code. Please try again.', 'wp-qr-trackr' );
 			error_log( 'QR Trackr: Database insert failed: ' . $wpdb->last_error );
@@ -189,13 +195,14 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 				<div class="qr-success-display">
 					<!-- QR Code Image -->
 					<div class="qr-success-image">
-						<?php 
+						<?php
 						$display_qr_url = $created_qr['qr_code_url'];
-						
-						if ( ! empty( $display_qr_url ) ) : ?>
+
+						if ( ! empty( $display_qr_url ) ) :
+							?>
 							<img src="<?php echo esc_url( $display_qr_url ); ?>" 
-								 alt="<?php esc_attr_e( 'QR Code', 'wp-qr-trackr' ); ?>" 
-								 style="width: 200px; height: 200px; border: 1px solid #ddd; border-radius: 4px;" />
+								alt="<?php esc_attr_e( 'QR Code', 'wp-qr-trackr' ); ?>" 
+								style="width: 200px; height: 200px; border: 1px solid #ddd; border-radius: 4px;" />
 						<?php else : ?>
 							<div style="width: 200px; height: 200px; border: 1px solid #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f9f9f9;">
 								<p style="text-align: center; color: #666;">
@@ -208,8 +215,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						<div style="margin-top: 15px;">
 							<?php if ( ! empty( $display_qr_url ) ) : ?>
 								<a href="<?php echo esc_url( $display_qr_url ); ?>" 
-								   download="qr-code-<?php echo esc_attr( $created_qr['qr_code'] ); ?>.png" 
-								   class="button button-primary">
+									download="qr-code-<?php echo esc_attr( $created_qr['qr_code'] ); ?>.png" 
+									class="button button-primary">
 									<?php esc_html_e( 'Download QR Code', 'wp-qr-trackr' ); ?>
 								</a>
 							<?php endif; ?>
@@ -243,10 +250,10 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 							<?php endif; ?>
 							
 							<?php if ( ! empty( $created_qr['post_id'] ) ) : ?>
-								<?php 
+								<?php
 								$linked_post = get_post( $created_qr['post_id'] );
-								if ( $linked_post ) : 
-								?>
+								if ( $linked_post ) :
+									?>
 									<tr>
 										<th scope="row"><?php esc_html_e( 'Linked Post:', 'wp-qr-trackr' ); ?></th>
 										<td>
@@ -266,8 +273,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 								<th scope="row"><?php esc_html_e( 'QR URL:', 'wp-qr-trackr' ); ?></th>
 								<td>
 									<a href="<?php echo esc_url( home_url( '/redirect/' . $created_qr['qr_code'] ) ); ?>" 
-									   target="_blank" 
-									   style="word-break: break-all;">
+										target="_blank" 
+										style="word-break: break-all;">
 										<?php echo esc_url( home_url( '/redirect/' . $created_qr['qr_code'] ) ); ?>
 									</a>
 								</td>
@@ -277,8 +284,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 								<th scope="row"><?php esc_html_e( 'Destination URL:', 'wp-qr-trackr' ); ?></th>
 								<td>
 									<a href="<?php echo esc_url( $created_qr['destination_url'] ); ?>" 
-									   target="_blank" 
-									   style="word-break: break-all;">
+										target="_blank" 
+										style="word-break: break-all;">
 										<?php echo esc_url( $created_qr['destination_url'] ); ?>
 									</a>
 								</td>
@@ -334,10 +341,10 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						</p>
 						<br>
 						<input type="url" 
-							   id="custom_destination_url" 
-							   name="custom_destination_url" 
-							   class="regular-text" 
-							   placeholder="<?php esc_attr_e( 'Or enter a custom URL...', 'wp-qr-trackr' ); ?>" />
+								id="custom_destination_url" 
+								name="custom_destination_url" 
+								class="regular-text" 
+								placeholder="<?php esc_attr_e( 'Or enter a custom URL...', 'wp-qr-trackr' ); ?>" />
 						<p class="description">
 							<?php esc_html_e( 'Enter a custom URL if you want to link to an external site or specific URL.', 'wp-qr-trackr' ); ?>
 						</p>
@@ -353,10 +360,10 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 					</th>
 					<td>
 						<input type="text" 
-							   id="common_name" 
-							   name="common_name" 
-							   class="regular-text" 
-							   value="<?php echo isset( $_POST['common_name'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) ) : ''; ?>" />
+								id="common_name" 
+								name="common_name" 
+								class="regular-text" 
+								value="<?php echo isset( $_POST['common_name'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) ) : ''; ?>" />
 						<p class="description">
 							<?php esc_html_e( 'A friendly name to help you identify this QR code (optional).', 'wp-qr-trackr' ); ?>
 						</p>
@@ -369,10 +376,10 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 					</th>
 					<td>
 						<input type="text" 
-							   id="referral_code" 
-							   name="referral_code" 
-							   class="regular-text" 
-							   value="<?php echo isset( $_POST['referral_code'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) ) : ''; ?>" />
+								id="referral_code" 
+								name="referral_code" 
+								class="regular-text" 
+								value="<?php echo isset( $_POST['referral_code'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) ) : ''; ?>" />
 						<p class="description">
 							<?php esc_html_e( 'A referral code for tracking and analytics (optional).', 'wp-qr-trackr' ); ?>
 						</p>
@@ -382,10 +389,10 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 
 			<p class="submit">
 				<input type="submit" 
-					   name="submit" 
-					   id="submit" 
-					   class="button button-primary" 
-					   value="<?php esc_attr_e( 'Create QR Code', 'wp-qr-trackr' ); ?>" />
+						name="submit" 
+						id="submit" 
+						class="button button-primary" 
+						value="<?php esc_attr_e( 'Create QR Code', 'wp-qr-trackr' ); ?>" />
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=qr-code-links' ) ); ?>" class="button">
 					<?php esc_html_e( 'Cancel', 'wp-qr-trackr' ); ?>
 				</a>

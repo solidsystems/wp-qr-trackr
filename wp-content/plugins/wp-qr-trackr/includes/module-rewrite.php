@@ -54,21 +54,21 @@ add_filter( 'query_vars', 'qr_trackr_add_query_vars' );
 function qr_trackr_handle_qr_redirect() {
 	// Get the QR code from query vars.
 	$qr_code = get_query_var( 'qr_tracking_code' );
-	
+
 	// If no QR code, this isn't our request.
 	if ( empty( $qr_code ) ) {
 		return;
 	}
-	
+
 	// Debug: Log that we're processing a QR code.
 	error_log( 'QR Trackr: Processing QR code: ' . $qr_code . ' - User logged in: ' . ( is_user_logged_in() ? 'YES' : 'NO' ) );
-	
+
 	// Set proper headers to indicate this is a redirect response.
 	status_header( 301 );
 	nocache_headers();
-	
+
 	global $wpdb;
-	
+
 	// Get destination URL from database.
 	$result = $wpdb->get_row(
 		$wpdb->prepare(
@@ -76,20 +76,20 @@ function qr_trackr_handle_qr_redirect() {
 			$qr_code
 		)
 	);
-	
+
 	if ( $result ) {
 		$destination_url = $result->destination_url;
-		$link_id = $result->id;
-		
+		$link_id         = $result->id;
+
 		error_log( 'QR Trackr: Found QR code - ID: ' . $link_id . ', Destination: ' . $destination_url );
-		
+
 		// Update scan count.
 		qr_trackr_update_scan_count_immediate( $link_id );
-		
+
 		// Set proper redirect headers.
 		header( 'Location: ' . esc_url_raw( $destination_url ), true, 301 );
 		header( 'X-Redirect-By: WP QR Trackr' );
-		
+
 		// Exit immediately.
 		exit;
 	} else {
@@ -111,7 +111,7 @@ add_action( 'template_redirect', 'qr_trackr_handle_qr_redirect', 1 );
  */
 function qr_trackr_update_scan_count_immediate( $link_id ) {
 	global $wpdb;
-	
+
 	// Update both access_count and scans for compatibility, set last_accessed timestamp.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Write operation, caching not applicable.
 	$result = $wpdb->query(
@@ -122,7 +122,7 @@ function qr_trackr_update_scan_count_immediate( $link_id ) {
 			$link_id
 		)
 	);
-	
+
 	if ( false === $result ) {
 		error_log( sprintf( 'QR Trackr: Failed to update scan count for QR code ID %d: %s.', $link_id, $wpdb->last_error ) );
 	} else {
@@ -147,14 +147,14 @@ function qr_trackr_handle_404() {
 	global $wp_query;
 	$wp_query->set_404();
 	status_header( 404 );
-	
+
 	// Check if this is a QR code request by looking at the request URI.
 	$request_uri = $_SERVER['REQUEST_URI'] ?? '';
 	if ( strpos( $request_uri, '/redirect/' ) === 0 ) {
 		// This is a QR code request that failed, exit silently.
 		exit;
 	}
-	
+
 	// For other 404s, use the normal 404 template.
 	get_template_part( 404 );
 	exit;

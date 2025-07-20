@@ -42,21 +42,19 @@ define( 'QR_TRACKR_DEBUG', defined( 'WP_DEBUG' ) && WP_DEBUG );
 function qr_trackr_load_autoloader() {
 	// Try the plugin vendor directory first (for Docker environments)
 	$autoload_path = QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
-	
+
 	// Fallback to root vendor directory if plugin vendor doesn't exist
 	if ( ! file_exists( $autoload_path ) ) {
 		$autoload_path = dirname( dirname( dirname( QR_TRACKR_PLUGIN_DIR ) ) ) . '/vendor/autoload.php';
 	}
-	
+
 	if ( file_exists( $autoload_path ) ) {
 		require_once $autoload_path;
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr: Composer autoloader loaded successfully from: ' . $autoload_path );
 		}
-	} else {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+	} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr: ERROR - Composer autoloader not found at: ' . $autoload_path );
-		}
 	}
 }
 

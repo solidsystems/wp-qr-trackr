@@ -124,7 +124,7 @@ function qrc_generate_qr_code_ajax() {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// Check cache first.
-	$cache_key = 'qr_trackr_link_' . $post_id;
+	$cache_key     = 'qr_trackr_link_' . $post_id;
 	$existing_link = wp_cache_get( $cache_key, 'qr_trackr' );
 
 	if ( false === $existing_link ) {
@@ -389,7 +389,7 @@ function qr_trackr_ajax_get_qr_details() {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log( sprintf( 'QR Trackr: AJAX get_qr_details called. POST data: %s', json_encode( $_POST ) ) );
 	}
-	
+
 	// Verify nonce.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -453,7 +453,7 @@ function qr_trackr_ajax_get_qr_details() {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( sprintf( 'QR Trackr: Generating QR code image for QR ID %d with URL: %s', $qr_id, $qr_code['destination_url'] ) );
 		}
-		
+
 		$new_qr_code_url = qrc_generate_qr_code( $qr_code['destination_url'] );
 		if ( ! is_wp_error( $new_qr_code_url ) ) {
 			// Update the database with the new QR code URL.
@@ -467,7 +467,7 @@ function qr_trackr_ajax_get_qr_details() {
 				array( '%s', '%s' ),
 				array( '%d' )
 			);
-			
+
 			if ( false !== $update_result ) {
 				$qr_code['qr_code_url'] = $new_qr_code_url;
 				// Clear cache to reflect the update immediately.
@@ -475,15 +475,11 @@ function qr_trackr_ajax_get_qr_details() {
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 					error_log( sprintf( 'QR Trackr: QR code image generated successfully: %s', $new_qr_code_url ) );
 				}
-			} else {
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 					error_log( sprintf( 'QR Trackr: Failed to update database with new QR code URL: %s', $wpdb->last_error ) );
-				}
 			}
-		} else {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				error_log( sprintf( 'QR Trackr: Failed to generate QR code image: %s', $new_qr_code_url->get_error_message() ) );
-			}
 		}
 	}
 
@@ -609,18 +605,20 @@ function qr_trackr_ajax_delete_qr_code() {
 
 	// Delete QR code image file if it exists.
 	if ( ! empty( $qr_code->qr_code_url ) ) {
-		$upload_dir = wp_upload_dir();
+		$upload_dir   = wp_upload_dir();
 		$qr_file_path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $qr_code->qr_code_url );
-		
+
 		if ( file_exists( $qr_file_path ) ) {
 			unlink( $qr_file_path );
 		}
 	}
 
-	wp_send_json_success( array(
-		'message' => esc_html__( 'QR code deleted successfully.', 'wp-qr-trackr' ),
-		'qr_id'   => $qr_id,
-	) );
+	wp_send_json_success(
+		array(
+			'message' => esc_html__( 'QR code deleted successfully.', 'wp-qr-trackr' ),
+			'qr_id'   => $qr_id,
+		)
+	);
 }
 add_action( 'wp_ajax_qr_trackr_delete_qr_code', 'qr_trackr_ajax_delete_qr_code' );
 
@@ -650,9 +648,9 @@ function qr_trackr_ajax_update_qr_details() {
 		return;
 	}
 
-	$common_name      = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
-	$referral_code    = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
-	$destination_url  = isset( $_POST['destination_url'] ) ? trim( wp_unslash( $_POST['destination_url'] ) ) : '';
+	$common_name     = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
+	$referral_code   = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+	$destination_url = isset( $_POST['destination_url'] ) ? trim( wp_unslash( $_POST['destination_url'] ) ) : '';
 
 	// Validate destination URL if provided.
 	if ( ! empty( $destination_url ) ) {
@@ -661,10 +659,10 @@ function qr_trackr_ajax_update_qr_details() {
 			wp_send_json_error( esc_html__( 'Invalid destination URL format. Please enter a valid URL starting with http:// or https://', 'wp-qr-trackr' ) );
 			return;
 		}
-		
+
 		// Then sanitize it for storage
 		$destination_url = esc_url_raw( $destination_url );
-		
+
 		// Double-check that sanitization didn't break the URL
 		if ( empty( $destination_url ) ) {
 			wp_send_json_error( esc_html__( 'Invalid destination URL format. Please enter a valid URL.', 'wp-qr-trackr' ) );
@@ -722,12 +720,12 @@ function qr_trackr_ajax_update_qr_details() {
 	// Add destination URL to update if provided.
 	if ( ! empty( $destination_url ) ) {
 		$update_data['destination_url'] = $destination_url;
-		
+
 		// If destination URL has changed and there was a linked post, clear the post_id
 		if ( $destination_url !== $existing_qr->destination_url && ! empty( $existing_qr->post_id ) ) {
 			$update_data['post_id'] = null;
 		}
-		
+
 		// If destination URL has changed, clear the QR code URL to force regeneration
 		if ( $destination_url !== $existing_qr->destination_url ) {
 			$update_data['qr_code_url'] = '';
@@ -759,16 +757,16 @@ function qr_trackr_ajax_update_qr_details() {
 	wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
 	wp_cache_delete( 'qrc_link_' . $qr_id, 'qrc_links' );
 	delete_transient( 'qrc_all_links' );
-	
+
 	// Regenerate QR code if destination URL changed
 	$qr_code_regenerated = false;
 	if ( ! empty( $destination_url ) && $destination_url !== $existing_qr->destination_url && function_exists( 'qrc_generate_qr_code' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( sprintf( 'QR Trackr: Regenerating QR code for ID %d with new URL: %s', $qr_id, $destination_url ) );
 		}
-		
+
 		$new_qr_code_url = qrc_generate_qr_code( $destination_url );
-		
+
 		if ( ! is_wp_error( $new_qr_code_url ) ) {
 			// Update the database with the new QR code URL.
 			$qr_update_result = $wpdb->update(
@@ -781,21 +779,17 @@ function qr_trackr_ajax_update_qr_details() {
 				array( '%s', '%s' ),
 				array( '%d' )
 			);
-			
+
 			if ( false !== $qr_update_result ) {
 				$qr_code_regenerated = true;
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 					error_log( sprintf( 'QR Trackr: QR code regenerated successfully: %s', $new_qr_code_url ) );
 				}
-			} else {
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 					error_log( sprintf( 'QR Trackr: Failed to update database with new QR code URL: %s', $wpdb->last_error ) );
-				}
 			}
-		} else {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				error_log( sprintf( 'QR Trackr: Failed to regenerate QR code: %s', $new_qr_code_url->get_error_message() ) );
-			}
 		}
 	}
 
@@ -804,7 +798,7 @@ function qr_trackr_ajax_update_qr_details() {
 	if ( ! empty( $destination_url ) && $destination_url !== $existing_qr->destination_url && ! empty( $existing_qr->post_id ) ) {
 		$post_unlinked = true;
 	}
-	
+
 	// Log successful update for debugging.
 	if ( function_exists( 'qr_trackr_debug_log' ) ) {
 		qr_trackr_debug_log( sprintf( 'Successfully updated QR code details for ID: %d. Rows affected: %d. Post unlinked: %s', $qr_id, $result, $post_unlinked ? 'Yes' : 'No' ) );
@@ -821,7 +815,7 @@ function qr_trackr_ajax_update_qr_details() {
 	if ( $post_unlinked && $qr_code_regenerated ) {
 		$message = esc_html__( 'QR code details updated successfully. The linked post has been unlinked and QR code image has been regenerated for the new destination URL.', 'wp-qr-trackr' );
 	}
-	
+
 	// Get the updated record to return complete data
 	$updated_record = $wpdb->get_row(
 		$wpdb->prepare(
@@ -830,19 +824,19 @@ function qr_trackr_ajax_update_qr_details() {
 		),
 		ARRAY_A
 	);
-	
+
 	$response_data = array(
-		'message'          => $message,
-		'common_name'      => esc_html( $updated_record['common_name'] ?? '' ),
-		'referral_code'    => esc_html( $updated_record['referral_code'] ?? '' ),
-		'destination_url'  => esc_url( $updated_record['destination_url'] ?? '' ),
-		'qr_code'          => esc_html( $updated_record['qr_code'] ?? '' ),
-		'qr_code_url'      => esc_url( $updated_record['qr_code_url'] ?? '' ),
-		'scans'            => absint( $updated_record['scans'] ?? $updated_record['access_count'] ?? 0 ),
-		'created_at'       => esc_html( $updated_record['created_at'] ?? '' ),
-		'post_unlinked'    => $post_unlinked,
+		'message'         => $message,
+		'common_name'     => esc_html( $updated_record['common_name'] ?? '' ),
+		'referral_code'   => esc_html( $updated_record['referral_code'] ?? '' ),
+		'destination_url' => esc_url( $updated_record['destination_url'] ?? '' ),
+		'qr_code'         => esc_html( $updated_record['qr_code'] ?? '' ),
+		'qr_code_url'     => esc_url( $updated_record['qr_code_url'] ?? '' ),
+		'scans'           => absint( $updated_record['scans'] ?? $updated_record['access_count'] ?? 0 ),
+		'created_at'      => esc_html( $updated_record['created_at'] ?? '' ),
+		'post_unlinked'   => $post_unlinked,
 	);
-	
+
 	wp_send_json_success( $response_data );
 }
 add_action( 'wp_ajax_qr_trackr_update_qr_details', 'qr_trackr_ajax_update_qr_details' );
@@ -909,13 +903,13 @@ add_action( 'wp_ajax_qr_trackr_debug', 'qr_trackr_ajax_debug' );
 function qr_trackr_ajax_qr_redirect() {
 	// Get the QR code from the request.
 	$qr_code = isset( $_GET['qr'] ) ? sanitize_text_field( wp_unslash( $_GET['qr'] ) ) : '';
-	
+
 	if ( empty( $qr_code ) ) {
 		wp_die( esc_html__( 'Invalid QR code.', 'wp-qr-trackr' ), 400 );
 	}
 
 	global $wpdb;
-	
+
 	// Get destination URL from database.
 	$result = $wpdb->get_row(
 		$wpdb->prepare(
@@ -929,7 +923,7 @@ function qr_trackr_ajax_qr_redirect() {
 	}
 
 	$destination_url = $result->destination_url;
-	$link_id = $result->id;
+	$link_id         = $result->id;
 
 	// Update scan count immediately.
 	qr_trackr_update_scan_count_immediate( $link_id );
