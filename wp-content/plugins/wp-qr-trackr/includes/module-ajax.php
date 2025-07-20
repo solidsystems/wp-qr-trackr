@@ -263,17 +263,6 @@ add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
  * @return void
  */
 function qrc_search_posts_ajax() {
-	// Debug logging for nonce verification.
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log(
-			sprintf(
-				'QR Trackr: AJAX search request - nonce: %s, term: %s',
-				isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : 'not set',
-				isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set'
-			)
-		);
-	}
-
 	// Security check - verify nonce and user permissions.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qrc_search_posts' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
@@ -285,6 +274,19 @@ function qrc_search_posts_ajax() {
 			)
 		);
 		return;
+	}
+
+	// Debug logging after nonce verification.
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+		$nonce = isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : 'not set';
+		$term  = isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set';
+		qr_trackr_debug_log(
+			sprintf(
+				'QR Trackr: AJAX search request - nonce: %s, term: %s',
+				$nonce,
+				$term
+			)
+		);
 	}
 
 	// Verify user has admin access.
@@ -307,14 +309,14 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging for search term validation.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+		$raw_term = isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set';
 		qr_trackr_debug_log(
 			sprintf(
-				'QR Trackr: Search term validation - raw: "%s", sanitized: "%s", length: %d, empty: %s, POST data: %s',
-				isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set',
+				'QR Trackr: Search term validation - raw: "%s", sanitized: "%s", length: %d, empty: %s',
+				$raw_term,
 				$search_term,
 				strlen( $search_term ),
-				empty( $search_term ) ? 'true' : 'false',
-				wp_json_encode( $_POST )
+				empty( $search_term ) ? 'true' : 'false'
 			)
 		);
 	}
@@ -914,6 +916,11 @@ add_action( 'wp_ajax_qr_trackr_debug', 'qr_trackr_ajax_debug' );
  * @return void
  */
 function qr_trackr_ajax_qr_redirect() {
+	// Verify nonce for security.
+	if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'qr_redirect' ) ) {
+		wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ), 403 );
+	}
+
 	// Get the QR code from the request.
 	$qr_code = isset( $_GET['qr'] ) ? sanitize_text_field( wp_unslash( $_GET['qr'] ) ) : '';
 
