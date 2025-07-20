@@ -511,6 +511,8 @@ function qr_trackr_ajax_update_qr_details() {
 	// Clear relevant caches.
 	wp_cache_delete( 'qr_trackr_details_' . $qr_id );
 	wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
+	wp_cache_delete( 'qrc_link_' . $qr_id, 'qrc_links' );
+	delete_transient( 'qrc_all_links' );
 
 	// Log successful update for debugging.
 	if ( function_exists( 'qr_trackr_debug_log' ) ) {

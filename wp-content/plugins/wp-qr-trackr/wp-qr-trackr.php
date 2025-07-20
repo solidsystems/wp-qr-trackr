@@ -11,10 +11,15 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 5.0
  * Tested up to: 6.4
- * Requires PHP: 7.4
+ * Requires PHP: 8.1
  *
  * @package WP_QR_TRACKR
  */
+
+// Debug message to confirm plugin is loaded.
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+	error_log( 'QR Trackr: Main plugin file loaded' );
+}
 
 // Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,6 +32,42 @@ define( 'QR_TRACKR_PLUGIN_FILE', __FILE__ );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'QR_TRACKR_DEBUG', defined( 'WP_DEBUG' ) && WP_DEBUG );
+
+/**
+ * Load Composer autoloader for Endroid QR Code library.
+ *
+ * @since 1.2.24
+ * @return void
+ */
+function qr_trackr_load_autoloader() {
+	// Try the plugin vendor directory first (for Docker environments)
+	$autoload_path = QR_TRACKR_PLUGIN_DIR . 'vendor/autoload.php';
+	
+	// Fallback to root vendor directory if plugin vendor doesn't exist
+	if ( ! file_exists( $autoload_path ) ) {
+		$autoload_path = dirname( dirname( dirname( QR_TRACKR_PLUGIN_DIR ) ) ) . '/vendor/autoload.php';
+	}
+	
+	if ( file_exists( $autoload_path ) ) {
+		require_once $autoload_path;
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: Composer autoloader loaded successfully from: ' . $autoload_path );
+		}
+	} else {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: ERROR - Composer autoloader not found at: ' . $autoload_path );
+		}
+	}
+}
+
+// Load autoloader immediately.
+qr_trackr_load_autoloader();
+
+// Also load autoloader on plugins_loaded hook to ensure it's available.
+add_action( 'plugins_loaded', 'qr_trackr_load_autoloader', 1 );
+
+// Load autoloader on init hook as well for maximum compatibility.
+add_action( 'init', 'qr_trackr_load_autoloader', 1 );
 
 // Legacy constants for backward compatibility.
 define( 'QRC_PLUGIN_FILE', __FILE__ );
@@ -102,6 +143,9 @@ function qr_trackr_load_modules() {
 		qr_trackr_debug_log( 'QR Trackr: Loading core modules on hook: ' . current_filter() );
 	}
 
+	// Ensure autoloader is loaded before loading modules.
+	qr_trackr_load_autoloader();
+
 	// Core modules that must be loaded in order.
 	$core_modules = array(
 		'module-requirements.php',
@@ -117,17 +161,17 @@ function qr_trackr_load_modules() {
 	// Load core modules.
 	foreach ( $core_modules as $module ) {
 		$module_path = QR_TRACKR_PLUGIN_DIR . 'includes/' . $module;
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-			qr_trackr_debug_log( 'QR Trackr: Loading module: ' . $module );
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: Loading module: ' . $module );
 		}
 
 		if ( file_exists( $module_path ) ) {
 			require_once $module_path;
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-				qr_trackr_debug_log( 'QR Trackr: Successfully loaded: ' . $module );
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'QR Trackr: Successfully loaded: ' . $module );
 			}
-		} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-				qr_trackr_debug_log( 'QR Trackr: ERROR - Module not found: ' . $module . ' at path: ' . $module_path );
+		} elseif ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: ERROR - Module not found: ' . $module . ' at path: ' . $module_path );
 		}
 	}
 

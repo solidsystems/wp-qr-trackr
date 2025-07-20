@@ -197,6 +197,97 @@ sequenceDiagram
     UTS->>DOC: Update TODO.md/STATUS.md
     UTS->>DOC: Create backup
     UTS->>DOC: Validate changes
+```
+
+## URL Handling Architecture
+
+### QR Code URL Processing Flow
+
+The plugin implements a robust URL handling system for QR code redirects with multiple fallback strategies:
+
+```mermaid
+flowchart TD
+    A[QR Code Scanned] --> B{URL Type?}
+    B -->|Clean URL| C[/qr/code]
+    B -->|AJAX URL| D[admin-ajax.php]
+    B -->|Query Param| E[/?qr=code]
+    
+    C --> F{Handler Called?}
+    F -->|No| G[Redirect to Admin]
+    F -->|Yes| H[Process Redirect]
+    
+    D --> I[AJAX Handler]
+    I --> H
+    
+    E --> J{Query Handler}
+    J -->|No| G
+    J -->|Yes| H
+    
+    H --> K[Database Lookup]
+    K --> L{Found?}
+    L -->|No| M[404 Error]
+    L -->|Yes| N[Update Scan Count]
+    N --> O[Redirect to Destination]
+```
+
+### URL Strategy Evolution
+
+**Initial Goal:** Clean, user-friendly URLs like `http://localhost:8080/qr/DofYy6sE`
+
+**Attempted Approaches:**
+1. **Rewrite Rules with `template_redirect`** - Failed due to WordPress URL processing conflicts
+2. **Early Request Interception** - `init`, `parse_request`, `wp` hooks failed to catch requests
+3. **REST API Endpoints** - Also redirected to admin page before processing
+4. **Query Parameters** - WordPress interference prevented handler execution
+
+**Working Solution:** AJAX endpoints using WordPress's built-in AJAX system
+```
+http://localhost:8080/wp-admin/admin-ajax.php?action=qr_redirect&qr=DofYy6sE
+```
+
+### URL Processing Architecture
+
+**Current Implementation:**
+- **AJAX Handler:** `qr_trackr_ajax_qr_redirect()` in `module-ajax.php`
+- **URL Generation:** Consistent across all modules using `admin_url()`
+- **Security:** WordPress sanitization and nonce verification
+- **Caching:** Database results cached for performance
+- **Error Handling:** Proper 404 responses for invalid codes
+
+**Production Considerations:**
+- **URL Aesthetics:** AJAX URLs contain "admin" (not ideal for public use)
+- **SEO Impact:** Search engines may not favor admin URLs
+- **User Experience:** Longer, more technical URLs
+- **Reliability:** Works consistently across all environments
+
+### Future URL Architecture
+
+**Planned Improvements:**
+1. **Custom Endpoint:** Proper rewrite rules with debugging
+2. **Subdomain Approach:** `qr.yoursite.com/code` for clean URLs
+3. **Custom Domain:** Dedicated domain for maximum flexibility
+4. **URL Shortening:** Implement URL shortening for QR codes
+
+**Architecture Trade-offs:**
+- ✅ **AJAX Endpoints:** Reliable, secure, simple implementation
+- ❌ **Clean URLs:** Complex, potential conflicts, requires debugging
+- ✅ **Subdomain:** Clean, separate from WordPress processing
+- ❌ **Subdomain:** Requires DNS configuration and management
+
+### URL Security Architecture
+
+**Current Security Measures:**
+- **Input Sanitization:** All QR codes sanitized with `sanitize_text_field()`
+- **Database Validation:** Prepared statements with parameterized queries
+- **Output Escaping:** All URLs escaped with `esc_url_raw()`
+- **Rate Limiting:** Consider implementing for public endpoints
+- **Error Handling:** Proper HTTP status codes and error messages
+
+**Future Security Enhancements:**
+- **Authentication:** Optional authentication for sensitive QR codes
+- **Rate Limiting:** Prevent abuse of public redirect endpoints
+- **Analytics:** Track and monitor URL access patterns
+- **Caching:** Implement caching for frequently accessed QR codes
     
     Dev->>DOC: Review changes
     Dev->>GIT: Commit changes

@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.25] - 2025-01-27
+
+### Enhanced
+- **USER EXPERIENCE**: Fixed table update issues that caused incorrect data display after editing QR codes
+- **CODE QUALITY**: Replaced fragile index-based column selection with robust CSS class-based targeting
+- **DEBUGGING**: Added comprehensive console logging for troubleshooting table update issues
+- **MAINTAINABILITY**: Improved table update logic to be more resilient to structural changes
+
+### Added
+- **NEW DEBUGGING**: Enhanced console logging for AJAX responses and table update operations
+- **NEW COLUMN SELECTION**: CSS class-based column targeting using `td.column-{name}` selectors
+- **NEW CELL CLEARING**: Added `$imageCell.empty()` before updating QR images to prevent duplication
+- **NEW ROW SELECTION**: Improved row targeting with specific admin table selection
+
+### Fixed
+- **CRITICAL**: Fixed data misalignment where incorrect data appeared in wrong table columns after editing
+- **CRITICAL**: Resolved QR code image duplication in table cells after updates
+- **CRITICAL**: Fixed AJAX response to include complete record data for accurate table updates
+- **CRITICAL**: Replaced fragile `td.eq(index)` column selection with robust CSS class selectors
+- **CRITICAL**: Fixed table row selection to target specific admin table rows
+
+### Technical
+- Enhanced `qr_trackr_ajax_update_qr_details` to return complete updated record data
+- Implemented CSS class-based column selection: `td.column-common_name`, `td.column-destination_url`, etc.
+- Added cell clearing before QR image updates to prevent duplication
+- Improved row selection with `$('.wp-list-table').find('tr').has('[data-qr-id="' + qrId + '"]')`
+- Enhanced debugging with detailed console logging for troubleshooting
+
+### User Experience
+- Table now updates correctly with proper data in correct columns after editing QR codes
+- No more duplicate QR code images appearing in table cells
+- Visual feedback (orange highlighting) works correctly on updated cells
+- No manual page refresh required after editing QR codes
+
 ## [1.2.24] - 2025-01-27
 
 ### Enhanced

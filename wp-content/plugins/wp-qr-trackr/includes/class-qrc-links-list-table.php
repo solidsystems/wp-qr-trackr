@@ -141,6 +141,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 	 */
 	public function get_columns() {
 		$columns = array(
+			'cb'              => '<input type="checkbox" />',
 			'id'              => esc_html__( 'ID', 'wp-qr-trackr' ),
 			'qr_image'        => esc_html__( 'QR Image', 'wp-qr-trackr' ),
 			'common_name'     => esc_html__( 'Name', 'wp-qr-trackr' ),
@@ -149,6 +150,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 			'referral_code'   => esc_html__( 'Referral Code', 'wp-qr-trackr' ),
 			'scans'           => esc_html__( 'Scans', 'wp-qr-trackr' ),
 			'created_at'      => esc_html__( 'Created', 'wp-qr-trackr' ),
+			'actions'         => esc_html__( 'Actions', 'wp-qr-trackr' ),
 		);
 
 		return $columns;
@@ -294,6 +296,9 @@ class QRC_Links_List_Table extends WP_List_Table {
 			case 'qr_code':
 				return $this->column_qr_code( $item );
 
+			case 'actions':
+				return $this->column_actions( $item );
+
 			default:
 				return esc_html( $item[ $column_name ] ?? '' );
 		}
@@ -340,7 +345,8 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$tracking_url = '';
 
 		if ( ! empty( $qr_code ) ) {
-			$tracking_url = home_url( '/qr/' . esc_attr( $qr_code ) );
+			// Use the clean rewrite URL instead of admin-ajax.php.
+			$tracking_url = home_url( '/redirect/' . esc_attr( $qr_code ) );
 		}
 
 		// Show QR code identifier and tracking URL without image (image is in qr_image column).
@@ -390,5 +396,34 @@ class QRC_Links_List_Table extends WP_List_Table {
 		}
 
 		return -$result;
+	}
+
+	/**
+	 * Render the actions column.
+	 *
+	 * @since 1.0.0
+	 * @param array $item The current item.
+	 * @return string The column content.
+	 */
+	protected function column_actions( $item ) {
+		$qr_id = $item['id'];
+		$actions = array();
+
+		// Edit action (opens modal).
+		$actions['edit'] = sprintf(
+			'<a href="#" class="button button-small qr-code-modal-trigger" data-qr-id="%d">%s</a>',
+			absint( $qr_id ),
+			esc_html__( 'Edit', 'wp-qr-trackr' )
+		);
+
+			// Delete action (AJAX).
+	$actions['delete'] = sprintf(
+		'<button type="button" class="button button-small button-link-delete qr-delete-btn" data-qr-id="%d" data-nonce="%s">%s</button>',
+		absint( $qr_id ),
+		esc_attr( wp_create_nonce( 'qr_trackr_nonce' ) ),
+		esc_html__( 'Delete', 'wp-qr-trackr' )
+	);
+
+		return implode( ' ', $actions );
 	}
 }

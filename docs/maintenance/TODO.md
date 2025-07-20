@@ -1,5 +1,32 @@
 # TODO List
 
+## ✅ COMPLETED: QR URL Cleanup
+
+### ✅ COMPLETED: Clean QR Code URLs
+- **Status**: ✅ COMPLETED
+- **Files Fixed**: `module-rewrite.php`, `class-qrc-links-list-table.php`, `module-utils.php`, `module-ajax.php`, `add-new-page.php`
+- **Changes Made**: 
+  - Replaced admin-ajax.php URLs with clean rewrite URLs: `/redirect/{code}`
+  - Implemented proper WordPress rewrite rules using `init` hook
+  - Added query var registration for `qr_tracking_code`
+  - Used `template_redirect` hook for reliable processing
+  - Added debug output to prevent admin redirects for non-logged-in users
+- **URL Format**: Changed from `http://localhost:8080/wp-admin/admin-ajax.php?action=qr_redirect&qr=H4qMunPg` to `http://localhost:8080/redirect/H4qMunPg`
+- **User Experience**: Works for both logged-in and logged-out users
+- **Security**: Maintains proper scan tracking and database updates
+
+### ✅ COMPLETED: Destination URL Edit Functionality
+- **Status**: ✅ COMPLETED
+- **Files Fixed**: `module-ajax.php`, `qrc-admin.js`
+- **Changes Made**: 
+  - Enhanced `qr_trackr_ajax_update_qr_details` function to accept and validate destination URL updates
+  - Changed destination URL field in edit modal from read-only link to editable input field
+  - Updated JavaScript to send destination URL in AJAX requests
+  - Added proper URL validation using `wp_http_validate_url()`
+  - Updated modal population to set input value instead of link attributes
+- **User Experience**: Users can now edit destination URLs directly from the QR code details modal
+- **Security**: Maintains proper validation and sanitization of URL inputs
+
 ## Critical Code Quality Issues
 
 ### ✅ COMPLETED: Nonce Verification
@@ -46,6 +73,23 @@
 - **Files**: `module-ajax.php`
 - **Changes Made**: Implemented caching for link lookup queries in AJAX handlers
 - **Performance Impact**: Improved response times for QR code generation requests
+
+### ✅ COMPLETED: Table Update Fixes
+- **Status**: ✅ COMPLETED
+- **Files Fixed**: `module-ajax.php`, `assets/qrc-admin.js`, `wp-content/plugins/wp-qr-trackr/assets/qrc-admin.js`
+- **Issues Resolved**:
+  - **Data Misalignment**: Fixed incorrect data appearing in wrong table columns after editing
+  - **QR Image Duplication**: Resolved duplicate QR code images appearing in table cells
+  - **Column Selection**: Replaced fragile index-based column selection with robust CSS class-based selection
+  - **AJAX Response**: Enhanced AJAX response to include complete record data for accurate table updates
+- **Technical Changes**:
+  - **Enhanced AJAX Response**: Modified `qr_trackr_ajax_update_qr_details` to return complete updated record data
+  - **CSS Class-Based Selection**: Changed from `td.eq(index)` to `td.column-{name}` selectors for reliable column targeting
+  - **Cell Clearing**: Added `$imageCell.empty()` before updating QR images to prevent duplication
+  - **Enhanced Debugging**: Added comprehensive console logging for troubleshooting table updates
+  - **Row Selection**: Improved row targeting with specific admin table selection
+- **User Experience**: Table now updates correctly with proper data in correct columns after editing QR codes
+- **Code Quality**: More maintainable and robust column selection that won't break with table structure changes
 
 ## Remaining Items (Optional)
 

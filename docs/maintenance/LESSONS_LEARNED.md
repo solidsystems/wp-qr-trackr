@@ -84,6 +84,140 @@ wp-qr-trackr is a modular, robust WordPress plugin for QR code generation and tr
 
 ---
 
+## JavaScript Event Delegation & jQuery Context Issues: Delete vs Edit Button Behavior
+
+### Problem Description
+During development, the delete button in the QR code admin list was not responding to clicks, while the edit button worked correctly. This created a puzzling situation where similar UI elements behaved differently.
+
+### Root Cause Analysis
+**Issue:** Delete button showed no confirmation dialog and no AJAX request was sent.
+**Edit Button:** Worked correctly, showing modal and handling AJAX requests.
+
+**Investigation Steps:**
+1. **Event Handler Attachment:** Both buttons used the same jQuery event delegation pattern
+2. **DOM Inspection:** Delete buttons were present with correct classes and data attributes
+3. **JavaScript Loading:** Scripts were loading in the correct order
+4. **AJAX Handler Registration:** Both AJAX handlers were properly registered
+
+**Critical Discovery:** The issue was with jQuery context, not the event handlers themselves.
+
+### The jQuery Context Problem
+
+**Original Code (Problematic):**
+```javascript
+jQuery(document).ready(function($) {
+    $(document).on('click', '.qr-delete-btn', function(e) {
+        // Handler never fired
+    });
+});
+```
+
+**Root Cause:** This pattern doesn't guarantee that `$` refers to the global jQuery object in all WordPress admin contexts.
+
+**Solution (Working):**
+```javascript
+(function($) {
+    $(function() {
+        $(document).on('click', '.qr-delete-btn', function(e) {
+            // Handler now fires correctly
+        });
+    });
+})(window.jQuery);
+```
+
+### Why This Fixed the Issue
+
+1. **Global jQuery Reference:** `window.jQuery` ensures we're using the global jQuery instance
+2. **Proper Context:** The IIFE (Immediately Invoked Function Expression) creates a clean scope
+3. **DOM Ready:** `$(function() { ... })` ensures the DOM is ready
+4. **Event Delegation:** `$(document).on('click', '.qr-delete-btn', ...)` works correctly
+
+### Debugging Strategy Used
+
+1. **Native JavaScript Fallback:** Added native JS event listeners to confirm buttons were clickable
+2. **Console Logging:** Extensive logging to track jQuery functionality and event attachment
+3. **Event Delegation Testing:** Tested general button clicks vs specific class clicks
+4. **jQuery Version Verification:** Confirmed jQuery was loaded and accessible
+
+### Key Learnings
+
+#### 1. jQuery Context Matters
+- **Rule:** Always use `(function($) { ... })(window.jQuery);` pattern in WordPress plugins
+- **Reason:** Ensures global jQuery is used regardless of WordPress admin context
+- **Benefit:** Consistent behavior across different WordPress admin pages
+
+#### 2. Event Delegation Debugging
+- **Strategy:** Test with native JS first to isolate jQuery issues
+- **Approach:** Add general event handlers before specific ones
+- **Verification:** Log jQuery object and document references
+
+#### 3. WordPress Admin JavaScript Patterns
+- **Best Practice:** Use IIFE wrapper for all admin JavaScript
+- **Avoid:** Direct `jQuery(document).ready()` calls
+- **Ensure:** Global jQuery reference with `window.jQuery`
+
+#### 4. Systematic Debugging Approach
+- **Step 1:** Verify DOM elements exist and are clickable
+- **Step 2:** Test with native JavaScript
+- **Step 3:** Verify jQuery is working with simple selectors
+- **Step 4:** Test event delegation with general handlers
+- **Step 5:** Debug specific event handlers
+
+### Code Quality Improvements
+
+#### Before (Problematic)
+```javascript
+jQuery(document).ready(function($) {
+    // Event handlers
+    // AJAX calls
+    // UI updates
+});
+```
+
+#### After (Robust)
+```javascript
+(function($) {
+    $(function() {
+        // Event handlers
+        // AJAX calls  
+        // UI updates
+    });
+})(window.jQuery);
+```
+
+### Testing Strategy
+
+1. **Cross-Page Testing:** Test on different WordPress admin pages
+2. **Console Verification:** Check for jQuery conflicts or errors
+3. **Event Logging:** Log all button clicks to verify handlers
+4. **AJAX Testing:** Test AJAX endpoints directly via browser dev tools
+
+### Future Prevention
+
+#### Development Guidelines
+1. **Always use IIFE wrapper** for WordPress admin JavaScript
+2. **Test event delegation** with both general and specific selectors
+3. **Add console logging** during development for debugging
+4. **Verify jQuery context** before implementing complex functionality
+
+#### Code Review Checklist
+- [ ] JavaScript uses `(function($) { ... })(window.jQuery);` pattern
+- [ ] Event handlers use proper delegation
+- [ ] AJAX calls include error handling
+- [ ] Console logging is removed for production
+
+### Impact on Plugin Architecture
+
+This learning reinforced the importance of:
+- **Consistent JavaScript patterns** across all admin functionality
+- **Systematic debugging approaches** for UI issues
+- **WordPress-specific best practices** for admin JavaScript
+- **Testing on multiple admin pages** to catch context issues
+
+The fix ensures all admin JavaScript follows the same robust pattern, preventing similar issues in future development.
+
+---
+
 ## Meta: How This Project Was Built
 - **Prompt Engineering Only:** All code, scripts, and documentation were generated via prompt engineering using Cursor's Agent Mode. No code was written by hand.
 - **First Public Open Source Repo:** This is the author's first public open source project, intended as a learning resource and a robust, real-world example of AI-driven software engineering.
@@ -246,3 +380,134 @@ fi
 7. **Monitor and iterate** - Continuously improve CI/CD pipeline
 
 This CI/CD implementation represents a major milestone in the project's evolution, providing a robust, containerized testing environment that ensures code quality and consistency across all contributors and platforms.
+
+## QR Code URL Handling & Template Redirect Learnings
+
+### Initial Approach: Clean URLs
+**Goal:** Create user-friendly QR code URLs like `http://localhost:8080/qr/DofYy6sE`
+
+**Attempted Solutions:**
+1. **Rewrite Rules with `template_redirect`:** Registered custom rewrite rules for `/qr/{code}` pattern
+2. **Early Request Interception:** Used `init`, `parse_request`, and `wp` actions to catch requests early
+3. **REST API Endpoints:** Created `/wp-json/qr-trackr/v1/redirect/{code}` endpoints
+
+**Problems Encountered:**
+- WordPress consistently redirected `/qr/` requests to admin page before our handlers could process them
+- Debug logging showed handlers were never called despite being properly registered
+- Multiple action hooks (`init`, `parse_request`, `wp`) failed to intercept requests
+- REST API endpoints also redirected to admin page
+
+**Root Cause Analysis:**
+- WordPress URL processing order processes requests before custom handlers
+- Rewrite rules may conflict with WordPress's default URL handling
+- `is_admin()` checks and other WordPress filters interfere with custom URL processing
+- Containerized environment may have different URL processing behavior
+
+### Working Solution: AJAX Endpoints
+**Final Implementation:** `http://localhost:8080/wp-admin/admin-ajax.php?action=qr_redirect&qr=DofYy6sE`
+
+**Why It Works:**
+- AJAX endpoints are processed by WordPress's built-in AJAX system
+- No conflicts with rewrite rules or URL processing
+- Reliable and predictable behavior across environments
+- Proper nonce verification and security handling
+
+**Trade-offs:**
+- ✅ **Reliable:** Works consistently across all environments
+- ✅ **Secure:** Uses WordPress's built-in AJAX security
+- ✅ **Simple:** No complex rewrite rule debugging needed
+- ❌ **URL Aesthetics:** Contains "admin" in URL (not ideal for public use)
+- ❌ **SEO Impact:** Search engines may not favor admin URLs
+- ❌ **User Experience:** Longer, more technical URLs
+
+### Production URL Recommendations
+
+For production use, consider these cleaner alternatives:
+
+#### 1. Custom Endpoint with Proper Rewrite Rules
+```php
+// Register custom endpoint
+add_rewrite_endpoint('qr-redirect', EP_ROOT);
+
+// Handle in template_redirect
+function handle_qr_redirect() {
+    global $wp_query;
+    if (isset($wp_query->query_vars['qr-redirect'])) {
+        // Process QR redirect
+    }
+}
+add_action('template_redirect', 'handle_qr_redirect');
+```
+
+#### 2. Subdomain Approach
+- Use `qr.yoursite.com/code` for QR redirects
+- Completely separate from WordPress admin
+- Clean, memorable URLs
+
+#### 3. Custom Domain
+- Dedicated domain like `qr.yourdomain.com/code`
+- Maximum flexibility and branding control
+- No WordPress URL processing conflicts
+
+#### 4. REST API with Authentication
+```php
+register_rest_route('qr-trackr/v1', '/redirect/(?P<code>[a-zA-Z0-9]+)', [
+    'methods' => 'GET',
+    'callback' => 'handle_qr_redirect',
+    'permission_callback' => '__return_true'
+]);
+```
+
+### Key Learnings for URL Handling
+
+#### 1. WordPress URL Processing Order
+- WordPress processes URLs in a specific order
+- Custom handlers must be registered at the right time
+- `template_redirect` is often too late for custom URL patterns
+
+#### 2. Containerized Environment Considerations
+- Docker environments may behave differently than local installations
+- URL processing can be affected by container networking
+- Always test URL handling in target environment
+
+#### 3. Debugging URL Handlers
+- Use `error_log()` for debugging URL processing
+- Check if handlers are registered: `has_action('hook', 'function')`
+- Verify function exists: `function_exists('function_name')`
+- Monitor WordPress logs for request processing
+
+#### 4. Fallback Strategies
+- Always have a working fallback (AJAX endpoints)
+- Test multiple approaches before settling on one
+- Document why certain approaches don't work
+
+#### 5. Security Considerations
+- All public endpoints need proper validation
+- Use WordPress sanitization and escaping
+- Implement rate limiting for public endpoints
+- Consider nonce verification for sensitive operations
+
+### Future Improvements
+
+#### Planned URL Enhancements
+1. **Custom Endpoint Implementation:** Proper rewrite rules with debugging
+2. **Subdomain Setup:** Dedicated QR redirect subdomain
+3. **URL Shortening:** Implement URL shortening for QR codes
+4. **Analytics Integration:** Track URL performance and user behavior
+5. **Caching:** Implement caching for frequently accessed QR codes
+
+#### Monitoring and Analytics
+- Track QR code redirect performance
+- Monitor URL accessibility and uptime
+- Analyze user behavior and conversion rates
+- Alert on redirect failures
+
+### Best Practices Established
+
+1. **Test URL handling in target environment** - Don't assume local behavior
+2. **Have working fallbacks** - AJAX endpoints as reliable backup
+3. **Document URL processing issues** - Help future developers avoid same problems
+4. **Consider user experience** - Balance technical simplicity with URL aesthetics
+5. **Plan for production** - Design URL structure for public use from the start
+
+This URL handling experience demonstrates the importance of understanding WordPress's internal URL processing and having reliable fallback strategies for critical functionality.

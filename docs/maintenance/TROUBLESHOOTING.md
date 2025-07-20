@@ -44,6 +44,84 @@ This guide covers common issues and solutions for the WP QR Trackr plugin. If yo
 - 🟢 **RESOLVED** - All QR code URLs now work correctly
 - 🟢 **Tracking Active** - Analytics and scan counting functional
 
+## JavaScript Event Delegation Issues - RESOLVED ✅
+
+### Delete Button Not Responding (Fixed in v1.2.8)
+
+**Problem:** Delete button in QR code admin list showed no confirmation dialog and no AJAX request was sent, while edit button worked correctly.
+
+**Symptoms:**
+- Delete button appeared clickable but nothing happened
+- No console errors or JavaScript warnings
+- Edit button worked perfectly with modal and AJAX
+- Both buttons used identical event delegation patterns
+
+**Root Cause:** jQuery context issue in WordPress admin environment.
+
+**Investigation Steps:**
+1. **DOM Inspection:** Confirmed delete buttons existed with correct classes and data attributes
+2. **Native JS Test:** Added native JavaScript event listeners - buttons were clickable
+3. **jQuery Verification:** Confirmed jQuery was loaded and accessible
+4. **Event Delegation Test:** General button clicks worked, specific class clicks didn't
+5. **Context Analysis:** Discovered jQuery context was not global
+
+**Solution Applied:**
+```javascript
+// BEFORE (Problematic)
+jQuery(document).ready(function($) {
+    $(document).on('click', '.qr-delete-btn', function(e) {
+        // Handler never fired
+    });
+});
+
+// AFTER (Working)
+(function($) {
+    $(function() {
+        $(document).on('click', '.qr-delete-btn', function(e) {
+            // Handler now fires correctly
+        });
+    });
+})(window.jQuery);
+```
+
+**Why This Fixed It:**
+- **Global jQuery Reference:** `window.jQuery` ensures global jQuery instance
+- **Proper Context:** IIFE creates clean scope with correct jQuery reference
+- **DOM Ready:** `$(function() { ... })` ensures DOM is ready
+- **Event Delegation:** Works correctly with proper jQuery context
+
+**Debugging Strategy Used:**
+1. **Native JavaScript Fallback:** Added native JS listeners to isolate jQuery issues
+2. **Console Logging:** Extensive logging to track jQuery functionality
+3. **Event Delegation Testing:** Tested general vs specific selectors
+4. **jQuery Version Verification:** Confirmed jQuery was loaded
+
+**Current Status:**
+- 🟢 **RESOLVED** - Delete button now works correctly with confirmation dialog
+- 🟢 **AJAX Functional** - Delete requests sent and processed successfully
+- 🟢 **UI Updates** - Button states and row removal work as expected
+- 🟢 **Pattern Established** - All admin JavaScript now uses robust IIFE pattern
+
+### Prevention Guidelines
+
+**For Future Development:**
+1. **Always use IIFE wrapper:** `(function($) { ... })(window.jQuery);`
+2. **Test event delegation:** With both general and specific selectors
+3. **Add console logging:** During development for debugging
+4. **Verify jQuery context:** Before implementing complex functionality
+
+**Code Review Checklist:**
+- [ ] JavaScript uses `(function($) { ... })(window.jQuery);` pattern
+- [ ] Event handlers use proper delegation
+- [ ] AJAX calls include error handling
+- [ ] Console logging is removed for production
+
+**Testing Strategy:**
+1. **Cross-Page Testing:** Test on different WordPress admin pages
+2. **Console Verification:** Check for jQuery conflicts or errors
+3. **Event Logging:** Log all button clicks to verify handlers
+4. **AJAX Testing:** Test AJAX endpoints directly via browser dev tools
+
 ## PHPCS Compliance Issues & Solutions
 
 ### Major PHPCS Compliance Achievement (Latest Update)
@@ -197,6 +275,133 @@ if ( false === $result ) {
 ## Environment & Dependency Issues
 - Use `yarn setup:ci` to reinstall all dependencies and Husky hooks.
 - Ensure `config/.env` and `config/.env.example` are up to date and match your environment.
+
+## QR Code URL Handling Issues
+
+### QR Code URLs Redirecting to Admin Page
+
+**Problem:** QR code URLs like `http://localhost:8080/qr/DofYy6sE` redirect to WordPress admin page instead of destination URL.
+
+**Symptoms:**
+- QR code URLs show "admin" in browser address bar
+- No debug messages appear in WordPress logs
+- Handlers are registered but never called
+- Multiple URL patterns fail (rewrite rules, REST API, query parameters)
+
+**Root Causes:**
+1. **WordPress URL Processing Order** - WordPress processes URLs before custom handlers
+2. **Rewrite Rule Conflicts** - Custom rewrite rules conflict with WordPress defaults
+3. **Container Environment Issues** - Docker may affect URL processing behavior
+4. **Action Hook Timing** - `init`, `parse_request`, `wp` hooks may be too late
+
+**Debugging Steps:**
+```bash
+# Check if handler functions exist
+docker compose -f docker/docker-compose.dev.yml exec wordpress-dev wp eval 'echo function_exists("qr_trackr_handle_qr_redirect") ? "EXISTS" : "NOT FOUND";'
+
+# Check if actions are registered
+docker compose -f docker/docker-compose.dev.yml exec wordpress-dev wp eval 'echo has_action("init", "qr_trackr_handle_qr_redirect") ? "REGISTERED" : "NOT REGISTERED";'
+
+# Test URL directly
+curl -I "http://localhost:8080/qr/DofYy6sE"
+
+# Check WordPress logs
+docker compose -f docker/docker-compose.dev.yml logs wordpress-dev --tail=10
+```
+
+**Working Solution:**
+Use AJAX endpoints as reliable fallback:
+```
+http://localhost:8080/wp-admin/admin-ajax.php?action=qr_redirect&qr=DofYy6sE
+```
+
+**Why AJAX Works:**
+- Uses WordPress's built-in AJAX system
+- No conflicts with rewrite rules
+- Reliable across all environments
+- Proper security handling
+
+**Production Recommendations:**
+1. **Custom Endpoint:** Implement proper rewrite rules with debugging
+2. **Subdomain:** Use `qr.yoursite.com/code` for clean URLs
+3. **Custom Domain:** Dedicated domain for QR redirects
+4. **REST API:** WordPress REST API with authentication
+
+### QR Code URL Generation Issues
+
+**Problem:** QR codes generate with wrong URL format.
+
+**Check These Files:**
+- `includes/class-qrc-links-list-table.php` - List table URL generation
+- `includes/module-ajax.php` - AJAX response URL generation
+- `includes/module-utils.php` - QR code generation URL
+
+**Current Working Format:**
+```php
+$tracking_url = admin_url( 'admin-ajax.php?action=qr_redirect&qr=' . esc_attr( $qr_code ) );
+```
+
+**Common Issues:**
+- Using `home_url()` instead of `admin_url()` for AJAX endpoints
+- Missing `action=qr_redirect` parameter
+- Incorrect parameter name (should be `qr`, not `code`)
+
+### AJAX Handler Not Working
+
+**Problem:** AJAX endpoints return 404 or redirect to admin page.
+
+**Check These Items:**
+1. **Handler Registration:**
+```php
+add_action( 'wp_ajax_qr_redirect', 'qr_trackr_ajax_qr_redirect' );
+add_action( 'wp_ajax_nopriv_qr_redirect', 'qr_trackr_ajax_qr_redirect' );
+```
+
+2. **Function Definition:**
+```php
+function qr_trackr_ajax_qr_redirect() {
+    // Get QR code parameter
+    $qr_code = isset( $_GET['qr'] ) ? sanitize_text_field( wp_unslash( $_GET['qr'] ) ) : '';
+    
+    // Database lookup and redirect
+    // ...
+}
+```
+
+3. **Module Loading:** Ensure AJAX module is loaded in main plugin file
+
+**Debug Commands:**
+```bash
+# Test AJAX endpoint directly
+curl -I "http://localhost:8080/wp-admin/admin-ajax.php?action=qr_redirect&qr=TESTCODE"
+
+# Check if AJAX handler exists
+docker compose -f docker/docker-compose.dev.yml exec wordpress-dev wp eval 'echo function_exists("qr_trackr_ajax_qr_redirect") ? "EXISTS" : "NOT FOUND";'
+```
+
+### URL Aesthetics for Production
+
+**Current Limitation:** AJAX URLs contain "admin" which is not ideal for public QR codes.
+
+**Solutions:**
+1. **Accept Current Format:** Works reliably, good for internal use
+2. **Implement Custom Endpoint:** Clean URLs with proper rewrite rules
+3. **Use Subdomain:** `qr.yoursite.com/code` for public-facing QR codes
+4. **Custom Domain:** Dedicated domain for maximum flexibility
+
+**Trade-offs:**
+- ✅ **AJAX Endpoints:** Reliable, secure, simple
+- ❌ **Clean URLs:** Complex, may have conflicts, requires debugging
+- ✅ **Subdomain:** Clean, separate from WordPress
+- ❌ **Subdomain:** Requires DNS configuration
+
+### Best Practices for URL Handling
+
+1. **Always Test in Target Environment** - Don't assume local behavior
+2. **Have Working Fallbacks** - AJAX endpoints as reliable backup
+3. **Document Issues** - Help future developers avoid same problems
+4. **Consider User Experience** - Balance technical simplicity with aesthetics
+5. **Plan for Production** - Design URL structure for public use from start
 
 ## CI/CD Workflow Issues
 

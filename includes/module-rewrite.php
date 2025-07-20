@@ -295,6 +295,7 @@ function qr_trackr_update_scan_count_immediate( $link_id ) {
 		// Clear relevant caches after successful update.
 		wp_cache_delete( 'qr_trackr_details_' . $link_id );
 		wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
+		wp_cache_delete( 'qrc_link_' . $link_id, 'qrc_links' );
 	}
 }
 

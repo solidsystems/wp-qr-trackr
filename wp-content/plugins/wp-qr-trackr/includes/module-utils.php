@@ -184,7 +184,7 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 	$args     = wp_parse_args( $args, $defaults );
 
 	// Generate the URL that the QR code will redirect to.
-	$redirect_url = home_url( '/qr/' . sanitize_text_field( $tracking_code ) );
+			$redirect_url = home_url( '/redirect/' . sanitize_text_field( $tracking_code ) );
 
 	// Check cache first.
 	$cache_key  = 'qr_trackr_image_' . md5( $tracking_code . wp_json_encode( $args ) );
