@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.29] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed template include paths for production servers
+- **CRITICAL**: Resolved "Failed opening template file" errors on production servers
+- **CRITICAL**: Fixed path resolution issues with `dirname(__DIR__)` on different server configurations
+- **CRITICAL**: Ensured consistent template loading across all server environments
+
+### Technical
+- Replaced `dirname(__DIR__)` with `QR_TRACKR_PLUGIN_DIR` constant for all template includes
+- Fixed include paths for admin-page.php, add-new-page.php, settings-page.php, and test-qr-generation.php
+- Improved path resolution reliability across different server configurations
+- Enhanced compatibility with various hosting environments
+
+### Production Impact
+- **TEMPLATE LOADING**: All admin pages now load correctly on production servers
+- **SERVER COMPATIBILITY**: Works consistently across different hosting configurations
+- **ERROR RESOLUTION**: Eliminates "Failed opening stream" and "No such file or directory" errors
+- **ADMIN FUNCTIONALITY**: Full admin interface now accessible on production sites
+
 ## [1.2.28] - 2025-01-27
 
 ### Fixed
