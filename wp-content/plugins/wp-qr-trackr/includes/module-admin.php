@@ -151,6 +151,11 @@ function qrc_admin_page() {
 		qr_trackr_debug_log( 'QR Trackr: qrc_admin_page() called' );
 	}
 
+	// Check user capabilities.
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
+	}
+
 	// Load list table class if not already loaded.
 	if ( ! class_exists( 'QRC_Links_List_Table' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
@@ -268,6 +273,11 @@ function qrc_admin_enqueue_scripts( $hook ) {
 function qrc_settings_page() {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 		qr_trackr_debug_log( 'QR Trackr: qrc_settings_page() called' );
+	}
+
+	// Check user capabilities.
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
 	}
 
 	// Include the settings page template.
