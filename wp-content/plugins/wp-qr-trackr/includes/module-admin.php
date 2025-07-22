@@ -77,6 +77,11 @@ function qrc_register_settings() {
 		qr_trackr_debug_log( 'QR Trackr: qrc_register_settings() called' );
 	}
 
+	// Debug output for troubleshooting.
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( 'QR Trackr: qrc_register_settings() called' );
+	}
+
 	// Register a new settings section.
 	add_settings_section(
 		'qr_trackr_general_settings',
