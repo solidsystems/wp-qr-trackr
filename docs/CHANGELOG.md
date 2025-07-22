@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.30] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed translation loading timing issues for WordPress 6.7+
+- **CRITICAL**: Resolved "Failed opening template file" errors on production servers
+- **CRITICAL**: Fixed early translation loading warnings in WordPress 6.7+
+- **CRITICAL**: Added fallback template include paths with comprehensive error handling
+
+### Technical
+- Moved module loading from immediate execution to `init` hook (priority 5)
+- Added fallback template include paths using `dirname(__DIR__)` when `QR_TRACKR_PLUGIN_DIR` fails
+- Added comprehensive debugging for template path resolution
+- Enhanced error handling with user-friendly error messages for missing templates
+- Fixed WordPress 6.7+ translation loading compliance
+
+### Production Impact
+- **TRANSLATION COMPLIANCE**: No more early translation loading warnings
+- **TEMPLATE LOADING**: Robust template inclusion with fallback paths
+- **ERROR HANDLING**: Clear error messages when templates are missing
+- **DEBUGGING**: Enhanced logging for troubleshooting template issues
+- **WORDPRESS COMPATIBILITY**: Full compliance with WordPress 6.7+ standards
+
+### WordPress 6.7+ Compatibility
+- **Translation Loading**: Now loads at proper time (init hook or later)
+- **Module Loading**: Properly timed to avoid early execution issues
+- **Error Handling**: Enhanced error messages for better debugging
+- **Template Resolution**: Robust path resolution for all server configurations
+
 ## [1.2.29] - 2025-01-27
 
 ### Fixed
