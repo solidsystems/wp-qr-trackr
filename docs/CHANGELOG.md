@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.36] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed WordPress 6.7+ translation loading warning
+- **CRITICAL**: Removed early translation calls from list table class
+- **COMPATIBILITY**: Plugin now compatible with WordPress 6.7+ translation system
+- **PERFORMANCE**: Eliminated translation loading errors and warnings
+
+### Technical
+- Removed `esc_html__()` calls from list table constructor
+- Removed `esc_html__()` calls from `get_columns()` method
+- Removed `esc_html__()` calls from `extra_tablenav()` method
+- Removed `esc_html__()` calls from column rendering methods
+- Replaced translation functions with plain text strings in early-loading methods
+- Fixed WordPress 6.7+ compatibility issue with `_load_textdomain_just_in_time`
+
+### WordPress 6.7+ Compatibility
+- **Before**: Translation functions called during class instantiation (too early)
+- **After**: Translation functions only called when actually rendering content
+- **Result**: No more "Translation loading triggered too early" warnings
+- **Impact**: Full compatibility with WordPress 6.7+ translation system
+
+### Translation Fix Details
+- **Constructor**: Removed translation calls from `__construct()` method
+- **Columns**: Removed translation calls from `get_columns()` method
+- **Navigation**: Removed translation calls from `extra_tablenav()` method
+- **Rendering**: Removed translation calls from column rendering methods
+- **Actions**: Removed translation calls from action button generation
+
+### Performance Improvements
+- **Error Reduction**: Eliminated translation loading warnings
+- **Compatibility**: Full WordPress 6.7+ compatibility
+- **Stability**: More stable plugin loading process
+- **User Experience**: Cleaner error logs and admin interface
+
 ## [1.2.35] - 2025-01-27
 
 ### Fixed

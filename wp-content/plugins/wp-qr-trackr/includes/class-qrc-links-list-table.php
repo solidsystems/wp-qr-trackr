@@ -32,8 +32,8 @@ class QRC_Links_List_Table extends WP_List_Table {
 	public function __construct() {
 		parent::__construct(
 			array(
-				'singular' => esc_html__( 'QR Code Link', 'wp-qr-trackr' ),
-				'plural'   => esc_html__( 'QR Code Links', 'wp-qr-trackr' ),
+				'singular' => 'QR Code Link',
+				'plural'   => 'QR Code Links',
 				'ajax'     => false,
 			)
 		);
@@ -79,7 +79,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 	 */
 	protected function extra_tablenav( $which ) {
 		if ( 'top' === $which ) {
-			$this->search_box( esc_html__( 'Search QR Codes', 'wp-qr-trackr' ), 'qr-search' );
+			$this->search_box( 'Search QR Codes', 'qr-search' );
 			$this->referral_filter_dropdown();
 		}
 	}
@@ -118,7 +118,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 		if ( ! empty( $referral_codes ) ) {
 			echo '<div class="alignleft actions" style="margin-left: 10px;">';
 			echo '<select name="referral_filter" id="referral-filter">';
-			echo '<option value="">' . esc_html__( 'All Referral Codes', 'wp-qr-trackr' ) . '</option>';
+			echo '<option value="">' . 'All Referral Codes' . '</option>';
 			foreach ( $referral_codes as $code ) {
 				printf(
 					'<option value="%s"%s>%s</option>',
@@ -128,7 +128,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 				);
 			}
 			echo '</select>';
-			submit_button( esc_html__( 'Filter', 'wp-qr-trackr' ), 'button', 'filter_action', false );
+			submit_button( 'Filter', 'button', 'filter_action', false );
 			echo '</div>';
 		}
 	}
@@ -142,15 +142,15 @@ class QRC_Links_List_Table extends WP_List_Table {
 	public function get_columns() {
 		$columns = array(
 			'cb'              => '<input type="checkbox" />',
-			'id'              => esc_html__( 'ID', 'wp-qr-trackr' ),
-			'qr_image'        => esc_html__( 'QR Image', 'wp-qr-trackr' ),
-			'common_name'     => esc_html__( 'Name', 'wp-qr-trackr' ),
-			'destination_url' => esc_html__( 'Destination URL', 'wp-qr-trackr' ),
-			'qr_code'         => esc_html__( 'QR Code', 'wp-qr-trackr' ),
-			'referral_code'   => esc_html__( 'Referral Code', 'wp-qr-trackr' ),
-			'scans'           => esc_html__( 'Scans', 'wp-qr-trackr' ),
-			'created_at'      => esc_html__( 'Created', 'wp-qr-trackr' ),
-			'actions'         => esc_html__( 'Actions', 'wp-qr-trackr' ),
+			'id'              => 'ID',
+			'qr_image'        => 'QR Image',
+			'common_name'     => 'Name',
+			'destination_url' => 'Destination URL',
+			'qr_code'         => 'QR Code',
+			'referral_code'   => 'Referral Code',
+			'scans'           => 'Scans',
+			'created_at'      => 'Created',
+			'actions'         => 'Actions',
 		);
 
 		return $columns;
@@ -276,11 +276,11 @@ class QRC_Links_List_Table extends WP_List_Table {
 				return $item[ $column_name ];
 
 			case 'common_name':
-				$name = ! empty( $item[ $column_name ] ) ? $item[ $column_name ] : '<em>' . esc_html__( 'No name set', 'wp-qr-trackr' ) . '</em>';
+				$name = ! empty( $item[ $column_name ] ) ? $item[ $column_name ] : '<em>No name set</em>';
 				return $name;
 
 			case 'referral_code':
-				$code = ! empty( $item[ $column_name ] ) ? '<code>' . esc_html( $item[ $column_name ] ) . '</code>' : '<em>' . esc_html__( 'None', 'wp-qr-trackr' ) . '</em>';
+				$code = ! empty( $item[ $column_name ] ) ? '<code>' . esc_html( $item[ $column_name ] ) . '</code>' : '<em>None</em>';
 				return $code;
 
 			case 'destination_url':
@@ -317,18 +317,15 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 		if ( ! empty( $qr_code_url ) ) {
 			return sprintf(
-				'<img src="%s" alt="%s" style="width: 60px; height: 60px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;" 
-				class="qr-code-modal-trigger" data-qr-id="%d" title="%s" />',
+				'<img src="%s" alt="QR Code" style="width: 60px; height: 60px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;" 
+				class="qr-code-modal-trigger" data-qr-id="%d" title="Click to view details" />',
 				esc_url( $qr_code_url ),
-				esc_attr__( 'QR Code', 'wp-qr-trackr' ),
-				absint( $qr_id ),
-				esc_attr__( 'Click to view details', 'wp-qr-trackr' )
+				absint( $qr_id )
 			);
 		} else {
 			return sprintf(
-				'<span class="qr-code-modal-trigger" data-qr-id="%d" style="cursor: pointer; color: #2271b1; text-decoration: underline;">%s</span>',
-				absint( $qr_id ),
-				esc_html__( 'Generate QR', 'wp-qr-trackr' )
+				'<span class="qr-code-modal-trigger" data-qr-id="%d" style="cursor: pointer; color: #2271b1; text-decoration: underline;">Generate QR</span>',
+				absint( $qr_id )
 			);
 		}
 	}
@@ -353,14 +350,13 @@ class QRC_Links_List_Table extends WP_List_Table {
 		if ( ! empty( $qr_code ) && ! empty( $tracking_url ) ) {
 			return sprintf(
 				'<code style="font-size: 12px; padding: 2px 4px; background: #f1f1f1; border-radius: 3px;">%s</code><br>
-				<a href="%s" target="_blank" class="button button-small" style="margin-top: 4px;">%s</a>',
+				<a href="%s" target="_blank" class="button button-small" style="margin-top: 4px;">Visit Link</a>',
 				esc_html( $qr_code ),
-				esc_url( $tracking_url ),
-				esc_html__( 'Visit Link', 'wp-qr-trackr' )
+				esc_url( $tracking_url )
 			);
 		}
 
-		return '<span class="dashicons dashicons-warning" title="' . esc_attr__( 'QR code not available', 'wp-qr-trackr' ) . '"></span>';
+		return '<span class="dashicons dashicons-warning" title="QR code not available"></span>';
 	}
 
 	/**
@@ -411,17 +407,15 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 		// Edit action (opens modal).
 		$actions['edit'] = sprintf(
-			'<a href="#" class="button button-small qr-code-modal-trigger" data-qr-id="%d">%s</a>',
-			absint( $qr_id ),
-			esc_html__( 'Edit', 'wp-qr-trackr' )
+			'<a href="#" class="button button-small qr-code-modal-trigger" data-qr-id="%d">Edit</a>',
+			absint( $qr_id )
 		);
 
 			// Delete action (AJAX).
 		$actions['delete'] = sprintf(
-			'<button type="button" class="button button-small button-link-delete qr-delete-btn" data-qr-id="%d" data-nonce="%s">%s</button>',
+			'<button type="button" class="button button-small button-link-delete qr-delete-btn" data-qr-id="%d" data-nonce="%s">Delete</button>',
 			absint( $qr_id ),
-			esc_attr( wp_create_nonce( 'qr_trackr_nonce' ) ),
-			esc_html__( 'Delete', 'wp-qr-trackr' )
+			esc_attr( wp_create_nonce( 'qr_trackr_nonce' ) )
 		);
 
 		return implode( ' ', $actions );
