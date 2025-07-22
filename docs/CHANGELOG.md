@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.26] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed admin page permission issues causing blank screens and access denied errors
+- **CRITICAL**: Added explicit capability checks to admin and settings page functions
+- **CRITICAL**: Resolved "Sorry, you are not allowed to access this page" error for site administrators
+- **CRITICAL**: Fixed JavaScript loading conflicts by removing manual script inclusion from admin template
+
+### Enhanced
+- **DEBUGGING**: Added comprehensive debugging output to admin page template
+- **SECURITY**: Enhanced permission validation for all admin page access
+- **CODE QUALITY**: Improved admin page template to use WordPress enqueue system properly
+- **USER EXPERIENCE**: Fixed blank screen issues on admin pages for users with proper permissions
+
+### Technical
+- Added `current_user_can('manage_options')` checks to `qrc_admin_page()` and `qrc_settings_page()` functions
+- Removed manual JavaScript inclusion from admin template to prevent conflicts
+- Added debug output to admin page template for troubleshooting
+- Enhanced error handling for permission-related issues
+
+### Production Impact
+- **ADMIN ACCESS**: Site administrators can now access QR Code admin pages without permission errors
+- **BLANK SCREENS**: Resolved blank screen issues on admin pages
+- **SETTINGS ACCESS**: Settings page now accessible to users with proper capabilities
+- **DEBUGGING**: Better error reporting for troubleshooting permission issues
+
 ## [1.2.25] - 2025-01-27
 
 ### Enhanced
