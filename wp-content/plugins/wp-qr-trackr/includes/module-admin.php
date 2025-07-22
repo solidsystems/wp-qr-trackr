@@ -173,30 +173,54 @@ function qrc_admin_page() {
 	$list_table = new QRC_Links_List_Table();
 	$list_table->prepare_items();
 
-	// Include the admin page template.
-	$template_path = QR_TRACKR_PLUGIN_DIR . 'templates/admin-page.php';
+	// Include the admin page template with multiple fallback paths.
+	$possible_paths = array(
+		QR_TRACKR_PLUGIN_DIR . 'templates/admin-page.php',
+		dirname( __DIR__ ) . '/templates/admin-page.php',
+		plugin_dir_path( __FILE__ ) . '../templates/admin-page.php',
+		ABSPATH . 'wp-content/plugins/wp-qr-trackr/templates/admin-page.php',
+	);
 	
-	// Debug template path.
+	$template_found = false;
+	$template_path = '';
+	
+	// Debug all possible paths.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'QR Trackr: Template path: ' . $template_path );
-		error_log( 'QR Trackr: File exists: ' . ( file_exists( $template_path ) ? 'true' : 'false' ) );
 		error_log( 'QR Trackr: QR_TRACKR_PLUGIN_DIR: ' . QR_TRACKR_PLUGIN_DIR );
+		error_log( 'QR Trackr: __DIR__: ' . __DIR__ );
+		error_log( 'QR Trackr: ABSPATH: ' . ABSPATH );
+		foreach ( $possible_paths as $index => $path ) {
+			error_log( 'QR Trackr: Path ' . $index . ': ' . $path . ' (exists: ' . ( file_exists( $path ) ? 'true' : 'false' ) . ')' );
+		}
 	}
 	
-	if ( file_exists( $template_path ) ) {
+	// Try each possible path.
+	foreach ( $possible_paths as $path ) {
+		if ( file_exists( $path ) ) {
+			$template_path = $path;
+			$template_found = true;
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'QR Trackr: Found template at: ' . $path );
+			}
+			break;
+		}
+	}
+	
+	if ( $template_found ) {
 		include $template_path;
 	} else {
-		// Fallback to direct path.
-		$fallback_path = dirname( __DIR__ ) . '/templates/admin-page.php';
+		// Show detailed error with all attempted paths.
+		$error_message = 'QR Trackr: Admin page template not found. Attempted paths:' . "\n";
+		foreach ( $possible_paths as $index => $path ) {
+			$error_message .= '- ' . $path . "\n";
+		}
+		$error_message .= "\nPlease check plugin installation and file permissions.";
+		
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( 'QR Trackr: Fallback path: ' . $fallback_path );
-			error_log( 'QR Trackr: Fallback exists: ' . ( file_exists( $fallback_path ) ? 'true' : 'false' ) );
+			error_log( $error_message );
 		}
-		if ( file_exists( $fallback_path ) ) {
-			include $fallback_path;
-		} else {
-			wp_die( esc_html__( 'QR Trackr: Admin page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
-		}
+		
+		wp_die( esc_html__( 'QR Trackr: Admin page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
 	}
 }
 
@@ -211,19 +235,30 @@ function qrc_add_new_page() {
 		qr_trackr_debug_log( 'QR Trackr: qrc_add_new_page() called' );
 	}
 
-	// Include the add new page template.
-	$template_path = QR_TRACKR_PLUGIN_DIR . 'templates/add-new-page.php';
+	// Include the add new page template with multiple fallback paths.
+	$possible_paths = array(
+		QR_TRACKR_PLUGIN_DIR . 'templates/add-new-page.php',
+		dirname( __DIR__ ) . '/templates/add-new-page.php',
+		plugin_dir_path( __FILE__ ) . '../templates/add-new-page.php',
+		ABSPATH . 'wp-content/plugins/wp-qr-trackr/templates/add-new-page.php',
+	);
 	
-	if ( file_exists( $template_path ) ) {
+	$template_found = false;
+	$template_path = '';
+	
+	// Try each possible path.
+	foreach ( $possible_paths as $path ) {
+		if ( file_exists( $path ) ) {
+			$template_path = $path;
+			$template_found = true;
+			break;
+		}
+	}
+	
+	if ( $template_found ) {
 		include $template_path;
 	} else {
-		// Fallback to direct path.
-		$fallback_path = dirname( __DIR__ ) . '/templates/add-new-page.php';
-		if ( file_exists( $fallback_path ) ) {
-			include $fallback_path;
-		} else {
-			wp_die( esc_html__( 'QR Trackr: Add new page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
-		}
+		wp_die( esc_html__( 'QR Trackr: Add new page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
 	}
 }
 
@@ -320,19 +355,30 @@ function qrc_settings_page() {
 		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
 	}
 
-	// Include the settings page template.
-	$template_path = QR_TRACKR_PLUGIN_DIR . 'templates/settings-page.php';
+	// Include the settings page template with multiple fallback paths.
+	$possible_paths = array(
+		QR_TRACKR_PLUGIN_DIR . 'templates/settings-page.php',
+		dirname( __DIR__ ) . '/templates/settings-page.php',
+		plugin_dir_path( __FILE__ ) . '../templates/settings-page.php',
+		ABSPATH . 'wp-content/plugins/wp-qr-trackr/templates/settings-page.php',
+	);
 	
-	if ( file_exists( $template_path ) ) {
+	$template_found = false;
+	$template_path = '';
+	
+	// Try each possible path.
+	foreach ( $possible_paths as $path ) {
+		if ( file_exists( $path ) ) {
+			$template_path = $path;
+			$template_found = true;
+			break;
+		}
+	}
+	
+	if ( $template_found ) {
 		include $template_path;
 	} else {
-		// Fallback to direct path.
-		$fallback_path = dirname( __DIR__ ) . '/templates/settings-page.php';
-		if ( file_exists( $fallback_path ) ) {
-			include $fallback_path;
-		} else {
-			wp_die( esc_html__( 'QR Trackr: Settings page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
-		}
+		wp_die( esc_html__( 'QR Trackr: Settings page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
 	}
 }
 
