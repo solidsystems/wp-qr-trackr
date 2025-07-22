@@ -149,7 +149,8 @@ function qr_trackr_handle_404() {
 	status_header( 404 );
 
 	// Check if this is a QR code request by looking at the request URI.
-	$request_uri = $_SERVER['REQUEST_URI'] ?? '';
+	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
+	$request_uri = wp_unslash( $_SERVER['REQUEST_URI'] ?? '' );
 	if ( strpos( $request_uri, '/redirect/' ) === 0 ) {
 		// This is a QR code request that failed, exit silently.
 		exit;

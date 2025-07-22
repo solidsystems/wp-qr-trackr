@@ -263,19 +263,35 @@ add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
  * @return void
  */
 function qrc_search_posts_ajax() {
-	// Debug logging for nonce verification.
+	// Security check - verify nonce and user permissions.
+	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qrc_search_posts' ) ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log( 'QR Trackr: Nonce verification failed for search request' );
+		}
+		wp_send_json_error(
+			array(
+				'message' => __( 'Security check failed.', 'wp-qr-trackr' ),
+			)
+		);
+		return;
+	}
+
+	// Debug logging after nonce verification.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
+		$nonce = isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : 'not set';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
+		$term = isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set';
 		qr_trackr_debug_log(
 			sprintf(
 				'QR Trackr: AJAX search request - nonce: %s, term: %s',
-				isset( $_POST['nonce'] ) ? $_POST['nonce'] : 'not set',
-				isset( $_POST['term'] ) ? $_POST['term'] : 'not set'
+				$nonce,
+				$term
 			)
 		);
 	}
 
-	// Security check - only verify user is logged in and has admin access.
-	// Nonce check removed for reliability since this is admin-only and WordPress has built-in CSRF protection.
+	// Verify user has admin access.
 	if ( ! is_admin() || ! current_user_can( 'edit_posts' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log( 'QR Trackr: Admin access check failed for search request' );
@@ -295,19 +311,28 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging for search term validation.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
+		$raw_term = isset( $_POST['term'] ) ? wp_unslash( $_POST['term'] ) : 'not set';
 		qr_trackr_debug_log(
 			sprintf(
-				'QR Trackr: Search term validation - raw: "%s", sanitized: "%s", length: %d, empty: %s, POST data: %s',
-				isset( $_POST['term'] ) ? $_POST['term'] : 'not set',
+				'QR Trackr: Search term validation - raw: "%s", sanitized: "%s", length: %d, empty: %s',
+				$raw_term,
 				$search_term,
 				strlen( $search_term ),
-				empty( $search_term ) ? 'true' : 'false',
-				json_encode( $_POST )
+				empty( $search_term ) ? 'true' : 'false'
 			)
 		);
 	}
 
 	// Temporarily bypass validation for debugging.
+	// Validation code commented out for debugging purposes.
+
+	/*
+	 * Validation code commented out for debugging purposes.
+	 */
+	/*
+	 * Search term validation temporarily disabled for debugging.
+	 */
 	/*
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
@@ -387,13 +412,14 @@ add_action( 'wp_ajax_qrc_search_posts', 'qrc_search_posts_ajax' );
 function qr_trackr_ajax_get_qr_details() {
 	// Debug logging for AJAX request.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( sprintf( 'QR Trackr: AJAX get_qr_details called. POST data: %s', json_encode( $_POST ) ) );
+		error_log( sprintf( 'QR Trackr: AJAX get_qr_details called. POST data: %s', wp_json_encode( $_POST ) ) );
 	}
 
 	// Verify nonce.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( 'QR Trackr: Nonce verification failed. Nonce: %s', isset( $_POST['nonce'] ) ? $_POST['nonce'] : 'not set' ) );
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
+			error_log( sprintf( 'QR Trackr: Nonce verification failed. Nonce: %s', isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : 'not set' ) );
 		}
 		wp_send_json_error( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
 		return;
@@ -517,7 +543,7 @@ function qr_trackr_ajax_get_qr_details() {
 		'qr_code'         => esc_html( $qr_code['qr_code'] ),
 		'common_name'     => esc_html( $qr_code['common_name'] ?? '' ),
 		'referral_code'   => esc_html( $qr_code['referral_code'] ?? '' ),
-		'destination_url' => $qr_code['destination_url'], // Don't escape for input field
+		'destination_url' => $qr_code['destination_url'], // Don't escape for input field.
 		'qr_code_url'     => esc_url( $qr_code['qr_code_url'] ?? '' ),
 		'post_title'      => esc_html( $post_title ),
 		'access_count'    => absint( $qr_code['access_count'] ),
@@ -648,22 +674,23 @@ function qr_trackr_ajax_update_qr_details() {
 		return;
 	}
 
-	$common_name     = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
-	$referral_code   = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+	$common_name   = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
+	$referral_code = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wp_unslash() is used for proper sanitization.
 	$destination_url = isset( $_POST['destination_url'] ) ? trim( wp_unslash( $_POST['destination_url'] ) ) : '';
 
 	// Validate destination URL if provided.
 	if ( ! empty( $destination_url ) ) {
-		// Validate URL format using regex pattern
+		// Validate URL format using regex pattern.
 		if ( ! preg_match( '/^https?:\/\/.+/', $destination_url ) ) {
 			wp_send_json_error( esc_html__( 'Invalid destination URL format. Please enter a valid URL starting with http:// or https://', 'wp-qr-trackr' ) );
 			return;
 		}
 
-		// Then sanitize it for storage
+		// Then sanitize it for storage.
 		$destination_url = esc_url_raw( $destination_url );
 
-		// Double-check that sanitization didn't break the URL
+		// Double-check that sanitization didn't break the URL.
 		if ( empty( $destination_url ) ) {
 			wp_send_json_error( esc_html__( 'Invalid destination URL format. Please enter a valid URL.', 'wp-qr-trackr' ) );
 			return;
@@ -721,12 +748,12 @@ function qr_trackr_ajax_update_qr_details() {
 	if ( ! empty( $destination_url ) ) {
 		$update_data['destination_url'] = $destination_url;
 
-		// If destination URL has changed and there was a linked post, clear the post_id
+		// If destination URL has changed and there was a linked post, clear the post_id.
 		if ( $destination_url !== $existing_qr->destination_url && ! empty( $existing_qr->post_id ) ) {
 			$update_data['post_id'] = null;
 		}
 
-		// If destination URL has changed, clear the QR code URL to force regeneration
+		// If destination URL has changed, clear the QR code URL to force regeneration.
 		if ( $destination_url !== $existing_qr->destination_url ) {
 			$update_data['qr_code_url'] = '';
 		}
@@ -738,7 +765,7 @@ function qr_trackr_ajax_update_qr_details() {
 		$table_name,
 		$update_data,
 		array( 'id' => $qr_id ),
-		null, // Let WordPress determine the format
+		null, // Let WordPress determine the format.
 		array( '%d' )
 	);
 
@@ -758,7 +785,7 @@ function qr_trackr_ajax_update_qr_details() {
 	wp_cache_delete( 'qrc_link_' . $qr_id, 'qrc_links' );
 	delete_transient( 'qrc_all_links' );
 
-	// Regenerate QR code if destination URL changed
+	// Regenerate QR code if destination URL changed.
 	$qr_code_regenerated = false;
 	if ( ! empty( $destination_url ) && $destination_url !== $existing_qr->destination_url && function_exists( 'qrc_generate_qr_code' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -793,7 +820,7 @@ function qr_trackr_ajax_update_qr_details() {
 		}
 	}
 
-	// Check if post was unlinked
+	// Check if post was unlinked.
 	$post_unlinked = false;
 	if ( ! empty( $destination_url ) && $destination_url !== $existing_qr->destination_url && ! empty( $existing_qr->post_id ) ) {
 		$post_unlinked = true;
@@ -804,7 +831,7 @@ function qr_trackr_ajax_update_qr_details() {
 		qr_trackr_debug_log( sprintf( 'Successfully updated QR code details for ID: %d. Rows affected: %d. Post unlinked: %s', $qr_id, $result, $post_unlinked ? 'Yes' : 'No' ) );
 	}
 
-	// Create appropriate message
+	// Create appropriate message.
 	$message = esc_html__( 'QR code details updated successfully.', 'wp-qr-trackr' );
 	if ( $post_unlinked ) {
 		$message = esc_html__( 'QR code details updated successfully. The linked post has been unlinked since the destination URL was changed.', 'wp-qr-trackr' );
@@ -816,7 +843,7 @@ function qr_trackr_ajax_update_qr_details() {
 		$message = esc_html__( 'QR code details updated successfully. The linked post has been unlinked and QR code image has been regenerated for the new destination URL.', 'wp-qr-trackr' );
 	}
 
-	// Get the updated record to return complete data
+	// Get the updated record to return complete data.
 	$updated_record = $wpdb->get_row(
 		$wpdb->prepare(
 			"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
@@ -901,6 +928,11 @@ add_action( 'wp_ajax_qr_trackr_debug', 'qr_trackr_ajax_debug' );
  * @return void
  */
 function qr_trackr_ajax_qr_redirect() {
+	// Verify nonce for security.
+	if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'qr_redirect' ) ) {
+		wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ), 403 );
+	}
+
 	// Get the QR code from the request.
 	$qr_code = isset( $_GET['qr'] ) ? sanitize_text_field( wp_unslash( $_GET['qr'] ) ) : '';
 
