@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.38] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Migrated to Query Monitor logging system for better debugging
+- **DEBUGGING**: Enhanced search debugging with Query Monitor integration
+- **VISIBILITY**: Debug output now visible in Query Monitor interface
+- **STRUCTURED**: Organized debug data with contextual information
+
+### Technical
+- Replaced `error_log()` calls with Query Monitor `do_action()` calls
+- Added structured logging with contextual data arrays
+- Implemented Query Monitor log levels (debug, warning, error)
+- Enhanced search debugging with detailed context information
+- Improved debugging visibility and organization
+
+### Query Monitor Integration
+- **Before**: Debug output hidden in error logs
+- **After**: Debug output visible in Query Monitor Logs panel
+- **Result**: Better debugging experience with organized data
+- **Impact**: Easier troubleshooting of search functionality
+
+### Debug Enhancements
+- **Structured Data**: All debug information now includes contextual arrays
+- **Log Levels**: Proper use of debug, warning, and error levels
+- **Contextual Info**: Detailed information about search terms, results, and errors
+- **Visibility**: Debug output appears in Query Monitor's Logs panel
+- **Organization**: Better organized and more readable debug information
+
+### Search Debugging Features
+- **AJAX Request Tracking**: Logs search request details and POST data
+- **Access Control**: Logs user permissions and admin status
+- **Term Validation**: Logs search term processing and validation
+- **Database Check**: Logs total posts and sample titles in database
+- **Search Results**: Logs get_posts results and found post IDs
+- **Final Results**: Logs final processed results and response data
+
 ## [1.2.37] - 2025-01-27
 
 ### Fixed
