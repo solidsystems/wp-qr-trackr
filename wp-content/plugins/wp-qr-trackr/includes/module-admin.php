@@ -174,7 +174,7 @@ function qrc_admin_page() {
 	$list_table->prepare_items();
 
 	// Include the admin page template.
-	include dirname( __DIR__ ) . '/templates/admin-page.php';
+	include QR_TRACKR_PLUGIN_DIR . 'templates/admin-page.php';
 }
 
 /**
@@ -189,7 +189,7 @@ function qrc_add_new_page() {
 	}
 
 	// Include the add new page template.
-	include dirname( __DIR__ ) . '/templates/add-new-page.php';
+	include QR_TRACKR_PLUGIN_DIR . 'templates/add-new-page.php';
 }
 
 
@@ -286,7 +286,7 @@ function qrc_settings_page() {
 	}
 
 	// Include the settings page template.
-	include dirname( __DIR__ ) . '/templates/settings-page.php';
+	include QR_TRACKR_PLUGIN_DIR . 'templates/settings-page.php';
 }
 
 /**
@@ -297,7 +297,7 @@ function qrc_settings_page() {
  */
 function qrc_load_test_script() {
 	if ( isset( $_GET['test_qr'] ) && current_user_can( 'manage_options' ) ) {
-		include dirname( __DIR__ ) . '/test-qr-generation.php';
+		include QR_TRACKR_PLUGIN_DIR . 'test-qr-generation.php';
 	}
 }
 
