@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.32] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed build script to include templates directory
+- **CRITICAL**: Resolved missing template files in plugin package
+- **CRITICAL**: Fixed root cause of 'template not found' errors
+- **CRITICAL**: Ensured all template files are included in production builds
+
+### Technical
+- Added `cp -r templates` to build-release.sh script
+- Templates directory now properly included in plugin package
+- All template files (admin-page.php, add-new-page.php, settings-page.php) now included
+- Build process now creates complete plugin package with all required files
+
+### Production Impact
+- **TEMPLATE FILES**: Now included in plugin package
+- **ADMIN PAGES**: All admin pages will load correctly
+- **PLUGIN COMPLETENESS**: Full plugin functionality restored
+- **ERROR RESOLUTION**: Root cause of template failures fixed
+- **BUILD PROCESS**: Complete and reliable plugin packaging
+
+### Build Process Fix
+- **Before**: Templates directory excluded from build
+- **After**: Templates directory properly included
+- **Result**: Complete plugin package with all required files
+- **Impact**: All template-related errors resolved
+
 ## [1.2.31] - 2025-01-27
 
 ### Fixed
