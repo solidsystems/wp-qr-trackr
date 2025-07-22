@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.28] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed settings link URL in plugins list
+- **CRITICAL**: Resolved "Sorry, you are not allowed to access this page" error when clicking Settings from plugins list
+- **CRITICAL**: Corrected settings link from `options-general.php?page=wp-qr-trackr` to `admin.php?page=qr-code-settings`
+
+### Technical
+- Updated `qrc_add_settings_link()` function to use correct admin page URL
+- Fixed URL mismatch between registered settings page and plugins list link
+- Ensured settings link points to the correct admin submenu page
+
+### Production Impact
+- **SETTINGS ACCESS**: Settings button in plugins list now works correctly
+- **USER EXPERIENCE**: No more permission errors when accessing settings from plugins page
+- **ADMIN NAVIGATION**: Proper navigation flow from plugins list to settings page
+
 ## [1.2.27] - 2025-01-27
 
 ### Fixed
