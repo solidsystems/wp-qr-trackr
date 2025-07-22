@@ -181,11 +181,8 @@ function qr_trackr_load_modules() {
 	}
 }
 
-// Load modules immediately.
-qr_trackr_load_modules();
-
-// Also hook into plugins_loaded for good measure.
-add_action( 'plugins_loaded', 'qr_trackr_load_modules', 10 );
+// Load modules on init hook to avoid early loading issues.
+add_action( 'init', 'qr_trackr_load_modules', 5 );
 
 // Initialize the plugin.
 /**

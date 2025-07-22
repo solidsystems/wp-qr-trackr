@@ -174,7 +174,30 @@ function qrc_admin_page() {
 	$list_table->prepare_items();
 
 	// Include the admin page template.
-	include QR_TRACKR_PLUGIN_DIR . 'templates/admin-page.php';
+	$template_path = QR_TRACKR_PLUGIN_DIR . 'templates/admin-page.php';
+	
+	// Debug template path.
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( 'QR Trackr: Template path: ' . $template_path );
+		error_log( 'QR Trackr: File exists: ' . ( file_exists( $template_path ) ? 'true' : 'false' ) );
+		error_log( 'QR Trackr: QR_TRACKR_PLUGIN_DIR: ' . QR_TRACKR_PLUGIN_DIR );
+	}
+	
+	if ( file_exists( $template_path ) ) {
+		include $template_path;
+	} else {
+		// Fallback to direct path.
+		$fallback_path = dirname( __DIR__ ) . '/templates/admin-page.php';
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: Fallback path: ' . $fallback_path );
+			error_log( 'QR Trackr: Fallback exists: ' . ( file_exists( $fallback_path ) ? 'true' : 'false' ) );
+		}
+		if ( file_exists( $fallback_path ) ) {
+			include $fallback_path;
+		} else {
+			wp_die( esc_html__( 'QR Trackr: Admin page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
+		}
+	}
 }
 
 /**
@@ -189,7 +212,19 @@ function qrc_add_new_page() {
 	}
 
 	// Include the add new page template.
-	include QR_TRACKR_PLUGIN_DIR . 'templates/add-new-page.php';
+	$template_path = QR_TRACKR_PLUGIN_DIR . 'templates/add-new-page.php';
+	
+	if ( file_exists( $template_path ) ) {
+		include $template_path;
+	} else {
+		// Fallback to direct path.
+		$fallback_path = dirname( __DIR__ ) . '/templates/add-new-page.php';
+		if ( file_exists( $fallback_path ) ) {
+			include $fallback_path;
+		} else {
+			wp_die( esc_html__( 'QR Trackr: Add new page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
+		}
+	}
 }
 
 
@@ -286,7 +321,19 @@ function qrc_settings_page() {
 	}
 
 	// Include the settings page template.
-	include QR_TRACKR_PLUGIN_DIR . 'templates/settings-page.php';
+	$template_path = QR_TRACKR_PLUGIN_DIR . 'templates/settings-page.php';
+	
+	if ( file_exists( $template_path ) ) {
+		include $template_path;
+	} else {
+		// Fallback to direct path.
+		$fallback_path = dirname( __DIR__ ) . '/templates/settings-page.php';
+		if ( file_exists( $fallback_path ) ) {
+			include $fallback_path;
+		} else {
+			wp_die( esc_html__( 'QR Trackr: Settings page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
+		}
+	}
 }
 
 /**
