@@ -38,6 +38,7 @@ mkdir -p "$BUILD_DIR/$PLUGIN_NAME" "$DIST_DIR"
 cp wp-qr-trackr.php "$BUILD_DIR/$PLUGIN_NAME/"
 cp -r includes "$BUILD_DIR/$PLUGIN_NAME/"
 cp -r assets "$BUILD_DIR/$PLUGIN_NAME/"
+cp -r templates "$BUILD_DIR/$PLUGIN_NAME/"
 cp LICENSE "$BUILD_DIR/$PLUGIN_NAME/"
 cp composer.json "$BUILD_DIR/$PLUGIN_NAME/"
 if [ -f composer.lock ]; then
