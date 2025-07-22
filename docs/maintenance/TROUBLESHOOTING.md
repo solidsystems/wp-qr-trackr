@@ -2,6 +2,98 @@
 
 This guide covers common issues and solutions for the WP QR Trackr plugin. If you run into a problem not listed here, please open an issue or see CONTRIBUTING.md for more help.
 
+## Production Debugging with WP Query Monitor
+
+### Essential Debugging Tool
+
+**WP Query Monitor** is the primary tool for debugging QR Trackr issues on production sites. It provides comprehensive insights into database queries, hooks, template loading, and performance.
+
+#### Installation
+```bash
+# Via WP-CLI (recommended)
+wp plugin install query-monitor --activate
+
+# Via WordPress Admin
+# Plugins → Add New → Search "Query Monitor" → Install & Activate
+```
+
+#### Key Monitoring Areas for QR Trackr
+
+1. **Database Queries Panel:**
+   - Monitor queries to `wp_qr_trackr_links` table
+   - Check for slow queries (>50ms)
+   - Verify proper `$wpdb->prepare()` usage
+   - Look for missing indexes or inefficient queries
+
+2. **Hooks & Actions Panel:**
+   - Verify `admin_menu` hook execution
+   - Check `admin_init` and `admin_enqueue_scripts` hooks
+   - Monitor AJAX action hooks (`wp_ajax_*`)
+   - Ensure proper hook priority and timing
+
+3. **Files Panel:**
+   - Check template file inclusion paths
+   - Monitor file loading errors
+   - Verify correct file permissions
+   - Track include/require statements
+
+4. **AJAX Panel:**
+   - Monitor AJAX requests to `admin-ajax.php`
+   - Check for failed requests or timeouts
+   - Verify nonce validation
+   - Track response times and errors
+
+#### Query Monitor Configuration
+
+**Recommended Settings:**
+```php
+// Add to wp-config.php for comprehensive debugging
+define('QM_DISABLED', false);
+define('QM_HIDE_SELF', false);
+define('QM_DISPLAY_ERROR_NOTICES', true);
+define('QM_DISPLAY_ERRORS', true);
+define('QM_DISPLAY_ERRORS_DETAILED', true);
+```
+
+**Performance Thresholds:**
+- Database queries: < 50ms
+- Template loading: < 100ms
+- AJAX responses: < 500ms
+- Memory usage: Monitor for spikes
+
+#### Debugging Workflow
+
+1. **Install Query Monitor** on production site
+2. **Reproduce the issue** while monitoring
+3. **Check Database Queries** for performance issues
+4. **Review Hooks & Actions** for missing executions
+5. **Examine Template Files** for inclusion problems
+6. **Monitor AJAX Requests** for failures
+7. **Check Error Logs** for PHP errors
+8. **Review Performance** for bottlenecks
+
+#### Common Issues & Query Monitor Solutions
+
+**Template File Not Found:**
+- Check "Files" panel for include path issues
+- Verify file permissions and existence
+- Monitor `QR_TRACKR_PLUGIN_DIR` constant resolution
+
+**Admin Page Access Denied:**
+- Check "Hooks & Actions" for `admin_menu` execution
+- Verify user capability checks in "Database Queries"
+- Monitor `current_user_can()` function calls
+
+**AJAX Requests Failing:**
+- Check "AJAX" panel for request details
+- Verify nonce validation in "Hooks & Actions"
+- Monitor response times and error codes
+
+**Performance Issues:**
+- Check "Database Queries" for slow queries
+- Monitor memory usage in "Overview" panel
+- Review template loading times in "Files" panel
+
 ## Plugin Activation Issues - RESOLVED ✅
 
 ### Fatal Error on Plugin Activation (Fixed in v1.2.4)

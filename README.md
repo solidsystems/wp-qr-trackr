@@ -161,6 +161,147 @@ See `.cursorrules` and the Makefile for details.
 - All pre-commit and pre-push hooks are enforced in the container and CI workflows.
 - For local checks, use `make fix`, `make lint`, and `make validate`.
 
+## Production Debugging & Monitoring
+
+### Debugging Production Sites
+
+When troubleshooting issues on production WordPress sites, the **WP Query Monitor** plugin is an essential tool for diagnosing problems with the QR Trackr plugin.
+
+#### Installing WP Query Monitor
+
+1. **Install from WordPress.org:**
+   - Go to Plugins → Add New
+   - Search for "Query Monitor"
+   - Install and activate the plugin
+
+2. **Install via WP-CLI:**
+   ```bash
+   wp plugin install query-monitor --activate
+   ```
+
+#### Using WP Query Monitor for QR Trackr Debugging
+
+**Key Areas to Monitor:**
+
+1. **Database Queries:**
+   - Look for queries to the `wp_qr_trackr_links` table
+   - Check for slow queries or missing indexes
+   - Verify proper use of `$wpdb->prepare()` for security
+
+2. **Hooks & Actions:**
+   - Monitor `admin_menu` hook execution
+   - Check `admin_init` and `admin_enqueue_scripts` hooks
+   - Verify AJAX action hooks are firing correctly
+
+3. **Template Loading:**
+   - Check if template files are being included correctly
+   - Monitor file path resolution issues
+   - Verify template hierarchy and fallbacks
+
+4. **AJAX Requests:**
+   - Monitor AJAX calls to `admin-ajax.php`
+   - Check for failed requests or timeouts
+   - Verify nonce validation and security checks
+
+#### Common Production Issues & Solutions
+
+**Issue: "Failed opening template file"**
+```
+include(): Failed opening '/path/to/wp-content/plugins/wp-qr-trackr/templates/admin-page.php'
+```
+
+**Solution:**
+- Check file permissions on production server
+- Verify template files are included in plugin package
+- Use Query Monitor to check file path resolution
+- Ensure `QR_TRACKR_PLUGIN_DIR` constant is set correctly
+
+**Issue: "Sorry, you are not allowed to access this page"**
+```
+WordPress Error: Sorry, you are not allowed to access this page
+```
+
+**Solution:**
+- Check user capabilities with Query Monitor
+- Verify `current_user_can('manage_options')` checks
+- Monitor admin menu registration
+- Check for conflicting plugins or themes
+
+**Issue: Blank admin pages**
+```
+Admin page loads but shows blank content
+```
+
+**Solution:**
+- Use Query Monitor to check for PHP errors
+- Monitor template inclusion in "Files" tab
+- Check for JavaScript errors in browser console
+- Verify WordPress Settings API conflicts
+
+#### Query Monitor Configuration for QR Trackr
+
+**Recommended Settings:**
+- Enable "Database Queries" panel
+- Enable "Hooks & Actions" panel
+- Enable "Files" panel for template debugging
+- Enable "AJAX" panel for AJAX request monitoring
+- Set "Minimum Query Time" to 0.1 seconds for performance monitoring
+
+**Custom Filters:**
+```php
+// Add to wp-config.php for QR Trackr specific debugging
+define('QM_DISABLED', false);
+define('QM_HIDE_SELF', false);
+define('QM_DISPLAY_ERROR_NOTICES', true);
+define('QM_DISPLAY_ERRORS', true);
+```
+
+#### Debugging Workflow
+
+1. **Install Query Monitor** on production site
+2. **Reproduce the issue** while Query Monitor is active
+3. **Check Database Queries** for slow or failed queries
+4. **Review Hooks & Actions** for missing or failed hooks
+5. **Examine Template Files** for inclusion issues
+6. **Monitor AJAX Requests** for failed calls
+7. **Check Error Logs** for PHP errors or warnings
+8. **Review Performance** for bottlenecks
+
+#### Performance Monitoring
+
+**Key Metrics to Track:**
+- Database query count and execution time
+- Template file inclusion time
+- AJAX request response times
+- Memory usage during QR code operations
+- Hook execution time for admin functions
+
+**Optimization Targets:**
+- Keep database queries under 50ms
+- Maintain template loading under 100ms
+- Ensure AJAX responses under 500ms
+- Monitor memory usage for large QR code lists
+
+#### Security Monitoring
+
+**Security Checks with Query Monitor:**
+- Verify all database queries use `$wpdb->prepare()`
+- Check for proper nonce validation in AJAX requests
+- Monitor user capability checks
+- Verify input sanitization and output escaping
+
+#### Troubleshooting Checklist
+
+- [ ] Query Monitor installed and active
+- [ ] Database queries executing correctly
+- [ ] Admin hooks firing as expected
+- [ ] Template files loading without errors
+- [ ] AJAX requests completing successfully
+- [ ] No PHP errors in error logs
+- [ ] User capabilities verified
+- [ ] File permissions correct
+- [ ] Plugin conflicts resolved
+
 ## Continuous Integration & Deployment
 
 ### CI/CD Workflow Overview
