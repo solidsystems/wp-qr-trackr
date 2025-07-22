@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.31] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Implemented robust multi-path template resolution
+- **CRITICAL**: Added comprehensive fallback paths for template includes
+- **CRITICAL**: Enhanced debugging for template path resolution issues
+- **CRITICAL**: Fixed template loading failures on production servers
+
+### Technical
+- Implemented 4-path fallback system for template includes:
+  1. `QR_TRACKR_PLUGIN_DIR . 'templates/admin-page.php'`
+  2. `dirname(__DIR__) . '/templates/admin-page.php'`
+  3. `plugin_dir_path(__FILE__) . '../templates/admin-page.php'`
+  4. `ABSPATH . 'wp-content/plugins/wp-qr-trackr/templates/admin-page.php'`
+- Added comprehensive debugging for all path resolution attempts
+- Enhanced error logging with detailed path information
+- Improved template loading reliability across all server configurations
+
+### Production Impact
+- **TEMPLATE LOADING**: Now works on all server configurations
+- **ERROR RESOLUTION**: Comprehensive fallback system prevents template failures
+- **DEBUGGING**: Detailed logging for troubleshooting path issues
+- **RELIABILITY**: Multiple path resolution methods ensure templates load
+- **COMPATIBILITY**: Works with various hosting environments and configurations
+
+### Debugging Features
+- **Path Resolution Logging**: Logs all attempted template paths
+- **File Existence Checks**: Verifies each path before attempting include
+- **Detailed Error Messages**: Shows all attempted paths when template not found
+- **Server Configuration Detection**: Logs key path constants for debugging
+
 ## [1.2.30] - 2025-01-27
 
 ### Fixed
