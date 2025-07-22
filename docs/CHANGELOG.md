@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.34] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed search functionality in "Add New QR Code" page
+- **ENHANCEMENT**: Increased QR code size in edit modal from 200px to 400px
+- **CRITICAL**: Re-enabled search term validation (minimum 2 characters)
+- **UX IMPROVEMENT**: Search box now properly filters posts and pages while typing
+
+### Technical
+- Uncommented search term validation in `qrc_search_posts_ajax()` function
+- Updated QR code image size in modal from `max-width: 200px` to `max-width: 400px`
+- Search functionality now requires minimum 2 characters for filtering
+- AJAX search now properly validates and processes search terms
+
+### User Experience
+- **SEARCH FUNCTIONALITY**: Search box now filters posts/pages in real-time
+- **QR CODE SIZE**: Edit modal shows QR codes at double the size (400px vs 200px)
+- **SEARCH VALIDATION**: Proper validation prevents empty searches
+- **REAL-TIME FILTERING**: Search results update as you type
+
+### Search Fix Details
+- **Before**: Search validation was commented out, causing no filtering
+- **After**: Search validation enabled with 2-character minimum
+- **Result**: Search box now properly filters posts and pages
+- **Impact**: Users can now find and select posts/pages efficiently
+
+### QR Code Size Enhancement
+- **Before**: Modal QR code size: 200px (same as list view)
+- **After**: Modal QR code size: 400px (double the size)
+- **Result**: Better visibility and easier scanning in edit modal
+- **Impact**: Improved user experience when editing QR codes
+
 ## [1.2.33] - 2025-01-27
 
 ### Fixed

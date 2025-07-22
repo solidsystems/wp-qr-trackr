@@ -307,8 +307,7 @@ function qrc_search_posts_ajax() {
 		);
 	}
 
-	// Temporarily bypass validation for debugging.
-	/*
+	// Validate search term.
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 			qr_trackr_debug_log(
@@ -327,7 +326,6 @@ function qrc_search_posts_ajax() {
 		);
 		return;
 	}
-	*/
 
 	// Search for posts/pages.
 	$posts = get_posts(

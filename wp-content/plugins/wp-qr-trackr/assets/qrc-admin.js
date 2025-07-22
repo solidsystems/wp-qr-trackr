@@ -323,7 +323,7 @@ $(function() {
 						<div class="qr-modal-row">
 							<div class="qr-modal-left">
 								<div class="qr-image-container">
-									<img id="qr-modal-image" src="" alt="QR Code" style="max-width: 200px; height: auto; border: 1px solid #ddd; border-radius: 4px;" />
+									<img id="qr-modal-image" src="" alt="QR Code" style="max-width: 400px; height: auto; border: 1px solid #ddd; border-radius: 4px;" />
 								</div>
 								<div class="qr-stats">
 									<h4>Statistics</h4>
