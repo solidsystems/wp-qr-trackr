@@ -338,6 +338,22 @@ function qrc_search_posts_ajax() {
 		)
 	);
 
+	// Debug: Check if there are any posts at all in the database.
+	$all_posts = get_posts(
+		array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => 5,
+		)
+	);
+
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( sprintf( 'QR Trackr: Total posts in database: %d', count( $all_posts ) ) );
+		if ( ! empty( $all_posts ) ) {
+			error_log( sprintf( 'QR Trackr: Sample post titles: %s', implode( ', ', array_map( function( $post ) { return $post->post_title; }, $all_posts ) ) ) );
+		}
+	}
+
 	// Debug logging for search results.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
 		qr_trackr_debug_log(
@@ -375,6 +391,7 @@ function qrc_search_posts_ajax() {
 	// Always log to error_log for debugging
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log( sprintf( 'QR Trackr: Search for "%s" returned %d results', $search_term, count( $results ) ) );
+		error_log( sprintf( 'QR Trackr: AJAX response data: %s', json_encode( array( 'posts' => $results ) ) ) );
 	}
 
 	wp_send_json_success( array( 'posts' => $results ) );

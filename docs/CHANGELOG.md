@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.37] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Added comprehensive debugging to search functionality
+- **DEBUGGING**: Enhanced error logging for search AJAX requests
+- **TROUBLESHOOTING**: Added database post count and sample title logging
+- **DIAGNOSTICS**: Enhanced AJAX response data logging for search issues
+
+### Technical
+- Added debug logging to check total posts in database
+- Added sample post title logging for troubleshooting
+- Enhanced AJAX response data logging
+- Added comprehensive search term validation logging
+- Improved error tracking for search functionality
+
+### Search Debugging Enhancements
+- **Database Check**: Logs total number of posts/pages in database
+- **Sample Data**: Logs sample post titles to verify content exists
+- **Search Results**: Enhanced logging of search results and response data
+- **Validation**: Improved logging of search term validation process
+- **Response Tracking**: Better tracking of AJAX response data
+
+### Troubleshooting Support
+- **Before**: Limited visibility into search functionality issues
+- **After**: Comprehensive logging for all search-related operations
+- **Result**: Better debugging capabilities for search problems
+- **Impact**: Easier identification and resolution of search issues
+
 ## [1.2.36] - 2025-01-27
 
 ### Fixed
