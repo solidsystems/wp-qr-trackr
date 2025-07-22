@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.33] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed URL mismatch between QR code generation and rewrite rules
+- **CRITICAL**: Updated rewrite rule from `/redirect/` to `/qr/` to match generated URLs
+- **CRITICAL**: Added automatic rewrite rules flush on plugin activation/update
+- **CRITICAL**: Fixed 404 errors on QR code URLs
+
+### Technical
+- Changed rewrite rule pattern from `^redirect/([a-zA-Z0-9]+)/?$` to `^qr/([a-zA-Z0-9]+)/?$`
+- Added rewrite rules flush handling in `qr_trackr_init()` function
+- Updated documentation to reflect correct URL pattern: `/qr/{tracking_code}`
+- Enhanced activation process to ensure rewrite rules are properly registered
+
+### Production Impact
+- **QR CODE URLS**: Now working correctly with `/qr/` pattern
+- **REDIRECTS**: All QR code redirects now function properly
+- **404 ERRORS**: Resolved for all QR code URLs
+- **URL CONSISTENCY**: Generated URLs now match rewrite rules
+- **ACTIVATION**: Automatic rewrite rules flush on plugin update
+
+### URL Pattern Fix
+- **Before**: QR codes generated `/qr/` URLs but rewrite rule expected `/redirect/`
+- **After**: Both QR code generation and rewrite rules use `/qr/` pattern
+- **Result**: Complete URL consistency and working redirects
+- **Impact**: All QR code scans now redirect properly
+
 ## [1.2.32] - 2025-01-27
 
 ### Fixed

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP QR Trackr
  * Description: A comprehensive QR code generation and tracking plugin for WordPress with analytics, custom styling, and advanced management features.
- * Version: 1.2.32
+ * Version: 1.2.33
  * Author: Solid Systems
  * Author URI: https://solidsystems.io
  * Plugin URI: https://github.com/solidsystems/wp-qr-trackr
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'QR_TRACKR_VERSION', '1.2.32' );
+define( 'QR_TRACKR_VERSION', '1.2.33' );
 define( 'QR_TRACKR_PLUGIN_FILE', __FILE__ );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -199,6 +199,16 @@ function qr_trackr_init() {
 
 	// Load translations.
 	load_plugin_textdomain( 'wp-qr-trackr', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+
+	// Check if rewrite rules need to be flushed.
+	if ( get_option( 'qr_trackr_needs_flush', false ) ) {
+		flush_rewrite_rules();
+		delete_option( 'qr_trackr_needs_flush' );
+		
+		if ( QR_TRACKR_DEBUG ) {
+			error_log( 'QR Trackr: Flushed rewrite rules on init' );
+		}
+	}
 }
 
 /**

@@ -4,6 +4,8 @@
  *
  * This module handles URL rewriting and redirection for QR code tracking links.
  * It sets up custom rewrite rules, handles query variables, and manages redirects.
+ * 
+ * URL Pattern: /qr/{tracking_code} where {tracking_code} is the alphanumeric tracking code.
  *
  * @package WP_QR_TRACKR
  * @since 1.0.0
@@ -20,9 +22,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function qr_trackr_register_rewrite_rules() {
-	// Add rewrite rule for QR code redirects using a public redirect path.
+	// Add rewrite rule for QR code redirects using /qr/ path (matches generated URLs).
 	add_rewrite_rule(
-		'^redirect/([a-zA-Z0-9]+)/?$',
+		'^qr/([a-zA-Z0-9]+)/?$',
 		'index.php?qr_tracking_code=$matches[1]',
 		'top'
 	);
