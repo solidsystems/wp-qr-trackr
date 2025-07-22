@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.35] - 2025-01-27
+
+### Fixed
+- **CRITICAL**: Fixed missing post_id hidden field in Add New QR Code form
+- **CRITICAL**: Added debugging to search functionality for troubleshooting
+- **BUGFIX**: Search functionality now properly stores selected post ID
+- **DEBUGGING**: Enhanced error logging for search AJAX requests
+
+### Technical
+- Added hidden input field `<input type="hidden" id="post_id" name="post_id" value="" />` to form
+- Enhanced AJAX search handler with additional error logging
+- Fixed JavaScript post selection to properly store post ID in hidden field
+- Added debug logging to track search results and AJAX responses
+
+### User Experience
+- **SEARCH FUNCTIONALITY**: Search now properly stores selected post information
+- **FORM SUBMISSION**: Post selection now correctly passes post ID to backend
+- **DEBUGGING**: Better error tracking for troubleshooting search issues
+- **DATA INTEGRITY**: Selected posts now properly linked to generated QR codes
+
+### Search Fix Details
+- **Before**: Missing post_id field caused search selections to not be stored
+- **After**: Hidden post_id field properly stores selected post information
+- **Result**: Search functionality now works end-to-end
+- **Impact**: Users can now properly select and link posts to QR codes
+
+### Debugging Enhancements
+- **Error Logging**: Enhanced logging for search AJAX requests
+- **Response Tracking**: Better tracking of search results and responses
+- **Troubleshooting**: Improved debugging information for search issues
+- **Monitoring**: Better visibility into search functionality performance
+
 ## [1.2.34] - 2025-01-27
 
 ### Fixed

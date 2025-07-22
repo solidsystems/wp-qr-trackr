@@ -372,6 +372,11 @@ function qrc_search_posts_ajax() {
 		);
 	}
 
+	// Always log to error_log for debugging
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( sprintf( 'QR Trackr: Search for "%s" returned %d results', $search_term, count( $results ) ) );
+	}
+
 	wp_send_json_success( array( 'posts' => $results ) );
 }
 add_action( 'wp_ajax_qrc_search_posts', 'qrc_search_posts_ajax' );
