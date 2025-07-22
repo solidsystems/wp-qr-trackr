@@ -38,7 +38,7 @@ function qrc_init() {
  * @return array The modified links.
  */
 function qrc_add_settings_link( $links ) {
-	$settings_link = '<a href="options-general.php?page=wp-qr-trackr">' . __( 'Settings', 'wp-qr-trackr' ) . '</a>';
+	$settings_link = '<a href="admin.php?page=qr-code-settings">' . __( 'Settings', 'wp-qr-trackr' ) . '</a>';
 	array_unshift( $links, $settings_link );
 	return $links;
 }
