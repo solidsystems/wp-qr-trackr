@@ -77,6 +77,7 @@ This project enforces the following standards and practices:
 
 - [Plugin User Guide](docs/USER_GUIDE.md)
 - [Developer Guide](docs/DEVELOPER_GUIDE.md)
+- [Editor Setup](docs/development/EDITOR_SETUP.md) - VS Code and Cursor setup with LLM integration
 - [Contributing Guide](docs/CONTRIBUTING.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Changelog](docs/CHANGELOG.md)

@@ -1,0 +1,72 @@
+{
+	"models": [
+		{
+			"title": "GPT-4",
+			"provider": "openai",
+			"model": "gpt-4",
+			"apiKey": "${OPENAI_API_KEY}"
+		},
+		{
+			"title": "Claude 3.5 Sonnet",
+			"provider": "anthropic",
+			"model": "claude-3-5-sonnet-20241022",
+			"apiKey": "${ANTHROPIC_API_KEY}"
+		},
+		{
+			"title": "Local Ollama (Llama 3.1)",
+			"provider": "ollama",
+			"model": "llama3.1:8b",
+			"baseUrl": "http://localhost:11434"
+		},
+		{
+			"title": "Local Ollama (CodeLlama)",
+			"provider": "ollama",
+			"model": "codellama:7b",
+			"baseUrl": "http://localhost:11434"
+		}
+	],
+	"defaultModel": "Local Ollama (CodeLlama)",
+	"contextProviders": [
+		{
+			"name": "git",
+			"config": {
+				"enabled": true
+			}
+		},
+		{
+			"name": "file",
+			"config": {
+				"enabled": true
+			}
+		},
+		{
+			"name": "github",
+			"config": {
+				"enabled": true
+			}
+		}
+	],
+	"slashCommands": [
+		{
+			"name": "wordpress",
+			"description": "Generate WordPress-specific code following project standards",
+			"prompt": "Generate WordPress code following the project's coding standards. Use WordPress functions, proper sanitization, escaping, and follow PHPCS compliance rules."
+		},
+		{
+			"name": "debug",
+			"description": "Help debug PHP/WordPress issues",
+			"prompt": "Help debug this PHP/WordPress issue. Consider WordPress-specific debugging techniques, error logging, and common WordPress development patterns."
+		},
+		{
+			"name": "review",
+			"description": "Review code for WordPress standards compliance",
+			"prompt": "Review this code for WordPress coding standards compliance. Check for proper sanitization, escaping, nonce verification, SQL preparation, and PHPCS compliance."
+		},
+		{
+			"name": "test",
+			"description": "Generate WordPress plugin tests",
+			"prompt": "Generate WordPress plugin tests following WordPress testing standards. Include unit tests, integration tests, and proper test setup."
+		}
+	],
+	"systemMessage": "You are an expert WordPress developer working on the WP QR Trackr plugin. Follow WordPress coding standards, use proper sanitization and escaping, implement nonce verification, use prepared SQL statements, and ensure PHPCS compliance. The project uses Docker containers for development and testing environments."
+}
