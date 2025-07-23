@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.44] - 2025-01-23
+
+### Fixed
+- **JAVASCRIPT**: Fixed missing ajaxUrl in script localization that was causing JavaScript errors
+- **TRANSLATIONS**: Added missing translation strings for JavaScript functionality
+- **ADMIN**: Resolved JavaScript syntax errors and undefined variable issues
+- **USER EXPERIENCE**: Fixed admin interface JavaScript errors that were preventing proper functionality
+
+### Technical
+- Added `ajaxUrl` to qrcAdmin localization object
+- Added missing translation strings: `noNameSet`, `none`, `errorLoadingDetails`
+- Fixed JavaScript undefined variable errors in admin interface
+- Improved error handling for AJAX requests
+
+### User Experience
+- **Before**: JavaScript errors were preventing admin interface from working properly
+- **After**: Admin interface now loads without JavaScript errors and functions correctly
+
 ## [1.2.43] - 2025-01-23
 
 ### Fixed

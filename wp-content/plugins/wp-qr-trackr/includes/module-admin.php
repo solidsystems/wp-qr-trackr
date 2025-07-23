@@ -336,6 +336,7 @@ function qrc_admin_enqueue_scripts($hook)
 		'qr-trackr-admin',
 		'qrcAdmin',
 		array(
+			'ajaxUrl' => admin_url('admin-ajax.php'),
 			'strings' => array(
 				'qrCodeDetails' => __('QR Code Details', 'wp-qr-trackr'),
 				'loading' => __('Loading...', 'wp-qr-trackr'),
@@ -356,6 +357,9 @@ function qrc_admin_enqueue_scripts($hook)
 				'linkedPost' => __('Linked Post', 'wp-qr-trackr'),
 				'close' => __('Close', 'wp-qr-trackr'),
 				'saveChanges' => __('Save Changes', 'wp-qr-trackr'),
+				'errorLoadingDetails' => __('Error loading QR code details.', 'wp-qr-trackr'),
+				'noNameSet' => __('No name set', 'wp-qr-trackr'),
+				'none' => __('None', 'wp-qr-trackr'),
 			),
 		)
 	);
