@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.43] - 2025-01-23
+
+### Fixed
+- **CRITICAL**: Fixed "Call to a member function current_action() on null" error in admin page
+- **SCOPE**: Made $list_table variable global so admin template can access it properly
+- **PRODUCTION**: Resolved critical issue preventing admin page from loading on production sites
+
+### Technical
+- Added `global $list_table;` declaration in qrc_admin_page() function
+- Ensured proper variable scope between admin module and template
+- Fixed variable accessibility issue that was causing null reference errors
+
+### User Experience
+- **Before**: Admin page would crash with fatal error when accessing QR Code Links
+- **After**: Admin page loads properly and displays QR codes list table correctly
+
 ## [1.2.42] - 2025-01-23
 
 ### Fixed
