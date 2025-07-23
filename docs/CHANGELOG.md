@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.42] - 2025-01-23
+
+### Fixed
+- **CRITICAL**: Fixed missing admin page template that was causing "Admin page template not found" error
+- **TEMPLATE**: Recreated admin-page.php template with proper security and functionality
+- **PRODUCTION**: Resolved critical issue preventing plugin from working on production sites
+
+### Technical
+- Recreated admin-page.php template with proper WordPress admin interface
+- Added security checks and nonce verification for bulk actions
+- Implemented proper error handling and user capability checks
+- Added JavaScript functionality for QR code image viewing and delete confirmations
+- Ensured proper integration with the list table class
+
+### User Experience
+- **Before**: Plugin would show "Admin page template not found" error on production sites
+- **After**: Admin page now displays properly with full QR code management functionality
+- **Result**: Users can now access and manage QR codes through the WordPress admin interface
+
+### Security
+- Added proper nonce verification for all form submissions
+- Implemented user capability checks to ensure only authorized users can access admin
+- Added proper input sanitization for bulk actions
+- Enhanced security with proper escaping and validation
+
+### Files Modified
+- `templates/admin-page.php`: Recreated missing admin page template
+- `wp-qr-trackr.php`: Updated version to 1.2.42
+
 ## [1.2.41] - 2025-01-23
 
 ### Fixed
