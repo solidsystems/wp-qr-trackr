@@ -56,11 +56,15 @@ This project enforces the following standards and practices:
    # Check environment
    bash scripts/check-onboarding.sh
 
-   # Start development environment (http://localhost:8080)
-   bash scripts/setup-wordpress.sh dev
+   # Start development environment with auto-recovery (http://localhost:8080)
+   bash scripts/setup-wordpress-enhanced.sh dev
 
-   # Start testing environment (http://localhost:8081)
-   bash scripts/setup-wordpress.sh nonprod
+   # Start testing environment with auto-recovery (http://localhost:8081)
+   bash scripts/setup-wordpress-enhanced.sh nonprod
+
+   # Or use the comprehensive container management system
+   bash scripts/manage-containers.sh start dev
+   bash scripts/manage-containers.sh health dev
    ```
 
 3. **Access**
@@ -77,6 +81,7 @@ This project enforces the following standards and practices:
 - [Architecture](docs/ARCHITECTURE.md)
 - [Changelog](docs/CHANGELOG.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Container Management](docs/development/CONTAINER_MANAGEMENT.md)
 
 ## Features
 
@@ -85,6 +90,34 @@ This project enforces the following standards and practices:
 - Mobile-first admin interface
 - Standards-compliant and secure codebase
 - Extensive developer API
+
+## Enhanced Container Management
+
+This project includes advanced container management capabilities that automatically detect and resolve issues:
+
+### Automatic Issue Detection & Recovery
+- **Health Monitoring**: Continuous monitoring of container status and WordPress accessibility
+- **Auto-Recovery**: Automatic restart and reinstallation when issues are detected
+- **Comprehensive Logging**: Detailed logs for troubleshooting and debugging
+- **Retry Logic**: Intelligent retry mechanisms with configurable attempts
+
+### Container Management Commands
+```bash
+# Enhanced setup with auto-recovery
+./scripts/setup-wordpress-enhanced.sh dev
+
+# Comprehensive container management
+./scripts/manage-containers.sh health dev          # Health check
+./scripts/manage-containers.sh monitor dev         # Continuous monitoring
+./scripts/manage-containers.sh diagnose dev        # Issue diagnosis
+./scripts/manage-containers.sh redeploy dev        # Full redeployment
+```
+
+### Benefits
+- **Reduced Downtime**: Automatic recovery minimizes development interruptions
+- **Better Debugging**: Comprehensive logging and diagnostic tools
+- **Consistent Environments**: Ensures reliable development and testing environments
+- **Team Productivity**: Developers can focus on coding rather than environment issues
 
 ## License
 
