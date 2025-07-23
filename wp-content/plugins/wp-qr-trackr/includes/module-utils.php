@@ -147,7 +147,7 @@ function qr_trackr_generate_unique_qr_code( $length = 8 ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Checking for uniqueness, minimal impact.
 		$exists = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_links WHERE qr_code = %s",
+				"SELECT COUNT(*) FROM {$table_name} WHERE qr_code = %s",
 				$code
 			)
 		);
@@ -184,7 +184,7 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 	$args     = wp_parse_args( $args, $defaults );
 
 	// Generate the URL that the QR code will redirect to.
-			$redirect_url = home_url( '/redirect/' . sanitize_text_field( $tracking_code ) );
+	$redirect_url = home_url( '/qr/' . sanitize_text_field( $tracking_code ) );
 
 	// Check cache first.
 	$cache_key  = 'qr_trackr_image_' . md5( $tracking_code . wp_json_encode( $args ) );

@@ -45,7 +45,7 @@ function qr_trackr_add_rewrite_rules() {
 function qr_trackr_init_rewrite_rules() {
 	global $wp;
 
-	// Register query var first
+	// Register query var first.
 	if ( isset( $wp->public_query_vars ) ) {
 		if ( ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
 			$wp->public_query_vars[] = 'qr_tracking_code';
@@ -56,10 +56,10 @@ function qr_trackr_init_rewrite_rules() {
 		}
 	}
 
-	// Always register our rewrite rules
+	// Always register our rewrite rules.
 	qr_trackr_add_rewrite_rules();
 
-	// Check if we have a pending flush from version update
+	// Check if we have a pending flush from version update.
 	if ( get_option( 'qr_trackr_needs_flush' ) ) {
 		flush_rewrite_rules();
 		delete_option( 'qr_trackr_needs_flush' );
@@ -69,11 +69,11 @@ function qr_trackr_init_rewrite_rules() {
 		}
 	}
 }
-// Move to higher priority to ensure early registration
+// Move to higher priority to ensure early registration.
 remove_action( 'init', 'qr_trackr_init_rewrite_rules' );
 add_action( 'init', 'qr_trackr_init_rewrite_rules', 1 );
 
-// Add a late check to ensure query var is registered
+// Add a late check to ensure query var is registered.
 add_action(
 	'wp_loaded',
 	function () {
@@ -89,7 +89,7 @@ add_action(
 	1
 );
 
-// Ensure query var is registered
+// Ensure query var is registered.
 add_filter(
 	'query_vars',
 	function ( $vars ) {
@@ -105,7 +105,7 @@ add_filter(
 	1
 );
 
-// Add a very late check to ensure query var is registered
+// Add a very late check to ensure query var is registered.
 add_action(
 	'parse_request',
 	function ( $wp ) {

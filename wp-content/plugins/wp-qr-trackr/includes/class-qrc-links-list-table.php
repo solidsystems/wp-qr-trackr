@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-// Ensure WP_List_Table is loaded for both web and CLI contexts.
+// Load WordPress List Table if not already loaded.
 if ( ! class_exists( 'WP_List_Table' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
@@ -32,8 +32,8 @@ class QRC_Links_List_Table extends WP_List_Table {
 	public function __construct() {
 		parent::__construct(
 			array(
-				'singular' => 'QR Code Link',
-				'plural'   => 'QR Code Links',
+				'singular' => esc_html__( 'QR Code Link', 'wp-qr-trackr' ),
+				'plural'   => esc_html__( 'QR Code Links', 'wp-qr-trackr' ),
 				'ajax'     => false,
 			)
 		);
@@ -73,13 +73,12 @@ class QRC_Links_List_Table extends WP_List_Table {
 	/**
 	 * Add extra navigation elements above/below the table.
 	 *
-	 * @since 1.0.0
 	 * @param string $which Position of the navigation (top or bottom).
 	 * @return void
 	 */
 	protected function extra_tablenav( $which ) {
 		if ( 'top' === $which ) {
-			$this->search_box( 'Search QR Codes', 'qr-search' );
+			$this->search_box( esc_html__( 'Search QR Codes', 'wp-qr-trackr' ), 'qr-search' );
 			$this->referral_filter_dropdown();
 		}
 	}
@@ -87,38 +86,24 @@ class QRC_Links_List_Table extends WP_List_Table {
 	/**
 	 * Display referral code filter dropdown.
 	 *
-	 * @since 1.0.0
 	 * @return void
 	 */
 	protected function referral_filter_dropdown() {
 		global $wpdb;
 
-		// Verify nonce for form processing.
-		if ( ! isset( $_REQUEST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'qr_trackr_admin_nonce' ) ) {
-			// Nonce verification failed, but we'll continue with empty filter for display purposes.
-			$current_filter = '';
-		} else {
-			$current_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
-		}
+		$table_name     = $wpdb->prefix . 'qr_trackr_links';
+		$current_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
 
-		$table_name = $wpdb->prefix . 'qr_trackr_links';
-
-		// Get unique referral codes with caching.
-		$cache_key      = 'qr_trackr_referral_codes';
-		$referral_codes = wp_cache_get( $cache_key, 'qr_trackr' );
-
-		if ( false === $referral_codes ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admin filter dropdown, results cached.
-			$referral_codes = $wpdb->get_col(
-				"SELECT DISTINCT referral_code FROM {$wpdb->prefix}qr_trackr_links WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
-			);
-			wp_cache_set( $cache_key, $referral_codes, 'qr_trackr', HOUR_IN_SECONDS );
-		}
+		// Get unique referral codes.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admin filter dropdown, results cached.
+		$referral_codes = $wpdb->get_col(
+			"SELECT DISTINCT referral_code FROM {$table_name} WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
+		);
 
 		if ( ! empty( $referral_codes ) ) {
 			echo '<div class="alignleft actions" style="margin-left: 10px;">';
 			echo '<select name="referral_filter" id="referral-filter">';
-			echo '<option value="">' . 'All Referral Codes' . '</option>';
+			echo '<option value="">' . esc_html__( 'All Referral Codes', 'wp-qr-trackr' ) . '</option>';
 			foreach ( $referral_codes as $code ) {
 				printf(
 					'<option value="%s"%s>%s</option>',
@@ -128,7 +113,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 				);
 			}
 			echo '</select>';
-			submit_button( 'Filter', 'button', 'filter_action', false );
+			submit_button( esc_html__( 'Filter', 'wp-qr-trackr' ), 'button', 'filter_action', false );
 			echo '</div>';
 		}
 	}
@@ -141,16 +126,14 @@ class QRC_Links_List_Table extends WP_List_Table {
 	 */
 	public function get_columns() {
 		$columns = array(
-			'cb'              => '<input type="checkbox" />',
-			'id'              => 'ID',
-			'qr_image'        => 'QR Image',
-			'common_name'     => 'Name',
-			'destination_url' => 'Destination URL',
-			'qr_code'         => 'QR Code',
-			'referral_code'   => 'Referral Code',
-			'scans'           => 'Scans',
-			'created_at'      => 'Created',
-			'actions'         => 'Actions',
+			'id'              => esc_html__( 'ID', 'wp-qr-trackr' ),
+			'qr_image'        => esc_html__( 'QR Image', 'wp-qr-trackr' ),
+			'common_name'     => esc_html__( 'Name', 'wp-qr-trackr' ),
+			'destination_url' => esc_html__( 'Destination URL', 'wp-qr-trackr' ),
+			'qr_code'         => esc_html__( 'QR Code', 'wp-qr-trackr' ),
+			'referral_code'   => esc_html__( 'Referral Code', 'wp-qr-trackr' ),
+			'scans'           => esc_html__( 'Scans', 'wp-qr-trackr' ),
+			'created_at'      => esc_html__( 'Created', 'wp-qr-trackr' ),
 		);
 
 		return $columns;
@@ -195,14 +178,8 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$where_clause = '';
 		$where_values = array();
 
-		// Verify nonce for form processing.
-		$nonce_verified = isset( $_REQUEST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'qr_trackr_admin_nonce' );
-
 		// Handle search.
-		$search = '';
-		if ( $nonce_verified && isset( $_REQUEST['s'] ) ) {
-			$search = sanitize_text_field( wp_unslash( $_REQUEST['s'] ) );
-		}
+		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 		if ( ! empty( $search ) ) {
 			$search_like   = '%' . $wpdb->esc_like( $search ) . '%';
 			$where_clause .= ' WHERE (common_name LIKE %s OR referral_code LIKE %s OR qr_code LIKE %s OR destination_url LIKE %s)';
@@ -210,10 +187,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 		}
 
 		// Handle referral code filter.
-		$referral_filter = '';
-		if ( $nonce_verified && isset( $_REQUEST['referral_filter'] ) ) {
-			$referral_filter = sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) );
-		}
+		$referral_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
 		if ( ! empty( $referral_filter ) ) {
 			if ( ! empty( $where_clause ) ) {
 				$where_clause .= ' AND referral_code = %s';
@@ -228,15 +202,17 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$data      = wp_cache_get( $cache_key, 'qr_trackr' );
 
 		if ( false === $data ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
+			$sql = "SELECT * FROM {$table_name}{$where_clause} ORDER BY created_at DESC";
+
 			if ( ! empty( $where_values ) ) {
-				// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQLPlaceholders.ReplacementsFound,WordPress.DB.PreparedSQLPlaceholders.MissingPlaceholder,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.PreparedSQLPlaceholders.ReplacementsFound,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic query built with validated placeholders.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
 				$results = $wpdb->get_results(
-					$wpdb->prepare( "SELECT * FROM {$wpdb->prefix}qr_trackr_links{$where_clause} ORDER BY created_at DESC", $where_values ),
+					$wpdb->prepare( $sql, $where_values ),
 					ARRAY_A
 				);
 			} else {
-				$results = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}qr_trackr_links ORDER BY created_at DESC", ARRAY_A );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
+				$results = $wpdb->get_results( $sql, ARRAY_A );
 			}
 
 			$data = array();
@@ -276,11 +252,11 @@ class QRC_Links_List_Table extends WP_List_Table {
 				return $item[ $column_name ];
 
 			case 'common_name':
-				$name = ! empty( $item[ $column_name ] ) ? $item[ $column_name ] : '<em>No name set</em>';
+				$name = ! empty( $item[ $column_name ] ) ? $item[ $column_name ] : '<em>' . esc_html__( 'No name set', 'wp-qr-trackr' ) . '</em>';
 				return $name;
 
 			case 'referral_code':
-				$code = ! empty( $item[ $column_name ] ) ? '<code>' . esc_html( $item[ $column_name ] ) . '</code>' : '<em>None</em>';
+				$code = ! empty( $item[ $column_name ] ) ? '<code>' . esc_html( $item[ $column_name ] ) . '</code>' : '<em>' . esc_html__( 'None', 'wp-qr-trackr' ) . '</em>';
 				return $code;
 
 			case 'destination_url':
@@ -296,18 +272,14 @@ class QRC_Links_List_Table extends WP_List_Table {
 			case 'qr_code':
 				return $this->column_qr_code( $item );
 
-			case 'actions':
-				return $this->column_actions( $item );
-
 			default:
-				return esc_html( $item[ $column_name ] ?? '' );
+				return print_r( $item, true );
 		}
 	}
 
 	/**
 	 * Render the QR image column with clickable modal.
 	 *
-	 * @since 1.0.0
 	 * @param array $item The current item.
 	 * @return string The column content.
 	 */
@@ -317,15 +289,18 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 		if ( ! empty( $qr_code_url ) ) {
 			return sprintf(
-				'<img src="%s" alt="QR Code" style="width: 60px; height: 60px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;" 
-				class="qr-code-modal-trigger" data-qr-id="%d" title="Click to view details" />',
+				'<img src="%s" alt="%s" style="width: 60px; height: 60px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;" 
+				class="qr-code-modal-trigger" data-qr-id="%d" title="%s" />',
 				esc_url( $qr_code_url ),
-				absint( $qr_id )
+				esc_attr__( 'QR Code', 'wp-qr-trackr' ),
+				absint( $qr_id ),
+				esc_attr__( 'Click to view details', 'wp-qr-trackr' )
 			);
 		} else {
 			return sprintf(
-				'<span class="qr-code-modal-trigger" data-qr-id="%d" style="cursor: pointer; color: #2271b1; text-decoration: underline;">Generate QR</span>',
-				absint( $qr_id )
+				'<span class="qr-code-modal-trigger" data-qr-id="%d" style="cursor: pointer; color: #2271b1; text-decoration: underline;">%s</span>',
+				absint( $qr_id ),
+				esc_html__( 'Generate QR', 'wp-qr-trackr' )
 			);
 		}
 	}
@@ -333,7 +308,6 @@ class QRC_Links_List_Table extends WP_List_Table {
 	/**
 	 * Render the QR code column.
 	 *
-	 * @since 1.0.0
 	 * @param array $item The current item.
 	 * @return string The column content.
 	 */
@@ -342,21 +316,21 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$tracking_url = '';
 
 		if ( ! empty( $qr_code ) ) {
-			// Use the clean rewrite URL instead of admin-ajax.php.
-			$tracking_url = home_url( '/redirect/' . esc_attr( $qr_code ) );
+			$tracking_url = home_url( '/qr/' . esc_attr( $qr_code ) );
 		}
 
 		// Show QR code identifier and tracking URL without image (image is in qr_image column).
 		if ( ! empty( $qr_code ) && ! empty( $tracking_url ) ) {
 			return sprintf(
 				'<code style="font-size: 12px; padding: 2px 4px; background: #f1f1f1; border-radius: 3px;">%s</code><br>
-				<a href="%s" target="_blank" class="button button-small" style="margin-top: 4px;">Visit Link</a>',
+				<a href="%s" target="_blank" class="button button-small" style="margin-top: 4px;">%s</a>',
 				esc_html( $qr_code ),
-				esc_url( $tracking_url )
+				esc_url( $tracking_url ),
+				esc_html__( 'Visit Link', 'wp-qr-trackr' )
 			);
 		}
 
-		return '<span class="dashicons dashicons-warning" title="QR code not available"></span>';
+		return '<span class="dashicons dashicons-warning" title="' . esc_attr__( 'QR code not available', 'wp-qr-trackr' ) . '"></span>';
 	}
 
 	/**
@@ -372,16 +346,13 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$orderby = 'id';
 		$order   = 'desc';
 
-		// Verify nonce for form processing.
-		$nonce_verified = isset( $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'qr_trackr_admin_nonce' );
-
 		// If orderby is set, use this as the sort column.
-		if ( $nonce_verified && ! empty( $_GET['orderby'] ) ) {
+		if ( ! empty( $_GET['orderby'] ) ) {
 			$orderby = sanitize_text_field( wp_unslash( $_GET['orderby'] ) );
 		}
 
 		// If order is set use this as the order.
-		if ( $nonce_verified && ! empty( $_GET['order'] ) ) {
+		if ( ! empty( $_GET['order'] ) ) {
 			$order = sanitize_text_field( wp_unslash( $_GET['order'] ) );
 		}
 
@@ -392,32 +363,5 @@ class QRC_Links_List_Table extends WP_List_Table {
 		}
 
 		return -$result;
-	}
-
-	/**
-	 * Render the actions column.
-	 *
-	 * @since 1.0.0
-	 * @param array $item The current item.
-	 * @return string The column content.
-	 */
-	protected function column_actions( $item ) {
-		$qr_id   = $item['id'];
-		$actions = array();
-
-		// Edit action (opens modal).
-		$actions['edit'] = sprintf(
-			'<a href="#" class="button button-small qr-code-modal-trigger" data-qr-id="%d">Edit</a>',
-			absint( $qr_id )
-		);
-
-			// Delete action (AJAX).
-		$actions['delete'] = sprintf(
-			'<button type="button" class="button button-small button-link-delete qr-delete-btn" data-qr-id="%d" data-nonce="%s">Delete</button>',
-			absint( $qr_id ),
-			esc_attr( wp_create_nonce( 'qr_trackr_nonce' ) )
-		);
-
-		return implode( ' ', $actions );
 	}
 }

@@ -160,38 +160,43 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		<div class="notice notice-success is-dismissible">
 			<p><?php echo esc_html( $success_message ); ?></p>
 		</div>
-		
+
 		<style>
-		.qr-success-display {
-			display: flex;
-			gap: 30px;
-			align-items: flex-start;
-		}
-		.qr-success-image {
-			flex: 0 0 200px;
-		}
-		.qr-success-details {
-			flex: 1;
-		}
-		@media (max-width: 768px) {
 			.qr-success-display {
-				flex-direction: column;
-				gap: 20px;
+				display: flex;
+				gap: 30px;
+				align-items: flex-start;
 			}
+
 			.qr-success-image {
-				flex: none;
-				text-align: center;
+				flex: 0 0 200px;
 			}
+
 			.qr-success-details {
-				flex: none;
+				flex: 1;
 			}
-		}
+
+			@media (max-width: 768px) {
+				.qr-success-display {
+					flex-direction: column;
+					gap: 20px;
+				}
+
+				.qr-success-image {
+					flex: none;
+					text-align: center;
+				}
+
+				.qr-success-details {
+					flex: none;
+				}
+			}
 		</style>
-		
+
 		<?php if ( isset( $created_qr ) && $created_qr ) : ?>
 			<div class="card" style="margin-top: 20px;">
 				<h2><?php esc_html_e( 'QR Code Created Successfully!', 'wp-qr-trackr' ); ?></h2>
-				
+
 				<div class="qr-success-display">
 					<!-- QR Code Image -->
 					<div class="qr-success-image">
@@ -200,29 +205,30 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 
 						if ( ! empty( $display_qr_url ) ) :
 							?>
-							<img src="<?php echo esc_url( $display_qr_url ); ?>" 
-								alt="<?php esc_attr_e( 'QR Code', 'wp-qr-trackr' ); ?>" 
+							<img src="<?php echo esc_url( $display_qr_url ); ?>"
+								alt="<?php esc_attr_e( 'QR Code', 'wp-qr-trackr' ); ?>"
 								style="width: 200px; height: 200px; border: 1px solid #ddd; border-radius: 4px;" />
 						<?php else : ?>
-							<div style="width: 200px; height: 200px; border: 1px solid #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f9f9f9;">
+							<div
+								style="width: 200px; height: 200px; border: 1px solid #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: #f9f9f9;">
 								<p style="text-align: center; color: #666;">
 									<?php esc_html_e( 'QR Code Image', 'wp-qr-trackr' ); ?><br>
 									<small><?php esc_html_e( '(Generated on first scan)', 'wp-qr-trackr' ); ?></small>
 								</p>
 							</div>
 						<?php endif; ?>
-						
+
 						<div style="margin-top: 15px;">
 							<?php if ( ! empty( $display_qr_url ) ) : ?>
-								<a href="<?php echo esc_url( $display_qr_url ); ?>" 
-									download="qr-code-<?php echo esc_attr( $created_qr['qr_code'] ); ?>.png" 
+								<a href="<?php echo esc_url( $display_qr_url ); ?>"
+									download="qr-code-<?php echo esc_attr( $created_qr['qr_code'] ); ?>.png"
 									class="button button-primary">
 									<?php esc_html_e( 'Download QR Code', 'wp-qr-trackr' ); ?>
 								</a>
 							<?php endif; ?>
 						</div>
 					</div>
-					
+
 					<!-- QR Code Details -->
 					<div class="qr-success-details">
 						<table class="form-table" style="margin-top: 0;">
@@ -230,25 +236,25 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 								<th scope="row" style="width: 150px;"><?php esc_html_e( 'QR Code:', 'wp-qr-trackr' ); ?></th>
 								<td>
 									<code style="font-size: 14px; background: #f9f9f9; padding: 8px; border-radius: 4px;">
-										<?php echo esc_html( $created_qr['qr_code'] ); ?>
-									</code>
+												<?php echo esc_html( $created_qr['qr_code'] ); ?>
+											</code>
 								</td>
 							</tr>
-							
+
 							<?php if ( ! empty( $created_qr['common_name'] ) ) : ?>
 								<tr>
 									<th scope="row"><?php esc_html_e( 'Common Name:', 'wp-qr-trackr' ); ?></th>
 									<td><?php echo esc_html( $created_qr['common_name'] ); ?></td>
 								</tr>
 							<?php endif; ?>
-							
+
 							<?php if ( ! empty( $created_qr['referral_code'] ) ) : ?>
 								<tr>
 									<th scope="row"><?php esc_html_e( 'Referral Code:', 'wp-qr-trackr' ); ?></th>
 									<td><code><?php echo esc_html( $created_qr['referral_code'] ); ?></code></td>
 								</tr>
 							<?php endif; ?>
-							
+
 							<?php if ( ! empty( $created_qr['post_id'] ) ) : ?>
 								<?php
 								$linked_post = get_post( $created_qr['post_id'] );
@@ -259,8 +265,9 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 										<td>
 											<strong><?php echo esc_html( $linked_post->post_title ); ?></strong>
 											<br>
-											<small><?php echo esc_html( ucfirst( $linked_post->post_type ) ); ?> • 
-												<a href="<?php echo esc_url( get_edit_post_link( $linked_post->ID ) ); ?>" target="_blank">
+											<small><?php echo esc_html( ucfirst( $linked_post->post_type ) ); ?> •
+												<a href="<?php echo esc_url( get_edit_post_link( $linked_post->ID ) ); ?>"
+													target="_blank">
 													<?php esc_html_e( 'Edit Post', 'wp-qr-trackr' ); ?>
 												</a>
 											</small>
@@ -268,40 +275,39 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 									</tr>
 								<?php endif; ?>
 							<?php endif; ?>
-							
+
 							<tr>
 								<th scope="row"><?php esc_html_e( 'QR URL:', 'wp-qr-trackr' ); ?></th>
 								<td>
-									<a href="<?php echo esc_url( home_url( '/redirect/' . $created_qr['qr_code'] ) ); ?>" 
-										target="_blank" 
-										style="word-break: break-all;">
+									<a href="<?php echo esc_url( home_url( '/redirect/' . $created_qr['qr_code'] ) ); ?>"
+										target="_blank" style="word-break: break-all;">
 										<?php echo esc_url( home_url( '/redirect/' . $created_qr['qr_code'] ) ); ?>
 									</a>
 								</td>
 							</tr>
-							
+
 							<tr>
 								<th scope="row"><?php esc_html_e( 'Destination URL:', 'wp-qr-trackr' ); ?></th>
 								<td>
-									<a href="<?php echo esc_url( $created_qr['destination_url'] ); ?>" 
-										target="_blank" 
+									<a href="<?php echo esc_url( $created_qr['destination_url'] ); ?>" target="_blank"
 										style="word-break: break-all;">
 										<?php echo esc_url( $created_qr['destination_url'] ); ?>
 									</a>
 								</td>
 							</tr>
-							
+
 							<tr>
 								<th scope="row"><?php esc_html_e( 'Created:', 'wp-qr-trackr' ); ?></th>
 								<td><?php echo esc_html( $created_qr['created_at'] ); ?></td>
 							</tr>
 						</table>
-						
+
 						<div style="margin-top: 20px;">
 							<a href="<?php echo esc_url( admin_url( 'admin.php?page=qr-code-links' ) ); ?>" class="button">
 								<?php esc_html_e( 'View All QR Codes', 'wp-qr-trackr' ); ?>
 							</a>
-							<a href="<?php echo esc_url( admin_url( 'admin.php?page=qr-code-add-new' ) ); ?>" class="button button-primary">
+							<a href="<?php echo esc_url( admin_url( 'admin.php?page=qr-code-add-new' ) ); ?>"
+								class="button button-primary">
 								<?php esc_html_e( 'Create Another QR Code', 'wp-qr-trackr' ); ?>
 							</a>
 						</div>
@@ -319,11 +325,12 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 
 	<div class="card">
 		<h2><?php esc_html_e( 'Create New QR Code', 'wp-qr-trackr' ); ?></h2>
-		<p><?php esc_html_e( 'Create a new QR code that will redirect users to your specified destination URL.', 'wp-qr-trackr' ); ?></p>
+		<p><?php esc_html_e( 'Create a new QR code that will redirect users to your specified destination URL.', 'wp-qr-trackr' ); ?>
+		</p>
 
 		<form method="post" action="">
 			<?php wp_nonce_field( 'qr_trackr_add_new' ); ?>
-			
+
 			<!-- Hidden field to store selected post ID -->
 			<input type="hidden" id="post_id" name="post_id" value="" />
 
@@ -340,11 +347,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 							<?php esc_html_e( 'Search and select a post or page, or enter a custom URL below.', 'wp-qr-trackr' ); ?>
 						</p>
 						<br>
-						<input type="url" 
-								id="custom_destination_url" 
-								name="custom_destination_url" 
-								class="regular-text" 
-								placeholder="<?php esc_attr_e( 'Or enter a custom URL...', 'wp-qr-trackr' ); ?>" />
+						<input type="url" id="custom_destination_url" name="custom_destination_url" class="regular-text"
+							placeholder="<?php esc_attr_e( 'Or enter a custom URL...', 'wp-qr-trackr' ); ?>" />
 						<p class="description">
 							<?php esc_html_e( 'Enter a custom URL if you want to link to an external site or specific URL.', 'wp-qr-trackr' ); ?>
 						</p>
@@ -359,11 +363,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						<label for="common_name"><?php esc_html_e( 'Common Name', 'wp-qr-trackr' ); ?></label>
 					</th>
 					<td>
-						<input type="text" 
-								id="common_name" 
-								name="common_name" 
-								class="regular-text" 
-								value="<?php echo isset( $_POST['common_name'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) ) : ''; ?>" />
+						<input type="text" id="common_name" name="common_name" class="regular-text"
+							value="<?php echo isset( $_POST['common_name'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) ) : ''; ?>" />
 						<p class="description">
 							<?php esc_html_e( 'A friendly name to help you identify this QR code (optional).', 'wp-qr-trackr' ); ?>
 						</p>
@@ -375,11 +376,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						<label for="referral_code"><?php esc_html_e( 'Referral Code', 'wp-qr-trackr' ); ?></label>
 					</th>
 					<td>
-						<input type="text" 
-								id="referral_code" 
-								name="referral_code" 
-								class="regular-text" 
-								value="<?php echo isset( $_POST['referral_code'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) ) : ''; ?>" />
+						<input type="text" id="referral_code" name="referral_code" class="regular-text"
+							value="<?php echo isset( $_POST['referral_code'] ) ? esc_attr( sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) ) : ''; ?>" />
 						<p class="description">
 							<?php esc_html_e( 'A referral code for tracking and analytics (optional).', 'wp-qr-trackr' ); ?>
 						</p>
@@ -388,11 +386,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 			</table>
 
 			<p class="submit">
-				<input type="submit" 
-						name="submit" 
-						id="submit" 
-						class="button button-primary" 
-						value="<?php esc_attr_e( 'Create QR Code', 'wp-qr-trackr' ); ?>" />
+				<input type="submit" name="submit" id="submit" class="button button-primary"
+					value="<?php esc_attr_e( 'Create QR Code', 'wp-qr-trackr' ); ?>" />
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=qr-code-links' ) ); ?>" class="button">
 					<?php esc_html_e( 'Cancel', 'wp-qr-trackr' ); ?>
 				</a>
@@ -403,101 +398,130 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	<div class="card">
 		<h2><?php esc_html_e( 'How It Works', 'wp-qr-trackr' ); ?></h2>
 		<ol>
-			<li><?php esc_html_e( 'Enter the destination URL where you want users to be redirected.', 'wp-qr-trackr' ); ?></li>
-			<li><?php esc_html_e( 'Optionally add a common name and referral code for better organization.', 'wp-qr-trackr' ); ?></li>
+			<li><?php esc_html_e( 'Enter the destination URL where you want users to be redirected.', 'wp-qr-trackr' ); ?>
+			</li>
+			<li><?php esc_html_e( 'Optionally add a common name and referral code for better organization.', 'wp-qr-trackr' ); ?>
+			</li>
 			<li><?php esc_html_e( 'Click "Create QR Code" to generate a unique QR code.', 'wp-qr-trackr' ); ?></li>
-			<li><?php esc_html_e( 'The QR code will be available in your QR Codes list for download and sharing.', 'wp-qr-trackr' ); ?></li>
+			<li><?php esc_html_e( 'The QR code will be available in your QR Codes list for download and sharing.', 'wp-qr-trackr' ); ?>
+			</li>
 		</ol>
 	</div>
 </div>
 
 <script type="text/javascript">
-(function($) {
-$(function() {
-	// Initialize Select2 for the destination URL dropdown.
-	$('#destination_url').select2({
-		placeholder: '<?php echo esc_js( __( 'Search posts and pages...', 'wp-qr-trackr' ) ); ?>',
-		allowClear: true,
-		ajax: {
-			url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
-			type: 'POST',
-			dataType: 'json',
-			delay: 250,
-			data: function(params) {
-				return {
-					action: 'qrc_search_posts',
-					term: params.term,
-					nonce: qr_trackr_ajax.nonce
-				};
-			},
-			processResults: function(data) {
-				var results = [];
-				if (data.success && data.data && data.data.posts) {
-					data.data.posts.forEach(function(post) {
-						results.push({
-							id: post.id, // Use post ID as the value
-							text: post.title + ' (' + post.type + ')',
-							url: post.url // Store URL as data attribute
-						});
-					});
+	(function ($) {
+		$(function () {
+			// Fallback: Load Select2 if not already loaded
+			if (typeof $.fn.select2 === 'undefined') {
+				console.log('Select2 not loaded, loading from CDN...');
+				// Load Select2 CSS
+				if (!$('link[href*="select2"]').length) {
+					$('<link>', {
+						rel: 'stylesheet',
+						type: 'text/css',
+						href: 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css'
+					}).appendTo('head');
 				}
-				return {
-					results: results
-				};
-			},
-			error: function(xhr, status, error) {
-				console.error('Select2 AJAX error:', {xhr: xhr, status: status, error: error});
-			},
-			cache: true
-		},
-		minimumInputLength: 2
-	});
+				// Load Select2 JS
+				$.getScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js')
+					.done(function () {
+						console.log('Select2 loaded successfully');
+						initializeSelect2();
+					})
+					.fail(function () {
+						console.error('Failed to load Select2');
+					});
+			} else {
+				console.log('Select2 already loaded');
+				initializeSelect2();
+			}
 
-	// Handle post selection from dropdown
-	$('#destination_url').on('select2:select', function(e) {
-		var data = e.params.data;
-		$('#post_id').val(data.id); // Store the post ID
-		$('#custom_destination_url').val(''); // Clear custom URL
-		$('#url-validation-error').hide(); // Hide validation error
-	});
+			function initializeSelect2() {
+				// Initialize Select2 for the destination URL dropdown.
+				$('#destination_url').select2({
+					placeholder: '<?php echo esc_js( __( 'Search posts and pages...', 'wp-qr-trackr' ) ); ?>',
+					allowClear: true,
+					ajax: {
+						url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+						type: 'POST',
+						dataType: 'json',
+						delay: 250,
+						data: function (params) {
+							return {
+								action: 'qrc_search_posts',
+								term: params.term,
+								nonce: qr_trackr_ajax.nonce
+							};
+						},
+						processResults: function (data) {
+							var results = [];
+							if (data.success && data.data && data.data.posts) {
+								data.data.posts.forEach(function (post) {
+									results.push({
+										id: post.id, // Use post ID as the value
+										text: post.title + ' (' + post.type + ')',
+										url: post.url // Store URL as data attribute
+									});
+								});
+							}
+							return {
+								results: results
+							};
+						},
+						error: function (xhr, status, error) {
+							console.error('Select2 AJAX error:', { xhr: xhr, status: status, error: error });
+						},
+						cache: true
+					},
+					minimumInputLength: 2
+				});
 
-	// Handle clearing the dropdown
-	$('#destination_url').on('select2:clear', function(e) {
-		$('#post_id').val(''); // Clear post ID
-		$('#url-validation-error').hide(); // Hide validation error
-	});
+				// Handle post selection from dropdown
+				$('#destination_url').on('select2:select', function (e) {
+					var data = e.params.data;
+					$('#post_id').val(data.id); // Store the post ID
+					$('#custom_destination_url').val(''); // Clear custom URL
+					$('#url-validation-error').hide(); // Hide validation error
+				});
 
-	// Handle custom URL input.
-	$('#custom_destination_url').on('input', function() {
-		if ($(this).val()) {
-			$('#destination_url').val('').trigger('change');
-			$('#post_id').val(''); // Clear post ID when custom URL is used
-			$('#url-validation-error').hide(); // Hide validation error
-		}
-	});
+				// Handle clearing the dropdown
+				$('#destination_url').on('select2:clear', function (e) {
+					$('#post_id').val(''); // Clear post ID
+					$('#url-validation-error').hide(); // Hide validation error
+				});
 
-	// Handle dropdown selection.
-	$('#destination_url').on('change', function() {
-		if ($(this).val()) {
-			$('#custom_destination_url').val('');
-			$('#url-validation-error').hide(); // Hide validation error
-		}
-	});
+				// Handle custom URL input.
+				$('#custom_destination_url').on('input', function () {
+					if ($(this).val()) {
+						$('#destination_url').val('').trigger('change');
+						$('#post_id').val(''); // Clear post ID when custom URL is used
+						$('#url-validation-error').hide(); // Hide validation error
+					}
+				});
 
-	// Handle form submission
-	$('form').on('submit', function(e) {
-		var destinationUrl = $('#destination_url').val();
-		var customUrl = $('#custom_destination_url').val();
-		var postId = $('#post_id').val();
+				// Handle dropdown selection.
+				$('#destination_url').on('change', function () {
+					if ($(this).val()) {
+						$('#custom_destination_url').val('');
+						$('#url-validation-error').hide(); // Hide validation error
+					}
+				});
 
-		if (!destinationUrl && !customUrl) {
-			e.preventDefault(); // Prevent form submission
-			$('#url-validation-error').show(); // Show validation error
-			return false;
-		} else {
-			$('#url-validation-error').hide(); // Hide validation error
-		}
-	});
-});
-})(window.jQuery);
-</script> 
+				// Handle form submission
+				$('form').on('submit', function (e) {
+					var destinationUrl = $('#destination_url').val();
+					var customUrl = $('#custom_destination_url').val();
+					var postId = $('#post_id').val();
+
+					if (!destinationUrl && !customUrl) {
+						e.preventDefault(); // Prevent form submission
+						$('#url-validation-error').show(); // Show validation error
+						return false;
+					} else {
+						$('#url-validation-error').hide(); // Hide validation error
+					}
+				});
+			});
+	})(window.jQuery);
+</script>

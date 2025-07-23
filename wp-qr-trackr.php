@@ -75,7 +75,7 @@ function qr_trackr_init_plugin() {
 		require_once $autoloader;
 	}
 
-	// Register query var first
+	// Register query var first.
 	add_filter(
 		'query_vars',
 		function ( $vars ) {
@@ -137,10 +137,16 @@ function qr_trackr_maybe_flush_rewrite_rules() {
 	}
 }
 
+/**
+ * Load plugin modules safely with error handling.
+ *
+ * @since 1.2.14
+ * @return void
+ */
 function qr_trackr_load_modules() {
 	static $loaded = false;
 
-	// Prevent double loading
+	// Prevent double loading.
 	if ( $loaded ) {
 		error_log( 'QR Trackr: Modules already loaded, skipping.' );
 		return;
@@ -148,7 +154,7 @@ function qr_trackr_load_modules() {
 
 	error_log( 'QR Trackr: Loading core modules on hook: ' . current_filter() );
 
-	// Check if includes directory exists
+	// Check if includes directory exists.
 	$includes_dir = QR_TRACKR_PLUGIN_DIR . 'includes';
 	if ( ! file_exists( $includes_dir ) || ! is_dir( $includes_dir ) ) {
 		error_log( 'QR Trackr: ERROR - Includes directory not found at: ' . $includes_dir );
@@ -166,7 +172,7 @@ function qr_trackr_load_modules() {
 		return;
 	}
 
-	// Core modules that must be loaded in order
+	// Core modules that must be loaded in order.
 	$core_modules = array(
 		'module-requirements.php',
 		'module-utils.php',
@@ -178,7 +184,7 @@ function qr_trackr_load_modules() {
 		'module-rewrite.php',
 	);
 
-	// Check if all required modules exist first
+	// Check if all required modules exist first.
 	$missing_modules = array();
 	foreach ( $core_modules as $module ) {
 		$module_path = $includes_dir . '/' . $module;
@@ -188,7 +194,7 @@ function qr_trackr_load_modules() {
 		}
 	}
 
-	// If any required modules are missing, show admin notice and return
+	// If any required modules are missing, show admin notice and return.
 	if ( ! empty( $missing_modules ) ) {
 		add_action(
 			'admin_notices',
@@ -204,7 +210,7 @@ function qr_trackr_load_modules() {
 		return;
 	}
 
-	// Load core modules
+	// Load core modules.
 	foreach ( $core_modules as $module ) {
 		$module_path = $includes_dir . '/' . $module;
 		error_log( 'QR Trackr: Loading module: ' . $module );
@@ -212,7 +218,7 @@ function qr_trackr_load_modules() {
 		error_log( 'QR Trackr: Successfully loaded: ' . $module );
 	}
 
-	// Log WordPress state
+	// Log WordPress state.
 	error_log( 'QR Trackr: WordPress state - is_admin(): ' . ( is_admin() ? 'true' : 'false' ) );
 	error_log( 'QR Trackr: WordPress state - current_user_can(manage_options): ' . ( current_user_can( 'manage_options' ) ? 'true' : 'false' ) );
 	error_log( 'QR Trackr: WordPress state - get_current_user_id(): ' . get_current_user_id() );
@@ -220,7 +226,7 @@ function qr_trackr_load_modules() {
 	$loaded = true;
 }
 
-// Only load modules on plugins_loaded hook with high priority
+// Only load modules on plugins_loaded hook with high priority.
 add_action( 'plugins_loaded', 'qr_trackr_load_modules', 5 );
 error_log( 'QR Trackr: Added plugins_loaded action for module loading' );
 
@@ -230,28 +236,28 @@ error_log( 'QR Trackr: Added plugins_loaded action for module loading' );
 function qr_trackr_init() {
 	error_log( 'QR Trackr: Plugin initialization started' );
 
-	// Load translations
+	// Load translations.
 	load_plugin_textdomain( 'wp-qr-trackr', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
-	// Check if we need to flush rewrite rules
+	// Check if we need to flush rewrite rules.
 	qr_trackr_maybe_flush_rewrite_rules();
 }
 
-// Add init hook with high priority
+// Add init hook with high priority.
 add_action( 'init', 'qr_trackr_init', 5 );
 error_log( 'QR Trackr: Added init action for plugin initialization' );
 
-// Remove old action to prevent double loading
+// Remove old action to prevent double loading.
 remove_action( 'plugins_loaded', 'qr_trackr_init_plugin' );
 
-// Add initialization on plugins_loaded with high priority
+// Add initialization on plugins_loaded with high priority.
 add_action( 'plugins_loaded', 'qr_trackr_init_plugin', 5 );
 
-// Register activation and deactivation hooks
+// Register activation and deactivation hooks.
 register_activation_hook( QR_TRACKR_PLUGIN_FILE, 'qr_trackr_activate_plugin' );
 register_deactivation_hook( QR_TRACKR_PLUGIN_FILE, 'qr_trackr_deactivate_plugin' );
 
-// Register query var early
+// Register query var early.
 add_action(
 	'init',
 	function () {
@@ -269,7 +275,7 @@ add_action(
 	1
 );
 
-// Ensure query var is registered
+// Ensure query var is registered.
 add_filter(
 	'query_vars',
 	function ( $vars ) {
@@ -285,7 +291,7 @@ add_filter(
 	1
 );
 
-// Add a late check to ensure query var is registered
+// Add a late check to ensure query var is registered.
 add_action(
 	'wp_loaded',
 	function () {
@@ -301,7 +307,7 @@ add_action(
 	1
 );
 
-// Add a very late check to ensure query var is registered
+// Add a very late check to ensure query var is registered.
 add_action(
 	'parse_request',
 	function ( $wp ) {
@@ -316,7 +322,7 @@ add_action(
 	1
 );
 
-// Add a final check to ensure query var is registered
+// Add a final check to ensure query var is registered.
 add_action(
 	'wp',
 	function () {

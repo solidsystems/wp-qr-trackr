@@ -16,7 +16,7 @@ function qrc_init() {
 	// Add a settings link to the plugins page.
 	add_filter( 'plugin_action_links_' . plugin_basename( QRC_PLUGIN_FILE ), 'qrc_add_settings_link' );
 
-	// Note: Activation and deactivation hooks are now handled in the main plugin file
+	// Note: Activation and deactivation hooks are now handled in the main plugin file.
 
 	// Create QR code post type.
 	qrc_create_post_type();
@@ -289,4 +289,4 @@ function qr_trackr_permalink_structure_changed() {
 }
 add_action( 'permalink_structure_changed', 'qr_trackr_permalink_structure_changed' );
 
-// Note: Activation hooks are now handled in the main plugin file to avoid conflicts
+// Note: Activation hooks are now handled in the main plugin file to avoid conflicts.

@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Check if the server meets the plugin's requirements.
  *
- * @since 1.0.0
  * @return bool True if requirements are met, false otherwise.
  */
 function qrc_requirements_met() {
@@ -37,9 +36,6 @@ function qrc_requirements_met() {
 
 /**
  * Display a notice if requirements are not met.
- *
- * @since 1.0.0
- * @return void
  */
 function qrc_requirements_notice() {
 	if ( false === qrc_requirements_met() ) {
@@ -58,9 +54,6 @@ add_action( 'admin_notices', 'qrc_requirements_notice' );
 
 /**
  * Deactivate the plugin if requirements are not met.
- *
- * @since 1.0.0
- * @return void
  */
 function qrc_deactivate_self() {
 	if ( false === qrc_requirements_met() ) {

@@ -7,8 +7,7 @@
  * @since 1.2.8
  */
 
-(function($) {
-$(function() {
+jQuery(document).ready(function($) {
 	'use strict';
 	
 	// Add CSS for updated cell highlighting
@@ -22,130 +21,6 @@ $(function() {
 			}
 		`)
 		.appendTo('head');
-	
-	// Track deleted QR codes to prevent modal opening
-	window.deletedQRCodes = window.deletedQRCodes || [];
-	window.isDeletingQR = window.isDeletingQR || false;
-	
-	// Prevent multiple script loads
-	if (window.qrTrackrInitialized) {
-		console.log('QR Trackr already initialized, skipping duplicate load');
-		return;
-	}
-	window.qrTrackrInitialized = true;
-	
-	// Handle QR code deletion via AJAX.
-	$(document).off('click', '.qr-delete-btn').on('click', '.qr-delete-btn', function(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		
-			// Debug logging
-	console.log('Delete button clicked for QR ID:', $(this).data('qr-id'));
-	console.log('Event handlers on button:', $._data(this, 'events'));
-	
-	// Prevent duplicate event handling
-	if ($(this).data('deleting') === true || window.isDeletingQR === true) {
-		console.log('Delete already in progress, ignoring click');
-		return false;
-	}
-		
-		const $button = $(this);
-		const qrId = $button.data('qr-id');
-		const nonce = $button.data('nonce');
-		
-		// Mark as deleting to prevent duplicate clicks
-		$button.data('deleting', true);
-		window.isDeletingQR = true;
-		
-		// Show confirmation dialog.
-		if (!confirm('Are you sure you want to delete this QR code?')) {
-			$button.data('deleting', false);
-			window.isDeletingQR = false;
-			return false;
-		}
-		
-		// Disable button and show loading state.
-		$button.prop('disabled', true).text('Deleting...');
-		
-		// Send AJAX request to delete QR code.
-		$.ajax({
-			url: qr_trackr_ajax.ajaxurl,
-			type: 'POST',
-			data: {
-				action: 'qr_trackr_delete_qr_code',
-				qr_id: qrId,
-				nonce: nonce
-			},
-			success: function(response) {
-				if (response.success) {
-					// Show success message.
-					showAdminNotice(response.data.message, 'success');
-					
-					// Remove the table row and all related elements.
-					const $row = $button.closest('tr');
-					const qrId = $button.data('qr-id');
-					
-					// Track this QR code as deleted
-					window.deletedQRCodes.push(qrId);
-					
-					// Remove ALL elements with this QR ID (images, text, buttons, etc.)
-					$('[data-qr-id="' + qrId + '"]').each(function() {
-						$(this).remove();
-					});
-					
-					// Remove the table row.
-					$row.fadeOut(300, function() {
-						$(this).remove();
-					});
-					
-					// Close any open modal for this QR code
-					if ($('#qr-code-modal').is(':visible')) {
-						closeQRModal();
-					}
-					
-					// Disable any remaining modal triggers for this QR code
-					$('[data-qr-id="' + qrId + '"]').off('click').css('pointer-events', 'none');
-					
-					// Refresh the page immediately to ensure all references are cleared.
-					setTimeout(function() {
-						location.reload();
-					}, 500);
-				} else {
-					// Show error message.
-					showAdminNotice(response.data || 'Delete failed.', 'error');
-					$button.prop('disabled', false).text('Delete');
-					$button.data('deleting', false);
-					window.isDeletingQR = false;
-				}
-			},
-			error: function() {
-				// Show error message.
-				showAdminNotice('Delete failed. Please try again.', 'error');
-				$button.prop('disabled', false).text('Delete');
-				$button.data('deleting', false);
-				window.isDeletingQR = false;
-			}
-		});
-	});
-
-	// Function to show admin notices.
-	function showAdminNotice(message, type) {
-		const noticeClass = type === 'success' ? 'notice-success' : 'notice-error';
-		const notice = $('<div class="notice ' + noticeClass + ' is-dismissible"><p>' + message + '</p></div>');
-		
-		// Remove any existing notices.
-		$('.notice').remove();
-		
-		// Add new notice after the page title.
-		$('.wp-heading-inline').after(notice);
-		
-		// Auto-dismiss after 5 seconds.
-		setTimeout(function() {
-			notice.fadeOut(300, function() {
-				$(this).remove();
-			});
-		}, 5000);
-	}
 
 	// Post search functionality
 	let searchTimeout;
@@ -276,7 +151,7 @@ $(function() {
 	function selectPost(id, title, type, url) {
 		$postId.val(id);
 		$postSearch.val(title);
-		$('#destination_url').val(url);
+		$('#destination_url').val(url); // Set the destination URL
 		$postResults.hide();
 		
 		$selectedPostInfo
@@ -290,7 +165,7 @@ $(function() {
 	function clearPostSelection() {
 		$postId.val('');
 		$postSearch.val('');
-		$('#destination_url').val('');
+		$('#destination_url').val(''); // Clear the destination URL
 		$postResults.hide().empty();
 		$selectedPostInfo.hide();
 	}
@@ -311,26 +186,26 @@ $(function() {
 		<div id="qr-code-modal" class="qr-modal" style="display: none;">
 			<div class="qr-modal-content">
 				<div class="qr-modal-header">
-					<h2 id="qr-modal-title">QR Code Details</h2>
+					<h2 id="qr-modal-title">${qrcAdmin.strings.qrCodeDetails}</h2>
 					<span class="qr-modal-close">&times;</span>
 				</div>
 				<div class="qr-modal-body">
 					<div class="qr-modal-loading" style="text-align: center; padding: 20px;">
 						<span class="spinner is-active"></span>
-						<p>Loading...</p>
+						<p>${qrcAdmin.strings.loading}</p>
 					</div>
 					<div class="qr-modal-content-inner" style="display: none;">
 						<div class="qr-modal-row">
 							<div class="qr-modal-left">
 								<div class="qr-image-container">
-									<img id="qr-modal-image" src="" alt="QR Code" style="max-width: 400px; height: auto; border: 1px solid #ddd; border-radius: 4px;" />
+									<img id="qr-modal-image" src="" alt="QR Code" style="max-width: 200px; height: auto; border: 1px solid #ddd; border-radius: 4px;" />
 								</div>
 								<div class="qr-stats">
-									<h4>Statistics</h4>
-									<p><strong>Total Scans:</strong> <span id="qr-modal-scans">0</span></p>
-									<p><strong>Recent Scans (30 days):</strong> <span id="qr-modal-recent-scans">0</span></p>
-									<p><strong>Last Accessed:</strong> <span id="qr-modal-last-accessed">Never</span></p>
-									<p><strong>Created:</strong> <span id="qr-modal-created"></span></p>
+									<h4>${qrcAdmin.strings.statistics}</h4>
+									<p><strong>${qrcAdmin.strings.totalScans}:</strong> <span id="qr-modal-scans">0</span></p>
+									<p><strong>${qrcAdmin.strings.recentScans}:</strong> <span id="qr-modal-recent-scans">0</span></p>
+									<p><strong>${qrcAdmin.strings.lastAccessed}:</strong> <span id="qr-modal-last-accessed">Never</span></p>
+									<p><strong>${qrcAdmin.strings.created}:</strong> <span id="qr-modal-created"></span></p>
 								</div>
 							</div>
 							<div class="qr-modal-right">
@@ -338,35 +213,35 @@ $(function() {
 									<input type="hidden" id="qr-modal-id" value="" />
 									
 									<div class="qr-field-group">
-										<label for="qr-modal-common-name"><strong>Common Name:</strong></label>
-										<input type="text" id="qr-modal-common-name" name="common_name" class="regular-text" placeholder="Enter a friendly name" />
-										<p class="description">A friendly name to help you identify this QR code.</p>
+										<label for="qr-modal-common-name"><strong>${qrcAdmin.strings.commonName}:</strong></label>
+										<input type="text" id="qr-modal-common-name" name="common_name" class="regular-text" placeholder="${qrcAdmin.strings.enterFriendlyName}" />
+										<p class="description">${qrcAdmin.strings.commonNameDesc}</p>
 									</div>
 									
 									<div class="qr-field-group">
-										<label for="qr-modal-referral-code"><strong>Referral Code:</strong></label>
-										<input type="text" id="qr-modal-referral-code" name="referral_code" class="regular-text" placeholder="Enter a referral code" />
-										<p class="description">A referral code for tracking and analytics.</p>
+										<label for="qr-modal-referral-code"><strong>${qrcAdmin.strings.referralCode}:</strong></label>
+										<input type="text" id="qr-modal-referral-code" name="referral_code" class="regular-text" placeholder="${qrcAdmin.strings.enterReferralCode}" />
+										<p class="description">${qrcAdmin.strings.referralCodeDesc}</p>
 									</div>
 									
 									<div class="qr-field-group">
-										<label><strong>QR Code:</strong></label>
+										<label><strong>${qrcAdmin.strings.qrCode}:</strong></label>
 										<p id="qr-modal-qr-code" style="font-family: monospace; background: #f9f9f9; padding: 8px; border-radius: 4px;"></p>
 									</div>
 									
 									<div class="qr-field-group">
-										<label><strong>QR URL:</strong></label>
+										<label><strong>${qrcAdmin.strings.qrUrl}:</strong></label>
 										<p><a id="qr-modal-qr-url" href="" target="_blank" style="word-break: break-all;"></a></p>
 									</div>
 									
 									<div class="qr-field-group">
-										<label for="qr-modal-destination-url"><strong>Destination URL:</strong></label>
+										<label for="qr-modal-destination-url"><strong>${qrcAdmin.strings.destinationUrl}:</strong></label>
 										<input type="url" id="qr-modal-destination-url" name="destination_url" class="regular-text" placeholder="https://example.com" />
 										<p class="description">The URL that users will be redirected to when they scan this QR code.</p>
 									</div>
 									
 									<div class="qr-field-group">
-										<label><strong>Linked Post:</strong></label>
+										<label><strong>${qrcAdmin.strings.linkedPost}:</strong></label>
 										<p id="qr-modal-post-title" style="font-style: italic;"></p>
 									</div>
 								</form>
@@ -374,10 +249,11 @@ $(function() {
 						</div>
 					</div>
 				</div>
-						<div class="qr-modal-footer">
-			<button type="button" class="button button-secondary qr-modal-close">Close</button>
-			<button type="button" class="button button-primary" id="qr-modal-save">Save Changes</button>
-		</div>
+				<div class="qr-modal-footer">
+					<div class="qr-modal-message" style="display: none;"></div>
+					<button type="button" class="button button-secondary qr-modal-close">${qrcAdmin.strings.close}</button>
+					<button type="button" class="button button-primary" id="qr-modal-save">${qrcAdmin.strings.saveChanges}</button>
+				</div>
 			</div>
 		</div>
 	`;
@@ -479,7 +355,21 @@ $(function() {
 			justify-content: space-between;
 			align-items: center;
 		}
-
+		.qr-modal-message {
+			padding: 8px 12px;
+			border-radius: 4px;
+			margin-right: 10px;
+		}
+		.qr-modal-message.success {
+			background-color: #d4edda;
+			color: #155724;
+			border: 1px solid #c3e6cb;
+		}
+		.qr-modal-message.error {
+			background-color: #f8d7da;
+			color: #721c24;
+			border: 1px solid #f5c6cb;
+		}
 		@media (max-width: 768px) {
 			.qr-modal-content {
 				width: 95%;
@@ -535,21 +425,6 @@ $(function() {
 	$(document).on('click', '.qr-code-modal-trigger', function(e) {
 		e.preventDefault();
 		const qrId = $(this).data('qr-id');
-		
-		// Check if this QR code has been deleted
-		if (window.deletedQRCodes && window.deletedQRCodes.includes(qrId)) {
-			showAdminNotice('This QR code has been deleted and is no longer available.', 'error');
-			// Remove this element to prevent future clicks
-			$(this).remove();
-			return;
-		}
-		
-		// Check if the element still exists in the DOM (basic validation)
-		if (!$(this).is(':visible') || $(this).closest('tr').length === 0) {
-			showAdminNotice('This QR code is no longer available.', 'error');
-			return;
-		}
-		
 		openQRModal(qrId);
 	});
 	
@@ -626,49 +501,34 @@ $(function() {
 	 * Open QR code details modal
 	 */
 	function openQRModal(qrId) {
-		// Check if this QR code has been deleted
-		if (window.deletedQRCodes && window.deletedQRCodes.includes(qrId)) {
-			showAdminNotice('This QR code has been deleted and is no longer available.', 'error');
-			return;
-		}
-		
 		$('#qr-code-modal').show();
 		$('.qr-modal-loading').show();
 		$('.qr-modal-content-inner').hide();
-		$('.qr-modal-message').remove();
+		$('.qr-modal-message').hide();
 		
 		// Fetch QR code details
-		$.post(qr_trackr_ajax.ajaxurl, {
+		$.post(qrcAdmin.ajaxUrl, {
 			action: 'qr_trackr_get_qr_details',
 			qr_id: qrId,
-			nonce: qr_trackr_ajax.nonce
+			nonce: qrcAdmin.nonce
 		})
 		.done(function(response) {
 			if (response.success) {
 				populateModal(response.data);
 				$('.qr-modal-loading').hide();
 				$('.qr-modal-content-inner').show();
-				
-				// If QR code image was generated, refresh the table row.
-				if (response.data.qr_code_url) {
-					updateQRImageInTable(qrId, response.data.qr_code_url);
-				}
 			} else {
 				// Handle specific error cases
-				let errorMessage = response.data || 'Error loading QR code details.';
+				let errorMessage = response.data || qrcAdmin.strings.errorLoadingDetails;
 				if (errorMessage.includes('QR code not found')) {
 					errorMessage = 'This QR code has been deleted or is no longer available. Please refresh the page to see the updated list.';
-					// Mark this QR code as deleted to prevent future attempts
-					window.deletedQRCodes.push(qrId);
-					// Remove any remaining elements with this QR ID
-					$('[data-qr-id="' + qrId + '"]').remove();
 				}
 				showModalMessage(errorMessage, 'error');
 				$('.qr-modal-loading').hide();
 			}
 		})
-		.fail(function(xhr, status, error) {
-			showModalMessage('Error loading QR code details.', 'error');
+		.fail(function() {
+			showModalMessage(qrcAdmin.strings.errorLoadingDetails, 'error');
 			$('.qr-modal-loading').hide();
 		});
 	}
@@ -698,7 +558,7 @@ $(function() {
 		$('#qr-modal-destination-url').val(data.destination_url);
 		
 		// Post title
-		$('#qr-modal-post-title').text(data.post_title || 'Not linked to a post');
+		$('#qr-modal-post-title').text(data.post_title || qrcAdmin.strings.notLinkedToPost);
 		
 		// QR Image
 		if (data.qr_code_url) {
@@ -738,20 +598,20 @@ $(function() {
 		// Show validation errors if any
 		if (validationErrors.length > 0) {
 			showModalMessage(validationErrors.join('<br>'), 'error');
-			$('#qr-modal-save').prop('disabled', false).text('Save Changes');
+			$('#qr-modal-save').prop('disabled', false).text(qrcAdmin.strings.saveChanges);
 			return;
 		}
 		
-		$('#qr-modal-save').prop('disabled', true).text('Saving...');
-		$('.qr-modal-message').remove();
+		$('#qr-modal-save').prop('disabled', true).text(qrcAdmin.strings.saving);
+		$('.qr-modal-message').hide();
 		
-		$.post(qr_trackr_ajax.ajaxurl, {
+		$.post(qrcAdmin.ajaxUrl, {
 			action: 'qr_trackr_update_qr_details',
 			qr_id: qrId,
 			common_name: commonName,
 			referral_code: referralCode,
-			destination_url: destinationUrl, // Include destination_url in the AJAX call
-			nonce: qr_trackr_ajax.nonce
+			destination_url: destinationUrl,
+			nonce: qrcAdmin.nonce
 		})
 		.done(function(response) {
 			if (response.success) {
@@ -782,14 +642,14 @@ $(function() {
 					closeQRModal();
 				}, 1500);
 			} else {
-				showModalMessage(response.data || 'Error saving QR code details.', 'error');
+				showModalMessage(response.data || qrcAdmin.strings.errorSavingDetails, 'error');
 			}
 		})
-		.fail(function(xhr, status, error) {
-			showModalMessage('Error saving QR code details.', 'error');
+		.fail(function() {
+			showModalMessage(qrcAdmin.strings.errorSavingDetails, 'error');
 		})
 		.always(function() {
-			$('#qr-modal-save').prop('disabled', false).text('Save Changes');
+			$('#qr-modal-save').prop('disabled', false).text(qrcAdmin.strings.saveChanges);
 		});
 	}
 	
@@ -797,32 +657,11 @@ $(function() {
 	 * Show message in modal
 	 */
 	function showModalMessage(message, type) {
-		// Remove any existing message element
-		$('.qr-modal-message').remove();
-		
-		// Create new message element
-		const $messageElement = $('<div class="qr-modal-message ' + type + '" style="margin-right: 10px; padding: 8px 12px; border-radius: 4px; display: block;"></div>');
-		
-		// Set styling based on type
-		if (type === 'success') {
-			$messageElement.css({
-				'background-color': '#d4edda',
-				'color': '#155724',
-				'border': '1px solid #c3e6cb'
-			});
-		} else {
-			$messageElement.css({
-				'background-color': '#f8d7da',
-				'color': '#721c24',
-				'border': '1px solid #f5c6cb'
-			});
-		}
-		
-		// Use html() instead of text() to support line breaks
-		$messageElement.html(message);
-		
-		// Insert before the buttons in the footer
-		$('.qr-modal-footer').prepend($messageElement);
+		$('.qr-modal-message')
+			.removeClass('success error')
+			.addClass(type)
+			.html(message)
+			.show();
 	}
 	
 	/**
@@ -860,7 +699,7 @@ $(function() {
 			// Use more specific column selection based on CSS classes
 			const $nameCell = $targetRow.find('td.column-common_name');
 			if ($nameCell.length) {
-				const nameText = data.common_name || 'No name set';
+				const nameText = data.common_name || qrcAdmin.strings.noNameSet;
 				$nameCell.html(data.common_name ? nameText : '<em>' + nameText + '</em>');
 				// Add highlight effect
 				$nameCell.addClass('updated-cell').delay(2000).queue(function() {
@@ -897,7 +736,7 @@ $(function() {
 			// Update referral code column
 			const $codeCell = $targetRow.find('td.column-referral_code');
 			if ($codeCell.length) {
-				const codeText = data.referral_code || 'None';
+				const codeText = data.referral_code || qrcAdmin.strings.none;
 				$codeCell.html(data.referral_code ? '<code>' + data.referral_code + '</code>' : '<em>' + codeText + '</em>');
 				// Add highlight effect
 				$codeCell.addClass('updated-cell').delay(2000).queue(function() {
@@ -947,21 +786,6 @@ $(function() {
 	}
 	
 	/**
-	 * Update QR image in table after generation
-	 */
-	function updateQRImageInTable(qrId, qrCodeUrl) {
-		const $row = $('tr').find('[data-qr-id="' + qrId + '"]').closest('tr');
-		if ($row.length) {
-			// Find the QR image column and update it
-			const $imageCell = $row.find('td').eq(1); // Assuming QR image is 2nd column
-			if ($imageCell.length) {
-				const newImageHtml = `<img src="${qrCodeUrl}" alt="QR Code" style="width: 60px; height: 60px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;" class="qr-code-modal-trigger" data-qr-id="${qrId}" title="Click to view details" />`;
-				$imageCell.html(newImageHtml);
-			}
-		}
-	}
-	
-	/**
 	 * Validate URL format
 	 */
 	function isValidUrl(string) {
@@ -972,5 +796,4 @@ $(function() {
 		const urlRegex = /^https?:\/\/.+/;
 		return urlRegex.test(trimmedString);
 	}
-});
-})(window.jQuery); 
+}); 
