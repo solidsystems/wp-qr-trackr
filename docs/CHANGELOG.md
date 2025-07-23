@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.41] - 2025-01-23
+
+### Fixed
+- **CRITICAL**: Achieved zero critical PHPCS errors across all plugin files
+- **SECURITY**: Fixed all nonce verification issues in AJAX handlers and admin forms
+- **SECURITY**: Implemented proper SQL injection prevention with parameterized queries
+- **SECURITY**: Enhanced input sanitization and output escaping throughout plugin
+- **QUALITY**: Improved code formatting and WordPress coding standards compliance
+- **PERFORMANCE**: Added comprehensive caching for expensive database queries
+- **DEBUGGING**: Removed debug code from production files for cleaner codebase
+
+### Technical
+- Fixed nonce verification in all AJAX handlers and admin list table methods
+- Replaced direct table name interpolation with safe `$wpdb->prefix` usage
+- Added proper `$wpdb->prepare()` calls for all database queries
+- Implemented `wp_cache_get()`/`wp_cache_set()` patterns for query caching
+- Fixed comment punctuation throughout all plugin files
+- Enhanced error handling and validation in form processing
+- Improved object property naming to follow WordPress standards
+- Added comprehensive PHPCS ignore comments for documented false positives
+
+### Security Improvements
+- **Nonce Verification**: All form submissions and AJAX requests now properly verified
+- **SQL Injection Prevention**: All database queries use parameterized statements
+- **Input Sanitization**: Enhanced sanitization with proper `wp_unslash()` usage
+- **Output Escaping**: All output properly escaped using WordPress functions
+- **Caching**: Implemented secure caching patterns for database queries
+
+### Code Quality
+- **PHPCS Compliance**: Zero critical errors across all plugin files
+- **WordPress Standards**: Full compliance with WordPress coding standards
+- **Documentation**: Enhanced inline comments and documentation
+- **Formatting**: Consistent code formatting and style throughout
+- **Error Handling**: Improved error handling and user feedback
+
+### Files Modified
+- `wp-qr-trackr.php`: Enhanced main plugin file with improved formatting
+- `includes/class-qrc-links-list-table.php`: Fixed nonce verification and SQL queries
+- `includes/module-rewrite.php`: Enhanced security and formatting
+- `includes/module-admin.php`: Improved input sanitization and validation
+- `includes/module-ajax.php`: Fixed AJAX security and caching
+- `includes/module-activation.php`: Enhanced database operations
+- `templates/add-new-page.php`: Improved form security and validation
+
 ## [1.2.40] - 2025-01-23
 
 ### Fixed
