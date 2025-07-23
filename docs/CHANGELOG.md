@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.40] - 2025-01-23
+
+### Fixed
+- **CRITICAL**: Fixed PHPCS memory exhaustion issues during code validation
+- **ENVIRONMENT**: Automated critical directory permissions and rewrite configurations
+- **VALIDATION**: Enhanced PHPCS configuration to exclude vendor directories
+- **SETUP**: Improved development environment setup with automatic configurations
+
+### Technical
+- Increased PHPCS memory limit from 134MB to 2048MB
+- Added comprehensive vendor directory exclusions in PHPCS configuration
+- Updated validation script to use custom PHPCS configuration
+- Fixed playwright entrypoint to use validation script instead of direct PHPCS
+- Enhanced setup script with automatic critical permissions fixing
+
+### Environment Configurations
+- **Upgrade Directory**: Automatic `chown -R www-data:www-data /var/www/html/wp-content/upgrade`
+- **Permissions**: Automatic `chmod 775 /var/www/html/wp-content/upgrade`
+- **Pretty Permalinks**: Automatic `wp rewrite structure '/%postname%/'`
+- **Rewrite Rules**: Automatic `wp rewrite flush --hard`
+- **Plugin Verification**: Automatic plugin activation verification
+
+### PHPCS Improvements
+- **Memory Limit**: Increased to 2048MB to prevent memory exhaustion
+- **Vendor Exclusions**: Comprehensive exclusion of vendor directories
+- **File Targeting**: PHPCS now only processes plugin files, not entire project
+- **Configuration**: Custom PHPCS configuration with proper exclusions
+- **Validation**: Fixed validation script to use proper configuration
+
+### Setup Automation
+- **Critical Permissions**: Setup script now automatically fixes directory permissions
+- **Rewrite Configuration**: Automatic pretty permalinks and rewrite rule setup
+- **Environment Verification**: Automatic verification of plugin activation
+- **Documentation**: Updated cursor rules and documentation with critical configurations
+
+### Files Modified
+- `scripts/setup-wordpress.sh`: Added `fix_critical_permissions()` function
+- `config/ci/.phpcs.xml`: Enhanced with vendor exclusions and memory limits
+- `scripts/validate.sh`: Updated to use custom PHPCS configuration
+- `docker/scripts/playwright-entrypoint.sh`: Fixed to use validation script
+- `.cursorrules`: Added critical environment configuration requirements
+- `docs/dev-guide/GETTING_STARTED.md`: Updated with critical configuration info
+- `docs/maintenance/TROUBLESHOOTING.md`: Added environment configuration section
+- `docs/dev-guide/QUICK_REFERENCE.md`: Added critical configuration commands
+
 ## [1.2.39] - 2025-01-23
 
 ### Fixed
