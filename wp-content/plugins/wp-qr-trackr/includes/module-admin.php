@@ -271,29 +271,40 @@ function qrc_add_new_page() {
  * @param string $hook The current admin page.
  * @return void
  */
+/**
+ * Enqueue admin scripts and styles.
+ *
+ * @since 1.0.0
+ * @param string $hook The current admin page hook.
+ * @return void
+ */
 function qrc_admin_enqueue_scripts( $hook ) {
-
-	// Temporarily load on ALL admin pages for debugging.
 	// Check if we're on a QR Trackr page by looking at the hook.
-	$qr_trackr_hooks     = array( 'toplevel_page_qr-code-links', 'qr-codes_page_qr-code-add-new', 'qr-codes_page_qr-code-settings' );
-		$qr_trackr_hooks = array( 'toplevel_page_qrc-links', 'qrc-links_page_qr-code-add-new', 'qrc-links_page_qrc-settings' );
+	$qr_trackr_hooks = array( 'toplevel_page_qrc-links', 'qrc-links_page_qr-code-add-new', 'qrc-links_page_qrc-settings' );
+	
 	// For debugging, load on any page that might be related.
 	if ( ! in_array( $hook, $qr_trackr_hooks, true ) && strpos( $hook, 'qr-code' ) === false ) {
 		// Check if we are on a QR Trackr page by looking at the hook.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( sprintf( 'QR Trackr: Script not loaded - not a QR Trackr page: %s', $hook ) );
+		}
+		return;
 	}
-		// return;
-}
-	// Enqueue our custom admin script on ALL admin pages for debugging.
-if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-	error_log( sprintf( 'QR Trackr: Enqueuing admin script for hook: %s', $hook ) );
-}
+
+	// Enqueue our custom admin script.
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( sprintf( 'QR Trackr: Enqueuing admin script for hook: %s', $hook ) );
+	}
+	
 	wp_enqueue_script( 'qr-trackr-admin', plugin_dir_url( __FILE__ ) . '../assets/qrc-admin.js', array( 'jquery', 'select2' ), QR_TRACKR_VERSION, true );
 
 	// Localize script for AJAX and admin strings.
 	wp_localize_script(
-		'nonce'   => wp_create_nonce( 'qr_trackr_nonce' ),
-	)
+		'qr-trackr-admin',
+		'qrTrackrAjax',
+		array(
+			'nonce' => wp_create_nonce( 'qr_trackr_nonce' ),
+		)
 	);
 
 	// Localize script for admin strings.
@@ -324,10 +335,10 @@ if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			),
 		)
 	);
-	}
+}
 
-	/**
-	 * Display the settings page content.
+/**
+ * Display the settings page content.
 	 *
 	 * @since 1.0.0
 	 * @return void

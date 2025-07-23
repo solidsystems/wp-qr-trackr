@@ -223,14 +223,14 @@ setup_wordpress_after_restart() {
     local port
     local wp_container
 
-    case $env in
-        "dev")
-            port=8080
-            wp_container="wordpress-dev"
-            ;;
+            case $env in
+            "dev")
+                port=8080
+                wp_container="docker-wordpress-dev-1"
+                ;;
         "nonprod")
             port=8081
-            wp_container="wordpress-nonprod"
+            wp_container="docker-wordpress-nonprod-1"
             ;;
         *)
             log "ERROR" "Invalid environment: $env"
@@ -295,21 +295,21 @@ monitor_containers() {
         # Check container health
         case $env in
             "dev")
-                if ! check_container_health "wordpress-dev"; then
+                if ! check_container_health "docker-wordpress-dev-1"; then
                     log "WARN" "WordPress dev container health check failed"
                     issues_found=true
                 fi
-                if ! check_container_health "db-dev"; then
+                if ! check_container_health "docker-db-dev-1"; then
                     log "WARN" "Database dev container health check failed"
                     issues_found=true
                 fi
                 ;;
             "nonprod")
-                if ! check_container_health "wordpress-nonprod"; then
+                if ! check_container_health "docker-wordpress-nonprod-1"; then
                     log "WARN" "WordPress nonprod container health check failed"
                     issues_found=true
                 fi
-                if ! check_container_health "db-nonprod"; then
+                if ! check_container_health "docker-db-nonprod-1"; then
                     log "WARN" "Database nonprod container health check failed"
                     issues_found=true
                 fi
@@ -366,35 +366,35 @@ comprehensive_health_check() {
     fi
 
     # Check specific containers based on environment
-    case $env in
-        "dev")
-            if ! check_container_health "wordpress-dev"; then
-                all_healthy=false
-            fi
-            if ! check_container_health "db-dev"; then
-                all_healthy=false
-            fi
-            if ! check_wordpress_accessibility 8080; then
-                all_healthy=false
-            fi
-            if ! check_wordpress_installation "wordpress-dev" 8080; then
-                all_healthy=false
-            fi
-            ;;
-        "nonprod")
-            if ! check_container_health "wordpress-nonprod"; then
-                all_healthy=false
-            fi
-            if ! check_container_health "db-nonprod"; then
-                all_healthy=false
-            fi
-            if ! check_wordpress_accessibility 8081; then
-                all_healthy=false
-            fi
-            if ! check_wordpress_installation "wordpress-nonprod" 8081; then
-                all_healthy=false
-            fi
-            ;;
+            case $env in
+            "dev")
+                if ! check_container_health "docker-wordpress-dev-1"; then
+                    all_healthy=false
+                fi
+                if ! check_container_health "docker-db-dev-1"; then
+                    all_healthy=false
+                fi
+                if ! check_wordpress_accessibility 8080; then
+                    all_healthy=false
+                fi
+                if ! check_wordpress_installation "docker-wordpress-dev-1" 8080; then
+                    all_healthy=false
+                fi
+                ;;
+                    "nonprod")
+                if ! check_container_health "docker-wordpress-nonprod-1"; then
+                    all_healthy=false
+                fi
+                if ! check_container_health "docker-db-nonprod-1"; then
+                    all_healthy=false
+                fi
+                if ! check_wordpress_accessibility 8081; then
+                    all_healthy=false
+                fi
+                if ! check_wordpress_installation "docker-wordpress-nonprod-1" 8081; then
+                    all_healthy=false
+                fi
+                ;;
     esac
 
     if [ "$all_healthy" = true ]; then

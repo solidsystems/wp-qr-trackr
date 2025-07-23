@@ -230,11 +230,11 @@ setup_wordpress_after_restart() {
     case $env in
         "dev")
             port=8080
-            wp_container="wordpress-dev"
+            wp_container="docker-wordpress-dev-1"
             ;;
         "nonprod")
             port=8081
-            wp_container="wordpress-nonprod"
+            wp_container="docker-wordpress-nonprod-1"
             ;;
         *)
             log "ERROR" "Invalid environment: $env"
@@ -296,11 +296,11 @@ setup_wordpress() {
     case $env in
         "dev")
             port=8080
-            wp_container="wordpress-dev"
+            wp_container="docker-wordpress-dev-1"
             ;;
         "nonprod")
             port=8081
-            wp_container="wordpress-nonprod"
+            wp_container="docker-wordpress-nonprod-1"
             ;;
         "playwright")
             port=8087
