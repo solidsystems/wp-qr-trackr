@@ -6,21 +6,19 @@
     <config name="installed_paths" value="vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra"/>
 
     <!-- Memory limit as per project requirements -->
-    <ini name="memory_limit" value="1024M"/>
+    <ini name="memory_limit" value="2048M"/>
 
     <!-- Use WordPress as the base -->
     <rule ref="WordPress"/>
-    
+
     <!-- Exclude deprecated sniffs -->
     <exclude name="Generic.Functions.CallTimePassByReference"/>
-    
-    <!-- Only lint plugin files -->
-    <file>.</file>
-    
-    <!-- Exclude patterns -->
+
+    <!-- Exclude patterns - comprehensive vendor exclusions -->
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>vendor/*</exclude-pattern>
     <exclude-pattern>**/vendor/*</exclude-pattern>
+    <exclude-pattern>wp-content/plugins/wp-qr-trackr/vendor/*</exclude-pattern>
     <exclude-pattern>node_modules/*</exclude-pattern>
     <exclude-pattern>**/node_modules/*</exclude-pattern>
     <exclude-pattern>tests/*</exclude-pattern>
@@ -28,7 +26,9 @@
     <exclude-pattern>assets/*.css</exclude-pattern>
     <exclude-pattern>coverage/*</exclude-pattern>
     <exclude-pattern>build/*</exclude-pattern>
-    
+    <exclude-pattern>**/composer/*</exclude-pattern>
+    <exclude-pattern>**/autoload.php</exclude-pattern>
+
     <!-- Ignore specific rules for admin/stats code -->
     <rule ref="WordPress.DB.DirectDatabaseQuery.DirectQuery">
         <exclude-pattern>includes/module-*.php</exclude-pattern>
@@ -60,4 +60,4 @@
 
     <!-- Enforce proper sanitization -->
     <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
-</ruleset> 
+</ruleset>

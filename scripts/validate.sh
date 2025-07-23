@@ -9,13 +9,13 @@ if [ ! -f /.dockerenv ] && [ -z "$DOCKER_CONTAINER" ]; then
   exit 1
 fi
 
-# Lint PHP
+# Lint PHP using our custom configuration with explicit memory limit
 echo "Running PHPCS..."
-vendor/bin/phpcs --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
+vendor/bin/phpcs -d memory_limit=2048M --standard=config/ci/.phpcs.xml --extensions=php wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php wp-content/plugins/wp-qr-trackr/includes/ wp-content/plugins/wp-qr-trackr/templates/
 
 # Auto-fix (optional, comment out if not desired)
 echo "Running PHPCBF..."
-vendor/bin/phpcbf --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
+vendor/bin/phpcbf -d memory_limit=2048M --standard=config/ci/.phpcs.xml --extensions=php wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php wp-content/plugins/wp-qr-trackr/includes/ wp-content/plugins/wp-qr-trackr/templates/
 
 # Run tests
 if [ -f vendor/bin/phpunit ]; then
@@ -23,4 +23,4 @@ if [ -f vendor/bin/phpunit ]; then
   vendor/bin/phpunit
 fi
 
-echo "All validation steps completed." 
+echo "All validation steps completed."

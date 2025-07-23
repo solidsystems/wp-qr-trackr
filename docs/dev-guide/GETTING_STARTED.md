@@ -28,11 +28,23 @@ A comprehensive guide for Cursor users on how to use the **WP QR Trackr** projec
 2. **Open in Cursor** and let it index the codebase
 3. **Run the setup script** to get the development environment ready:
    ```bash
-   ./scripts/setup-wordpress.sh
+   # For development environment
+   ./scripts/setup-wordpress.sh dev
+
+   # For testing environment
+   ./scripts/setup-wordpress.sh nonprod
    ```
 4. **Access your development environment**:
    - Dev environment: http://localhost:8080 (username: `trackr`, password: `trackr`)
    - Nonprod environment: http://localhost:8081 (for testing)
+
+> ⚠️ **Critical**: The setup script automatically applies essential configurations including:
+> - Directory permissions for plugin updates
+> - Pretty permalinks for QR code redirects
+> - Rewrite rules flushing
+> - Plugin activation verification
+>
+> These configurations are **mandatory** for proper plugin functionality.
 
 ---
 
@@ -44,7 +56,7 @@ A comprehensive guide for Cursor users on how to use the **WP QR Trackr** projec
 ```
 I want to use the wp-qr-trackr repository as a foundation to build a WordPress plugin that does:
 - [Feature X]: [Detailed description]
-- [Feature Y]: [Detailed description]  
+- [Feature Y]: [Detailed description]
 - [Feature Z]: [Detailed description]
 
 Please create a comprehensive project plan that includes:
@@ -165,7 +177,7 @@ Please use the todo_write tool to create comprehensive tasks and mark the first 
 I'm ready to work on the next task in our plugin development. Please:
 
 1. **Review the current TODO status** and identify the next priority task
-2. **Mark the appropriate task as in_progress** 
+2. **Mark the appropriate task as in_progress**
 3. **Provide detailed implementation steps** for the current task
 4. **Identify any dependencies** that need to be completed first
 5. **Set up proper testing** for the feature being implemented
@@ -417,4 +429,4 @@ echo "# Effective Cursor Prompts for [Plugin Name]" > prompts/README.md
 
 **Remember**: The wp-qr-trackr project is designed to be a comprehensive foundation. Take advantage of all the infrastructure, testing, and automation that's already built so you can focus on your plugin's unique features rather than boilerplate setup.
 
-**Happy Plugin Development!** 🚀 
+**Happy Plugin Development!** 🚀

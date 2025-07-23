@@ -94,6 +94,67 @@ define('QM_DISPLAY_ERRORS_DETAILED', true);
 - Monitor memory usage in "Overview" panel
 - Review template loading times in "Files" panel
 
+## Critical Environment Configuration Issues
+
+### Plugin Update Directory Permissions (RESOLVED ✅)
+
+**Issue**: "Could not create directory" error during plugin updates
+```bash
+Installing plugin from uploaded file: wp-qr-trackr-v1.2.39.zip
+Unpacking the package…
+Updating the plugin…
+Removing the current plugin…
+Could not remove the current plugin.
+Plugin update failed.
+```
+
+**Root Cause**: Incorrect ownership and permissions on `/var/www/html/wp-content/upgrade` directory
+
+**Solution**: The setup script now automatically fixes these permissions:
+```bash
+# Applied automatically by setup-wordpress.sh
+docker compose -f docker/docker-compose.dev.yml exec --user root wordpress-dev chown -R www-data:www-data /var/www/html/wp-content/upgrade
+docker compose -f docker/docker-compose.dev.yml exec --user root wordpress-dev chmod 775 /var/www/html/wp-content/upgrade
+```
+
+**Prevention**: Always use the setup script which includes `fix_critical_permissions()` function
+
+### Custom Post Type Registration Error (RESOLVED ✅)
+
+**Issue**: Fatal error "Call to a member function add_rewrite_tag() on null"
+```
+PHP Fatal error: Uncaught Error: Call to a member function add_rewrite_tag() on null in /var/www/html/wp-includes/rewrite.php:176
+```
+
+**Root Cause**: Custom post type registration on `plugins_loaded` hook before rewrite system ready
+
+**Solution**: Moved registration to `init` hook in `module-activation.php`:
+```php
+// Changed from:
+add_action('plugins_loaded', 'qrc_init');
+// To:
+add_action('init', 'qrc_init');
+```
+
+**Prevention**: All custom post types must be registered on `init` hook, not `plugins_loaded`
+
+### Pretty Permalinks Required (CRITICAL)
+
+**Issue**: QR code redirects don't work
+**Root Cause**: Plain permalinks enabled (default WordPress setting)
+
+**Solution**: Setup script automatically sets pretty permalinks:
+```bash
+# Applied automatically by setup-wordpress.sh
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp rewrite structure '/%postname%/' --path=/var/www/html
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp rewrite flush --hard --path=/var/www/html
+```
+
+**Verification**: Check permalink structure:
+```bash
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp option get permalink_structure --path=/var/www/html
+```
+
 ## Plugin Activation Issues - RESOLVED ✅
 
 ### Fatal Error on Plugin Activation (Fixed in v1.2.4)
@@ -454,7 +515,7 @@ add_action( 'wp_ajax_nopriv_qr_redirect', 'qr_trackr_ajax_qr_redirect' );
 function qr_trackr_ajax_qr_redirect() {
     // Get QR code parameter
     $qr_code = isset( $_GET['qr'] ) ? sanitize_text_field( wp_unslash( $_GET['qr'] ) ) : '';
-    
+
     // Database lookup and redirect
     // ...
 }

@@ -1,25 +1,48 @@
-# Cursor Plugin Development Quick Reference
+# Cursor Quick Reference
 
-Essential prompts and commands for building WordPress plugins with the wp-qr-trackr foundation.
+Essential commands and prompts for WP QR Trackr development with Cursor.
 
-## 🚀 Getting Started
+## 🚨 Critical Environment Configurations (MANDATORY)
 
-### Initial Project Setup
-```
-I want to use the wp-qr-trackr repository as a foundation to build a WordPress plugin that does:
-- [Feature 1]: [Description]
-- [Feature 2]: [Description]
-- [Feature 3]: [Description]
+### Setup Commands
+```bash
+# Development environment (port 8080)
+./scripts/setup-wordpress.sh dev
 
-Please create a comprehensive project plan with structured tasks and dependencies using the TODO automation system.
-```
+# Testing environment (port 8081)
+./scripts/setup-wordpress.sh nonprod
 
-### Architecture Analysis
-```
-Analyze the wp-qr-trackr codebase and create a migration plan for transforming it into a [plugin name] plugin. Identify reusable components and create a detailed implementation roadmap.
+# Playwright testing environment (port 8087)
+./scripts/setup-wordpress.sh playwright
 ```
 
-## 🔧 Development Workflow
+### Manual Configuration (if setup script fails)
+```bash
+# Fix upgrade directory permissions
+docker compose -f docker/docker-compose.dev.yml exec --user root wordpress-dev chown -R www-data:www-data /var/www/html/wp-content/upgrade
+docker compose -f docker/docker-compose.dev.yml exec --user root wordpress-dev chmod 775 /var/www/html/wp-content/upgrade
+
+# Set pretty permalinks (REQUIRED for QR redirects)
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp rewrite structure '/%postname%/' --path=/var/www/html
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp rewrite flush --hard --path=/var/www/html
+
+# Verify plugin activation
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp plugin list --name=wp-qr-trackr
+```
+
+### Verification Commands
+```bash
+# Check plugin status
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp plugin list --name=wp-qr-trackr
+
+# Check permalink structure
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp option get permalink_structure --path=/var/www/html
+
+# Check directory permissions
+docker compose -f docker/docker-compose.dev.yml exec wordpress-dev ls -la /var/www/html/wp-content/upgrade
+```
+
+## Development Commands
 
 ### Daily Development Start
 ```
@@ -188,4 +211,4 @@ Optimize the plugin performance by:
 
 **💾 Save this reference** for quick access during development!
 
-**📖 For detailed instructions**, see the [Complete Cursor Plugin Development Guide](CURSOR_PLUGIN_DEVELOPMENT_GUIDE.md) 
+**📖 For detailed instructions**, see the [Complete Cursor Plugin Development Guide](CURSOR_PLUGIN_DEVELOPMENT_GUIDE.md)

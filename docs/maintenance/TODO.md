@@ -5,7 +5,7 @@
 ### ✅ COMPLETED: Clean QR Code URLs
 - **Status**: ✅ COMPLETED
 - **Files Fixed**: `module-rewrite.php`, `class-qrc-links-list-table.php`, `module-utils.php`, `module-ajax.php`, `add-new-page.php`
-- **Changes Made**: 
+- **Changes Made**:
   - Replaced admin-ajax.php URLs with clean rewrite URLs: `/redirect/{code}`
   - Implemented proper WordPress rewrite rules using `init` hook
   - Added query var registration for `qr_tracking_code`
@@ -18,7 +18,7 @@
 ### ✅ COMPLETED: Destination URL Edit Functionality
 - **Status**: ✅ COMPLETED
 - **Files Fixed**: `module-ajax.php`, `qrc-admin.js`
-- **Changes Made**: 
+- **Changes Made**:
   - Enhanced `qr_trackr_ajax_update_qr_details` function to accept and validate destination URL updates
   - Changed destination URL field in edit modal from read-only link to editable input field
   - Updated JavaScript to send destination URL in AJAX requests
@@ -36,7 +36,7 @@
 - **Security Impact**: All user input now properly verified with nonces before processing
 
 ### ✅ COMPLETED: SQL Injection Prevention
-- **Status**: ✅ COMPLETED  
+- **Status**: ✅ COMPLETED
 - **Files Fixed**: `class-qrc-links-list-table.php`, `module-utils.php`
 - **Changes Made**: Replaced direct table name interpolation with `$wpdb->prefix` usage, added proper `$wpdb->prepare()` calls
 - **Security Impact**: All database queries now use proper parameterized queries
@@ -111,10 +111,29 @@
 - **User Experience**: Destination URL search now properly finds existing posts and pages
 - **Documentation**: Added comprehensive lessons learned to `LESSONS_LEARNED.md`
 
+## ✅ COMPLETED: Critical Environment Configurations
+
+### ✅ COMPLETED: Automated Setup Script Enhancements
+- **Status**: ✅ COMPLETED
+- **Files**: `scripts/setup-wordpress.sh`, `.cursorrules`, `docs/dev-guide/GETTING_STARTED.md`, `docs/maintenance/TROUBLESHOOTING.md`, `docs/dev-guide/QUICK_REFERENCE.md`
+- **Changes Made**:
+  - Added `fix_critical_permissions()` function to setup script
+  - Updated cursor rules with mandatory environment configurations
+  - Enhanced documentation with critical configuration requirements
+  - Added troubleshooting section for common environment issues
+  - Updated quick reference with verification commands
+- **Critical Configurations Applied**:
+  - Upgrade directory permissions: `chown -R www-data:www-data /var/www/html/wp-content/upgrade`
+  - Pretty permalinks: `wp rewrite structure '/%postname%/'`
+  - Rewrite rules flush: `wp rewrite flush --hard`
+  - Plugin activation verification: `wp plugin list --name=wp-qr-trackr`
+- **Prevention**: These configurations prevent "Could not create directory" errors and ensure QR redirects work
+- **Automation**: All environments (dev, nonprod, playwright) automatically receive these configurations
+
 ## Remaining Items (Optional)
 
 ### 📋 PENDING: Debug Code Removal (Optional)
-- **Status**: 📋 PENDING  
+- **Status**: 📋 PENDING
 - **Files**: `module-rewrite.php`, `wp-qr-trackr.php`
 - **Issue**: `error_log()` statements in production code (warnings only)
 - **Priority**: Low - these are debug warnings, not errors
@@ -123,14 +142,14 @@
 ## 🎉 FINAL ACHIEVEMENT: Production-Ready Status
 
 ### ✅ Major Milestone: Zero Critical Errors + CI/CD Success
-We have successfully achieved **zero critical PHPCS errors** and **CI/CD passing** across all plugin files! 
+We have successfully achieved **zero critical PHPCS errors** and **CI/CD passing** across all plugin files!
 
 ### ✅ Security Improvements
 - All form processing now includes proper nonce verification
 - All database queries use parameterized statements
 - No more SQL injection vulnerabilities
 
-### ✅ Performance Improvements  
+### ✅ Performance Improvements
 - Implemented comprehensive caching for expensive database queries
 - Reduced database load for frequently accessed data
 - Improved response times for AJAX operations

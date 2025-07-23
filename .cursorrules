@@ -774,3 +774,64 @@ Line 2" --base main --head my-feature-branch
 ## PHPCS Automation
 - Run PHPCS and PHPCBF in CI and local E2E workflows.
 - Auto-fix what can be fixed, and require manual review for the rest.
+
+# Critical Environment Configurations (MANDATORY)
+
+## Docker Environment Setup Requirements
+- **CRITICAL**: Every time a local testing environment is instantiated, the setup script MUST apply these configurations:
+  - Upgrade directory permissions: `chown -R www-data:www-data /var/www/html/wp-content/upgrade`
+  - Upgrade directory permissions: `chmod 775 /var/www/html/wp-content/upgrade`
+  - Uploads directory permissions: `chown -R www-data:www-data /var/www/html/wp-content/uploads`
+  - Plugins directory permissions: `chown -R www-data:www-data /var/www/html/wp-content/plugins`
+  - Pretty permalinks: `wp rewrite structure '/%postname%/'`
+  - Rewrite rules flush: `wp rewrite flush --hard`
+  - Plugin activation verification: `wp plugin list --name=wp-qr-trackr`
+
+## Why These Configurations Are Critical
+- **Plugin Updates**: Without correct upgrade directory permissions, WordPress cannot install plugin updates
+- **QR Code Redirects**: Pretty permalinks are REQUIRED for QR code redirect functionality
+- **File System Access**: Correct permissions prevent "Could not create directory" errors
+- **Rewrite Rules**: Plugin custom post types and redirects require flushed rewrite rules
+
+## Setup Script Integration
+- The `scripts/setup-wordpress.sh` script now includes `fix_critical_permissions()` function
+- This function is called automatically during environment setup
+- All environments (dev, nonprod, playwright) receive these configurations
+- Setup script provides verification output showing applied configurations
+
+## Manual Application (if needed)
+If setup script fails, manually apply these commands:
+```bash
+# Fix upgrade directory permissions
+docker compose -f docker/docker-compose.dev.yml exec --user root wordpress-dev chown -R www-data:www-data /var/www/html/wp-content/upgrade
+docker compose -f docker/docker-compose.dev.yml exec --user root wordpress-dev chmod 775 /var/www/html/wp-content/upgrade
+
+# Set pretty permalinks and flush rewrite rules
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp rewrite structure '/%postname%/' --path=/var/www/html
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp rewrite flush --hard --path=/var/www/html
+```
+
+## Verification Commands
+After setup, verify configurations are correct:
+```bash
+# Check plugin status
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp plugin list --name=wp-qr-trackr
+
+# Check permalink structure
+docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp option get permalink_structure --path=/var/www/html
+
+# Check directory permissions
+docker compose -f docker/docker-compose.dev.yml exec wordpress-dev ls -la /var/www/html/wp-content/upgrade
+```
+
+## Failure Prevention
+- These configurations prevent the "Could not create directory" plugin update errors
+- They ensure QR code redirects work properly with pretty permalinks
+- They maintain consistent file system permissions across all environments
+- They verify plugin activation and rewrite rule functionality
+
+## Development Workflow Integration
+- All new environment setups automatically include these configurations
+- CI/CD processes should verify these configurations are present
+- Documentation must reference these requirements for manual setups
+- Troubleshooting guides should include these configurations as first steps
