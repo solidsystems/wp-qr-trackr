@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.25] - 2025-01-23
+## [1.2.39] - 2025-01-23
 
 ### Fixed
 - **CRITICAL**: Fixed Select2 destination URL search functionality
