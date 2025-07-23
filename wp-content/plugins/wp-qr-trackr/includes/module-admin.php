@@ -180,10 +180,10 @@ function qrc_admin_page() {
 		plugin_dir_path( __FILE__ ) . '../templates/admin-page.php',
 		ABSPATH . 'wp-content/plugins/wp-qr-trackr/templates/admin-page.php',
 	);
-	
+
 	$template_found = false;
-	$template_path = '';
-	
+	$template_path  = '';
+
 	// Debug all possible paths.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log( 'QR Trackr: QR_TRACKR_PLUGIN_DIR: ' . QR_TRACKR_PLUGIN_DIR );
@@ -193,11 +193,11 @@ function qrc_admin_page() {
 			error_log( 'QR Trackr: Path ' . $index . ': ' . $path . ' (exists: ' . ( file_exists( $path ) ? 'true' : 'false' ) . ')' );
 		}
 	}
-	
+
 	// Try each possible path.
 	foreach ( $possible_paths as $path ) {
 		if ( file_exists( $path ) ) {
-			$template_path = $path;
+			$template_path  = $path;
 			$template_found = true;
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				error_log( 'QR Trackr: Found template at: ' . $path );
@@ -205,7 +205,7 @@ function qrc_admin_page() {
 			break;
 		}
 	}
-	
+
 	if ( $template_found ) {
 		include $template_path;
 	} else {
@@ -215,11 +215,11 @@ function qrc_admin_page() {
 			$error_message .= '- ' . $path . "\n";
 		}
 		$error_message .= "\nPlease check plugin installation and file permissions.";
-		
+
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( $error_message );
 		}
-		
+
 		wp_die( esc_html__( 'QR Trackr: Admin page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
 	}
 }
@@ -242,19 +242,19 @@ function qrc_add_new_page() {
 		plugin_dir_path( __FILE__ ) . '../templates/add-new-page.php',
 		ABSPATH . 'wp-content/plugins/wp-qr-trackr/templates/add-new-page.php',
 	);
-	
+
 	$template_found = false;
-	$template_path = '';
-	
+	$template_path  = '';
+
 	// Try each possible path.
 	foreach ( $possible_paths as $path ) {
 		if ( file_exists( $path ) ) {
-			$template_path = $path;
+			$template_path  = $path;
 			$template_found = true;
 			break;
 		}
 	}
-	
+
 	if ( $template_found ) {
 		include $template_path;
 	} else {
@@ -272,41 +272,28 @@ function qrc_add_new_page() {
  * @return void
  */
 function qrc_admin_enqueue_scripts( $hook ) {
-	// Debug logging for script enqueuing.
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( sprintf( 'QR Trackr: Script enqueue function called with hook: %s', $hook ) );
-	}
 
 	// Temporarily load on ALL admin pages for debugging.
 	// Check if we're on a QR Trackr page by looking at the hook.
-	$qr_trackr_hooks = array( 'toplevel_page_qr-code-links', 'qr-codes_page_qr-code-add-new', 'qr-codes_page_qr-code-settings' );
-
+	$qr_trackr_hooks     = array( 'toplevel_page_qr-code-links', 'qr-codes_page_qr-code-add-new', 'qr-codes_page_qr-code-settings' );
+		$qr_trackr_hooks = array( 'toplevel_page_qrc-links', 'qrc-links_page_qr-code-add-new', 'qrc-links_page_qrc-settings' );
 	// For debugging, load on any page that might be related.
 	if ( ! in_array( $hook, $qr_trackr_hooks, true ) && strpos( $hook, 'qr-code' ) === false ) {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// Check if we are on a QR Trackr page by looking at the hook.
 			error_log( sprintf( 'QR Trackr: Script not loaded - not a QR Trackr page: %s', $hook ) );
-		}
-		return;
 	}
-
-	// Enqueue Select2 for searchable dropdowns.
-	wp_enqueue_script( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array( 'jquery' ), '4.1.0', true );
-	wp_enqueue_style( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array(), '4.1.0' );
-
+		// return;
+}
 	// Enqueue our custom admin script on ALL admin pages for debugging.
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( sprintf( 'QR Trackr: Enqueuing admin script for hook: %s', $hook ) );
-	}
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+	error_log( sprintf( 'QR Trackr: Enqueuing admin script for hook: %s', $hook ) );
+}
 	wp_enqueue_script( 'qr-trackr-admin', plugin_dir_url( __FILE__ ) . '../assets/qrc-admin.js', array( 'jquery', 'select2' ), QR_TRACKR_VERSION, true );
 
 	// Localize script for AJAX and admin strings.
 	wp_localize_script(
-		'qr-trackr-admin',
-		'qr_trackr_ajax',
-		array(
-			'ajaxurl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'qr_trackr_nonce' ),
-		)
+		'nonce'   => wp_create_nonce( 'qr_trackr_nonce' ),
+	)
 	);
 
 	// Localize script for admin strings.
@@ -337,220 +324,220 @@ function qrc_admin_enqueue_scripts( $hook ) {
 			),
 		)
 	);
-}
-
-/**
- * Display the settings page content.
- *
- * @since 1.0.0
- * @return void
- */
-function qrc_settings_page() {
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log( 'QR Trackr: qrc_settings_page() called' );
 	}
 
-	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
-		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
-	}
+	/**
+	 * Display the settings page content.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	function qrc_settings_page() {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log( 'QR Trackr: qrc_settings_page() called' );
+		}
 
-	// Include the settings page template with multiple fallback paths.
-	$possible_paths = array(
-		QR_TRACKR_PLUGIN_DIR . 'templates/settings-page.php',
-		dirname( __DIR__ ) . '/templates/settings-page.php',
-		plugin_dir_path( __FILE__ ) . '../templates/settings-page.php',
-		ABSPATH . 'wp-content/plugins/wp-qr-trackr/templates/settings-page.php',
-	);
-	
-	$template_found = false;
-	$template_path = '';
-	
-	// Try each possible path.
-	foreach ( $possible_paths as $path ) {
-		if ( file_exists( $path ) ) {
-			$template_path = $path;
-			$template_found = true;
-			break;
+		// Check user capabilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
+		}
+
+		// Include the settings page template with multiple fallback paths.
+		$possible_paths = array(
+			QR_TRACKR_PLUGIN_DIR . 'templates/settings-page.php',
+			dirname( __DIR__ ) . '/templates/settings-page.php',
+			plugin_dir_path( __FILE__ ) . '../templates/settings-page.php',
+			ABSPATH . 'wp-content/plugins/wp-qr-trackr/templates/settings-page.php',
+		);
+
+		$template_found = false;
+		$template_path  = '';
+
+		// Try each possible path.
+		foreach ( $possible_paths as $path ) {
+			if ( file_exists( $path ) ) {
+				$template_path  = $path;
+				$template_found = true;
+				break;
+			}
+		}
+
+		if ( $template_found ) {
+			include $template_path;
+		} else {
+			wp_die( esc_html__( 'QR Trackr: Settings page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
 		}
 	}
-	
-	if ( $template_found ) {
-		include $template_path;
-	} else {
-		wp_die( esc_html__( 'QR Trackr: Settings page template not found. Please check plugin installation.', 'wp-qr-trackr' ) );
-	}
-}
 
-/**
- * Load test script if requested.
- *
- * @since 1.2.24
- * @return void
- */
-function qrc_load_test_script() {
-	if ( isset( $_GET['test_qr'] ) && current_user_can( 'manage_options' ) ) {
-		include QR_TRACKR_PLUGIN_DIR . 'test-qr-generation.php';
-	}
-}
-
-
-
-/**
- * Register admin hooks.
- *
- * @since 1.0.0
- * @return void
- */
-function qrc_register_admin_hooks() {
-	// Hook to load test script.
-	add_action( 'admin_notices', 'qrc_load_test_script' );
-
-	// Register admin menu items.
-	add_action( 'admin_menu', 'qrc_admin_menu' );
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'QR Trackr: Added admin_menu action' );
+	/**
+	 * Load test script if requested.
+	 *
+	 * @since 1.2.24
+	 * @return void
+	 */
+	function qrc_load_test_script() {
+		if ( isset( $_GET['test_qr'] ) && current_user_can( 'manage_options' ) ) {
+			include QR_TRACKR_PLUGIN_DIR . 'test-qr-generation.php';
+		}
 	}
 
-	// Register settings.
-	add_action( 'admin_init', 'qrc_register_settings' );
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'QR Trackr: Added admin_init action' );
+
+
+	/**
+	 * Register admin hooks.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	function qrc_register_admin_hooks() {
+		// Hook to load test script.
+		add_action( 'admin_notices', 'qrc_load_test_script' );
+
+		// Register admin menu items.
+		add_action( 'admin_menu', 'qrc_admin_menu' );
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: Added admin_menu action' );
+		}
+
+		// Register settings.
+		add_action( 'admin_init', 'qrc_register_settings' );
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: Added admin_init action' );
+		}
+
+		// Enqueue admin scripts and styles.
+		add_action( 'admin_enqueue_scripts', 'qrc_admin_enqueue_scripts' );
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'QR Trackr: Added admin_enqueue_scripts action' );
+		}
 	}
 
-	// Enqueue admin scripts and styles.
-	add_action( 'admin_enqueue_scripts', 'qrc_admin_enqueue_scripts' );
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'QR Trackr: Added admin_enqueue_scripts action' );
-	}
-}
+	/**
+	 * Handle delete action for QR codes.
+	 *
+	 * @since 1.2.24
+	 * @return void
+	 */
+	function qrc_handle_delete_action() {
+		// Check if we're on the QR codes page and action is delete.
+		if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] || ! isset( $_GET['action'] ) || 'delete' !== $_GET['action'] ) {
+			return;
+		}
 
-/**
- * Handle delete action for QR codes.
- *
- * @since 1.2.24
- * @return void
- */
-function qrc_handle_delete_action() {
-	// Check if we're on the QR codes page and action is delete.
-	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] || ! isset( $_GET['action'] ) || 'delete' !== $_GET['action'] ) {
-		return;
-	}
+		// Debug logging (only to error log, not output).
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? $_GET['page'] : 'not set', isset( $_GET['action'] ) ? $_GET['action'] : 'not set' ) );
+		}
 
-	// Debug logging (only to error log, not output).
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? $_GET['page'] : 'not set', isset( $_GET['action'] ) ? $_GET['action'] : 'not set' ) );
-	}
+		// Check user capabilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to delete QR codes.', 'wp-qr-trackr' ) );
+		}
 
-	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
-		wp_die( esc_html__( 'You do not have sufficient permissions to delete QR codes.', 'wp-qr-trackr' ) );
-	}
+		// Get and validate QR code ID.
+		$qr_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
+		if ( 0 === $qr_id ) {
+			wp_die( esc_html__( 'Invalid QR code ID.', 'wp-qr-trackr' ) );
+		}
 
-	// Get and validate QR code ID.
-	$qr_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
-	if ( 0 === $qr_id ) {
-		wp_die( esc_html__( 'Invalid QR code ID.', 'wp-qr-trackr' ) );
-	}
+		// Verify nonce.
+		$nonce_action = 'delete_qr_code_' . $qr_id;
+		if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), $nonce_action ) ) {
+			wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
+		}
 
-	// Verify nonce.
-	$nonce_action = 'delete_qr_code_' . $qr_id;
-	if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), $nonce_action ) ) {
-		wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
-	}
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_trackr_links';
-
-	// Get QR code details before deletion for logging.
-	$qr_code = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
-			$qr_id
-		)
-	);
-
-	if ( ! $qr_code ) {
-		wp_die( esc_html__( 'QR code not found.', 'wp-qr-trackr' ) );
-	}
-
-	// Delete the QR code.
-	$result = $wpdb->delete(
-		$table_name,
-		array( 'id' => $qr_id ),
-		array( '%d' )
-	);
-
-	if ( false === $result ) {
-		wp_die( esc_html__( 'Failed to delete QR code.', 'wp-qr-trackr' ) );
-	}
-
-	// Log the deletion for debugging.
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
-		qr_trackr_debug_log(
-			sprintf(
-				'QR Trackr: QR code deleted. ID: %d, QR Code: %s, Destination: %s',
-				$qr_id,
-				$qr_code->qr_code,
-				$qr_code->destination_url
+		// Get QR code details before deletion for logging.
+		$qr_code = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
+				$qr_id
 			)
 		);
-	}
 
-	// Clear relevant caches.
-	wp_cache_delete( 'qr_trackr_details_' . $qr_id );
-	wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
+		if ( ! $qr_code ) {
+			wp_die( esc_html__( 'QR code not found.', 'wp-qr-trackr' ) );
+		}
 
-	// Delete QR code image file if it exists.
-	if ( ! empty( $qr_code->qr_code_url ) ) {
-		$upload_dir   = wp_upload_dir();
-		$qr_file_path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $qr_code->qr_code_url );
+		// Delete the QR code.
+		$result = $wpdb->delete(
+			$table_name,
+			array( 'id' => $qr_id ),
+			array( '%d' )
+		);
 
-		if ( file_exists( $qr_file_path ) ) {
-			unlink( $qr_file_path );
+		if ( false === $result ) {
+			wp_die( esc_html__( 'Failed to delete QR code.', 'wp-qr-trackr' ) );
+		}
+
+		// Log the deletion for debugging.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'qr_trackr_debug_log' ) ) {
+			qr_trackr_debug_log(
+				sprintf(
+					'QR Trackr: QR code deleted. ID: %d, QR Code: %s, Destination: %s',
+					$qr_id,
+					$qr_code->qr_code,
+					$qr_code->destination_url
+				)
+			);
+		}
+
+		// Clear relevant caches.
+		wp_cache_delete( 'qr_trackr_details_' . $qr_id );
+		wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
+
+		// Delete QR code image file if it exists.
+		if ( ! empty( $qr_code->qr_code_url ) ) {
+			$upload_dir   = wp_upload_dir();
+			$qr_file_path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $qr_code->qr_code_url );
+
+			if ( file_exists( $qr_file_path ) ) {
+				unlink( $qr_file_path );
+			}
+		}
+
+		// Redirect back to the QR codes list with success message.
+		$redirect_url = add_query_arg(
+			array(
+				'page'    => 'qr-code-links',
+				'deleted' => '1',
+			),
+			admin_url( 'admin.php' )
+		);
+
+		// Ensure no output has been sent before redirecting.
+		if ( ! headers_sent() ) {
+			wp_safe_redirect( $redirect_url );
+			exit;
+		} else {
+			// If headers were already sent, use JavaScript redirect as fallback.
+			echo '<script>window.location.href = "' . esc_js( $redirect_url ) . '";</script>';
+			exit;
 		}
 	}
 
-	// Redirect back to the QR codes list with success message.
-	$redirect_url = add_query_arg(
-		array(
-			'page'    => 'qr-code-links',
-			'deleted' => '1',
-		),
-		admin_url( 'admin.php' )
-	);
 
-	// Ensure no output has been sent before redirecting.
-	if ( ! headers_sent() ) {
-		wp_safe_redirect( $redirect_url );
-		exit;
-	} else {
-		// If headers were already sent, use JavaScript redirect as fallback.
-		echo '<script>window.location.href = "' . esc_js( $redirect_url ) . '";</script>';
-		exit;
+
+	/**
+	 * Display admin notices for delete action.
+	 *
+	 * @since 1.2.24
+	 * @return void
+	 */
+	function qrc_admin_notices() {
+		// Check if we're on the QR codes page.
+		if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] ) {
+			return;
+		}
+
+		// Display success message for deleted QR code.
+		if ( isset( $_GET['deleted'] ) && '1' === $_GET['deleted'] ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'QR code deleted successfully.', 'wp-qr-trackr' ) . '</p></div>';
+		}
 	}
-}
+	add_action( 'admin_notices', 'qrc_admin_notices' );
 
-
-
-/**
- * Display admin notices for delete action.
- *
- * @since 1.2.24
- * @return void
- */
-function qrc_admin_notices() {
-	// Check if we're on the QR codes page.
-	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] ) {
-		return;
-	}
-
-	// Display success message for deleted QR code.
-	if ( isset( $_GET['deleted'] ) && '1' === $_GET['deleted'] ) {
-		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'QR code deleted successfully.', 'wp-qr-trackr' ) . '</p></div>';
-	}
-}
-add_action( 'admin_notices', 'qrc_admin_notices' );
-
-// Register hooks on init to ensure WordPress is ready.
-add_action( 'init', 'qrc_register_admin_hooks' );
+	// Register hooks on init to ensure WordPress is ready.
+	add_action( 'init', 'qrc_register_admin_hooks' );

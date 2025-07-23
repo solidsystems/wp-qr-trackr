@@ -333,7 +333,6 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						<label for="destination_url"><?php esc_html_e( 'Destination URL', 'wp-qr-trackr' ); ?></label>
 					</th>
 					<td>
-						<input type="hidden" id="post_id" name="post_id" value="" />
 						<select id="destination_url" name="destination_url" class="regular-text">
 							<option value=""><?php esc_html_e( 'Select a post or page...', 'wp-qr-trackr' ); ?></option>
 						</select>
@@ -421,12 +420,14 @@ $(function() {
 		allowClear: true,
 		ajax: {
 			url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+			type: 'POST',
 			dataType: 'json',
 			delay: 250,
 			data: function(params) {
 				return {
 					action: 'qrc_search_posts',
-					term: params.term
+					term: params.term,
+					nonce: qr_trackr_ajax.nonce
 				};
 			},
 			processResults: function(data) {

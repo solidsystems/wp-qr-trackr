@@ -12,6 +12,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Debug output.
 if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 	echo '<!-- QR Trackr: Admin page template loaded -->';
+	error_log( 'QR Trackr: Admin page template loaded' );
+
+	// Debug: Check if list table is available.
+	if ( isset( $list_table ) ) {
+		error_log( 'QR Trackr: List table is available' );
+		error_log( 'QR Trackr: List table items count: ' . count( $list_table->items ) );
+	} else {
+		error_log( 'QR Trackr: List table is NOT available' );
+	}
 }
 
 ?>

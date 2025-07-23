@@ -4,7 +4,7 @@
  *
  * This module handles URL rewriting and redirection for QR code tracking links.
  * It sets up custom rewrite rules, handles query variables, and manages redirects.
- * 
+ *
  * URL Pattern: /qr/{tracking_code} where {tracking_code} is the alphanumeric tracking code.
  *
  * @package WP_QR_TRACKR

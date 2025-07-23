@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.25] - 2025-01-23
+
+### Fixed
+- **CRITICAL**: Fixed Select2 destination URL search functionality
+- **AJAX**: Resolved AJAX method mismatch (GET vs POST requests)
+- **NONCE**: Standardized nonce verification across all AJAX handlers
+- **PARAMETERS**: Fixed parameter name mismatch (`search` vs `term`)
+- **SCRIPT LOADING**: Fixed admin script enqueuing for "Add New" page
+- **SEARCH LOGIC**: Improved search result consistency with reliable ordering
+
+### Technical
+- Added `type: 'POST'` to Select2 AJAX configuration
+- Updated AJAX handler to expect `$_POST['term']` parameter
+- Standardized all AJAX handlers to use `qr_trackr_nonce`
+- Fixed hook names for script loading: `qrc-links_page_qr-code-add-new`
+- Changed search ordering from `relevance` to `title` with `ASC` order
+- Cleaned up all debug code and logging
+- Re-enabled caching for list table data
+
+### User Experience
+- **Before**: Destination URL search showed "no results found" even with existing posts
+- **After**: Search properly finds and displays existing posts and pages
+- **Result**: Functional destination URL selection in QR code creation
+- **Impact**: Improved user experience for QR code creation workflow
+
+### Code Quality
+- **Debug Cleanup**: Removed all temporary debug logging
+- **Consistency**: Standardized AJAX patterns across all handlers
+- **Performance**: Re-enabled caching for optimal performance
+- **Documentation**: Added comprehensive lessons learned to documentation
+
+### Files Modified
+- `includes/module-ajax.php`: Fixed AJAX handler parameters and nonce verification
+- `templates/add-new-page.php`: Added POST method to Select2 configuration
+- `includes/module-admin.php`: Fixed script loading hook names
+- `class-qrc-links-list-table.php`: Cleaned up debug code and re-enabled caching
+- `docs/maintenance/LESSONS_LEARNED.md`: Added comprehensive debugging lessons
+- `docs/maintenance/TODO.md`: Updated with completion status
+
 ## [1.2.38] - 2025-01-27
 
 ### Fixed

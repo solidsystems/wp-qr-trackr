@@ -265,22 +265,30 @@ add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
 function qrc_search_posts_ajax() {
 	// Debug logging for nonce verification using Query Monitor.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		do_action( 'qm/debug', 'QR Trackr: AJAX search request started', [
-			'nonce' => isset( $_POST['nonce'] ) ? $_POST['nonce'] : 'not set',
-			'term' => isset( $_POST['term'] ) ? $_POST['term'] : 'not set',
-			'post_data' => $_POST
-		] );
+		do_action(
+			'qm/debug',
+			'QR Trackr: AJAX search request started',
+			array(
+				'nonce'     => isset( $_POST['nonce'] ) ? $_POST['nonce'] : 'not set',
+				'term'      => isset( $_POST['term'] ) ? $_POST['term'] : 'not set',
+				'post_data' => $_POST,
+			)
+		);
 	}
 
 	// Security check - only verify user is logged in and has admin access.
 	// Nonce check removed for reliability since this is admin-only and WordPress has built-in CSRF protection.
 	if ( ! is_admin() || ! current_user_can( 'edit_posts' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			do_action( 'qm/warning', 'QR Trackr: Admin access check failed for search request', [
-				'is_admin' => is_admin(),
-				'user_can_edit_posts' => current_user_can( 'edit_posts' ),
-				'current_user_id' => get_current_user_id()
-			] );
+			do_action(
+				'qm/warning',
+				'QR Trackr: Admin access check failed for search request',
+				array(
+					'is_admin'            => is_admin(),
+					'user_can_edit_posts' => current_user_can( 'edit_posts' ),
+					'current_user_id'     => get_current_user_id(),
+				)
+			);
 		}
 		wp_send_json_error(
 			array(
@@ -297,23 +305,31 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging for search term validation using Query Monitor.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		do_action( 'qm/debug', 'QR Trackr: Search term validation', [
-			'raw_term' => isset( $_POST['term'] ) ? $_POST['term'] : 'not set',
-			'sanitized_term' => $search_term,
-			'term_length' => strlen( $search_term ),
-			'is_empty' => empty( $search_term ),
-			'post_data' => $_POST
-		] );
+		do_action(
+			'qm/debug',
+			'QR Trackr: Search term validation',
+			array(
+				'raw_term'       => isset( $_POST['term'] ) ? $_POST['term'] : 'not set',
+				'sanitized_term' => $search_term,
+				'term_length'    => strlen( $search_term ),
+				'is_empty'       => empty( $search_term ),
+				'post_data'      => $_POST,
+			)
+		);
 	}
 
 	// Validate search term.
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			do_action( 'qm/warning', 'QR Trackr: Search term validation failed', [
-				'is_empty' => empty( $search_term ),
-				'term_length' => strlen( $search_term ),
-				'search_term' => $search_term
-			] );
+			do_action(
+				'qm/warning',
+				'QR Trackr: Search term validation failed',
+				array(
+					'is_empty'    => empty( $search_term ),
+					'term_length' => strlen( $search_term ),
+					'search_term' => $search_term,
+				)
+			);
 		}
 		wp_send_json_error(
 			array(
@@ -344,19 +360,35 @@ function qrc_search_posts_ajax() {
 	);
 
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		do_action( 'qm/debug', 'QR Trackr: Database post check', [
-			'total_posts' => count( $all_posts ),
-			'sample_titles' => ! empty( $all_posts ) ? array_map( function( $post ) { return $post->post_title; }, $all_posts ) : []
-		] );
+		do_action(
+			'qm/debug',
+			'QR Trackr: Database post check',
+			array(
+				'total_posts'   => count( $all_posts ),
+				'sample_titles' => ! empty( $all_posts ) ? array_map(
+					function ( $post ) {
+						return $post->post_title; },
+					$all_posts
+				) : array(),
+			)
+		);
 	}
 
 	// Debug logging for search results using Query Monitor.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		do_action( 'qm/debug', 'QR Trackr: Search results from get_posts', [
-			'search_term' => $search_term,
-			'posts_found' => count( $posts ),
-			'post_ids' => ! empty( $posts ) ? array_map( function( $post ) { return $post->ID; }, $posts ) : []
-		] );
+		do_action(
+			'qm/debug',
+			'QR Trackr: Search results from get_posts',
+			array(
+				'search_term' => $search_term,
+				'posts_found' => count( $posts ),
+				'post_ids'    => ! empty( $posts ) ? array_map(
+					function ( $post ) {
+						return $post->ID; },
+					$posts
+				) : array(),
+			)
+		);
 	}
 
 	$results = array();
@@ -373,11 +405,15 @@ function qrc_search_posts_ajax() {
 
 	// Add debug logging if WP_DEBUG is enabled using Query Monitor.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		do_action( 'qm/debug', 'QR Trackr: Final search results', [
-			'search_term' => $search_term,
-			'results_count' => count( $results ),
-			'results' => $results
-		] );
+		do_action(
+			'qm/debug',
+			'QR Trackr: Final search results',
+			array(
+				'search_term'   => $search_term,
+				'results_count' => count( $results ),
+				'results'       => $results,
+			)
+		);
 	}
 
 	wp_send_json_success( array( 'posts' => $results ) );

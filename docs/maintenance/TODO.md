@@ -91,6 +91,26 @@
 - **User Experience**: Table now updates correctly with proper data in correct columns after editing QR codes
 - **Code Quality**: More maintainable and robust column selection that won't break with table structure changes
 
+## ✅ COMPLETED: Select2 Search Functionality Fix
+
+### ✅ COMPLETED: Destination URL Search Box
+- **Status**: ✅ COMPLETED
+- **Files Fixed**: `module-ajax.php`, `templates/add-new-page.php`, `module-admin.php`, `class-qrc-links-list-table.php`
+- **Issues Resolved**:
+  - **AJAX Method Mismatch**: Fixed Select2 making GET instead of POST requests
+  - **Nonce Verification**: Standardized all AJAX handlers to use `qr_trackr_nonce`
+  - **Parameter Names**: Fixed `$_POST['search']` vs `$_POST['term']` mismatch
+  - **Script Loading**: Fixed admin script enqueuing for "Add New" page
+  - **Search Logic**: Changed from `orderby => 'relevance'` to `orderby => 'title'` for consistency
+- **Technical Changes**:
+  - Added `type: 'POST'` to Select2 AJAX configuration
+  - Updated AJAX handler to expect `$_POST['term']` parameter
+  - Fixed hook names for script loading: `qrc-links_page_qr-code-add-new`
+  - Cleaned up all debug code and logging
+  - Re-enabled caching for list table data
+- **User Experience**: Destination URL search now properly finds existing posts and pages
+- **Documentation**: Added comprehensive lessons learned to `LESSONS_LEARNED.md`
+
 ## Remaining Items (Optional)
 
 ### 📋 PENDING: Debug Code Removal (Optional)

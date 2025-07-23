@@ -40,6 +40,18 @@ function qrc_admin_menu() {
 		'qrc_admin_page'
 	);
 
+	// Add "Add New" page.
+	$add_new = add_submenu_page(
+		'qrc-links',  // Changed from qr-code-links to qrc-links
+		__( 'Add New QR Code', 'wp-qr-trackr' ),
+		__( 'Add New', 'wp-qr-trackr' ),
+		'manage_options',
+		'qr-code-add-new',
+		'qrc_add_new_page'
+	);
+
+	error_log( 'QR Trackr: Add New page added with hook: ' . ( $add_new ? $add_new : 'failed' ) );
+
 	// Add settings page.
 	$settings = add_submenu_page(
 		'qrc-links',  // Changed from qr-code-links to qrc-links
@@ -101,6 +113,22 @@ function qrc_admin_page() {
 
 	// Display the page.
 	include QRC_PLUGIN_DIR . 'templates/admin-page.php';
+}
+
+/**
+ * Render the add new page.
+ *
+ * @since 1.0.0
+ * @return void
+ */
+function qrc_add_new_page() {
+	// Check user capabilities.
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	// Display the page.
+	include QRC_PLUGIN_DIR . 'templates/add-new-page.php';
 }
 
 /**

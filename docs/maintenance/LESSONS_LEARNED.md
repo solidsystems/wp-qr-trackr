@@ -511,3 +511,259 @@ register_rest_route('qr-trackr/v1', '/redirect/(?P<code>[a-zA-Z0-9]+)', [
 5. **Plan for production** - Design URL structure for public use from the start
 
 This URL handling experience demonstrates the importance of understanding WordPress's internal URL processing and having reliable fallback strategies for critical functionality.
+
+---
+
+## Select2 AJAX Search Integration: Debugging WordPress Admin JavaScript
+
+### Problem Description
+The destination URL search box on the "Add New QR Code" page was showing "no results found" even though existing posts existed in the database. The Select2 dropdown was making AJAX requests but receiving `{success: false}` responses.
+
+### Root Cause Analysis
+
+#### 1. **AJAX Method Mismatch**
+**Problem:** Select2 was making GET requests instead of POST requests.
+**Root Cause:** Missing `type: 'POST'` in Select2 AJAX configuration.
+**Solution:** Added `type: 'POST'` to Select2 AJAX configuration.
+
+#### 2. **Nonce Verification Mismatch**
+**Problem:** AJAX handler expected `qrc_admin_nonce` but Select2 was sending `qr_trackr_nonce`.
+**Root Cause:** Inconsistent nonce naming across different AJAX handlers.
+**Solution:** Standardized all AJAX handlers to use `qr_trackr_nonce`.
+
+#### 3. **Parameter Name Mismatch**
+**Problem:** AJAX handler expected `$_POST['search']` but Select2 sends `$_POST['term']`.
+**Root Cause:** Select2 uses `term` as the default parameter name for search queries.
+**Solution:** Updated AJAX handler to read `$_POST['term']`.
+
+#### 4. **Script Loading Issues**
+**Problem:** Admin scripts (Select2, AJAX localization) weren't loading on the "Add New" page.
+**Root Cause:** Script enqueuing function had incorrect hook name checks.
+**Solution:** Fixed hook names and temporarily disabled conditional loading for debugging.
+
+#### 5. **Search Logic Issues**
+**Problem:** `get_posts()` was using `orderby => 'relevance'` which can be unreliable.
+**Root Cause:** `relevance` ordering depends on WordPress search implementation and can vary.
+**Solution:** Changed to `orderby => 'title'` with `order => 'ASC'` for consistent results.
+
+### Debugging Strategy Used
+
+#### 1. **Browser Console Analysis**
+- Added `console.log()` statements in Select2 `processResults` function
+- Monitored AJAX request/response in browser dev tools
+- Identified `{success: false}` response pattern
+
+#### 2. **Server-Side Debugging**
+- Added extensive `error_log()` statements in AJAX handler
+- Monitored WordPress debug log for AJAX request processing
+- Verified nonce verification and parameter handling
+
+#### 3. **Direct AJAX Testing**
+- Used `curl` commands to test AJAX endpoints directly
+- Verified request method, parameters, and nonce values
+- Isolated issues between client and server
+
+#### 4. **Script Loading Verification**
+- Checked if Select2 and admin scripts were loading
+- Verified AJAX localization variables were available
+- Tested script enqueuing on different admin pages
+
+### Key Learnings
+
+#### 1. **Select2 AJAX Configuration**
+**Rule:** Always specify `type: 'POST'` for WordPress AJAX requests.
+```javascript
+ajax: {
+    url: admin_url('admin-ajax.php'),
+    type: 'POST',  // Required for WordPress AJAX
+    dataType: 'json',
+    delay: 250,
+    data: function(params) {
+        return {
+            action: 'qrc_search_posts',
+            term: params.term,
+            nonce: qr_trackr_ajax.nonce
+        };
+    }
+}
+```
+
+#### 2. **WordPress AJAX Parameter Names**
+**Rule:** Select2 sends `term` parameter, not `search`.
+```php
+// CORRECT:
+$search_term = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
+
+// WRONG:
+$search_term = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
+```
+
+#### 3. **Nonce Consistency**
+**Rule:** Use consistent nonce names across all AJAX handlers.
+```php
+// Standardize on one nonce name:
+wp_create_nonce( 'qr_trackr_nonce' )
+wp_verify_nonce( $nonce, 'qr_trackr_nonce' )
+```
+
+#### 4. **WordPress Admin Hook Names**
+**Rule:** Hook names follow specific patterns for admin pages.
+```php
+// Correct hook names for admin pages:
+$qr_trackr_hooks = array(
+    'toplevel_page_qrc-links',           // Main menu page
+    'qrc-links_page_qr-code-add-new',    // Add New submenu
+    'qrc-links_page_qrc-settings'        // Settings submenu
+);
+```
+
+#### 5. **Search Result Consistency**
+**Rule:** Use reliable ordering for search results.
+```php
+// Reliable search ordering:
+$posts = get_posts( array(
+    'post_type'      => array( 'post', 'page' ),
+    'post_status'    => 'publish',
+    'posts_per_page' => 20,
+    's'              => $search_term,
+    'orderby'        => 'title',  // Consistent ordering
+    'order'          => 'ASC'     // Predictable results
+) );
+```
+
+### Debugging Best Practices
+
+#### 1. **Systematic Approach**
+1. **Check browser console** for JavaScript errors
+2. **Monitor network tab** for AJAX request/response
+3. **Add server-side logging** to track request processing
+4. **Test endpoints directly** with curl or Postman
+5. **Verify script loading** and localization
+
+#### 2. **WordPress-Specific Debugging**
+```php
+// Debug AJAX requests:
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+    error_log( 'QR Trackr: AJAX request received: ' . wp_json_encode( $_POST ) );
+}
+
+// Debug script loading:
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+    error_log( 'QR Trackr: Script enqueued for hook: ' . $hook );
+}
+```
+
+#### 3. **JavaScript Debugging**
+```javascript
+// Debug Select2 AJAX:
+processResults: function(data) {
+    console.log('Select2 processResults called with data:', data);
+    // Process results...
+    console.log('Select2 returning results:', results);
+    return { results: results };
+}
+```
+
+### Code Quality Improvements
+
+#### Before (Problematic)
+```javascript
+ajax: {
+    url: admin_url('admin-ajax.php'),
+    dataType: 'json',
+    data: function(params) {
+        return {
+            action: 'qrc_search_posts',
+            search: params.term,  // Wrong parameter name
+            nonce: '<?php echo wp_create_nonce( "qrc_admin_nonce" ); ?>'  // Inconsistent nonce
+        };
+    }
+}
+```
+
+#### After (Robust)
+```javascript
+ajax: {
+    url: admin_url('admin-ajax.php'),
+    type: 'POST',  // Explicit POST method
+    dataType: 'json',
+    data: function(params) {
+        return {
+            action: 'qrc_search_posts',
+            term: params.term,  // Correct parameter name
+            nonce: qr_trackr_ajax.nonce  // Consistent nonce
+        };
+    }
+}
+```
+
+### Testing Strategy
+
+#### 1. **Cross-Page Testing**
+- Test Select2 on different admin pages
+- Verify script loading on all relevant pages
+- Check for conflicts with other plugins
+
+#### 2. **AJAX Endpoint Testing**
+```bash
+# Test AJAX endpoint directly:
+curl -X POST http://localhost:8080/wp-admin/admin-ajax.php \
+  -d "action=qrc_search_posts" \
+  -d "term=hello" \
+  -d "nonce=YOUR_NONCE"
+```
+
+#### 3. **Error Handling**
+- Test with empty search terms
+- Test with special characters
+- Test with non-existent posts
+- Verify proper error responses
+
+### Future Prevention
+
+#### Development Guidelines
+1. **Always specify AJAX method** - Don't rely on defaults
+2. **Use consistent nonce names** - Standardize across all handlers
+3. **Test parameter names** - Verify what Select2 actually sends
+4. **Add comprehensive logging** - For both client and server debugging
+5. **Test on multiple pages** - Ensure scripts load everywhere needed
+
+#### Code Review Checklist
+- [ ] Select2 AJAX includes `type: 'POST'`
+- [ ] Parameter names match Select2 defaults (`term`)
+- [ ] Nonce names are consistent across handlers
+- [ ] Script loading works on all target pages
+- [ ] Error handling is comprehensive
+- [ ] Debug logging is removed for production
+
+### Impact on Plugin Architecture
+
+This debugging experience reinforced the importance of:
+- **Consistent AJAX patterns** across all admin functionality
+- **Comprehensive debugging tools** for troubleshooting
+- **WordPress-specific best practices** for admin JavaScript
+- **Systematic testing approaches** for complex integrations
+
+The fix ensures all Select2 integrations follow the same robust pattern, preventing similar issues in future development.
+
+### Production Considerations
+
+#### Performance Optimization
+- Implement caching for search results
+- Add debouncing for search input
+- Optimize database queries for search
+- Consider pagination for large result sets
+
+#### Security Hardening
+- Rate limit AJAX requests
+- Validate search term length and content
+- Implement proper error handling
+- Log suspicious search patterns
+
+#### User Experience
+- Add loading indicators
+- Provide helpful error messages
+- Implement search suggestions
+- Add keyboard navigation support
+
+This Select2 integration experience demonstrates the importance of understanding both client-side JavaScript libraries and WordPress's AJAX system, as well as the value of systematic debugging approaches for complex integrations.

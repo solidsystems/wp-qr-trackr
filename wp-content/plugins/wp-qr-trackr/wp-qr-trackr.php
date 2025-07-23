@@ -204,7 +204,7 @@ function qr_trackr_init() {
 	if ( get_option( 'qr_trackr_needs_flush', false ) ) {
 		flush_rewrite_rules();
 		delete_option( 'qr_trackr_needs_flush' );
-		
+
 		if ( QR_TRACKR_DEBUG ) {
 			error_log( 'QR Trackr: Flushed rewrite rules on init' );
 		}
