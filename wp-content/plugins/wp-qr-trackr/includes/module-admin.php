@@ -5,7 +5,7 @@
  * @package WP_QR_TRACKR
  */
 
-// TEST: Verify this file is being loaded
+// TEST: Verify this file is being loaded.
 error_log( 'QR Trackr: Admin module loaded at ' . gmdate( 'Y-m-d H:i:s' ) );
 
 // Debug message to confirm module is loaded.
@@ -282,7 +282,7 @@ function qrc_add_new_page() {
  * @return void
  */
 function qrc_admin_enqueue_scripts( $hook ) {
-	// TEST: Log that this function is being called
+	// TEST: Log that this function is being called.
 	error_log( 'QR Trackr: qrc_admin_enqueue_scripts called with hook: ' . $hook );
 
 	// Check if we're on a QR Trackr page by looking at the hook.
@@ -298,7 +298,7 @@ function qrc_admin_enqueue_scripts( $hook ) {
 	}
 
 	// Enqueue Select2 from CDN for the add-new page.
-	if ( $hook === 'qr-code-links_page_qr-code-add-new' ) {
+	if ( 'qr-code-links_page_qr-code-add-new' === $hook ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( 'QR Trackr: Loading Select2 for add-new page' );
 		}
@@ -446,7 +446,7 @@ function qrc_register_admin_hooks() {
  */
 function qrc_handle_delete_action() {
 	// Check if we're on the QR codes page and action is delete.
-	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] || ! isset( $_GET['action'] ) || 'delete' !== $_GET['action'] ) {
+	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== sanitize_text_field( wp_unslash( $_GET['page'] ) ) || ! isset( $_GET['action'] ) || 'delete' !== sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 		return;
 	}
 
