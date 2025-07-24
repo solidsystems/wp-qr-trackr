@@ -249,7 +249,7 @@ setup_wordpress_after_restart() {
     # Check if WordPress needs installation
     if ! docker exec "$wp_container" wp core is-installed --path=/var/www/html 2>/dev/null; then
         log "INFO" "WordPress not installed, running installation..."
-        
+
         # Install WordPress
         docker exec "$wp_container" wp core install \
             --url="http://localhost:$port" \
@@ -270,7 +270,7 @@ setup_wordpress_after_restart() {
         log "INFO" "WordPress installation completed"
     else
         log "INFO" "WordPress already installed, checking plugin status..."
-        
+
         # Ensure plugin is activated
         if ! docker exec "$wp_container" wp plugin is-active wp-qr-trackr --path=/var/www/html 2>/dev/null; then
             log "INFO" "Activating WP QR Trackr plugin..."
@@ -280,6 +280,126 @@ setup_wordpress_after_restart() {
 
     log "INFO" "WordPress setup completed for $env environment"
     return 0
+}
+
+# Function to check WordPress status
+check_wordpress_status() {
+    local env=$1
+    local compose_file="docker/docker-compose.$env.yml"
+    local wp_container
+
+    case $env in
+        "dev")
+            wp_container="docker-wordpress-dev-1"
+            ;;
+        "nonprod")
+            wp_container="docker-wordpress-nonprod-1"
+            ;;
+        *)
+            log "ERROR" "Invalid environment: $env"
+            return 1
+            ;;
+    esac
+
+    log "INFO" "Checking WordPress status for $env environment"
+
+    # Check if WordPress is installed
+    if docker exec "$wp_container" wp core is-installed --path=/var/www/html 2>/dev/null; then
+        log "INFO" "WordPress is installed"
+
+        # Get site URL
+        local site_url=$(docker exec "$wp_container" wp option get siteurl --path=/var/www/html 2>/dev/null || echo "Not set")
+        log "INFO" "Site URL: $site_url"
+
+        # Get home URL
+        local home_url=$(docker exec "$wp_container" wp option get home --path=/var/www/html 2>/dev/null || echo "Not set")
+        log "INFO" "Home URL: $home_url"
+
+        # Get permalink structure
+        local permalink_structure=$(docker exec "$wp_container" wp option get permalink_structure --path=/var/www/html 2>/dev/null || echo "Not set")
+        log "INFO" "Permalink structure: $permalink_structure"
+    else
+        log "WARN" "WordPress is not installed"
+    fi
+}
+
+# Function to reset WordPress installation
+reset_wordpress_installation() {
+    local env=$1
+    local compose_file="docker/docker-compose.$env.yml"
+    local wp_container
+
+    case $env in
+        "dev")
+            wp_container="docker-wordpress-dev-1"
+            ;;
+        "nonprod")
+            wp_container="docker-wordpress-nonprod-1"
+            ;;
+        *)
+            log "ERROR" "Invalid environment: $env"
+            return 1
+            ;;
+    esac
+
+    log "INFO" "Resetting WordPress installation for $env environment"
+
+    # Stop containers
+    docker compose -f "$compose_file" down
+
+    # Remove volumes to reset data
+    docker compose -f "$compose_file" down -v
+
+    # Start containers
+    docker compose -f "$compose_file" up -d
+
+    # Wait for containers to be ready
+    sleep 10
+
+    # Setup WordPress
+    setup_wordpress_after_restart "$env"
+
+    log "INFO" "WordPress installation reset completed"
+}
+
+# Function to check plugin status
+check_plugin_status() {
+    local env=$1
+    local compose_file="docker/docker-compose.$env.yml"
+    local wp_container
+
+    case $env in
+        "dev")
+            wp_container="docker-wordpress-dev-1"
+            ;;
+        "nonprod")
+            wp_container="docker-wordpress-nonprod-1"
+            ;;
+        *)
+            log "ERROR" "Invalid environment: $env"
+            return 1
+            ;;
+    esac
+
+    log "INFO" "Checking plugin status for $env environment"
+
+    # Check if plugin exists
+    if docker exec "$wp_container" test -d /var/www/html/wp-content/plugins/wp-qr-trackr; then
+        log "INFO" "WP QR Trackr plugin is installed"
+
+        # Check plugin status
+        if docker exec "$wp_container" wp plugin is-active wp-qr-trackr --path=/var/www/html 2>/dev/null; then
+            log "INFO" "WP QR Trackr plugin is active"
+        else
+            log "WARN" "WP QR Trackr plugin is not active"
+        fi
+
+        # List all plugins
+        log "INFO" "All installed plugins:"
+        docker exec "$wp_container" wp plugin list --path=/var/www/html
+    else
+        log "WARN" "WP QR Trackr plugin is not installed"
+    fi
 }
 
 # Function to monitor containers continuously
@@ -420,6 +540,10 @@ show_usage() {
     echo "  diagnose [dev|nonprod]  - Diagnose container issues"
     echo "  logs [dev|nonprod]      - Show container logs"
     echo "  status [dev|nonprod]    - Show container status"
+    echo "  wp-install [dev|nonprod] - Install WordPress"
+    echo "  wp-status [dev|nonprod]  - Check WordPress status"
+    echo "  wp-reset [dev|nonprod]   - Reset WordPress installation"
+    echo "  wp-plugin-status [dev|nonprod] - Check plugin status"
     echo ""
     echo "Options:"
     echo "  --interval SECONDS      - Monitoring interval (default: 60)"
@@ -508,6 +632,22 @@ main() {
             log "INFO" "Container status for $environment environment:"
             docker compose -f "$compose_file" ps
             ;;
+        "wp-install")
+            log "INFO" "Installing WordPress for $environment environment..."
+            setup_wordpress_after_restart "$environment"
+            ;;
+        "wp-status")
+            log "INFO" "Checking WordPress status for $environment environment..."
+            check_wordpress_status "$environment"
+            ;;
+        "wp-reset")
+            log "INFO" "Resetting WordPress installation for $environment environment..."
+            reset_wordpress_installation "$environment"
+            ;;
+        "wp-plugin-status")
+            log "INFO" "Checking plugin status for $environment environment..."
+            check_plugin_status "$environment"
+            ;;
         *)
             log "ERROR" "Unknown command: $command"
             show_usage
@@ -517,4 +657,4 @@ main() {
 }
 
 # Run main function with all arguments
-main "$@" 
+main "$@"

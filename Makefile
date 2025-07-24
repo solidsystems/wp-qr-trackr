@@ -26,3 +26,60 @@ pr:
 		exit 1; \
 	fi; \
 	bash scripts/create-pr.sh $(BRANCH) "$(TITLE)" $(BODY)
+
+# WordPress operations
+wp-dev:
+	@echo "WordPress operations for dev environment"
+	@echo "Usage: make wp-dev COMMAND=<wp-command>"
+	@if [ -n "$(COMMAND)" ]; then \
+		./scripts/wp-operations.sh dev $(COMMAND); \
+	else \
+		echo "Available commands: plugin list, core is-installed, option get permalink_structure"; \
+	fi
+
+wp-nonprod:
+	@echo "WordPress operations for nonprod environment"
+	@echo "Usage: make wp-nonprod COMMAND=<wp-command>"
+	@if [ -n "$(COMMAND)" ]; then \
+		./scripts/wp-operations.sh nonprod $(COMMAND); \
+	else \
+		echo "Available commands: plugin list, core is-installed, option get permalink_structure"; \
+	fi
+
+# Debug operations
+debug-dev:
+	@echo "Debug operations for dev environment"
+	@echo "Usage: make debug-dev COMMAND=<debug-command>"
+	@if [ -n "$(COMMAND)" ]; then \
+		./scripts/debug.sh dev $(COMMAND); \
+	else \
+		echo "Available commands: dependencies, container-status, logs, health, diagnose, wordpress, database, plugin, permissions"; \
+	fi
+
+debug-nonprod:
+	@echo "Debug operations for nonprod environment"
+	@echo "Usage: make debug-nonprod COMMAND=<debug-command>"
+	@if [ -n "$(COMMAND)" ]; then \
+		./scripts/debug.sh nonprod $(COMMAND); \
+	else \
+		echo "Available commands: dependencies, container-status, logs, health, diagnose, wordpress, database, plugin, permissions"; \
+	fi
+
+# Container management
+containers-dev:
+	@echo "Container management for dev environment"
+	@echo "Usage: make containers-dev COMMAND=<container-command>"
+	@if [ -n "$(COMMAND)" ]; then \
+		./scripts/manage-containers.sh $(COMMAND) dev; \
+	else \
+		echo "Available commands: start, stop, restart, redeploy, health, monitor, diagnose, logs, status, wp-install, wp-status, wp-reset, wp-plugin-status"; \
+	fi
+
+containers-nonprod:
+	@echo "Container management for nonprod environment"
+	@echo "Usage: make containers-nonprod COMMAND=<container-command>"
+	@if [ -n "$(COMMAND)" ]; then \
+		./scripts/manage-containers.sh $(COMMAND) nonprod; \
+	else \
+		echo "Available commands: start, stop, restart, redeploy, health, monitor, diagnose, logs, status, wp-install, wp-status, wp-reset, wp-plugin-status"; \
+	fi

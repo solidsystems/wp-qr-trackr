@@ -1,674 +1,223 @@
-# .cursorrules Index
+# .cursorrules - WP QR Trackr Project Standards
 
-**This file contains all enforced project rules. It MUST be reviewed as part of every pre-commit and pre-merge check.**
+**This file contains all enforced project rules and Claude prompt engineering guidelines. It MUST be reviewed as part of every pre-commit and pre-merge check.**
 
-## Index
-- WordPress Plugin Development Standards
-- PHPCS Compliance Enforcement
-- SQL Query and Caching Standards
-- Comment and Docblock Standards
-- WordPress Function Usage
-- Security and Input/Output Handling
-- File Organization and Naming
-- PHPCS and CI/CD Configuration
-- Date and Time Standards
-- Rewrite Rules Best Practices
-- Modular Setup and Module Design
-- Module Documentation, Testing, Security, and Performance
-- Contribution Workflow and PR Automation
-- Environment Variable and Tooling Standards
-- Xdebug/PECL and Linter Memory
-- Cursor Project Rules (Yarn-Only, Indentation, etc.)
-- WordPress Coding Standards (Security, Output, Comments, etc.)
-- Yarn-Only Package Management (NO npm/npx/pnpm)
+## Table of Contents
+1. [Claude Prompt Engineering Guidelines](#claude-prompt-engineering-guidelines)
+2. [WordPress Plugin Development Standards](#wordpress-plugin-development-standards)
+3. [PHPCS Compliance Enforcement](#phpcs-compliance-enforcement)
+4. [Security and Input/Output Handling](#security-and-inputoutput-handling)
+5. [Code Organization and Architecture](#code-organization-and-architecture)
+6. [Development Environment Standards](#development-environment-standards)
+7. [Testing and Quality Assurance](#testing-and-quality-assurance)
+8. [Documentation Standards](#documentation-standards)
+9. [Release and Deployment](#release-and-deployment)
+10. [Tooling and Automation](#tooling-and-automation)
+11. [Control Script Enforcement](#control-script-enforcement)
+
+---
+
+# Claude Prompt Engineering Guidelines
+
+## Context and Role Definition
+- **Role**: You are a senior WordPress plugin developer and Claude AI assistant
+- **Project**: WP QR Trackr - A WordPress plugin for QR code generation and tracking
+- **Architecture**: Modular PHP with Docker-based development environment
+- **Standards**: WordPress coding standards with PHPCS compliance
+
+## Communication Style
+- **Be Direct**: Provide clear, actionable responses without unnecessary explanations
+- **Show Code**: Always provide complete, working code examples
+- **Explain Decisions**: When making architectural choices, briefly explain the reasoning
+- **Ask for Clarification**: If requirements are unclear, ask specific questions
+- **Provide Alternatives**: When possible, offer multiple approaches with pros/cons
+
+## Code Generation Standards
+- **Complete Examples**: Provide full, runnable code snippets, not placeholders
+- **WordPress Best Practices**: Always follow WordPress coding standards
+- **Security First**: Include proper sanitization, validation, and escaping
+- **Error Handling**: Include appropriate error handling and logging
+- **Documentation**: Add inline comments and docblocks for complex logic
+
+## Problem-Solving Approach
+1. **Understand the Context**: Review existing code and requirements
+2. **Identify Constraints**: Consider WordPress, PHPCS, and project-specific limitations
+3. **Propose Solutions**: Offer multiple approaches when appropriate
+4. **Implement Safely**: Use proper error handling and validation
+5. **Test Thoroughly**: Ensure code works in the Docker environment
+
+## File and Code Organization
+- **Modular Design**: Keep functionality in separate modules under `includes/`
+- **Single Responsibility**: Each file should have one clear purpose
+- **Consistent Naming**: Use WordPress naming conventions (snake_case, hyphens)
+- **Proper Structure**: Follow WordPress plugin architecture patterns
+
+## Error Handling and Debugging
+- **Graceful Degradation**: Handle errors without breaking functionality
+- **Informative Messages**: Provide clear error messages for debugging
+- **Logging**: Use WordPress logging functions for debugging
+- **User Feedback**: Give users clear feedback on success/failure
 
 ---
 
 # WordPress Plugin Development Standards
-- All plugins are developed with professional WordPress best practices and excellent security standards.
-- Functionality is implemented in an elegant, maintainable, and efficient manner.
-- Debug logging is available upon request and should be implemented where appropriate.
-- UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices.
 
-# PHPCS Compliance Enforcement (Based on Recent Achievement)
-# We achieved 0 PHPCS errors across all 9 PHP files. These rules maintain that standard.
+## Core Principles
+- All plugins are developed with professional WordPress best practices and excellent security standards
+- Functionality is implemented in an elegant, maintainable, and efficient manner
+- Debug logging is available upon request and should be implemented where appropriate
+- UI styling for both generator functions and wp-admin panes must be mobile-first, ensuring optimal experience on all devices
+
+## Plugin Architecture
+- **Main File**: `wp-qr-trackr.php` - Bootstrap and module loading only
+- **Modules**: All business logic in `includes/` directory
+- **Templates**: Admin UI templates in `templates/` directory
+- **Assets**: JavaScript and CSS in `assets/` directory
+- **Tests**: Unit and integration tests in `tests/` directory
+
+---
+
+# PHPCS Compliance Enforcement
+
+**We achieved 0 PHPCS errors across all 9 PHP files. These rules maintain that standard.**
 
 ## Mandatory SQL Query Standards
-- ALL SQL queries MUST use $wpdb->prepare() for any variables
-- Table names MUST use {$wpdb->prefix}table_name format, NEVER string concatenation or variables
-- Dynamic query builders MUST include specific PHPCS ignore comments with explanations
-- Example: // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic query built with validated placeholders.
-- All user input MUST use placeholders (%d, %s, %f) in prepare statements
-- Direct database queries MUST include caching or PHPCS ignore with explanation
+- **ALL SQL queries MUST use `$wpdb->prepare()` for any variables**
+- **Table names MUST use `{$wpdb->prefix}table_name` format, NEVER string concatenation**
+- **Dynamic query builders MUST include specific PHPCS ignore comments with explanations**
+- **All user input MUST use placeholders (`%d`, `%s`, `%f`) in prepare statements**
+- **Direct database queries MUST include caching or PHPCS ignore with explanation**
+
+### Example SQL Query Pattern
+```php
+$table_name = $wpdb->prefix . 'qr_code_links';
+$result = $wpdb->get_row(
+    $wpdb->prepare(
+        "SELECT * FROM {$table_name} WHERE post_id = %d AND status = %s",
+        $post_id,
+        $status
+    )
+);
+```
 
 ## Mandatory Caching Implementation
-- All expensive database queries MUST implement wp_cache_get()/wp_cache_set() patterns
-- Cache keys MUST be descriptive and include relevant IDs
-- Cache timeouts MUST be appropriate (300 seconds for frequent queries, longer for static data)
-- Cache invalidation MUST occur after database writes
-- Example pattern:
-  ```php
-  $cache_key = 'qr_trackr_item_' . $id;
-  $result = wp_cache_get( $cache_key );
-  if ( false === $result ) {
-      // Query and cache
-      wp_cache_set( $cache_key, $result, '', 300 );
-  }
-  ```
+- **All expensive database queries MUST implement `wp_cache_get()`/`wp_cache_set()` patterns**
+- **Cache keys MUST be descriptive and include relevant IDs**
+- **Cache timeouts MUST be appropriate (300 seconds for frequent queries, longer for static data)**
+- **Cache invalidation MUST occur after database writes**
+
+### Example Caching Pattern
+```php
+$cache_key = 'qr_trackr_item_' . $id;
+$result = wp_cache_get( $cache_key );
+if ( false === $result ) {
+    // Query and cache
+    $result = $wpdb->get_row( $prepared_query );
+    wp_cache_set( $cache_key, $result, '', 300 );
+}
+```
 
 ## Mandatory Comment Standards
-- ALL inline comments MUST end with proper punctuation (. ! ?)
-- Exception: Code reference comments (// ...existing code..., // phpcs:ignore, // @codeCoverageIgnore)
-- Examples:
-  - CORRECT: // Initialize the database table.
-  - WRONG: // Initialize the database table
-- All PHPCS ignore comments MUST include explanations
-- All functions MUST have complete docblocks with @param, @return, @throws tags
+- **ALL inline comments MUST end with proper punctuation (`. ! ?`)**
+- **Exception**: Code reference comments (`// ...existing code...`, `// phpcs:ignore`, `// @codeCoverageIgnore`)
+- **All PHPCS ignore comments MUST include explanations**
+- **All functions MUST have complete docblocks with `@param`, `@return`, `@throws` tags**
+
+### Comment Examples
+```php
+// Initialize the database table.
+// Why is this value negative?
+// Database query completed successfully!
+// ...existing code...
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented
+```
 
 ## Mandatory WordPress Function Usage
-- NEVER use serialize() - use wp_json_encode()
-- NEVER use date() - use gmdate() for timezone safety
-- NEVER use json_encode() - use wp_json_encode()
-- NEVER use error_log() without PHPCS ignore for debug-only usage
-- ALL user input MUST use WordPress sanitization functions
-- ALL output MUST use WordPress escaping functions
+- **NEVER use `serialize()` - use `wp_json_encode()`**
+- **NEVER use `date()` - use `gmdate()` for timezone safety**
+- **NEVER use `json_encode()` - use `wp_json_encode()`**
+- **NEVER use `error_log()` without PHPCS ignore for debug-only usage**
+- **ALL user input MUST use WordPress sanitization functions**
+- **ALL output MUST use WordPress escaping functions**
 
-## Mandatory Security Standards
-- ALL user input MUST be sanitized using wp_unslash() and appropriate WordPress functions
-- ALL output MUST be escaped using esc_html(), esc_url(), esc_attr()
-- ALL form submissions MUST verify nonces
-- ALL AJAX requests MUST verify nonces
-- ALL conditionals MUST use Yoda conditions where possible
+---
+
+# Security and Input/Output Handling
+
+## Input Sanitization
+- **ALL user input MUST be sanitized using `wp_unslash()` and appropriate WordPress functions**
+- **Text**: `sanitize_text_field()`
+- **URLs**: `esc_url_raw()`
+- **HTML**: `wp_kses_post()`
+- **Integers**: `absint()` or `intval()`
+
+## Output Escaping
+- **ALL output MUST be escaped using appropriate WordPress functions**
+- **HTML**: `esc_html()`
+- **URLs**: `esc_url()`
+- **Attributes**: `esc_attr()`
+- **JavaScript**: `esc_js()`
+
+## Security Verification
+- **ALL form submissions MUST verify nonces**
+- **ALL AJAX requests MUST verify nonces**
+- **ALL conditionals MUST use Yoda conditions where possible**
+
+### Example Security Pattern
+```php
+if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'action_name' ) ) {
+    wp_send_json_error( array( 'message' => __( 'Security check failed.', 'wp-qr-trackr' ) ) );
+    return;
+}
+```
+
+---
+
+# Code Organization and Architecture
 
 ## File Organization Requirements
-- Class files MUST be prefixed with 'class-'
-- File names MUST use lowercase and hyphens, not underscores
-- File names MUST match class names
-- All files MUST have proper file-level docblocks with @package tags
+- **Class files MUST be prefixed with 'class-'**
+- **File names MUST use lowercase and hyphens, not underscores**
+- **File names MUST match class names**
+- **All files MUST have proper file-level docblocks with `@package` tags**
 
-## PHPCS Configuration Requirements
-- Memory limit MUST be at least 1GB (1024MB)
-- MUST use --extensions=php to avoid processing JS files
-- MUST configure proper exclusion patterns in .phpcs.xml
-- CI/CD MUST allow warnings but block on errors (--warning-severity=0)
-
-# Date and Time Standards
-- NEVER use hardcoded dates in documentation or comments
-- Use "current", "recent", or relative terms instead of specific dates
-- When specific dates are required, use dynamic date functions or placeholders
-- Examples:
-  - WRONG: "March 2024 Achievement" or "December 2023 Update"
-  - CORRECT: "Recent Achievement" or "Latest Achievement"
-  - WRONG: "As of January 2024" or "Since Q4 2023"
-  - CORRECT: "As of the latest update" or "Currently"
-- For code comments requiring dates, use current_time() or gmdate() functions
-- Documentation should use relative terms that don't become outdated
-
-# WordPress Rewrite Rules Best Practices
-- Rewrite rules must be registered on the 'init' hook to ensure WordPress's rewrite system is fully loaded.
-- Never attempt to add rewrite rules before WordPress is fully initialized (e.g., during plugins_loaded).
-- Always check is_admin() and wp_doing_ajax() before adding rewrite rules to prevent admin interference.
-- Use add_rewrite_rule() with 'top' priority for custom URL structures to ensure they take precedence.
-- Flush rewrite rules only during plugin activation/deactivation, not during normal operation.
-- Register query vars using the 'query_vars' filter before adding rewrite rules.
-- Use proper sanitization and escaping for all URL parameters and redirects.
-- Implement proper error handling for invalid or missing rewrite parameters.
-- Document all custom rewrite rules and their expected URL patterns.
-- Test rewrite rules in both pretty permalinks and default permalink settings.
-
-# Modular Setup Considerations
-- Major plugin logic should be separated into modules (e.g., admin, AJAX, rewrite, debug, utility) under an `includes/` directory.
-- The main plugin file should only bootstrap and require these modules, not contain business logic.
-- Each module should register its own hooks and handle a single concern (separation of concerns).
-- When adding new features, create a new module and require it in the main file.
-- Modularization improves maintainability, scalability, testability, and aligns with WordPress best practices.
-- Document the purpose of each module in the README and keep module boundaries clear.
-
-# Module Design Principles
-- Each module should have a clear, single responsibility
-- Modules should be loosely coupled and highly cohesive
-- Dependencies between modules should be explicit and documented
-- Each module should have its own error handling and logging
-- Modules should be independently testable
-- Module interfaces should be stable and well-documented
-- Changes to one module should not require changes to others
-- Each module should have clear entry and exit points
-
-# Module Organization
-- Core functionality modules should be loaded first
-- Feature modules should be loaded after core modules
-- UI/Admin modules should be loaded last
-- Module loading order should be documented
-- Each module should declare its dependencies
-- Circular dependencies between modules should be avoided
-- Module initialization should be explicit and controlled
-
-# Module Documentation
-- Each module must have a header comment describing its purpose
-- Module dependencies must be documented
-- Module hooks and filters must be documented
-- Module configuration options must be documented
-- Module error handling must be documented
-- Module testing requirements must be documented
-
-# Module Testing
-- Each module should have its own test suite
-- Module tests should be independent of other modules
-- Module tests should cover all public interfaces
-- Module tests should include error cases
-- Module tests should be automated
-- Module test coverage should be monitored
-- Module tests should be run before deployment
-
-# Module Security
-- Each module should validate its own input
-- Each module should sanitize its own output
-- Each module should handle its own permissions
-- Each module should log security events
-- Each module should have security tests
-- Each module should follow WordPress security best practices
-
-# Module Performance
-- Each module should be optimized for performance
-- Each module should implement caching where appropriate
-- Each module should minimize database queries
-- Each module should use WordPress transients for caching
-- Each module should profile its performance
-- Each module should document performance requirements
-
-# Contribution Workflow Standards
-- Every code change or new feature must be accompanied by updated documentation (e.g., README.md, inline comments).
-- All changes must be made on a feature branch and submitted via a pull request (PR) before merging to main.
-- PRs should not be merged unless documentation is up to date and reviewed.
-
-# Environment Variable Standards
-- Every time a new environment variable is added to provide dependencies or flexibility, the `config/.env.example` file must be updated to reflect the change.
-
-# Xdebug/PECL Homebrew Fix
-- Always run fix-pecl-xdebug.sh as part of the standard macOS (ARM and x86) setup to ensure Xdebug can be installed reliably with Homebrew PHP and PECL. This resolves symlink and permission issues common to both architectures.
-
-# PR Review Automation
-- Every pull request must include a summary comment detailing documentation and technical changes. If automated, use a one-line command with escaped newlines for the GitHub CLI (gh pr comment) to ensure proper formatting.
-
-# Cursor Project Rules
-
-# Linter Memory Limit
-linter_max_memory_mb = 1024  # Set linter max memory to 1GB (1024MB) instead of the default 512MB for this project.
-
-# WordPress PHP Indentation Rule
-All PHP files (except inline alignment in arrays/comments) must use tabs for indentation, not spaces. This is especially important for WordPress plugins.
-
-# Cursor Project Rules: WordPress Plugin Coding Standards (Enforced)
-
-# Security & Input Handling
-- All user input (e.g., $_POST, $_GET, $_SERVER) must be sanitized using wp_unslash() and the appropriate WordPress sanitization function (sanitize_text_field, esc_url_raw, intval, etc.) before use.
-- Never use raw superglobals in business logic or output.
-
-# Output Escaping
-- All output (HTML, attributes, URLs, translations, etc.) must be escaped using esc_html(), esc_url(), esc_attr(), or similar before rendering to the browser.
-
-# Yoda Conditions
-- All conditionals must use Yoda conditions and strict comparison (===, !==) where possible.
-
-# Comment Punctuation
-- All inline comments must end in a full-stop (period), exclamation mark, or question mark (PHPCS Error 426).
-- This applies to both single-line (//) and multi-line (/* */) inline comments.
-- Examples:
-  - Correct: // Initialize the database table.
-  - Correct: // Why is this value negative?
-  - Correct: // Database query completed successfully!
-  - Incorrect: // Initialize the database table
-  - Incorrect: // Set default value to null
-- Exception: Code reference comments that are part of a documented pattern do not require ending punctuation.
-  - Example: // ...existing code...
-  - Example: // @codeCoverageIgnore
-  - Example: // phpcs:ignore
-
-# Docblocks
-- All functions, classes, and files must have complete docblocks describing their purpose, parameters, and return values.
-
-# WordPress Standards
-- Use gmdate() instead of date() for timezone safety.
-- Use wp_json_encode() instead of json_encode() for outputting JSON.
-- Add PHPCS ignore comments for direct DB calls or debug-only error_log() only if absolutely necessary and document why.
-- All enqueued assets must have resource versioning for cache busting.
-
-# PHPCS & CI/CD
-- All code must pass PHPCS with the project .phpcs.xml before merging.
-- All code must pass CI/CD checks in GitHub Actions before merging.
-
-# Review & Automation
-- PR reviewers must check for these standards before approving.
-- Automated tools and pre-commit hooks should enforce these rules where possible.
-
-# Cursor Project Rule: Parallel Documentation Paths
-
-All major documentation files (README, CONTRIBUTING, TROUBLESHOOTING, etc.) must have parallel development and production versions (e.g., README.dev.md and README.prod.md). Both versions must be kept up to date, include all shared sections, and be referenced in the main README or project landing page. This ensures clarity for both development and production users and prevents environment-specific confusion.
-
-# Cursor Project Rule: Plugin-Based Database Migrations
-Always use plugin-based migration routines for database schema changes (never require manual SQL or WP-CLI for schema updates). All schema changes must be handled automatically on plugin activation or upgrade.
-
-# PHPCS Memory Requirement
-phpcs_min_memory_mb = 1024  # PHPCS requires at least 1GB of memory for this project. For large codebases, 4GB (4096MB) is recommended.
-
-# MCP Integration Rule
-# When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), Cursor and agents should use MCP APIs by default for documentation, repository, and cloud operations. This ensures consistent, secure, and agent-friendly workflows across all plugins and environments.
-
-# Playwright Dev-Only Rule
-Playwright is only installed and used in the dev Docker image (port 8080). It must not be present in production or nonprod images. Automated UI testing and screenshot capture are only supported in dev.
-
-# Platform-Specific Learnings and Best Practices (PHP/WordPress)
-- Always restrict PHPCS to PHP files using --extensions=php in CI/CD for all plugin development.
-- Use Cursor as an assistant for troubleshooting, configuration, and documentation.
-- Favor modular configuration (Docker, Composer, PHPCS, etc.) for maintainability and scalability.
-- Define and enforce best practices for development environments (memory, dependencies, code standards) from the start.
-
-# PHPCS Compliance Rules
-
-## Comment Standards
-- All inline comments must end in a full-stop (period), exclamation mark, or question mark (PHPCS Error 426).
-- This applies to both single-line (//) and multi-line (/* */) inline comments.
-- Examples:
-  - Correct: // Initialize the database table.
-  - Correct: // Why is this value negative?
-  - Correct: // Database query completed successfully!
-  - Incorrect: // Initialize the database table
-  - Incorrect: // Set default value to null
-- Exception: Code reference comments that are part of a documented pattern do not require ending punctuation.
-  - Example: // ...existing code...
-  - Example: // @codeCoverageIgnore
-  - Example: // phpcs:ignore
-
-## Database Query Standards
-- All SQL queries MUST use $wpdb->prepare() for any variables.
-- Table names MUST be constructed using {$wpdb->prefix}table_name format, not string concatenation.
-- Direct database queries require a phpcs:ignore comment explaining why they're necessary.
-- Example:
-  ```php
-  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, atomic operation required
-  $result = $wpdb->get_row(
-      $wpdb->prepare(
-          "SELECT * FROM {$wpdb->prefix}qr_code_links WHERE post_id = %d",
-          $post_id
-      )
-  );
-  ```
-
-## Input/Output Security
-- All user input MUST be sanitized using appropriate WordPress functions:
-  - Text: sanitize_text_field()
-  - URLs: esc_url_raw()
-  - HTML: wp_kses_post()
-  - Integers: absint() or intval()
-- All output MUST be escaped using appropriate WordPress functions:
-  - HTML: esc_html()
-  - URLs: esc_url()
-  - Attributes: esc_attr()
-  - JavaScript: esc_js()
-- Nonce verification is required for all form submissions and AJAX requests.
-- Example:
-  ```php
-  if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'action_name' ) ) {
-      wp_send_json_error( array( 'message' => __( 'Security check failed.', 'text-domain' ) ) );
-      return;
-  }
-  ```
-
-## Code Organization
-- Each file should contain only one class, function, or feature set.
-- Class files must be prefixed with 'class-'.
-- Interface files must be prefixed with 'interface-'.
-- Trait files must be prefixed with 'trait-'.
-- File names should use lowercase and hyphens (not underscores).
-- Example:
-  - Correct: class-qr-code-generator.php
-  - Incorrect: class_qr_code_generator.php
+## Module Design Principles
+- **Each module should have a clear, single responsibility**
+- **Modules should be loosely coupled and highly cohesive**
+- **Dependencies between modules should be explicit and documented**
+- **Each module should have its own error handling and logging**
+- **Modules should be independently testable**
 
 ## Function and Variable Naming
-- Function names must use lowercase letters and underscores.
-- Class methods should use camelCase.
-- Variables should use lowercase letters and underscores.
-- Global variables and functions must be prefixed with the plugin prefix.
-- Example:
-  ```php
-  function qr_trackr_generate_code() {
-      $post_id = get_the_ID();
-      $this->generateQRCode( $post_id );
-  }
-  ```
+- **Function names must use lowercase letters and underscores**
+- **Class methods should use camelCase**
+- **Variables should use lowercase letters and underscores**
+- **Global variables and functions must be prefixed with the plugin prefix**
 
-## Error Handling and Logging
-- All database operations must check for errors.
-- Use wp_error_log() for debug logging with descriptive messages.
-- Always return proper error responses for AJAX requests.
-- Example:
-  ```php
-  if ( false === $result ) {
-      error_log( sprintf(
-          'Database operation failed for post %d: %s',
-          $post_id,
-          $wpdb->last_error
-      ) );
-      return new WP_Error( 'db_error', __( 'Database operation failed.', 'text-domain' ) );
-  }
-  ```
+### Example Naming Pattern
+```php
+function qr_trackr_generate_code() {
+    $post_id = get_the_ID();
+    $this->generateQRCode( $post_id );
+}
+```
 
-## Code Documentation
-- All functions must have complete docblocks with @since, @param, and @return tags.
-- All classes must have complete docblocks with @package and @since tags.
-- All files must have a file-level docblock with @package tag.
-- Example:
-  ```php
-  /**
-   * Generates a QR code for the given post.
-   *
-   * @since 1.0.0
-   * @param int    $post_id The post ID to generate the code for.
-   * @param string $size    Optional. The size of the QR code. Default 'medium'.
-   * @return string|WP_Error The QR code URL or error object.
-   */
-  function qr_trackr_generate_code( $post_id, $size = 'medium' ) {
-  ```
+---
 
-## Performance Considerations
-- Implement caching for expensive operations.
-- Use transients for temporary data storage.
-- Minimize database queries by batching operations.
-- Example:
-  ```php
-  $cache_key = 'qr_code_' . $post_id;
-  $cached_value = wp_cache_get( $cache_key );
-  if ( false !== $cached_value ) {
-      return $cached_value;
-  }
-  // ... generate value ...
-  wp_cache_set( $cache_key, $value, '', 300 ); // Cache for 5 minutes
-  ```
+# Development Environment Standards
 
-## Internationalization
-- All user-facing strings must use translation functions.
-- Translation functions must include text domain.
-- Use proper escaping with translation functions.
-- Example:
-  ```php
-  // Correct
-  echo esc_html__( 'QR Code generated successfully.', 'wp-qr-trackr' );
-
-  // Incorrect
-  echo 'QR Code generated successfully.';
-  ```
-
-## PHPCS Ignore Comments
-- PHPCS ignore comments must include explanation.
-- Only ignore specific rules, not entire files.
-- Document why the rule is being ignored.
-- Example:
-  ```php
-  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, atomic operation required
-  ```
-
-# WordPress SQL Query Preparation Best Practices
-
-## Table Name Handling
-- Always store table names in variables with proper prefixes:
-  ```php
-  $table_name = $wpdb->prefix . 'my_table_name';
-  ```
-- Use double-quoted strings with curly braces for table names:
-  ```php
-  "SELECT * FROM {$table_name} WHERE id = %d"
-  ```
-- Never concatenate table names directly into queries
-
-## Query Preparation
-- Use simple placeholders (%s, %d) instead of complex ones (%1$s):
-  ```php
-  // Good
-  $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id = %d", $id );
-
-  // Bad
-  $wpdb->prepare( "SELECT * FROM {$table_name} WHERE id = %1$d", $id );
-  ```
-- For IN clauses, generate placeholders dynamically:
-  ```php
-  $placeholders = array_fill( 0, count( $ids ), '%d' );
-  $sql = "SELECT * FROM {$table_name} WHERE id IN (" . implode( ',', $placeholders ) . ')';
-  $wpdb->prepare( $sql, ...$ids );
-  ```
-
-## Order and Sort Parameters
-- Validate against whitelists before using in queries:
-  ```php
-  $valid_orderby = array( 'id', 'title', 'date' );
-  $orderby = in_array( $orderby, $valid_orderby, true ) ? $orderby : 'id';
-  ```
-- Use esc_sql() only for validated order/sort parameters:
-  ```php
-  $sql .= ' ORDER BY ' . esc_sql( $orderby ) . ' ' . esc_sql( $order );
-  ```
-
-## Dynamic WHERE Clauses
-- Build WHERE clauses with proper placeholders:
-  ```php
-  $where = '';
-  $where_values = array();
-  if ( ! empty( $search ) ) {
-      $where = 'title LIKE %s OR description LIKE %s';
-      $search_like = '%' . $wpdb->esc_like( $search ) . '%';
-      $where_values = array( $search_like, $search_like );
-  }
-  ```
-
-## Caching
-- Cache query results with appropriate timeouts:
-  ```php
-  $cache_key = 'prefix_query_' . md5( $query );
-  $results = wp_cache_get( $cache_key );
-  if ( false === $results ) {
-      $results = $wpdb->get_results( $sql );
-      wp_cache_set( $cache_key, $results, '', 300 ); // Cache for 5 minutes
-  }
-  ```
-
-## PHPCS Compliance
-- Add phpcs:ignore comments only when necessary and with explanations:
-  ```php
-  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-  ```
-- Never ignore SQL preparation warnings without proper handling
-- Use proper docblocks for all query-related methods:
-  ```php
-  /**
-   * Get items by search term.
-   *
-   * @param string $search Search term.
-   * @return array Array of items.
-   */
-  ```
-
-## Query Builder Pattern
-- Use dedicated query builder classes for complex queries
-- Separate SQL generation from execution
-- Return prepared queries rather than executing them directly
-- Document expected parameter types and formats
-
-## Error Handling
-- Always check for false/null return values from $wpdb methods
-- Log database errors with descriptive messages:
-  ```php
-  if ( false === $result ) {
-      error_log( sprintf(
-          'Database operation failed: %s',
-          $wpdb->last_error
-      ) );
-      return new WP_Error( 'db_error', __( 'Database operation failed.', 'text-domain' ) );
-  }
-  ```
-
-## Security
-- Never trust user input
-- Always use $wpdb->prepare() for queries with variables
-- Use wp_unslash() and appropriate sanitization functions for input:
-  ```php
-  $title = sanitize_text_field( wp_unslash( $_POST['title'] ) );
-  ```
-- Validate and sanitize all parameters before using in queries
-
-## Performance
-- Use LIMIT and OFFSET for pagination
-- Index frequently queried columns
-- Use JOINs sparingly and efficiently
-- Cache complex query results
-- Monitor query performance in debug logs
-
-## Testing
-- Write unit tests for query builders
-- Test edge cases with special characters
-- Test with different table prefixes
-- Test with large datasets for performance
-- Test error conditions and recovery
-
-## Documentation
-- Document table schemas
-- Document expected parameter formats
-- Document cache invalidation strategies
-- Document query builder usage examples
-- Keep inline comments for complex queries
-
-## Maintenance
-- Use version control for schema changes
-- Document database upgrades
-- Keep track of deprecated queries
-- Monitor query performance
-- Regular security audits
-
-These rules are based on lessons learned from implementing WordPress plugin database queries while maintaining PHPCS compliance and following WordPress coding standards.
-
-# Plugin Release Automation Rule
-
-## Command: "create plugin release for [plugin-name]"
-When the user issues the command "create plugin release for [plugin-name]" (e.g., "create plugin release for wp-qr-trackr"), automatically execute the following workflow using GitHub MCP and available tools:
-
-### 1. Pre-Release Validation
-- Verify the plugin directory exists and contains required files (main plugin file, README.md, CHANGELOG.md)
-- Check that the current working directory is clean (no uncommitted changes)
-- Validate that all required documentation is up to date
-
-### 2. Version Management
-- Read the current version from the main plugin file header
-- Increment the version number (patch version by default, unless specified)
-- Update version in all relevant files:
-  - Main plugin file header (Version: field)
-  - Plugin constants (if any)
-  - README.md (if version referenced)
-  - package.json/composer.json (if present)
-
-### 3. Documentation Updates
-- Update CHANGELOG.md with new version entry and current date
-- Ensure README.md reflects current features and version
-- Update any version-specific documentation
-- Generate/update any API documentation if applicable
-
-### 4. Code Quality Checks
-- Run PHPCS compliance check if .phpcs.xml exists
-- Run any configured tests (PHPUnit, etc.)
-- Verify no linting errors or critical issues
-
-### 5. Git Operations
-- Stage all changes: `git add .`
-- Commit with standardized message: `git commit -m "Release v[version]: [brief description]"`
-- Create annotated git tag: `git tag -a v[version] -m "Release v[version]"`
-- Push commits and tags: `git push origin main && git push origin v[version]`
-
-### 6. GitHub Release Creation
-- Use GitHub MCP to create a new release
-- Set release title: "v[version]"
-- Generate release notes from CHANGELOG.md or commit history
-- Mark as latest release
-- Include download links for plugin zip file
-
-### 7. Release Package Creation (if build script exists)
-- Execute build-release.sh if present
-- Create production-ready plugin zip file
-- Exclude development files (.git, node_modules, tests, etc.)
-- Upload as release asset to GitHub
-
-### 8. Post-Release Actions
-- Create a summary comment on the release with key changes
-- Update any deployment workflows or notifications
-- Log successful release completion
-
-### Error Handling
-- If any step fails, provide clear error message and rollback instructions
-- Preserve git history and don't force-push
-- Suggest manual intervention steps if automation fails
-
-### Example Usage
-User: "create plugin release for wp-qr-trackr"
-Assistant: Executes full release workflow for wp-qr-trackr plugin, incrementing from current version to next patch version, updating all documentation, committing, tagging, and creating GitHub release.
-
-### Customization Options
-- Allow version type specification: "create plugin release for wp-qr-trackr minor" (for minor version bump)
-- Support custom release notes: "create plugin release for wp-qr-trackr with notes 'Major security update'"
-- Enable pre-release flag: "create plugin release for wp-qr-trackr prerelease"
-
-# WP QR Trackr Development Standards
-
-## Development Environment Setup
-- Only Docker Desktop and Git are required on the host machine
-- All development must be done inside Docker containers
-- No local PHP, Composer, Node.js, or other tools should be installed
-- Use provided scripts for all operations
+## Docker-Based Development
+- **Only Docker Desktop and Git are required on the host machine**
+- **All development must be done inside Docker containers**
+- **No local PHP, Composer, Node.js, or other tools should be installed**
+- **Use provided scripts for all operations**
 
 ## Required Tools
 - Docker Desktop (latest)
 - Git
 - Terminal (macOS default terminal or iTerm2)
 
-## Prohibited Tools
-- Local PHP installation
-- Local Composer installation
-- Local Node.js/npm/yarn installation
-- Local WordPress installation
-- Manual PHPCS/PHPCBF installation
-
-## Development Workflow Scripts
-
-### Environment Setup
-- Use `scripts/check-onboarding.sh` to validate environment
-- Use `scripts/setup-wordpress.sh dev` to start development environment (port 8080)
-- Use `scripts/setup-wordpress.sh nonprod` to start testing environment (port 8081)
-
-### Code Validation
-- Use `make validate` or `docker compose run --rm ci-runner bash scripts/validate.sh`
-- Never run PHPCS, PHPCBF, or tests directly on host machine
-
-### Container Management
-- Use provided Docker Compose files only
-- Never modify container configurations directly
-- Use volume mounts defined in docker-compose.*.yml files
-
-### WordPress Configuration
-- Use WP-CLI through containers only
-- Never modify wp-config.php directly
-- Use environment variables in docker-compose files
-
-## Directory Structure
-- All plugin code must be in wp-content/plugins/wp-qr-trackr/
-- All development tools must be in Docker containers
-- All scripts must be in scripts/ directory
-
-## Testing Standards
-- All tests must run in ci-runner container
-- Use `make test` for running test suite
-- Use `make lint` for code style checks
-
-## Documentation Standards
-- All commands must reference provided scripts
-- No direct Docker commands in documentation
-- Always use relative paths from project root
-
-## Script Usage Examples
+## Environment Setup Commands
 ```bash
 # Check environment setup
 bash scripts/check-onboarding.sh
@@ -681,157 +230,340 @@ bash scripts/setup-wordpress.sh nonprod
 
 # Run all tests and validation
 make validate
-
-# Run specific tests in container
-docker compose run --rm ci-runner vendor/bin/phpunit
 ```
 
 ## Access URLs
-- Development: http://localhost:8080
-- Testing: http://localhost:8081
-- Admin credentials: trackr/trackr
+- **Development**: http://localhost:8080
+- **Testing**: http://localhost:8081
+- **Admin credentials**: trackr/trackr
 
-## Common Issues
-- If containers fail to start, check Docker Desktop is running
-- If plugin not found, check volume mounts
-- If tests fail, ensure running in ci-runner container
+## Critical Environment Configurations
+- **Upgrade directory permissions**: `chown -R www-data:www-data /var/www/html/wp-content/upgrade`
+- **Pretty permalinks**: `wp rewrite structure '/%postname%/'`
+- **Rewrite rules flush**: `wp rewrite flush --hard`
+- **Plugin activation verification**: `wp plugin list --name=wp-qr-trackr`
 
-## Prohibited Practices
-- Manual plugin installation through WordPress admin
-- Direct database manipulation
-- Local tool installation
-- Manual container configuration
-- Direct wp-config.php modification
+---
 
-## Best Practices
-- Always use provided scripts
-- Keep Docker Desktop updated
-- Use ci-runner for all development tasks
-- Follow WordPress coding standards
-- Use container shells for debugging
+# Testing and Quality Assurance
 
-## Maintenance
-- Keep scripts up to date
-- Document any script modifications
-- Test scripts in clean environment
-- Update documentation with script changes
+## Testing Standards
+- **All tests must run in ci-runner container**
+- **Use `make test` for running test suite**
+- **Use `make lint` for code style checks**
+- **All tests must be independent of other modules**
 
-# Cursor Project Rule: Yarn-Only Package Management
+## Code Quality Checks
+- **All code must pass PHPCS with the project `.phpcs.xml` before merging**
+- **All code must pass CI/CD checks in GitHub Actions before merging**
+- **Memory limit MUST be at least 1GB (1024MB) for PHPCS**
 
-- Only Yarn is allowed as the package manager for this project.
-- npm, npx, pnpm, and other package managers are prohibited in all scripts, Dockerfiles, and documentation.
-- All dependency installation, script execution, and package management must use Yarn exclusively.
-- All contributors and CI/CD must use Yarn for all Node.js workflows.
-- Any reference to npm, npx, or other package managers in code, scripts, or documentation is a violation of project policy.
+## Error Handling and Logging
+- **All database operations must check for errors**
+- **Use `wp_error_log()` for debug logging with descriptive messages**
+- **Always return proper error responses for AJAX requests**
 
-# PR Creation CLI Formatting Rule
-- When creating pull requests via CLI (e.g., gh pr create), always use single quotes for multi-line --body arguments, or escape newlines properly.
-- Never use unescaped double quotes for multi-line PR bodies, as this will trigger an interactive shell prompt (dquote>).
-- Example (correct):
-  gh pr create --title 'My PR Title' --body 'Line 1
+### Example Error Handling
+```php
+if ( false === $result ) {
+    error_log( sprintf(
+        'Database operation failed for post %d: %s',
+        $post_id,
+        $wpdb->last_error
+    ) );
+    return new WP_Error( 'db_error', __( 'Database operation failed.', 'wp-qr-trackr' ) );
+}
+```
+
+---
+
+# Documentation Standards
+
+## Code Documentation
+- **All functions must have complete docblocks with `@since`, `@param`, and `@return` tags**
+- **All classes must have complete docblocks with `@package` and `@since` tags**
+- **All files must have a file-level docblock with `@package` tag**
+
+### Example Docblock
+```php
+/**
+ * Generates a QR code for the given post.
+ *
+ * @since 1.0.0
+ * @param int    $post_id The post ID to generate the code for.
+ * @param string $size    Optional. The size of the QR code. Default 'medium'.
+ * @return string|WP_Error The QR code URL or error object.
+ */
+function qr_trackr_generate_code( $post_id, $size = 'medium' ) {
+```
+
+## Internationalization
+- **All user-facing strings must use translation functions**
+- **Translation functions must include text domain**
+- **Use proper escaping with translation functions**
+
+### Example Internationalization
+```php
+// Correct
+echo esc_html__( 'QR Code generated successfully.', 'wp-qr-trackr' );
+
+// Incorrect
+echo 'QR Code generated successfully.';
+```
+
+## Parallel Documentation Paths
+- **All major documentation files must have parallel development and production versions**
+- **Both versions must be kept up to date and include all shared sections**
+- **This ensures clarity for both development and production users**
+
+---
+
+# Release and Deployment
+
+## Plugin Release Automation
+When the command "create plugin release for [plugin-name]" is issued, automatically execute:
+
+### 1. Pre-Release Validation
+- Verify plugin directory exists with required files
+- Check for uncommitted changes
+- Validate documentation is up to date
+
+### 2. Version Management
+- Read current version from main plugin file header
+- Increment version number (patch by default)
+- Update version in all relevant files
+
+### 3. Documentation Updates
+- Update CHANGELOG.md with new version entry
+- Ensure README.md reflects current features
+- Update version-specific documentation
+
+### 4. Code Quality Checks
+- Run PHPCS compliance check
+- Run configured tests
+- Verify no linting errors
+
+### 5. Git Operations
+- Stage all changes: `git add .`
+- Commit with standardized message
+- Create annotated git tag
+- Push commits and tags
+
+### 6. GitHub Release Creation
+- Create new release via GitHub MCP
+- Set release title and notes
+- Mark as latest release
+- Include download links
+
+## Plugin-Based Database Migrations
+- **Always use plugin-based migration routines for database schema changes**
+- **Never require manual SQL or WP-CLI for schema updates**
+- **All schema changes must be handled automatically on plugin activation or upgrade**
+
+---
+
+# Tooling and Automation
+
+## Package Management
+- **Only Yarn is allowed as the package manager for this project**
+- **npm, npx, pnpm, and other package managers are prohibited**
+- **All dependency installation and script execution must use Yarn exclusively**
+
+## MCP Integration
+- **When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), use MCP APIs by default**
+- **This ensures consistent, secure, and agent-friendly workflows**
+- **Use for documentation, repository, and cloud operations**
+
+## PR Creation Standards
+- **When creating pull requests via CLI, always use single quotes for multi-line --body arguments**
+- **Never use unescaped double quotes for multi-line PR bodies**
+- **This ensures all PRs can be created non-interactively**
+
+### Example PR Creation
+```bash
+gh pr create --title 'My PR Title' --body 'Line 1
 
 Line 2
 
 Line 3' --base main --head my-feature-branch
-- Example (incorrect):
-  gh pr create --title "My PR Title" --body "Line 1
-Line 2" --base main --head my-feature-branch
-- This rule is enforced to ensure all PRs can be created non-interactively and reliably in automation and scripts.
-
-# PHPCS & WordPress Coding Standards Guardrails (Auto-Generated)
-
-## Inline Comments
-- All inline comments must end with a period, exclamation mark, or question mark.
-- Example: // This is a comment.
-
-## Docblocks
-- All files, classes, and functions must have complete docblocks with @package, @param, @return, and @throws (if applicable).
-- File-level docblocks must use /** ... */ style and include @package.
-
-## SQL Queries
-- All SQL queries must use $wpdb->prepare() with placeholders for variables.
-- Table names must be injected using {$wpdb->prefix}table_name, never direct interpolation.
-- Add PHPCS ignore comments with explanations only when absolutely necessary.
-
-## Error Logging
-- Do not use error_log() or print_r() in production code.
-- If used for debugging, add a PHPCS ignore comment with an explanation and remove before release.
-
-## Nonce Verification
-- All form data and AJAX requests must verify nonces before processing input.
-
-## Variable Naming
-- Object properties and variables must use snake_case.
-
-## Output Escaping & Input Sanitization
-- All output must be escaped using esc_html(), esc_url(), esc_attr(), etc.
-- All input must be sanitized using sanitize_text_field(), esc_url_raw(), absint(), etc.
-
-## Deprecated/Discouraged Patterns
-- Do not override WordPress globals (e.g., $table_prefix) directly.
-- Do not use ini_set('display_errors', 1); use WP_DEBUG_DISPLAY instead.
-
-## PHPCS Automation
-- Run PHPCS and PHPCBF in CI and local E2E workflows.
-- Auto-fix what can be fixed, and require manual review for the rest.
-
-# Critical Environment Configurations (MANDATORY)
-
-## Docker Environment Setup Requirements
-- **CRITICAL**: Every time a local testing environment is instantiated, the setup script MUST apply these configurations:
-  - Upgrade directory permissions: `chown -R www-data:www-data /var/www/html/wp-content/upgrade`
-  - Upgrade directory permissions: `chmod 775 /var/www/html/wp-content/upgrade`
-  - Uploads directory permissions: `chown -R www-data:www-data /var/www/html/wp-content/uploads`
-  - Plugins directory permissions: `chown -R www-data:www-data /var/www/html/wp-content/plugins`
-  - Pretty permalinks: `wp rewrite structure '/%postname%/'`
-  - Rewrite rules flush: `wp rewrite flush --hard`
-  - Plugin activation verification: `wp plugin list --name=wp-qr-trackr`
-
-## Why These Configurations Are Critical
-- **Plugin Updates**: Without correct upgrade directory permissions, WordPress cannot install plugin updates
-- **QR Code Redirects**: Pretty permalinks are REQUIRED for QR code redirect functionality
-- **File System Access**: Correct permissions prevent "Could not create directory" errors
-- **Rewrite Rules**: Plugin custom post types and redirects require flushed rewrite rules
-
-## Setup Script Integration
-- The `scripts/setup-wordpress.sh` script now includes `fix_critical_permissions()` function
-- This function is called automatically during environment setup
-- All environments (dev, nonprod, playwright) receive these configurations
-- Setup script provides verification output showing applied configurations
-
-## Manual Application (if needed)
-If setup script fails, manually apply these commands:
-```bash
-# Fix upgrade directory permissions
-docker compose -f docker/docker-compose.dev.yml exec --user root wordpress-dev chown -R www-data:www-data /var/www/html/wp-content/upgrade
-docker compose -f docker/docker-compose.dev.yml exec --user root wordpress-dev chmod 775 /var/www/html/wp-content/upgrade
-
-# Set pretty permalinks and flush rewrite rules
-docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp rewrite structure '/%postname%/' --path=/var/www/html
-docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp rewrite flush --hard --path=/var/www/html
 ```
 
-## Verification Commands
-After setup, verify configurations are correct:
-```bash
-# Check plugin status
-docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp plugin list --name=wp-qr-trackr
+## Date and Time Standards
+- **NEVER use hardcoded dates in documentation or comments**
+- **Use "current", "recent", or relative terms instead of specific dates**
+- **When specific dates are required, use dynamic date functions or placeholders**
+- **Documentation should use relative terms that don't become outdated**
 
-# Check permalink structure
-docker compose -f docker/docker-compose.dev.yml exec wpcli-dev wp option get permalink_structure --path=/var/www/html
+## Playwright Dev-Only Rule
+- **Playwright is only installed and used in the dev Docker image (port 8080)**
+- **It must not be present in production or nonprod images**
+- **Automated UI testing and screenshot capture are only supported in dev**
 
-# Check directory permissions
-docker compose -f docker/docker-compose.dev.yml exec wordpress-dev ls -la /var/www/html/wp-content/upgrade
+---
+
+# WordPress Rewrite Rules Best Practices
+
+## Rewrite Rule Registration
+- **Rewrite rules must be registered on the 'init' hook to ensure WordPress's rewrite system is fully loaded**
+- **Never attempt to add rewrite rules before WordPress is fully initialized**
+- **Always check `is_admin()` and `wp_doing_ajax()` before adding rewrite rules**
+
+## URL Structure and Priority
+- **Use `add_rewrite_rule()` with 'top' priority for custom URL structures**
+- **Flush rewrite rules only during plugin activation/deactivation, not during normal operation**
+- **Register query vars using the 'query_vars' filter before adding rewrite rules**
+
+## Security and Error Handling
+- **Use proper sanitization and escaping for all URL parameters and redirects**
+- **Implement proper error handling for invalid or missing rewrite parameters**
+- **Document all custom rewrite rules and their expected URL patterns**
+
+## Testing Requirements
+- **Test rewrite rules in both pretty permalinks and default permalink settings**
+- **Verify rewrite rules work with different permalink structures**
+- **Test edge cases with special characters and long URLs**
+
+---
+
+# Performance and Caching Standards
+
+## Database Query Optimization
+- **Use LIMIT and OFFSET for pagination**
+- **Index frequently queried columns**
+- **Use JOINs sparingly and efficiently**
+- **Cache complex query results**
+- **Monitor query performance in debug logs**
+
+## WordPress Caching
+- **Implement caching for expensive operations**
+- **Use transients for temporary data storage**
+- **Minimize database queries by batching operations**
+- **Cache invalidation must occur after database writes**
+
+### Example Caching Pattern
+```php
+$cache_key = 'qr_code_' . $post_id;
+$cached_value = wp_cache_get( $cache_key );
+if ( false !== $cached_value ) {
+    return $cached_value;
+}
+// ... generate value ...
+wp_cache_set( $cache_key, $value, '', 300 ); // Cache for 5 minutes
 ```
 
-## Failure Prevention
-- These configurations prevent the "Could not create directory" plugin update errors
-- They ensure QR code redirects work properly with pretty permalinks
-- They maintain consistent file system permissions across all environments
-- They verify plugin activation and rewrite rule functionality
+## Performance Monitoring
+- **Profile module performance**
+- **Document performance requirements**
+- **Monitor query performance**
+- **Use WordPress debug logging for performance analysis**
 
-## Development Workflow Integration
-- All new environment setups automatically include these configurations
-- CI/CD processes should verify these configurations are present
-- Documentation must reference these requirements for manual setups
-- Troubleshooting guides should include these configurations as first steps
+---
+
+# Maintenance and Best Practices
+
+## Version Control
+- **Use version control for schema changes**
+- **Document database upgrades**
+- **Keep track of deprecated queries**
+- **Monitor query performance**
+- **Regular security audits**
+
+## Code Maintenance
+- **Keep scripts up to date**
+- **Document any script modifications**
+- **Test scripts in clean environment**
+- **Update documentation with script changes**
+
+## Common Issues and Solutions
+- **If containers fail to start, check Docker Desktop is running**
+- **If plugin not found, check volume mounts**
+- **If tests fail, ensure running in ci-runner container**
+- **If rewrite rules don't work, verify pretty permalinks are enabled**
+
+## Prohibited Practices
+- **Manual plugin installation through WordPress admin**
+- **Direct database manipulation**
+- **Local tool installation**
+- **Manual container configuration**
+- **Direct wp-config.php modification**
+
+---
+
+# Control Script Enforcement
+
+## Core Principle
+- **ALL operations MUST use control scripts instead of direct Docker commands**
+- **This ensures dependency minimization and consistent development practices**
+- **No local PHP, Composer, Node.js, or other tools should be installed**
+
+## Mandatory Control Script Usage
+
+### Environment Setup
+- **Use `./scripts/setup-wordpress.sh dev` instead of direct Docker commands**
+- **Use `./scripts/setup-wordpress-enhanced.sh dev` for auto-recovery environments**
+- **Use `./scripts/manage-containers.sh start dev` for container management**
+
+### WordPress Operations
+- **Use `./scripts/wp-operations.sh dev plugin list` instead of `docker exec wordpress-dev wp plugin list`**
+- **Use `./scripts/wp-operations.sh dev core is-installed` instead of direct wp-cli commands**
+- **Use `./scripts/wp-operations.sh dev option get permalink_structure` for WordPress options**
+
+### Debug Operations
+- **Use `./scripts/debug.sh dev health` instead of manual container health checks**
+- **Use `./scripts/debug.sh dev diagnose` instead of manual troubleshooting**
+- **Use `./scripts/debug.sh dev wordpress` for WordPress status checks**
+
+### Code Validation
+- **Use `make validate` instead of direct PHPCS commands**
+- **Use `make lint` instead of direct linting commands**
+- **Use `make test` instead of direct PHPUnit commands**
+
+## Prohibited Direct Commands
+
+### ❌ Never Use These Direct Commands
+```bash
+# Direct Docker commands
+docker compose -f docker/docker-compose.dev.yml up -d
+docker exec wordpress-dev wp plugin list --path=/var/www/html
+docker exec wordpress-dev wp core is-installed --path=/var/www/html
+docker compose -f docker/docker-compose.dev.yml logs
+docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcs
+```
+
+### ✅ Always Use These Control Scripts
+```bash
+# Control script usage
+./scripts/setup-wordpress.sh dev
+./scripts/wp-operations.sh dev plugin list
+./scripts/wp-operations.sh dev core is-installed
+./scripts/manage-containers.sh logs dev
+make validate
+```
+
+## Makefile Integration
+- **Use `make wp-dev COMMAND="plugin list"` for WordPress operations**
+- **Use `make debug-dev COMMAND="health"` for debug operations**
+- **Use `make containers-dev COMMAND="start"` for container management**
+
+## Documentation Requirements
+- **All documentation MUST show control script usage**
+- **Never document direct Docker commands**
+- **Include control script examples in all guides**
+- **Reference `docs/dev-guide/COMMAND_REFERENCE.md` for complete command list**
+
+## Enforcement Mechanisms
+- **Pre-commit hooks check for control script usage**
+- **Code reviews verify control script compliance**
+- **Documentation reviews ensure proper command examples**
+- **CI/CD pipelines use control scripts exclusively**
+
+## Benefits of Control Script Enforcement
+1. **Consistency**: All developers use the same commands
+2. **Error Prevention**: Built-in validation and error handling
+3. **Dependency Minimization**: No local tools required
+4. **Maintainability**: Centralized command logic
+5. **Documentation**: Clear usage examples and help text
+
+---
+
+**This file is automatically validated and must be kept up to date with all project standards and Claude prompt engineering best practices.**
