@@ -9,6 +9,10 @@ if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
+// Load Select2 directly in the template.
+wp_enqueue_style('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array(), '4.1.0');
+wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array('jquery'), '4.1.0', true);
+
 // Handle form submission.
 if (isset($_POST['submit']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'qr_trackr_add_new')) {
 	$destination_url = isset($_POST['destination_url']) ? esc_url_raw(wp_unslash($_POST['destination_url'])) : '';
@@ -236,8 +240,8 @@ if (isset($_POST['submit']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sani
 								<th scope="row" style="width: 150px;"><?php esc_html_e('QR Code:', 'wp-qr-trackr'); ?></th>
 								<td>
 									<code style="font-size: 14px; background: #f9f9f9; padding: 8px; border-radius: 4px;">
-																<?php echo esc_html($created_qr['qr_code']); ?>
-															</code>
+																		<?php echo esc_html($created_qr['qr_code']); ?>
+																	</code>
 								</td>
 							</tr>
 
@@ -279,9 +283,9 @@ if (isset($_POST['submit']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sani
 							<tr>
 								<th scope="row"><?php esc_html_e('QR URL:', 'wp-qr-trackr'); ?></th>
 								<td>
-									<a href="<?php echo esc_url(home_url('/redirect/' . $created_qr['qr_code'])); ?>"
+									<a href="<?php echo esc_url(qr_trackr_get_redirect_url($created_qr['qr_code'])); ?>"
 										target="_blank" style="word-break: break-all;">
-										<?php echo esc_url(home_url('/redirect/' . $created_qr['qr_code'])); ?>
+										<?php echo esc_url(qr_trackr_get_redirect_url($created_qr['qr_code'])); ?>
 									</a>
 								</td>
 							</tr>
@@ -412,116 +416,90 @@ if (isset($_POST['submit']) && isset($_POST['_wpnonce']) && wp_verify_nonce(sani
 <script type="text/javascript">
 	(function ($) {
 		$(function () {
-			// Fallback: Load Select2 if not already loaded
-			if (typeof $.fn.select2 === 'undefined') {
-				console.log('Select2 not loaded, loading from CDN...');
-				// Load Select2 CSS
-				if (!$('link[href*="select2"]').length) {
-					$('<link>', {
-						rel: 'stylesheet',
-						type: 'text/css',
-						href: 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css'
-					}).appendTo('head');
-				}
-				// Load Select2 JS
-				$.getScript('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js')
-					.done(function () {
-						console.log('Select2 loaded successfully');
-						initializeSelect2();
-					})
-					.fail(function () {
-						console.error('Failed to load Select2');
-					});
-			} else {
-				console.log('Select2 already loaded');
-				initializeSelect2();
-			}
-
-			function initializeSelect2() {
-				// Initialize Select2 for the destination URL dropdown.
-				$('#destination_url').select2({
-					placeholder: '<?php echo esc_js(__('Search posts and pages...', 'wp-qr-trackr')); ?>',
-					allowClear: true,
-					ajax: {
-						url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
-						type: 'POST',
-						dataType: 'json',
-						delay: 250,
-						data: function (params) {
-							return {
-								action: 'qrc_search_posts',
-								term: params.term,
-								nonce: qr_trackr_ajax.nonce
-							};
-						},
-						processResults: function (data) {
-							var results = [];
-							if (data.success && data.data && data.data.posts) {
-								data.data.posts.forEach(function (post) {
-									results.push({
-										id: post.id, // Use post ID as the value
-										text: post.title + ' (' + post.type + ')',
-										url: post.url // Store URL as data attribute
-									});
-								});
-							}
-							return {
-								results: results
-							};
-						},
-						error: function (xhr, status, error) {
-							console.error('Select2 AJAX error:', { xhr: xhr, status: status, error: error });
-						},
-						cache: true
+			// Initialize Select2 for the destination URL dropdown.
+			$('#destination_url').select2({
+				placeholder: '<?php echo esc_js(__('Search posts and pages...', 'wp-qr-trackr')); ?>',
+				allowClear: true,
+				ajax: {
+					url: '<?php echo admin_url('admin-ajax.php'); ?>',
+					type: 'POST',
+					dataType: 'json',
+					delay: 250,
+					data: function (params) {
+						return {
+							action: 'qrc_search_posts',
+							search: params.term,
+							nonce: qr_trackr_ajax.nonce
+						};
 					},
-					minimumInputLength: 2
-				});
-
-				// Handle post selection from dropdown
-				$('#destination_url').on('select2:select', function (e) {
-					var data = e.params.data;
-					$('#post_id').val(data.id); // Store the post ID
-					$('#custom_destination_url').val(''); // Clear custom URL
-					$('#url-validation-error').hide(); // Hide validation error
-				});
-
-				// Handle clearing the dropdown
-				$('#destination_url').on('select2:clear', function (e) {
-					$('#post_id').val(''); // Clear post ID
-					$('#url-validation-error').hide(); // Hide validation error
-				});
-
-				// Handle custom URL input.
-				$('#custom_destination_url').on('input', function () {
-					if ($(this).val()) {
-						$('#destination_url').val('').trigger('change');
-						$('#post_id').val(''); // Clear post ID when custom URL is used
-						$('#url-validation-error').hide(); // Hide validation error
-					}
-				});
-
-				// Handle dropdown selection.
-				$('#destination_url').on('change', function () {
-					if ($(this).val()) {
-						$('#custom_destination_url').val('');
-						$('#url-validation-error').hide(); // Hide validation error
-					}
-				});
-
-				// Handle form submission
-				$('form').on('submit', function (e) {
-					var destinationUrl = $('#destination_url').val();
-					var customUrl = $('#custom_destination_url').val();
-					var postId = $('#post_id').val();
-
-					if (!destinationUrl && !customUrl) {
-						e.preventDefault(); // Prevent form submission
-						$('#url-validation-error').show(); // Show validation error
-						return false;
-					} else {
-						$('#url-validation-error').hide(); // Hide validation error
-					}
-				});
+					processResults: function (data) {
+						var results = [];
+						if (data.success && data.data && data.data.posts) {
+							data.data.posts.forEach(function (post) {
+								results.push({
+									id: post.id, // Use post ID as the value
+									text: post.title + ' (' + post.type + ')',
+									url: post.url // Store URL as data attribute
+								});
+							});
+						}
+						return {
+							results: results
+						};
+					},
+					error: function (xhr, status, error) {
+						console.error('Select2 AJAX error:', { xhr: xhr, status: status, error: error });
+					},
+					cache: true
+				},
+				minimumInputLength: 2
 			});
+
+			// Handle post selection from dropdown
+			$('#destination_url').on('select2:select', function (e) {
+				var data = e.params.data;
+				$('#post_id').val(data.id); // Store the post ID
+				$('#custom_destination_url').val(''); // Clear custom URL
+				$('#url-validation-error').hide(); // Hide validation error
+			});
+
+			// Handle clearing the dropdown
+			$('#destination_url').on('select2:clear', function (e) {
+				$('#post_id').val(''); // Clear post ID
+				$('#url-validation-error').hide(); // Hide validation error
+			});
+
+			// Handle custom URL input.
+			$('#custom_destination_url').on('input', function () {
+				if ($(this).val()) {
+					$('#destination_url').val('').trigger('change');
+					$('#post_id').val(''); // Clear post ID when custom URL is used
+					$('#url-validation-error').hide(); // Hide validation error
+				}
+			});
+
+			// Handle dropdown selection.
+			$('#destination_url').on('change', function () {
+				if ($(this).val()) {
+					$('#custom_destination_url').val('');
+					$('#url-validation-error').hide(); // Hide validation error
+				}
+			});
+
+			// Handle form submission
+			$('form').on('submit', function (e) {
+				var destinationUrl = $('#destination_url').val();
+				var customUrl = $('#custom_destination_url').val();
+				var postId = $('#post_id').val();
+
+				if (!destinationUrl && !customUrl) {
+					e.preventDefault(); // Prevent form submission
+					$('#url-validation-error').show(); // Show validation error
+					return false;
+				} else {
+					$('#url-validation-error').hide(); // Hide validation error
+				}
+			});
+		});
 	})(window.jQuery);
 </script>
