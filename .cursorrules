@@ -14,6 +14,7 @@
 9. [Release and Deployment](#release-and-deployment)
 10. [Tooling and Automation](#tooling-and-automation)
 11. [Control Script Enforcement](#control-script-enforcement)
+12. [WordPress Redirect Handling Standards](#wordpress-redirect-handling-standards)
 
 ---
 
@@ -422,6 +423,50 @@ Line 3' --base main --head my-feature-branch
 - **Test rewrite rules in both pretty permalinks and default permalink settings**
 - **Verify rewrite rules work with different permalink structures**
 - **Test edge cases with special characters and long URLs**
+
+---
+
+# WordPress Redirect Handling Standards
+
+## External URL Redirects: wp_safe_redirect() vs wp_redirect()
+
+### Critical Security Consideration
+- **`wp_safe_redirect()` blocks external redirects as a security measure to prevent redirect attacks**
+- **Use `wp_redirect()` for external URLs while maintaining proper URL escaping**
+- **Always use `esc_url_raw()` to sanitize URLs before redirecting**
+
+### Implementation Pattern
+```php
+// ❌ This blocks external redirects to external domains
+wp_safe_redirect(esc_url_raw($destination_url), 302);
+
+// ✅ This allows external redirects with proper sanitization
+wp_redirect(esc_url_raw($destination_url), 302);
+```
+
+### Security Best Practices
+- **Always validate that destination URLs are from trusted sources**
+- **Consider implementing a whitelist of allowed domains for production use**
+- **Use `esc_url_raw()` for URL sanitization before redirecting**
+- **Log redirect attempts for security monitoring**
+
+### Use Case Guidelines
+- **Internal redirects**: Use `wp_safe_redirect()` for same-domain redirects
+- **External redirects**: Use `wp_redirect()` for cross-domain redirects
+- **QR code redirects**: Use `wp_redirect()` since QR codes often redirect to external URLs
+- **Admin redirects**: Use `wp_safe_redirect()` for admin area redirects
+
+### Error Handling
+- **Always check if redirect was successful**
+- **Provide fallback behavior if redirect fails**
+- **Log redirect failures for debugging**
+- **Handle edge cases like malformed URLs**
+
+### Testing Requirements
+- **Test both internal and external redirect scenarios**
+- **Verify redirects work with various URL formats**
+- **Test security measures with malicious URL attempts**
+- **Validate redirect behavior across different WordPress configurations**
 
 ---
 
