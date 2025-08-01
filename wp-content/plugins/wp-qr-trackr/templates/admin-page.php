@@ -13,22 +13,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	// Debug logging using Query Monitor.
 if ( function_exists( 'do_action' ) ) {
-	do_action( 'qm_debug', 'QR Trackr: Admin page template loaded' );
+	do_action( 'qm/debug', 'QR Trackr: Admin page template loaded' );
 }
 
 // Check user capabilities.
 if ( ! current_user_can( 'manage_options' ) ) {
-	do_action( 'qm_error', 'QR Trackr: User does not have manage_options capability' );
+	do_action( 'qm/error', 'QR Trackr: User does not have manage_options capability' );
 	wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
 }
 
 // Ensure the list table is available.
 if ( ! isset( $list_table ) || ! is_object( $list_table ) ) {
-	do_action( 'qm_error', 'QR Trackr: List table not available', array( 'list_table' => $list_table ?? 'not set' ) );
+	do_action( 'qm/error', 'QR Trackr: List table not available', array( 'list_table' => $list_table ?? 'not set' ) );
 	wp_die( esc_html__( 'QR Trackr: List table not available.', 'wp-qr-trackr' ) );
 }
 
-	do_action( 'qm_debug', 'QR Trackr: About to display admin page content' );
+do_action( 'qm/debug', 'QR Trackr: About to display admin page content' );
 ?>
 
 <div class="wrap">
@@ -45,10 +45,10 @@ if ( ! isset( $list_table ) || ! is_object( $list_table ) ) {
 	<?php
 	// Display admin notices.
 	if ( function_exists( 'qrc_admin_notices' ) ) {
-		do_action( 'qm_debug', 'QR Trackr: Calling qrc_admin_notices' );
+		do_action( 'qm/debug', 'QR Trackr: Calling qrc_admin_notices' );
 		qrc_admin_notices();
 	} else {
-		do_action( 'qm_warning', 'QR Trackr: qrc_admin_notices function not found' );
+		do_action( 'qm/warning', 'QR Trackr: qrc_admin_notices function not found' );
 	}
 	?>
 
@@ -59,12 +59,12 @@ if ( ! isset( $list_table ) || ! is_object( $list_table ) ) {
 			wp_nonce_field( 'qr_trackr_admin_action', 'qr_trackr_nonce' );
 
 			// Display the list table.
-			do_action( 'qm_debug', 'QR Trackr: About to display list table' );
+			do_action( 'qm/debug', 'QR Trackr: About to display list table' );
 			try {
 				$list_table->display();
-				do_action( 'qm_debug', 'QR Trackr: List table displayed successfully' );
+				do_action( 'qm/debug', 'QR Trackr: List table displayed successfully' );
 			} catch ( Exception $e ) {
-				do_action( 'qm_error', 'QR Trackr: Error displaying list table', array( 'exception' => $e ) );
+				do_action( 'qm/error', 'QR Trackr: Error displaying list table', array( 'exception' => $e ) );
 				echo '<p>Error displaying QR codes list. Please check the logs.</p>';
 			}
 			?>
@@ -93,7 +93,7 @@ if ( ! isset( $list_table ) || ! is_object( $list_table ) ) {
 </div>
 
 <?php
-do_action( 'qm_debug', 'QR Trackr: Admin page template completed' );
+do_action( 'qm/debug', 'QR Trackr: Admin page template completed' );
 ?>
 
 <style>
