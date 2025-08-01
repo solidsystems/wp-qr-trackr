@@ -20,9 +20,9 @@ else
 fi
 
 # Install dependencies if needed
-if [ ! -d "vendor" ]; then
+if [ ! -d "vendor" ] || [ ! -f "vendor/bin/phpcs" ]; then
     echo "Installing Composer dependencies..."
-    composer install --no-interaction
+    composer install --no-interaction --prefer-dist
 fi
 
 if [ ! -d "node_modules" ]; then
