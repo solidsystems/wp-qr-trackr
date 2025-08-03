@@ -216,16 +216,18 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 	$qr_url    = get_transient( $cache_key );
 
 	if ( false === $qr_url ) {
-		// Build the query parameters for the QR code API.
+		// Use QR Server API (modern, reliable, free).
 		$api_params = array(
-			'cht'  => 'qr',
-			'chs'  => $args['size'] . 'x' . $args['size'],
-			'chl'  => rawurlencode( wp_kses( $data, array() ) ),
-			'choe' => 'UTF-8',
-			'chld' => $args['error_correction'] . '|' . $args['margin'],
+			'data'    => urlencode( $data ),
+			'size'    => $args['size'] . 'x' . $args['size'],
+			'format'  => 'png',
+			'ecc'     => $args['error_correction'],
+			'margin'  => $args['margin'],
+			'color'   => ltrim( $args['foreground_color'], '#' ),
+			'bgcolor' => ltrim( $args['background_color'], '#' ),
 		);
 
-		$api_url = add_query_arg( $api_params, 'https://chart.googleapis.com/chart' );
+		$api_url = add_query_arg( $api_params, 'https://api.qrserver.com/v1/create-qr-code/' );
 
 		// Verify the API response.
 		$response = wp_safe_remote_get( $api_url );
@@ -319,10 +321,57 @@ function qrc_generate_qr_code( $data, $args = array() ) {
  * @return string|WP_Error The URL of the generated QR code, or a WP_Error object on failure.
  */
 function qrc_generate_fallback_qr( $data, $args ) {
-	// Implementation of fallback QR code generation.
-	// This is a placeholder that should be replaced with actual fallback logic.
-	return new WP_Error(
-		'qrc_no_fallback',
-		esc_html__( 'Fallback QR code generation not implemented.', 'wp-qr-trackr' )
+	// Use GoQR.me API as fallback.
+	$api_params = array(
+		'data'   => urlencode( $data ),
+		'size'   => $args['size'] . 'x' . $args['size'],
+		'format' => 'png',
+		'ecc'    => $args['error_correction'],
+		'margin' => $args['margin'],
 	);
+
+	$api_url = add_query_arg( $api_params, 'https://api.qrserver.com/v1/create-qr-code/' );
+
+	// Try the fallback API.
+	$response = wp_safe_remote_get( $api_url );
+	if ( is_wp_error( $response ) ) {
+		return new WP_Error(
+			'qrc_fallback_error',
+			esc_html__( 'Fallback QR code generation failed.', 'wp-qr-trackr' )
+		);
+	}
+
+	$response_code = wp_remote_retrieve_response_code( $response );
+	if ( 200 !== $response_code ) {
+		return new WP_Error(
+			'qrc_fallback_error',
+			esc_html__( 'Fallback QR code generation failed.', 'wp-qr-trackr' )
+		);
+	}
+
+	// Save the QR code image.
+	$upload_dir = wp_upload_dir();
+	$qr_dir     = $upload_dir['basedir'] . '/qr-codes';
+	if ( ! file_exists( $qr_dir ) ) {
+		wp_mkdir_p( $qr_dir );
+	}
+
+	$filename  = sanitize_file_name( 'qr-fallback-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
+	$file_path = $qr_dir . '/' . $filename;
+	$qr_url    = $upload_dir['baseurl'] . '/qr-codes/' . $filename;
+
+	// Save the image using WP_Filesystem.
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	WP_Filesystem();
+	global $wp_filesystem;
+
+	$image_data = wp_remote_retrieve_body( $response );
+	if ( ! $wp_filesystem->put_contents( $file_path, $image_data, FS_CHMOD_FILE ) ) {
+		return new WP_Error(
+			'qrc_fallback_save_error',
+			esc_html__( 'Failed to save fallback QR code image.', 'wp-qr-trackr' )
+		);
+	}
+
+	return $qr_url;
 }
