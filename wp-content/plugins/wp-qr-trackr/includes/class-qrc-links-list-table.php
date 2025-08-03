@@ -245,8 +245,8 @@ class QRC_Links_List_Table extends WP_List_Table {
 				);
 			} else {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Cached immediately after query, needed for admin display.
-				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL is prepared with $wpdb->prepare().
-				$results = $wpdb->get_results( $wpdb->prepare( $sql ), ARRAY_A );
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Static SQL query without variables, no preparation needed.
+				$results = $wpdb->get_results( $sql, ARRAY_A );
 			}
 
 			// Check for database errors.
