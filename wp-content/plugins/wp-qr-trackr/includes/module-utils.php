@@ -144,7 +144,7 @@ function qr_trackr_generate_unique_qr_code( $length = 8 ) {
 			$code .= $characters[ wp_rand( 0, strlen( $characters ) - 1 ) ];
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Checking for uniqueness, minimal impact.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Uniqueness check in tight loop, caching not appropriate.
 		$exists = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table_name} WHERE qr_code = %s",

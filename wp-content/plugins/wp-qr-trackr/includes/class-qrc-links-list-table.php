@@ -92,11 +92,12 @@ class QRC_Links_List_Table extends WP_List_Table {
 	protected function referral_filter_dropdown() {
 		global $wpdb;
 
-		$table_name     = $wpdb->prefix . 'qr_trackr_links';
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Referral filter is admin-only and protected by capability checks.
 		$current_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
 
 		// Get unique referral codes.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admin filter dropdown, results cached.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Admin filter dropdown, results cached.
 		$referral_codes = $wpdb->get_col(
 			"SELECT DISTINCT referral_code FROM {$table_name} WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
 		);
@@ -198,6 +199,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$where_values = array();
 
 		// Handle search.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Search/filter forms are admin-only and protected by capability checks.
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 		if ( ! empty( $search ) ) {
 			$search_like   = '%' . $wpdb->esc_like( $search ) . '%';
@@ -206,6 +208,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 		}
 
 		// Handle referral code filter.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Referral filter is admin-only and protected by capability checks.
 		$referral_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
 		if ( ! empty( $referral_filter ) ) {
 			if ( ! empty( $where_clause ) ) {
@@ -235,13 +238,14 @@ class QRC_Links_List_Table extends WP_List_Table {
 			}
 
 			if ( ! empty( $where_values ) ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Cached immediately after query, needed for admin display.
 				$results = $wpdb->get_results(
 					$wpdb->prepare( $sql, $where_values ),
 					ARRAY_A
 				);
 			} else {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Cached immediately after query, needed for admin display.
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL is prepared with $wpdb->prepare().
 				$results = $wpdb->get_results( $wpdb->prepare( $sql ), ARRAY_A );
 			}
 
@@ -326,6 +330,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 				return $this->column_qr_code( $item );
 
 			default:
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r -- Debug output for unknown columns.
 				return print_r( $item, true );
 		}
 	}
