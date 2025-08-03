@@ -81,7 +81,7 @@ function qrc_activate() {
 	if ( $table_exists !== $table_name ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( 'QR Trackr activation: Failed to create table ' . $table_name . '. Last error: ' . $wpdb->last_error );
+			error_log( 'QR Trackr activation: Failed to create table ' . $table_name . '. Last error: ' . $wpdb->last_error );
 		}
 		// Set an option to indicate activation had issues.
 		update_option( 'qr_trackr_activation_error', 'Failed to create database table: ' . $table_name );
@@ -90,7 +90,7 @@ function qrc_activate() {
 		delete_option( 'qr_trackr_activation_error' );
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( 'QR Trackr activation: Table ' . $table_name . ' created successfully' );
+			error_log( 'QR Trackr activation: Table ' . $table_name . ' created successfully' );
 		}
 	}
 
@@ -142,7 +142,7 @@ function qr_trackr_maybe_upgrade_database() {
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( 'QR Trackr: Added common_name column to database' );
+			error_log( 'QR Trackr: Added common_name column to database' );
 		}
 	}
 
@@ -154,7 +154,7 @@ function qr_trackr_maybe_upgrade_database() {
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( 'QR Trackr: Added referral_code column to database' );
+			error_log( 'QR Trackr: Added referral_code column to database' );
 		}
 	}
 }

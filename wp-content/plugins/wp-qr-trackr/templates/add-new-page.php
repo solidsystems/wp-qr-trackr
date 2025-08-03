@@ -15,11 +15,11 @@ wp_enqueue_script( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/d
 
 // Handle form submission.
 if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'qr_trackr_add_new' ) ) {
-	$destination_url = isset( $_POST['destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['destination_url'] ) ) : '';
-	$custom_url      = isset( $_POST['custom_destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['custom_destination_url'] ) ) : '';
+	$destination_url  = isset( $_POST['destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['destination_url'] ) ) : '';
+	$custom_url       = isset( $_POST['custom_destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['custom_destination_url'] ) ) : '';
 	$selected_post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
-	$common_name     = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
-	$referral_code   = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+	$common_name      = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
+	$referral_code    = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
 
 	// Debug: Log form data.
 	error_log( 'QR Trackr: Form submission - destination_url: ' . $destination_url . ', custom_url: ' . $custom_url . ', post_id: ' . $selected_post_id );
