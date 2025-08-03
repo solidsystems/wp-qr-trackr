@@ -88,7 +88,9 @@ function qrc_get_all_links() {
 	if ( false === $links ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
 		$links = $wpdb->get_results(
-			"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` ORDER BY created_at DESC"
+			$wpdb->prepare(
+				"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` ORDER BY created_at DESC"
+			)
 		);
 
 		if ( $links ) {
@@ -216,7 +218,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 	if ( false === $qr_url ) {
 		// Use QR Server API (modern, reliable, free).
 		$api_params = array(
-			'data'    => rawurlencode( $data ),
+			'data'    => urlencode( $data ),
 			'size'    => $args['size'] . 'x' . $args['size'],
 			'format'  => 'png',
 			'ecc'     => $args['error_correction'],
@@ -231,7 +233,6 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 		$response = wp_safe_remote_get( $api_url );
 		if ( is_wp_error( $response ) ) {
 			// Log the error for debugging.
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log(
 				sprintf(
 					'QR Code API Error: %s (URL: %s).',
@@ -255,7 +256,6 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 		$response_code = wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $response_code ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log(
 				sprintf(
 					'QR Code API Error: HTTP %d (URL: %s).',
@@ -295,7 +295,6 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 		$image_data = wp_remote_retrieve_body( $response );
 		if ( ! $wp_filesystem->put_contents( $file_path, $image_data, FS_CHMOD_FILE ) ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( sprintf( 'Failed to save QR code image to %s.', $file_path ) );
 			return new WP_Error(
 				'qrc_save_error',
@@ -324,7 +323,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 function qrc_generate_fallback_qr( $data, $args ) {
 	// Use GoQR.me API as fallback.
 	$api_params = array(
-		'data'   => rawurlencode( $data ),
+		'data'   => urlencode( $data ),
 		'size'   => $args['size'] . 'x' . $args['size'],
 		'format' => 'png',
 		'ecc'    => $args['error_correction'],
