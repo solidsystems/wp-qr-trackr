@@ -491,6 +491,7 @@ function qrc_settings_page() {
  * @return void
  */
 function qrc_load_test_script() {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin-only function with capability check.
 	if ( isset( $_GET['test_qr'] ) && current_user_can( 'manage_options' ) ) {
 		include QR_TRACKR_PLUGIN_DIR . 'test-qr-generation.php';
 	}
@@ -629,11 +630,13 @@ function qrc_handle_delete_action() {
  */
 function qrc_admin_notices() {
 	// Check if we're on the QR codes page.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin notices display only, no sensitive data.
 	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] ) {
 		return;
 	}
 
 	// Display success message for deleted QR code.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin notices display only, no sensitive data.
 	if ( isset( $_GET['deleted'] ) && '1' === $_GET['deleted'] ) {
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'QR code deleted successfully.', 'wp-qr-trackr' ) . '</p></div>';
 	}

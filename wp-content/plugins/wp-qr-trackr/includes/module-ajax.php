@@ -121,7 +121,7 @@ function qrc_generate_qr_code_ajax() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented below, direct query needed for atomic operation.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic operation required, caching not applicable for single record lookup.
 	$existing_link = $wpdb->get_row(
 		$wpdb->prepare(
 			"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
@@ -208,7 +208,7 @@ function qrc_track_link_click_ajax() {
 	global $wpdb;
 
 	// Increment the access count and get destination URL in one query for efficiency.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic operation required, caching not applicable.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic operation required, caching not applicable for tracking.
 	$result = $wpdb->query(
 		$wpdb->prepare(
 			"UPDATE {$wpdb->prefix}qr_trackr_links SET access_count = access_count + 1, last_accessed = %s WHERE id = %d RETURNING destination_url AS url",
@@ -255,6 +255,7 @@ function qrc_search_posts_ajax() {
 	}
 
 	// Security check.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verification implemented with wp_verify_nonce() and capability check.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
