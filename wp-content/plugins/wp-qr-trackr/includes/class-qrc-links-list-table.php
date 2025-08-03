@@ -173,7 +173,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 	private function table_data() {
 		global $wpdb;
 
-		// Add Query Monitor logging
+		// Add Query Monitor logging.
 		if ( function_exists( 'do_action' ) ) {
 			do_action( 'qm_debug', 'QR Trackr: table_data() method called' );
 		}
@@ -242,7 +242,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 				);
 			} else {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query, needed for admin display.
-				$results = $wpdb->get_results( $sql, ARRAY_A );
+				$results = $wpdb->get_results( $wpdb->prepare( $sql ), ARRAY_A );
 			}
 
 			// Check for database errors.
