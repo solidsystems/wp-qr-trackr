@@ -19,10 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 		settings_fields( 'qr_trackr_settings' );
 
 		// Output setting sections and their fields.
-		do_settings_sections( 'qrc-settings' );  // Changed from qr_trackr_settings to qrc-settings
+		do_settings_sections( 'qr_trackr_settings' );
 
 		// Output save settings button.
 		submit_button( __( 'Save Settings', 'wp-qr-trackr' ) );
 		?>
 	</form>
-</div> 
+</div>
