@@ -180,7 +180,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 		$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-		// Check if table exists
+		// Check if table exists.
 		if ( function_exists( 'do_action' ) ) {
 			$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
 			do_action(
@@ -245,7 +245,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 				$results = $wpdb->get_results( $sql, ARRAY_A );
 			}
 
-			// Check for database errors
+			// Check for database errors.
 			if ( $wpdb->last_error ) {
 				if ( function_exists( 'do_action' ) ) {
 					do_action(
@@ -257,7 +257,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 						)
 					);
 				}
-				return array(); // Return empty array on error
+				return array(); // Return empty array on error.
 			}
 
 			if ( function_exists( 'do_action' ) ) {
