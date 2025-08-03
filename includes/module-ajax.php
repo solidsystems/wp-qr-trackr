@@ -256,12 +256,12 @@ add_action( 'wp_ajax_qrc_generate_qr_code', 'qrc_generate_qr_code_ajax' );
  */
 function qrc_track_link_click_ajax() {
 	// Security check.
-	if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'qrc_track_link' ) ) {
+	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qrc_track_link' ) ) {
 		wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ), 403 );
 	}
 
 	// Get and validate the link ID.
-	$link_id = isset( $_GET['link_id'] ) ? absint( $_GET['link_id'] ) : 0;
+	$link_id = isset( $_POST['link_id'] ) ? absint( $_POST['link_id'] ) : 0;
 	if ( ! $link_id ) {
 		wp_die( esc_html__( 'Invalid link ID.', 'wp-qr-trackr' ), 400 );
 	}
@@ -279,7 +279,8 @@ function qrc_track_link_click_ajax() {
 	);
 
 	if ( false === $result ) {
-		error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional debug logging.
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional debug logging.
+		error_log(
 			sprintf(
 				'Failed to track QR code click for link ID %d: %s',
 				$link_id,
@@ -313,12 +314,14 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
 	}
 
 	// Security check.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Nonce verification failed for qrc_search_posts_ajax' );
 		}
 		qr_trackr_log( 'Security check failed in search posts AJAX', 'error', array( 'nonce_provided' => isset( $_POST['nonce'] ) ) );

@@ -142,6 +142,7 @@ function qr_trackr_load_modules() {
 	// Check if includes directory exists.
 	$includes_dir = QR_TRACKR_PLUGIN_DIR . 'includes';
 	if ( ! file_exists( $includes_dir ) || ! is_dir( $includes_dir ) ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Critical error logging for missing includes directory.
 		error_log( 'QR Trackr: ERROR - Includes directory not found at: ' . $includes_dir );
 		add_action(
 			'admin_notices',

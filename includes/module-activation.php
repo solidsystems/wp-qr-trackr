@@ -70,6 +70,7 @@ function qrc_activate() {
 
 	// Log activation results for debugging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr activation: Table creation result: ' . wp_json_encode( $result ) );
 	}
 
@@ -79,6 +80,7 @@ function qrc_activate() {
 
 	if ( $table_exists !== $table_name ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr activation: Failed to create table ' . $table_name . '. Last error: ' . $wpdb->last_error );
 		}
 		// Set an option to indicate activation had issues.
@@ -87,6 +89,7 @@ function qrc_activate() {
 		// Clear any previous activation errors.
 		delete_option( 'qr_trackr_activation_error' );
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr activation: Table ' . $table_name . ' created successfully' );
 		}
 	}
@@ -129,6 +132,7 @@ function qr_trackr_maybe_upgrade_database() {
 		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY common_name (common_name)" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Added common_name column to database' );
 		}
 	}
@@ -140,6 +144,7 @@ function qr_trackr_maybe_upgrade_database() {
 		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY referral_code (referral_code)" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Added referral_code column to database' );
 		}
 	}
@@ -159,6 +164,7 @@ function qrc_deactivate() {
 		$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr deactivation: Dropped table ' . $table_name );
 		}
 	}
@@ -243,6 +249,7 @@ function qr_trackr_check_permalink_structure() {
 		update_option( 'qr_trackr_permalink_warning', $message );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr activation: Plain permalinks detected - QR code redirects will not work' );
 		}
 	} else {
@@ -250,6 +257,7 @@ function qr_trackr_check_permalink_structure() {
 		delete_option( 'qr_trackr_permalink_warning' );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr activation: Pretty permalinks detected - QR code redirects will work correctly' );
 		}
 	}
