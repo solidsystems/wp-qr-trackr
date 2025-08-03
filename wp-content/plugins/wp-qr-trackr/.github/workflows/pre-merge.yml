@@ -1,0 +1,16 @@
+name: Pre-Merge Checklist
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-summary-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reminder - Add PR Summary Comment
+        run: |
+          echo "Before merging, ensure you have posted a summary comment using scripts/pr-summary-comment.sh."
+          echo "Usage: ./scripts/pr-summary-comment.sh <PR_NUMBER> [SUMMARY_TEXT]"
+          echo "See .cursorrules for project requirements."
+          echo "This step is a reminder; the script must be run manually for now." 

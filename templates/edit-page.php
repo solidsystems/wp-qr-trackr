@@ -18,12 +18,12 @@ if ( ! $qr_code ) {
 }
 
 // Get current values.
-$common_name = esc_attr($qr_code->common_name ?? '');
-$referral_code = esc_attr($qr_code->referral_code ?? '');
-$destination_url = esc_url($qr_code->destination_url ?? '');
-$qr_code_id = esc_attr($qr_code->qr_code ?? '');
-$created_at = esc_html($qr_code->created_at ?? '');
-$scans = absint($qr_code->scans ?? $qr_code->access_count ?? 0);
+$common_name     = esc_attr( $qr_code->common_name ?? '' );
+$referral_code   = esc_attr( $qr_code->referral_code ?? '' );
+$destination_url = esc_url( $qr_code->destination_url ?? '' );
+$qr_code_id      = esc_attr( $qr_code->qr_code ?? '' );
+$created_at      = esc_html( $qr_code->created_at ?? '' );
+$scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 ?>
 
 <div class="wrap">
@@ -126,7 +126,7 @@ $scans = absint($qr_code->scans ?? $qr_code->access_count ?? 0);
 					<img src="<?php echo esc_url( $qr_code->qr_code_url ); ?>"
 						alt="<?php esc_attr_e( 'QR Code', 'wp-qr-trackr' ); ?>" style="max-width: 200px; height: auto;" />
 				</div>
-			<?php else: ?>
+			<?php else : ?>
 				<div class="qr-code-placeholder">
 					<p><?php esc_html_e( 'QR code image not available.', 'wp-qr-trackr' ); ?></p>
 				</div>

@@ -194,6 +194,7 @@ add_action( 'wp_ajax_qrc_generate_qr_code', 'qrc_generate_qr_code_ajax' );
  */
 function qrc_track_link_click_ajax() {
 	// Security check.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verification implemented above.
 	if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'qrc_track_link' ) ) {
 		wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ), 403 );
 	}
@@ -249,12 +250,14 @@ add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
 function qrc_search_posts_ajax() {
 	// Debug logging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
 	}
 
 	// Security check.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Nonce verification failed for qrc_search_posts_ajax' );
 		}
 		wp_send_json_error(
@@ -313,6 +316,7 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: Search results for term "' . $search_term . '": ' . count( $results ) . ' posts found' );
 	}
 

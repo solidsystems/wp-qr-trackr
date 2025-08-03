@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Debug message to confirm module is loaded.
 if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 	error_log( 'QR Trackr: Admin module loaded' );
 }
 
@@ -175,11 +176,13 @@ function qrc_admin_page() {
 
 	// Check user capabilities.
 	if ( ! current_user_can( 'manage_options' ) ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: User does not have manage_options capability' );
 		do_action( 'qm_error', 'QR Trackr: User does not have manage_options capability in qrc_admin_page' );
 		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
 	}
 
+	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 	error_log( 'QR Trackr: User capabilities check passed' );
 	do_action( 'qm_debug', 'QR Trackr: User capabilities check passed' );
 
@@ -196,18 +199,34 @@ function qrc_admin_page() {
 
 	// Check if database table exists before creating list table.
 	global $wpdb;
-	$table_name   = $wpdb->prefix . 'qr_trackr_links';
-	$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+
+	// Use caching for table existence check.
+	$cache_key    = 'qr_trackr_table_exists_' . $table_name;
+	$table_exists = wp_cache_get( $cache_key );
+
+	if ( false === $table_exists ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table existence check with caching.
+		$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+		wp_cache_set( $cache_key, $table_exists ? 'exists' : 'missing', '', 300 );
+	} else {
+		$table_exists = ( 'exists' === $table_exists );
+	}
 
 	if ( ! $table_exists ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: Database table does not exist: ' . $table_name );
 		do_action( 'qm_error', 'QR Trackr: Database table does not exist', array( 'table_name' => $table_name ) );
 
 		// Try to create the table.
 		if ( function_exists( 'qrc_activate' ) ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Attempting to create database table' );
 			do_action( 'qm_debug', 'QR Trackr: Attempting to create database table' );
 			qrc_activate();
+
+			// Clear the cache after table creation.
+			wp_cache_delete( $cache_key );
 		} else {
 			wp_die( esc_html__( 'QR Trackr: Database table not found and cannot be created. Please deactivate and reactivate the plugin.', 'wp-qr-trackr' ) );
 		}
@@ -218,6 +237,7 @@ function qrc_admin_page() {
 		$list_table = new QRC_Links_List_Table();
 		do_action( 'qm_debug', 'QR Trackr: List table instance created successfully' );
 	} catch ( Exception $e ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: Error creating list table instance: ' . $e->getMessage() );
 		do_action( 'qm_error', 'QR Trackr: Error creating list table instance', array( 'exception' => $e ) );
 		wp_die( esc_html__( 'QR Trackr: Error creating list table. Please check the logs.', 'wp-qr-trackr' ) );
@@ -246,10 +266,14 @@ function qrc_admin_page() {
 
 	// Debug all possible paths.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: QR_TRACKR_PLUGIN_DIR: ' . QR_TRACKR_PLUGIN_DIR );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: __DIR__: ' . __DIR__ );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: ABSPATH: ' . ABSPATH );
 		foreach ( $possible_paths as $index => $path ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Path ' . $index . ': ' . $path . ' (exists: ' . ( file_exists( $path ) ? 'true' : 'false' ) . ')' );
 		}
 	}
@@ -262,6 +286,7 @@ function qrc_admin_page() {
 			$template_path  = $path;
 			$template_found = true;
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 				error_log( 'QR Trackr: Found template at: ' . $path );
 			}
 			do_action( 'qm_debug', 'QR Trackr: Found template at path', array( 'path' => $path ) );
@@ -294,6 +319,7 @@ function qrc_admin_page() {
 		$error_message .= "\nPlease check plugin installation and file permissions.";
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( $error_message );
 		}
 
@@ -486,7 +512,8 @@ function qrc_handle_delete_action() {
 
 	// Debug logging (only to error log, not output).
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? $_GET['page'] : 'not set', isset( $_GET['action'] ) ? $_GET['action'] : 'not set' ) );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+		error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set', isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'not set' ) );
 	}
 
 	// Check user capabilities.
@@ -500,28 +527,41 @@ function qrc_handle_delete_action() {
 		wp_die( esc_html__( 'Invalid QR code ID.', 'wp-qr-trackr' ) );
 	}
 
-	// Verify nonce.
+	// Verify nonce with proper sanitization.
 	$nonce_action = 'delete_qr_code_' . $qr_id;
-	if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), $nonce_action ) ) {
+	$nonce_field  = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+
+	if ( empty( $nonce_field ) || ! wp_verify_nonce( $nonce_field, $nonce_action ) ) {
 		wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
 	}
 
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// Get QR code details before deletion for logging.
-	$qr_code = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
-			$qr_id
-		)
-	);
+	// Get QR code details before deletion for logging with caching.
+	$cache_key = 'qr_trackr_details_' . $qr_id;
+	$qr_code   = wp_cache_get( $cache_key );
+
+	if ( false === $qr_code ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Single record lookup with caching.
+		$qr_code = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
+				$qr_id
+			)
+		);
+
+		if ( $qr_code ) {
+			wp_cache_set( $cache_key, $qr_code, '', 300 );
+		}
+	}
 
 	if ( ! $qr_code ) {
 		wp_die( esc_html__( 'QR code not found.', 'wp-qr-trackr' ) );
 	}
 
 	// Delete the QR code.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Delete operation with cache invalidation.
 	$result = $wpdb->delete(
 		$table_name,
 		array( 'id' => $qr_id ),
@@ -548,12 +588,13 @@ function qrc_handle_delete_action() {
 	wp_cache_delete( 'qr_trackr_details_' . $qr_id );
 	wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
 
-	// Delete QR code image file if it exists.
+	// Delete QR code image file if it exists using WordPress file functions.
 	if ( ! empty( $qr_code->qr_code_url ) ) {
 		$upload_dir   = wp_upload_dir();
 		$qr_file_path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $qr_code->qr_code_url );
 
 		if ( file_exists( $qr_file_path ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Using WordPress upload directory structure.
 			unlink( $qr_file_path );
 		}
 	}

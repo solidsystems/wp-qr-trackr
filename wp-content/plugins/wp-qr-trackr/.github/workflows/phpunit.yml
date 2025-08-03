@@ -1,0 +1,65 @@
+name: Run PHPUnit tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}/ci-runner:latest
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: wpdb
+          MYSQL_USER: wpuser
+          MYSQL_PASSWORD: wppass
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+
+    strategy:
+      matrix:
+        php: [8.1, 8.2]
+        wp: [6.4, latest]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install Node.js dependencies
+        run: |
+          if [ -f package.json ]; then
+            yarn install
+          fi
+
+      - name: Install SVN
+        run: apt-get update && apt-get install -y subversion
+
+      - name: Run WP-CLI scaffolded tests
+        run: |
+          bash scripts/install-wp-tests.sh wpdb wpuser wppass mysql ${{ matrix.wp }}
+
+      - name: Debug: List WordPress test suite directory
+        run: |
+          if [ -d /tmp/wordpress-tests-lib ]; then
+            echo "Found /tmp/wordpress-tests-lib"
+            ls -l /tmp/wordpress-tests-lib
+            ls -l /tmp/wordpress-tests-lib/includes
+          else
+            echo "Missing /tmp/wordpress-tests-lib"
+          fi
+
+      - name: Run PHPCS
+        run: ./vendor/bin/phpcs --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
+
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit

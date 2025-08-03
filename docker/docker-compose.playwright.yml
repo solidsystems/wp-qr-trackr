@@ -61,4 +61,4 @@ services:
 
 volumes:
   wordpress_data:
-  db_data: 
+  db_data:

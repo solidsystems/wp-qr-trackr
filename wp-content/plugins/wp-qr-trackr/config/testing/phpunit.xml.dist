@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="wp-content/plugins/wp-qr-trackr/tests/phpunit/bootstrap.php"
+         colors="true"
+         verbose="true"
+         stopOnFailure="false"
+         stopOnError="false"
+         stopOnWarning="false"
+         failOnRisky="true"
+         failOnWarning="true"
+         failOnIncomplete="true"
+         failOnSkipped="false">
+    <testsuites>
+        <testsuite name="Plugin Unit Tests">
+            <directory>wp-content/plugins/wp-qr-trackr/tests/phpunit/</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="WP_TESTS_DIR" value="/tmp/wordpress-tests-lib"/>
+        <env name="WP_PLUGIN_DIR" value="/usr/src/app/wp-content/plugins"/>
+        <env name="WP_PLUGIN_FILE" value="wp-qr-trackr/wp-qr-trackr.php"/>
+    </php>
+</phpunit> 
