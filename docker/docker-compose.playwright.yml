@@ -52,7 +52,6 @@ services:
     volumes:
       - ../wp-content/plugins/wp-qr-trackr:/usr/src/app/wp-content/plugins/wp-qr-trackr
       - ../:/usr/src/app
-      - ../vendor:/usr/src/app/vendor
     depends_on:
       - wordpress-playwright
       - db-playwright

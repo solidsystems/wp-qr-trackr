@@ -43,8 +43,17 @@ RUN ls -l node_modules && ls -l node_modules/playwright || echo 'Playwright not 
 
 RUN composer install --prefer-dist --no-scripts
 
-# Copy the entire project (after dependencies are installed)
-COPY . .
+# Copy only the necessary project files (excluding vendor directory)
+# Copy core plugin files
+COPY wp-qr-trackr.php ./
+COPY includes/ ./includes/
+COPY templates/ ./templates/
+COPY config/ ./config/
+COPY scripts/ ./scripts/
+COPY ci.sh ./
+
+# Copy wp-content directory (excluding vendor)
+COPY wp-content/ ./wp-content/
 
 # Install dependencies in the plugin directory for E2E tests
 WORKDIR /usr/src/app/wp-content/plugins/wp-qr-trackr
