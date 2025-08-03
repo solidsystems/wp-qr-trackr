@@ -17,9 +17,6 @@ function qrc_init() {
 	add_filter( 'plugin_action_links_' . plugin_basename( QRC_PLUGIN_FILE ), 'qrc_add_settings_link' );
 
 	// Note: Activation and deactivation hooks are now handled in the main plugin file.
-
-	// Create QR code post type.
-	qrc_create_post_type();
 }
 
 /**
@@ -116,10 +113,10 @@ function qr_trackr_maybe_upgrade_database() {
 	$has_referral_code = false;
 
 	foreach ( $columns as $column ) {
-		if ( 'common_name' === $column->Field ) {
+		if ( 'common_name' === $column->field ) {
 			$has_common_name = true;
 		}
-		if ( 'referral_code' === $column->Field ) {
+		if ( 'referral_code' === $column->field ) {
 			$has_referral_code = true;
 		}
 	}
