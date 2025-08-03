@@ -157,7 +157,8 @@ function qrc_register_settings() {
 
 	// Debug output for troubleshooting.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'QR Trackr: qrc_register_settings() called' );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+	error_log( 'QR Trackr: qrc_register_settings() called' );
 	}
 
 	// Register a new settings section.
@@ -271,10 +272,14 @@ function qrc_admin_page() {
 
 	// Debug all possible paths.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: QR_TRACKR_PLUGIN_DIR: ' . QR_TRACKR_PLUGIN_DIR );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: __DIR__: ' . __DIR__ );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: ABSPATH: ' . ABSPATH );
 		foreach ( $possible_paths as $index => $path ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Path ' . $index . ': ' . $path . ' (exists: ' . ( file_exists( $path ) ? 'true' : 'false' ) . ')' );
 		}
 	}
@@ -285,7 +290,8 @@ function qrc_admin_page() {
 			$template_path  = $path;
 			$template_found = true;
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'QR Trackr: Found template at: ' . $path );
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+		error_log( 'QR Trackr: Found template at: ' . $path );
 			}
 			break;
 		}
@@ -310,7 +316,8 @@ function qrc_admin_page() {
 		$error_message .= "\nPlease check plugin installation and file permissions.";
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( $error_message );
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+		error_log( $error_message );
 		}
 
 		qr_trackr_log( 'Admin page template not found', 'error', array( 'attempted_paths' => $possible_paths ) );
@@ -538,6 +545,7 @@ function qrc_edit_page() {
  */
 function qrc_admin_enqueue_scripts( $hook ) {
 	// TEST: Log that this function is being called.
+	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 	error_log( 'QR Trackr: qrc_admin_enqueue_scripts called with hook: ' . $hook );
 
 	// Check if we're on a QR Trackr page by looking at the hook.
@@ -547,6 +555,7 @@ function qrc_admin_enqueue_scripts( $hook ) {
 	if ( ! in_array( $hook, $qr_trackr_hooks, true ) && strpos( $hook, 'qr-code' ) === false ) {
 		// Check if we are on a QR Trackr page by looking at the hook.
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( sprintf( 'QR Trackr: Script not loaded - not a QR Trackr page: %s', $hook ) );
 		}
 		return;
@@ -555,6 +564,7 @@ function qrc_admin_enqueue_scripts( $hook ) {
 	// Enqueue Select2 from CDN for the add-new page.
 	if ( $hook === 'qr-code-links_page_qr-code-add-new' ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Loading Select2 for add-new page' );
 		}
 		wp_enqueue_style( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array(), '4.1.0' );
@@ -563,6 +573,7 @@ function qrc_admin_enqueue_scripts( $hook ) {
 
 	// Enqueue our custom admin script.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( sprintf( 'QR Trackr: Enqueuing admin script for hook: %s', $hook ) );
 	}
 
@@ -689,19 +700,22 @@ function qrc_register_admin_hooks() {
 	// Register admin menu items.
 	add_action( 'admin_menu', 'qrc_admin_menu' );
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'QR Trackr: Added admin_menu action' );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+	error_log( 'QR Trackr: Added admin_menu action' );
 	}
 
 	// Register settings.
 	add_action( 'admin_init', 'qrc_register_settings' );
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'QR Trackr: Added admin_init action' );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+	error_log( 'QR Trackr: Added admin_init action' );
 	}
 
 	// Enqueue admin scripts and styles.
 	add_action( 'admin_enqueue_scripts', 'qrc_admin_enqueue_scripts' );
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( 'QR Trackr: Added admin_enqueue_scripts action' );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+	error_log( 'QR Trackr: Added admin_enqueue_scripts action' );
 	}
 }
 
@@ -713,21 +727,22 @@ function qrc_register_admin_hooks() {
  */
 function qrc_handle_delete_action() {
 	// Check if we're on the QR codes page and action is delete.
-	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] || ! isset( $_GET['action'] ) || 'delete' !== $_GET['action'] ) {
+	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== sanitize_text_field( wp_unslash( $_GET['page'] ) ) || ! isset( $_GET['action'] ) || 'delete' !== sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 		return;
 	}
 
 	qr_trackr_log_page_load(
 		'delete_action',
 		array(
-			'page'   => $_GET['page'],
-			'action' => $_GET['action'],
+			'page'   => sanitize_text_field( wp_unslash( $_GET['page'] ) ),
+			'action' => sanitize_text_field( wp_unslash( $_GET['action'] ) ),
 		)
 	);
 
 	// Debug logging (only to error log, not output).
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? $_GET['page'] : 'not set', isset( $_GET['action'] ) ? $_GET['action'] : 'not set' ) );
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+		error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set', isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'not set' ) );
 	}
 
 	// Check user capabilities.
@@ -874,17 +889,17 @@ function qrc_handle_delete_action() {
  */
 function qrc_admin_notices() {
 	// Check if we're on the QR codes page.
-	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] ) {
+	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== sanitize_text_field( wp_unslash( $_GET['page'] ) ) ) {
 		return;
 	}
 
 	// Display success message for deleted QR code.
-	if ( isset( $_GET['deleted'] ) && '1' === $_GET['deleted'] ) {
+	if ( isset( $_GET['deleted'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['deleted'] ) ) ) {
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'QR code deleted successfully.', 'wp-qr-trackr' ) . '</p></div>';
 	}
 
 	// Display success message for updated QR code.
-	if ( isset( $_GET['updated'] ) && '1' === $_GET['updated'] ) {
+	if ( isset( $_GET['updated'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['updated'] ) ) ) {
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'QR code updated successfully.', 'wp-qr-trackr' ) . '</p></div>';
 	}
 }
