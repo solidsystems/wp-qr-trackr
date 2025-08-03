@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP QR Trackr
  * Description: A comprehensive QR code generation and tracking plugin for WordPress with analytics, custom styling, and advanced management features.
- * Version: 1.2.41
+ * Version: 1.2.39
  * Author: Solid Systems
  * Author URI: https://solidsystems.io
  * Plugin URI: https://github.com/solidsystems/wp-qr-trackr
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'QR_TRACKR_VERSION', '1.2.41' );
+define( 'QR_TRACKR_VERSION', '1.2.39' );
 define( 'QR_TRACKR_PLUGIN_FILE', __FILE__ );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -74,6 +74,18 @@ function qr_trackr_init_plugin() {
 	if ( file_exists( $autoloader ) ) {
 		require_once $autoloader;
 	}
+
+	// Register query var first.
+	add_filter(
+		'query_vars',
+		function ( $vars ) {
+			if ( ! in_array( 'qr_tracking_code', $vars, true ) ) {
+				$vars[] = 'qr_tracking_code';
+			}
+			return $vars;
+		},
+		1
+	);
 
 	// Load plugin modules safely with file existence checks.
 	$modules = array(
@@ -136,13 +148,15 @@ function qr_trackr_load_modules() {
 
 	// Prevent double loading.
 	if ( $loaded ) {
+		error_log( 'QR Trackr: Modules already loaded, skipping.' );
 		return;
 	}
+
+	error_log( 'QR Trackr: Loading core modules on hook: ' . current_filter() );
 
 	// Check if includes directory exists.
 	$includes_dir = QR_TRACKR_PLUGIN_DIR . 'includes';
 	if ( ! file_exists( $includes_dir ) || ! is_dir( $includes_dir ) ) {
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Critical error logging for missing includes directory.
 		error_log( 'QR Trackr: ERROR - Includes directory not found at: ' . $includes_dir );
 		add_action(
 			'admin_notices',
@@ -176,7 +190,7 @@ function qr_trackr_load_modules() {
 		$module_path = $includes_dir . '/' . $module;
 		if ( ! file_exists( $module_path ) ) {
 			$missing_modules[] = $module;
-
+			error_log( 'QR Trackr: ERROR - Required module not found: ' . $module . ' at path: ' . $module_path );
 		}
 	}
 
@@ -199,19 +213,28 @@ function qr_trackr_load_modules() {
 	// Load core modules.
 	foreach ( $core_modules as $module ) {
 		$module_path = $includes_dir . '/' . $module;
+		error_log( 'QR Trackr: Loading module: ' . $module );
 		require_once $module_path;
+		error_log( 'QR Trackr: Successfully loaded: ' . $module );
 	}
+
+	// Log WordPress state.
+	error_log( 'QR Trackr: WordPress state - is_admin(): ' . ( is_admin() ? 'true' : 'false' ) );
+	error_log( 'QR Trackr: WordPress state - current_user_can(manage_options): ' . ( current_user_can( 'manage_options' ) ? 'true' : 'false' ) );
+	error_log( 'QR Trackr: WordPress state - get_current_user_id(): ' . get_current_user_id() );
 
 	$loaded = true;
 }
 
 // Only load modules on plugins_loaded hook with high priority.
 add_action( 'plugins_loaded', 'qr_trackr_load_modules', 5 );
+error_log( 'QR Trackr: Added plugins_loaded action for module loading' );
 
 /**
  * Initialize the plugin
  */
 function qr_trackr_init() {
+	error_log( 'QR Trackr: Plugin initialization started' );
 
 	// Load translations.
 	load_plugin_textdomain( 'wp-qr-trackr', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
@@ -222,6 +245,7 @@ function qr_trackr_init() {
 
 // Add init hook with high priority.
 add_action( 'init', 'qr_trackr_init', 5 );
+error_log( 'QR Trackr: Added init action for plugin initialization' );
 
 // Remove old action to prevent double loading.
 remove_action( 'plugins_loaded', 'qr_trackr_init_plugin' );
@@ -232,3 +256,84 @@ add_action( 'plugins_loaded', 'qr_trackr_init_plugin', 5 );
 // Register activation and deactivation hooks.
 register_activation_hook( QR_TRACKR_PLUGIN_FILE, 'qr_trackr_activate_plugin' );
 register_deactivation_hook( QR_TRACKR_PLUGIN_FILE, 'qr_trackr_deactivate_plugin' );
+
+// Register query var early.
+add_action(
+	'init',
+	function () {
+		global $wp;
+		if ( isset( $wp->public_query_vars ) ) {
+			if ( ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+				$wp->public_query_vars[] = 'qr_tracking_code';
+
+				if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+					error_log( 'QR Trackr: Added qr_tracking_code to public_query_vars directly' );
+				}
+			}
+		}
+	},
+	1
+);
+
+// Ensure query var is registered.
+add_filter(
+	'query_vars',
+	function ( $vars ) {
+		if ( ! in_array( 'qr_tracking_code', $vars, true ) ) {
+			$vars[] = 'qr_tracking_code';
+
+			if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+				error_log( 'QR Trackr: Added qr_tracking_code via query_vars filter' );
+			}
+		}
+		return $vars;
+	},
+	1
+);
+
+// Add a late check to ensure query var is registered.
+add_action(
+	'wp_loaded',
+	function () {
+		global $wp;
+		if ( isset( $wp->public_query_vars ) && ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+			$wp->public_query_vars[] = 'qr_tracking_code';
+
+			if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+				error_log( 'QR Trackr: Late registration of qr_tracking_code query var' );
+			}
+		}
+	},
+	1
+);
+
+// Add a very late check to ensure query var is registered.
+add_action(
+	'parse_request',
+	function ( $wp ) {
+		if ( ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+			$wp->public_query_vars[] = 'qr_tracking_code';
+
+			if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+				error_log( 'QR Trackr: Very late registration of qr_tracking_code query var' );
+			}
+		}
+	},
+	1
+);
+
+// Add a final check to ensure query var is registered.
+add_action(
+	'wp',
+	function () {
+		global $wp;
+		if ( isset( $wp->public_query_vars ) && ! in_array( 'qr_tracking_code', $wp->public_query_vars, true ) ) {
+			$wp->public_query_vars[] = 'qr_tracking_code';
+
+			if ( defined( 'QR_TRACKR_DEBUG' ) && QR_TRACKR_DEBUG ) {
+				error_log( 'QR Trackr: Final registration of qr_tracking_code query var' );
+			}
+		}
+	},
+	1
+);
