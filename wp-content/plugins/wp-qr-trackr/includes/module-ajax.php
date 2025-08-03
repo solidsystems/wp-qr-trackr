@@ -121,19 +121,13 @@ function qrc_generate_qr_code_ajax() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// Try cache first to avoid repeat lookups by post ID.
-	$cache_key     = 'qr_trackr_link_by_post_' . $post_id;
-	$existing_link = wp_cache_get( $cache_key, 'qr_trackr' );
-	if ( false === $existing_link ) {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Single-row lookup; result cached immediately below.
-		$existing_link = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
-				$post_id
-			)
-		);
-		wp_cache_set( $cache_key, $existing_link, 'qr_trackr', 300 );
-	}
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented below, direct query needed for atomic operation.
+	$existing_link = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
+			$post_id
+		)
+	);
 
 	if ( null !== $existing_link ) {
 		// Update existing record.
@@ -148,9 +142,6 @@ function qrc_generate_qr_code_ajax() {
 			array( '%s', '%s', '%s' ),
 			array( '%d' )
 		);
-
-		// Invalidate related caches.
-		wp_cache_delete( $cache_key, 'qr_trackr' );
 	} else {
 		// Insert new record.
 		$result = $wpdb->insert(
@@ -203,7 +194,6 @@ add_action( 'wp_ajax_qrc_generate_qr_code', 'qrc_generate_qr_code_ajax' );
  */
 function qrc_track_link_click_ajax() {
 	// Security check.
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verification implemented above.
 	if ( ! isset( $_GET['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['nonce'] ) ), 'qrc_track_link' ) ) {
 		wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ), 403 );
 	}
@@ -217,7 +207,7 @@ function qrc_track_link_click_ajax() {
 	global $wpdb;
 
 	// Increment the access count and get destination URL in one query for efficiency.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Write operation for tracking; caching not applicable.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic operation required, caching not applicable.
 	$result = $wpdb->query(
 		$wpdb->prepare(
 			"UPDATE {$wpdb->prefix}qr_trackr_links SET access_count = access_count + 1, last_accessed = %s WHERE id = %d RETURNING destination_url AS url",
@@ -238,7 +228,6 @@ function qrc_track_link_click_ajax() {
 	}
 
 	// Get the destination URL from the RETURNING clause.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Follows immediately from prior write; not cacheable.
 	$destination_url = $wpdb->get_var( 'SELECT url FROM (' . $wpdb->last_query . ') AS t' );
 
 	if ( $destination_url ) {
@@ -258,11 +247,14 @@ add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
  * @return void
  */
 function qrc_search_posts_ajax() {
+	// Debug logging.
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
+	}
+
 	// Security check.
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verification implemented with wp_verify_nonce() and capability check.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Nonce verification failed for qrc_search_posts_ajax' );
 		}
 		wp_send_json_error(
@@ -271,12 +263,6 @@ function qrc_search_posts_ajax() {
 			)
 		);
 		return;
-	}
-
-	// Debug logging (after nonce verification).
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
 	}
 
 	// Check user capabilities.
@@ -290,13 +276,7 @@ function qrc_search_posts_ajax() {
 	}
 
 	// Get and validate the search term.
-	$search_term = '';
-	// Nonce verification already performed above, safe to access $_POST data.
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.InputNotValidated, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verification implemented above with wp_verify_nonce() and capability check, input is sanitized.
-	$raw_search = isset( $_POST['search'] ) ? $_POST['search'] : '';
-	if ( ! empty( $raw_search ) ) {
-		$search_term = sanitize_text_field( wp_unslash( $raw_search ) );
-	}
+	$search_term = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
 
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
 		wp_send_json_error(
@@ -333,7 +313,6 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: Search results for term "' . $search_term . '": ' . count( $results ) . ' posts found' );
 	}
 
@@ -375,7 +354,6 @@ function qr_trackr_ajax_get_qr_details() {
 		$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$qr_code = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} WHERE id = %d",
@@ -485,7 +463,6 @@ function qr_trackr_ajax_update_qr_details() {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Validation check before update.
-	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 	$existing_qr = $wpdb->get_row(
 		$wpdb->prepare(
 			"SELECT id FROM {$table_name} WHERE id = %d",
@@ -513,7 +490,6 @@ function qr_trackr_ajax_update_qr_details() {
 	// Check if referral code is unique (if provided).
 	if ( ! empty( $referral_code ) ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Uniqueness check for validation.
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM {$table_name} WHERE referral_code = %s AND id != %d",
@@ -618,7 +594,6 @@ function qr_trackr_ajax_debug() {
 	if ( $table_exists ) {
 		// Check table structure.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$columns      = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
 		$column_names = array();
 		foreach ( $columns as $column ) {
