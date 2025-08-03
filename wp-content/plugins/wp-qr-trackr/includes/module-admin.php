@@ -168,7 +168,7 @@ function qrc_admin_page() {
 		qr_trackr_debug_log( 'QR Trackr: qrc_admin_page() called' );
 	}
 
-	// Add Query Monitor logging
+	// Add Query Monitor logging.
 	if ( function_exists( 'do_action' ) ) {
 		do_action( 'qm_debug', 'QR Trackr: qrc_admin_page() function called' );
 	}
@@ -194,7 +194,7 @@ function qrc_admin_page() {
 
 	do_action( 'qm_debug', 'QR Trackr: About to create list table instance' );
 
-	// Check if database table exists before creating list table
+	// Check if database table exists before creating list table.
 	global $wpdb;
 	$table_name   = $wpdb->prefix . 'qr_trackr_links';
 	$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
@@ -203,7 +203,7 @@ function qrc_admin_page() {
 		error_log( 'QR Trackr: Database table does not exist: ' . $table_name );
 		do_action( 'qm_error', 'QR Trackr: Database table does not exist', array( 'table_name' => $table_name ) );
 
-		// Try to create the table
+		// Try to create the table.
 		if ( function_exists( 'qrc_activate' ) ) {
 			error_log( 'QR Trackr: Attempting to create database table' );
 			do_action( 'qm_debug', 'QR Trackr: Attempting to create database table' );
@@ -480,7 +480,7 @@ function qrc_load_test_script() {
  */
 function qrc_handle_delete_action() {
 	// Check if we're on the QR codes page and action is delete.
-	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== $_GET['page'] || ! isset( $_GET['action'] ) || 'delete' !== $_GET['action'] ) {
+	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== sanitize_text_field( wp_unslash( $_GET['page'] ) ) || ! isset( $_GET['action'] ) || 'delete' !== sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 		return;
 	}
 
