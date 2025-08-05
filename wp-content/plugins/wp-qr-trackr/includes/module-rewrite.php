@@ -284,6 +284,7 @@ function qr_trackr_update_scan_count_immediate( $link_id ) {
 
 	// Update both access_count and scans for compatibility, set last_accessed timestamp.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Write operation, caching not applicable.
+	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 	$result = $wpdb->query(
 		$wpdb->prepare(
 			"UPDATE {$table_name} SET access_count = access_count + 1, scans = scans + 1, last_accessed = %s, updated_at = %s WHERE id = %d",

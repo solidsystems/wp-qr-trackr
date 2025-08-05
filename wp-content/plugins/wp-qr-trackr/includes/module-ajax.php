@@ -602,6 +602,7 @@ function qr_trackr_ajax_debug() {
 	if ( $table_exists ) {
 		// Check table structure.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$columns      = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
 		$column_names = array();
 		foreach ( $columns as $column ) {
