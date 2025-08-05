@@ -119,6 +119,7 @@ function qr_trackr_maybe_upgrade_database() {
 
 	// Check if new fields exist.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Schema check during upgrade.
+	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 	$columns = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
 
 	$has_common_name   = false;
@@ -136,8 +137,10 @@ function qr_trackr_maybe_upgrade_database() {
 	// Add missing columns.
 	if ( ! $has_common_name ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade during activation.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN common_name varchar(255) DEFAULT NULL AFTER qr_code_url" );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Index creation during activation.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY common_name (common_name)" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -148,8 +151,10 @@ function qr_trackr_maybe_upgrade_database() {
 
 	if ( ! $has_referral_code ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Schema upgrade during activation.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN referral_code varchar(100) DEFAULT NULL AFTER common_name" );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Index creation during activation.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$wpdb->query( "ALTER TABLE {$table_name} ADD KEY referral_code (referral_code)" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -170,6 +175,7 @@ function qrc_deactivate() {
 	// Only drop the table if the user has chosen to remove data upon deactivation.
 	if ( get_option( 'qrc_remove_data_on_deactivation' ) ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema cleanup during deactivation, caching not applicable for table deletion.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {

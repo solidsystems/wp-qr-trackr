@@ -98,6 +98,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 		// Get unique referral codes.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Admin filter dropdown, results cached.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$referral_codes = $wpdb->get_col(
 			"SELECT DISTINCT referral_code FROM {$table_name} WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
 		);

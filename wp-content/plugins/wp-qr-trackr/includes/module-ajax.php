@@ -359,6 +359,7 @@ function qr_trackr_ajax_get_qr_details() {
 		$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$qr_code = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} WHERE id = %d",
@@ -468,6 +469,7 @@ function qr_trackr_ajax_update_qr_details() {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Validation check before update.
+	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 	$existing_qr = $wpdb->get_row(
 		$wpdb->prepare(
 			"SELECT id FROM {$table_name} WHERE id = %d",
@@ -495,6 +497,7 @@ function qr_trackr_ajax_update_qr_details() {
 	// Check if referral code is unique (if provided).
 	if ( ! empty( $referral_code ) ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Uniqueness check for validation.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM {$table_name} WHERE referral_code = %s AND id != %d",
