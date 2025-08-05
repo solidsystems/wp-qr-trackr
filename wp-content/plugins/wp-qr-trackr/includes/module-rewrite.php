@@ -95,6 +95,7 @@ function qr_trackr_handle_clean_urls() {
 	$cache_key = 'qr_trackr_lookup_' . $qr_code;
 	$result    = wp_cache_get( $cache_key );
 	if ( false === $result ) {
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$result = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} WHERE qr_code = %s",
@@ -169,6 +170,7 @@ function qr_trackr_ajax_redirect() {
 
 		// Get destination URL and ID from database using tracking code.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for performance.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 		$result = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT destination_url, id FROM {$table_name} WHERE qr_code = %s",
