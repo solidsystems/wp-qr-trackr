@@ -248,12 +248,6 @@ add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
  * @return void
  */
 function qrc_search_posts_ajax() {
-	// Debug logging.
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
-	}
-
 	// Security check.
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verification implemented with wp_verify_nonce() and capability check.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
@@ -268,6 +262,12 @@ function qrc_search_posts_ajax() {
 		);
 		return;
 	}
+
+    // Debug logging (after nonce verification).
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+        error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
+    }
 
 	// Check user capabilities.
 	if ( ! current_user_can( 'manage_options' ) ) {
