@@ -22,23 +22,27 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	$referral_code    = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
 
 	// Debug: Log form data.
+    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 	error_log( 'QR Trackr: Form submission - destination_url: ' . $destination_url . ', custom_url: ' . $custom_url . ', post_id: ' . $selected_post_id );
 
 	// Use custom URL if provided, otherwise use dropdown selection.
 	if ( ! empty( $custom_url ) ) {
-		$destination_url = $custom_url;
+		$destination_url  = $custom_url;
 		$selected_post_id = 0; // Clear post ID if custom URL is used.
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: Using custom URL: ' . $destination_url );
 	} elseif ( ! empty( $selected_post_id ) ) {
 		// If post ID is provided, get the post URL.
 		$selected_post = get_post( $selected_post_id );
 		if ( $selected_post ) {
 			$destination_url = get_permalink( $selected_post_id );
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Using post URL: ' . $destination_url . ' for post ID: ' . $selected_post_id );
 		}
 	}
 
 	// Validate that we have a destination URL (either from custom URL or post selection).
+    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 	error_log( 'QR Trackr: Final destination_url: ' . $destination_url . ', validation check: ' . ( ! empty( $destination_url ) ? 'PASS' : 'FAIL' ) );
 
 	if ( ! empty( $destination_url ) ) {
