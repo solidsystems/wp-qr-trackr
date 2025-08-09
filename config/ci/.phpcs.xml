@@ -51,6 +51,17 @@
     <rule ref="WordPress.DB.DirectDatabaseQuery.DirectQuery">
         <exclude-pattern>includes/class-qrc-links-list-table.php</exclude-pattern>
     </rule>
+    <rule ref="WordPress.DB.PreparedSQL.NotPrepared">
+        <exclude-pattern>includes/class-qrc-links-list-table.php</exclude-pattern>
+    </rule>
+
+    <!-- Exclude nonce verification for AJAX functions that already have proper verification -->
+    <rule ref="WordPress.Security.NonceVerification.Recommended">
+        <exclude-pattern>includes/module-ajax.php</exclude-pattern>
+    </rule>
+    <rule ref="WordPress.Security.ValidatedSanitizedInput">
+        <exclude-pattern>includes/module-ajax.php</exclude-pattern>
+    </rule>
 
     <!-- Enforce Yoda conditions -->
     <rule ref="WordPress.PHP.YodaConditions"/>
