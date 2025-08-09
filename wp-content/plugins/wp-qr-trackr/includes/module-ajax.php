@@ -281,10 +281,11 @@ function qrc_search_posts_ajax() {
 
 	// Get and validate the search term.
 	$search_term = '';
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verification implemented above with wp_verify_nonce() and capability check, input is sanitized.
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended
 	if ( isset( $_POST['search'] ) ) {
 		$search_term = sanitize_text_field( wp_unslash( $_POST['search'] ) );
 	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
 		wp_send_json_error(
