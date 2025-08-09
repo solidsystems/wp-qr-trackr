@@ -8,11 +8,11 @@ The WP QR Trackr project uses a robust, containerized CI/CD pipeline that ensure
 
 ### CI Environment Components
 
-- **CI Runner Container:** Self-contained testing environment with PHP, Composer, Node.js, and Yarn
-- **MariaDB Service:** Database for WordPress test suite (ARM64 compatible)
-- **WordPress Test Suite:** Automated WordPress environment setup
-- **PHPUnit Integration:** WordPress plugin testing framework
-- **Docker Compose:** Orchestration for local and CI testing
+- **CI Runner Container:** Self-contained testing environment with PHP and Composer (Node present, no Playwright in CI).
+- **MariaDB Service:** Database for WordPress test suite (ARM64 compatible).
+- **WordPress Test Suite:** Automated WordPress environment setup.
+- **PHPUnit Integration:** WordPress plugin testing framework (skipped when no tests present).
+- **Docker Compose:** Orchestration for local and CI testing.
 
 ### Key Files
 
@@ -31,9 +31,8 @@ docker build -f docker/Dockerfile.ci -t ci-runner .
 ```
 
 ### 2. Install Dependencies
-- Composer packages (PHP dependencies)
-- Yarn packages (Node.js dependencies)
-- Playwright browser binaries
+- Composer packages (PHP dependencies).
+- Node/Yarn are available but JS dev deps (Playwright) are NOT installed in CI.
 
 ### 3. Setup WordPress Test Suite
 ```bash
@@ -47,9 +46,9 @@ bash scripts/install-wp-tests.sh wpdb wpuser wppass db latest
 - WordPress test configuration updated
 
 ### 5. Run Tests
-- PHPUnit tests execute in WordPress environment
-- Code quality checks (PHPCS when enabled)
-- Playwright tests (temporarily disabled in CI)
+- PHPCS runs using `config/ci/.phpcs.xml`.
+- Warnings do not fail CI; errors do.
+- PHPUnit runs only if `config/testing/phpunit.xml.dist` exists and test files are present; otherwise it is skipped.
 
 ## Recent Fixes and Improvements
 
@@ -300,11 +299,10 @@ Regularly update:
 
 ### Planned Enhancements
 
-1. **Re-enable Playwright Tests:** Add full WordPress environment for E2E testing
-2. **PHPCS Integration:** Re-enable code style checking in CI
-3. **Performance Optimization:** Cache dependencies and test artifacts
-4. **Multi-Platform Testing:** Test on different architectures
-5. **Security Scanning:** Add vulnerability scanning to CI pipeline
+1. **Re-enable Playwright Tests locally only:** E2E testing remains local by project policy.
+2. **Performance Optimization:** Cache dependencies and test artifacts.
+3. **Multi-Platform Testing:** Test on different architectures.
+4. **Security Scanning:** Add vulnerability scanning to CI pipeline.
 
 ### Monitoring and Metrics
 

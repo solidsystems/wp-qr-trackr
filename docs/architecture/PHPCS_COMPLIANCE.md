@@ -70,9 +70,27 @@ We successfully achieved **100% PHPCS compliance** for the WordPress QR Trackr p
 4. Maintain complete docblock documentation
 
 ### CI/CD Requirements
-- All PRs must pass PHPCS with 0 errors
-- Warnings are allowed but should be minimized
-- Documentation must be updated with code changes
+- All PRs must pass PHPCS with 0 errors (CI configured to ignore warnings on exit).
+- Warnings are allowed but should be minimized and justified with inline comments or caching.
+- Documentation must be updated with code changes.
+
+### Database Call Patterns (Required)
+
+- Use `$wpdb->prepare()` with placeholders for all variable inputs.
+- Table names must use `{$wpdb->prefix}table_name` (never concatenated user input).
+- For read queries:
+  - Implement object cache: `wp_cache_get()`/`wp_cache_set()` with a clear cache key and TTL.
+  - Add `wp_cache_delete()` after writes to invalidate related keys.
+  - If caching is not applicable (e.g., debug, immediate follow-up reads, tracking writes), add a PHPCS ignore with justification:
+    - `// phpcs:ignore WordPress.Caching.NoCacheObjectCacheFound -- Write operation / immediate follow-up read; not cacheable.`
+- For activation/upgrade schema changes:
+  - Use `dbDelta()` when possible.
+  - If `ALTER TABLE`/`DROP TABLE` are required, add explicit PHPCS ignores with explanation and scope to activation-only code.
+
+### Logging & Debugging
+
+- Use `qr_trackr_debug_log()` where available.
+- If using `error_log()` for debug in dev, add an inline PHPCS ignore with justification and ensure it does not leak PII.
 
 ---
 
