@@ -46,8 +46,9 @@ setup_plugin() {
     if [ -d "/var/www/html/wp-content/plugins/wp-qr-trackr" ]; then
         echo "Setting up WP QR Trackr plugin..."
 
-        # Fix permissions
-        chown -R www-data:www-data /var/www/html/wp-content/plugins/wp-qr-trackr
+        # Note: The plugin is bind-mounted from host. Avoid chown on bind mounts to prevent permission errors.
+        # If needed, permissive fix can be attempted, but ignore failures on bind-mounted files.
+        chown -R www-data:www-data /var/www/html/wp-content/plugins/wp-qr-trackr 2>/dev/null || echo "Skipping chown for bind-mounted plugin directory."
 
         # Activate plugin if not already active
         if ! wp plugin is-active wp-qr-trackr --path=/var/www/html 2>/dev/null; then
@@ -66,11 +67,11 @@ setup_plugin() {
 
 # Function to fix permissions
 fix_permissions() {
-    echo "Fixing permissions..."
-    chown -R www-data:www-data /var/www/html/wp-content
-    chmod -R 755 /var/www/html/wp-content
-    chmod -R 755 /var/www/html/wp-content/upgrade
-    chmod -R 755 /var/www/html/wp-content/uploads
+    echo "Fixing permissions for writable directories..."
+    # Only adjust writable dirs to avoid bind-mount chown failures
+    mkdir -p /var/www/html/wp-content/upgrade /var/www/html/wp-content/uploads
+    chown -R www-data:www-data /var/www/html/wp-content/upgrade /var/www/html/wp-content/uploads
+    chmod -R 755 /var/www/html/wp-content/upgrade /var/www/html/wp-content/uploads
 }
 
 # Main execution
