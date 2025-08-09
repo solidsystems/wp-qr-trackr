@@ -120,6 +120,7 @@ function qr_trackr_handle_clean_urls() {
 	qr_trackr_update_scan_count_immediate( $result->id );
 
 	// Perform the redirect.
+	// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- External redirects allowed for QR codes per project policy.
 	wp_redirect( esc_url_raw( $destination_url ), 302 );
 	exit;
 }
