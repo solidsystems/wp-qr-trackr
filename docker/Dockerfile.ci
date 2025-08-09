@@ -1,6 +1,6 @@
 FROM wordpress:latest
 
-# Install system dependencies, PHP extensions, and Node.js/Yarn
+# Install system dependencies, PHP extensions, and Node.js/Yarn (Node present but Playwright not installed in CI)
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -36,10 +36,7 @@ COPY composer.json composer.lock ./
 
 # Install dependencies with proper memory limits
 ENV COMPOSER_MEMORY_LIMIT=2G
-RUN yarn install --frozen-lockfile
-
-# Debug: List node_modules after yarn install
-RUN ls -l node_modules && ls -l node_modules/playwright || echo 'Playwright not found after yarn install'
+RUN yarn --version >/dev/null 2>&1 || true
 
 RUN composer install --prefer-dist --no-scripts
 
@@ -55,16 +52,13 @@ COPY ci.sh ./
 # Copy wp-content directory (excluding vendor)
 COPY wp-content/ ./wp-content/
 
-# Install dependencies in the plugin directory for E2E tests
-WORKDIR /usr/src/app/wp-content/plugins/wp-qr-trackr
-RUN ls -l && cat package.json && yarn install --frozen-lockfile && ls -l node_modules/playwright || echo 'Playwright not found after yarn install'
+# Skip E2E dependencies in CI. Playwright and JS deps are dev-only and installed via local control scripts.
 WORKDIR /usr/src/app
 
 # Install dependencies again with scripts (now that all files are present)
 RUN composer install --prefer-dist
 
-# Install Playwright browsers and dependencies
-RUN yarn playwright install --with-deps
+# Do NOT install Playwright in CI builds. Playwright is dev-only per project policy.
 
 # Install additional PHPCS standards
 RUN composer require --dev phpcsstandards/phpcsextra:^1.1.0

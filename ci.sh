@@ -19,16 +19,14 @@ else
     find /usr/src/app -name "composer.json" 2>/dev/null || echo "No composer.json found anywhere"
 fi
 
-# Install dependencies if needed
+# Install dependencies if needed (server-side only; no dev Playwright in CI)
 if [ ! -d "vendor" ] || [ ! -f "vendor/bin/phpcs" ]; then
     echo "Installing Composer dependencies..."
     composer install --no-interaction --prefer-dist
 fi
 
-if [ ! -d "node_modules" ]; then
-    echo "Installing Node.js dependencies..."
-    yarn install --frozen-lockfile
-fi
+# Skip yarn install in CI to avoid bringing in Playwright; JS dev deps are installed only in local dev via control scripts
+echo "Skipping yarn install in CI (Playwright dev-only)."
 
 # Install WordPress test suite
 echo "Installing WordPress test suite..."

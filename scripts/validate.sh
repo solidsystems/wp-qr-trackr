@@ -21,7 +21,7 @@ echo "Running PHPCS..."
 vendor/bin/phpcs -d memory_limit=2048M --standard=config/ci/.phpcs.xml --extensions=php wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php wp-content/plugins/wp-qr-trackr/includes/ wp-content/plugins/wp-qr-trackr/templates/
 
 # Auto-fix (optional, comment out if not desired)
-echo "Running PHPCBF..."
+echo "Running PHPCBF... (server-side only; no UI/E2E)"
 vendor/bin/phpcbf -d memory_limit=2048M --standard=config/ci/.phpcs.xml --extensions=php wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php wp-content/plugins/wp-qr-trackr/includes/ wp-content/plugins/wp-qr-trackr/templates/
 
 # Run tests
