@@ -24,7 +24,6 @@ services:
     volumes:
       - wordpress_data_nonprod:/var/www/html
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
-      - ../wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
 
   wpcli-nonprod:
     image: wordpress:cli
@@ -42,7 +41,6 @@ services:
       WP_SITEURL: http://localhost:8081
     volumes:
       - wordpress_data_nonprod:/var/www/html
-      - ../wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     entrypoint: ["tail", "-f", "/dev/null"]
 
