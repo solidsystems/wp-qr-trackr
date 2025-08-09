@@ -78,7 +78,7 @@
     <rule ref="WordPress.Security.ValidatedSanitizedInput">
         <exclude-pattern>includes/module-ajax.php</exclude-pattern>
     </rule>
-
+    
     <!-- Enforce Yoda conditions -->
     <rule ref="WordPress.PHP.YodaConditions"/>
 
