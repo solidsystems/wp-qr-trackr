@@ -263,11 +263,11 @@ function qrc_search_posts_ajax() {
 		return;
 	}
 
-    // Debug logging (after nonce verification).
-    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-        error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
-    }
+	// Debug logging (after nonce verification).
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+		error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
+	}
 
 	// Check user capabilities.
 	if ( ! current_user_can( 'manage_options' ) ) {
