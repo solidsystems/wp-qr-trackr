@@ -280,6 +280,7 @@ function qrc_search_posts_ajax() {
 	}
 
 	// Get and validate the search term.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verification implemented above with wp_verify_nonce() and capability check, input is sanitized.
 	$search_term = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
 
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {

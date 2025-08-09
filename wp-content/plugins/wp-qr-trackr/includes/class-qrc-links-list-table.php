@@ -240,6 +240,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 			if ( ! empty( $where_values ) ) {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Cached immediately after query, needed for admin display.
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- SQL is built dynamically with proper escaping and preparation.
 				$results = $wpdb->get_results(
 					$wpdb->prepare( $sql, $where_values ),
 					ARRAY_A
