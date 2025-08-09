@@ -24,6 +24,10 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
  */
 class QRC_Links_List_Table extends WP_List_Table {
 
+
+
+
+
 	/**
 	 * Constructor.
 	 *
@@ -119,10 +123,10 @@ class QRC_Links_List_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Override the parent columns method. Defines the columns to use in your listing table.
+	 * Get a list of columns for the list table.
 	 *
 	 * @since 1.0.0
-	 * @return array
+	 * @return array Columns array.
 	 */
 	public function get_columns() {
 		$columns = array(
@@ -134,6 +138,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 			'referral_code'   => esc_html__( 'Referral Code', 'wp-qr-trackr' ),
 			'scans'           => esc_html__( 'Scans', 'wp-qr-trackr' ),
 			'created_at'      => esc_html__( 'Created', 'wp-qr-trackr' ),
+			'actions'         => esc_html__( 'Actions', 'wp-qr-trackr' ), // New column for actions.
 		);
 
 		return $columns;
@@ -273,6 +278,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 				return $this->column_qr_code( $item );
 
 			default:
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r -- Debug output for unknown columns.
 				return print_r( $item, true );
 		}
 	}
@@ -289,7 +295,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 		if ( ! empty( $qr_code_url ) ) {
 			return sprintf(
-				'<img src="%s" alt="%s" style="width: 60px; height: 60px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;" 
+				'<img src="%s" alt="%s" style="width: 60px; height: 60px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"
 				class="qr-code-modal-trigger" data-qr-id="%d" title="%s" />',
 				esc_url( $qr_code_url ),
 				esc_attr__( 'QR Code', 'wp-qr-trackr' ),
@@ -316,7 +322,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$tracking_url = '';
 
 		if ( ! empty( $qr_code ) ) {
-			$tracking_url = home_url( '/qr/' . esc_attr( $qr_code ) );
+			$tracking_url = qr_trackr_get_redirect_url( $qr_code );
 		}
 
 		// Show QR code identifier and tracking URL without image (image is in qr_image column).
@@ -331,6 +337,36 @@ class QRC_Links_List_Table extends WP_List_Table {
 		}
 
 		return '<span class="dashicons dashicons-warning" title="' . esc_attr__( 'QR code not available', 'wp-qr-trackr' ) . '"></span>';
+	}
+
+	/**
+	 * Render the Actions column for each row.
+	 *
+	 * @since 1.0.0
+	 * @param array $item The current item.
+	 * @return string HTML for actions.
+	 */
+	public function column_actions( $item ) {
+		$edit_url   = esc_url( admin_url( 'admin.php?page=qr-code-edit&id=' . absint( $item['id'] ) ) );
+		$delete_url = esc_url( wp_nonce_url( admin_url( 'admin.php?page=qr-code-links&action=delete&id=' . absint( $item['id'] ) ), 'qrc_delete_qr_code_' . absint( $item['id'] ) ) );
+		$actions    = array();
+		$actions[]  = '<a href="' . $edit_url . '">' . esc_html__( 'Edit', 'wp-qr-trackr' ) . '</a>';
+		$actions[]  = '<a href="' . $delete_url . '" onclick="return confirm(\'' . esc_js( __( 'Are you sure you want to delete this QR code?', 'wp-qr-trackr' ) ) . '\');">' . esc_html__( 'Delete', 'wp-qr-trackr' ) . '</a>';
+		return implode( ' | ', $actions );
+	}
+
+	/**
+	 * Render the Name column (without row actions).
+	 *
+	 * @since 1.0.0
+	 * @param array $item The current item.
+	 * @return string Name value.
+	 */
+	public function column_common_name( $item ) {
+		if ( empty( $item['common_name'] ) ) {
+			return '<em>' . esc_html__( 'No name set', 'wp-qr-trackr' ) . '</em>';
+		}
+		return esc_html( $item['common_name'] );
 	}
 
 	/**
@@ -363,5 +399,16 @@ class QRC_Links_List_Table extends WP_List_Table {
 		}
 
 		return -$result;
+	}
+
+	/**
+	 * Remove row actions from the default implementation.
+	 *
+	 * @since 1.0.0
+	 * @param array $item The current item.
+	 * @return array Empty array.
+	 */
+	protected function get_row_actions( $item ) {
+		return array();
 	}
 }

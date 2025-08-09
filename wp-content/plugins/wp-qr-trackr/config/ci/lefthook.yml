@@ -1,0 +1,13 @@
+pre-commit:
+  parallel: true
+  commands:
+    phpcbf:
+      run: docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcbf
+    phpcs:
+      run: docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcs
+
+pre-push:
+  parallel: true
+  commands:
+    validate:
+      run: make validate

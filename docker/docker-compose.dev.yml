@@ -1,8 +1,8 @@
 services:
   wordpress-dev:
     build:
-      context: .
-      dockerfile: Dockerfile.wordpress
+      context: ..
+      dockerfile: docker/Dockerfile.dev
     ports:
       - "8080:80"
     environment:
@@ -20,6 +20,7 @@ services:
       WORDPRESS_ADMIN_USER: trackr
       WORDPRESS_ADMIN_PASSWORD: trackr
       WORDPRESS_ADMIN_EMAIL: dev@example.com
+      WORDPRESS_HOME: http://localhost:8080
     depends_on:
       - db-dev
     volumes:
@@ -60,8 +61,8 @@ services:
 
   ci-runner:
     build:
-      context: .
-      dockerfile: Dockerfile.ci
+      context: ..
+      dockerfile: docker/Dockerfile.ci
     depends_on:
       - db-dev
     volumes:
@@ -77,4 +78,4 @@ services:
 
 volumes:
   db_data_dev:
-  wordpress_data: 
+  wordpress_data:

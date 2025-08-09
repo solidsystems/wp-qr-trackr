@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.45] - current
+
+### Fixed
+- PHPCS: Cleared remaining nonce verification error in `includes/module-ajax.php` by moving `$_POST` debug logging after the nonce check.
+
+### Technical
+- Ensured POST-based debug logging runs only after `wp_verify_nonce()` to satisfy PHPCS security rules.
+- Validated locally with the CI PHPCS ruleset (`config/ci/.phpcs.xml`).
+
 ## [1.2.44] - 2025-01-23
 
 ### Fixed

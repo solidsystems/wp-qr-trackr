@@ -1,0 +1,24 @@
+{
+  "name": "wp-qr-trackr",
+  "version": "1.0.0",
+  "description": "WordPress QR Code Tracking Plugin",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "PWDEBUG=1 playwright test",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:single": "PWDEBUG=1 playwright test -g 'can access QR code admin page'"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.2",
+    "@types/node": "^24.0.10",
+    "eslint": "^9.8.0",
+    "eslint-plugin-playwright": "^1.6.2",
+    "playwright": "1.54.0",
+    "stylelint": "^16.20.0",
+    "stylelint-config-standard": "^38.0.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {},
+  "packageManager": "yarn@1.22.19"
+}

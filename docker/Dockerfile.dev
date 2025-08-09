@@ -6,26 +6,53 @@ FROM wordpress:php8.1-apache
 
 # Install system dependencies
 RUN apt-get update && \
-    apt-get install -y curl less gnupg default-mysql-client && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y \
+        curl \
+        less \
+        gnupg \
+        default-mysql-client \
+        unzip \
+        wget \
+        git \
+        && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js and Playwright for UI testing
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get update && \
     apt-get install -y nodejs && \
+    npm install -g yarn && \
     yarn global add playwright && \
-    yarn playwright install --with-deps
+    npx playwright install --with-deps
 
 # Install WP-CLI
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
+# Set up WordPress directories and permissions
+RUN mkdir -p /var/www/html/wp-content/plugins \
+    && mkdir -p /var/www/html/wp-content/uploads \
+    && mkdir -p /var/www/html/wp-content/upgrade \
+    && chown -R www-data:www-data /var/www/html/wp-content \
+    && chmod -R 755 /var/www/html/wp-content
+
+# Download and install Query Monitor plugin
+RUN cd /var/www/html/wp-content/plugins \
+    && wget -O query-monitor.zip https://downloads.wordpress.org/plugin/query-monitor.latest-stable.zip \
+    && unzip -o query-monitor.zip \
+    && rm query-monitor.zip \
+    && chown -R www-data:www-data /var/www/html/wp-content/plugins/query-monitor
+
+# Create plugin directory for wp-qr-trackr
+RUN mkdir -p /var/www/html/wp-content/plugins/wp-qr-trackr \
+    && chown -R www-data:www-data /var/www/html/wp-content/plugins/wp-qr-trackr
+
 # Copy entrypoint script
-COPY ./scripts/docker-dev-entrypoint.sh /usr/local/bin/docker-dev-entrypoint.sh
+COPY scripts/docker-dev-entrypoint.sh /usr/local/bin/docker-dev-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-dev-entrypoint.sh
+
+# Set working directory
+WORKDIR /var/www/html
 
 ENTRYPOINT ["/usr/local/bin/docker-dev-entrypoint.sh"]
 CMD ["apache2-foreground"]
-
-# ... rest of your Dockerfile ... 

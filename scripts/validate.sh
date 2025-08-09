@@ -9,18 +9,29 @@ if [ ! -f /.dockerenv ] && [ -z "$DOCKER_CONTAINER" ]; then
   exit 1
 fi
 
+# Check if PHPCS is available
+if [ ! -f "vendor/bin/phpcs" ]; then
+    echo "ERROR: PHPCS not found at vendor/bin/phpcs"
+    echo "Installing Composer dependencies..."
+    composer install --no-interaction --prefer-dist
+fi
+
 # Lint PHP using our custom configuration with explicit memory limit
 echo "Running PHPCS..."
 vendor/bin/phpcs -d memory_limit=2048M --standard=config/ci/.phpcs.xml --extensions=php wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php wp-content/plugins/wp-qr-trackr/includes/ wp-content/plugins/wp-qr-trackr/templates/
 
 # Auto-fix (optional, comment out if not desired)
-echo "Running PHPCBF..."
+echo "Running PHPCBF... (server-side only; no UI/E2E)"
 vendor/bin/phpcbf -d memory_limit=2048M --standard=config/ci/.phpcs.xml --extensions=php wp-content/plugins/wp-qr-trackr/wp-qr-trackr.php wp-content/plugins/wp-qr-trackr/includes/ wp-content/plugins/wp-qr-trackr/templates/
 
-# Run tests
+# Run tests (only if config and tests exist)
 if [ -f vendor/bin/phpunit ]; then
-  echo "Running PHPUnit..."
-  vendor/bin/phpunit
+  if [ -f config/testing/phpunit.xml.dist ] && ls wp-content/plugins/wp-qr-trackr/tests/phpunit/*.php >/dev/null 2>&1; then
+    echo "Running PHPUnit..."
+    vendor/bin/phpunit -c config/testing/phpunit.xml.dist
+  else
+    echo "Skipping PHPUnit (no test config or test files found)."
+  fi
 fi
 
 echo "All validation steps completed."

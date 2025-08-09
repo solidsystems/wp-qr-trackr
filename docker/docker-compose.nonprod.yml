@@ -1,6 +1,8 @@
 services:
   wordpress-nonprod:
-    image: wordpress:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.nonprod
     ports:
       - "8081:80"
     environment:
@@ -15,7 +17,7 @@ services:
       WORDPRESS_ADMIN_USER: trackr
       WORDPRESS_ADMIN_PASSWORD: trackr
       WORDPRESS_ADMIN_EMAIL: nonprod@example.com
-      WORDPRESS_SKIP_INSTALL: "no"
+      WORDPRESS_HOME: http://localhost:8081
     depends_on:
       db-nonprod:
         condition: service_healthy
@@ -61,4 +63,4 @@ services:
 
 volumes:
   db_data_nonprod:
-  wordpress_data_nonprod: 
+  wordpress_data_nonprod:

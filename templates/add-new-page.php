@@ -17,25 +17,49 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	$common_name     = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
 	$referral_code   = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
 
-	// Debug: Log form data.
-	error_log( 'QR Trackr: Form submission - destination_url: ' . $destination_url . ', custom_url: ' . $custom_url . ', post_id: ' . $post_id );
+	// Log form submission with new logging system.
+	qr_trackr_log_form_submission(
+		'add_new_qr_code',
+		array(
+			'destination_url' => $destination_url,
+			'custom_url'      => $custom_url,
+			'post_id'         => $post_id,
+			'common_name'     => $common_name,
+			'referral_code'   => $referral_code,
+		),
+		'form_submit'
+	);
 
 	// Use custom URL if provided, otherwise use dropdown selection.
 	if ( ! empty( $custom_url ) ) {
 		$destination_url = $custom_url;
-		$post_id         = 0; // Clear post ID if custom URL is used
-		error_log( 'QR Trackr: Using custom URL: ' . $destination_url );
+		$post_id         = 0; // Clear post ID if custom URL is used.
+		qr_trackr_log( 'Using custom URL for QR code generation', 'info', array( 'custom_url' => $custom_url ) );
 	} elseif ( ! empty( $post_id ) ) {
 		// If post ID is provided, get the post URL.
 		$post = get_post( $post_id );
 		if ( $post ) {
 			$destination_url = get_permalink( $post_id );
-			error_log( 'QR Trackr: Using post URL: ' . $destination_url . ' for post ID: ' . $post_id );
+			qr_trackr_log(
+				'Using post URL for QR code generation',
+				'info',
+				array(
+					'post_id'  => $post_id,
+					'post_url' => $destination_url,
+				)
+			);
 		}
 	}
 
 	// Validate that we have a destination URL (either from custom URL or post selection).
-	error_log( 'QR Trackr: Final destination_url: ' . $destination_url . ', validation check: ' . ( ! empty( $destination_url ) ? 'PASS' : 'FAIL' ) );
+	qr_trackr_log(
+		'QR code destination URL validation',
+		'info',
+		array(
+			'destination_url' => $destination_url,
+			'validation'      => ! empty( $destination_url ) ? 'PASS' : 'FAIL',
+		)
+	);
 
 	if ( ! empty( $destination_url ) ) {
 		// Generate unique QR code.
@@ -45,19 +69,25 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 			$qr_code = 'qr_' . wp_generate_password( 8, false );
 		}
 
-		error_log( 'QR Trackr: Generated QR code: ' . $qr_code );
+		qr_trackr_log( 'Generated unique QR code', 'info', array( 'qr_code' => $qr_code ) );
 
 		// Generate QR code image URL.
 		$qr_code_url = '';
 
-		// Debug: Check if function exists and Endroid library is available.
-		error_log( 'QR Trackr: Checking if qrc_generate_qr_code function exists: ' . ( function_exists( 'qrc_generate_qr_code' ) ? 'YES' : 'NO' ) );
-		error_log( 'QR Trackr: Checking if Endroid QR Code library is available: ' . ( class_exists( 'Endroid\QrCode\QrCode' ) ? 'YES' : 'NO' ) );
-		error_log( 'QR Trackr: About to generate QR code for destination: ' . $destination_url );
+		// Check if function exists and Endroid library is available.
+		qr_trackr_log(
+			'QR code generation function check',
+			'info',
+			array(
+				'qrc_generate_qr_code_exists' => function_exists( 'qrc_generate_qr_code' ),
+				'endroid_library_available'   => class_exists( 'Endroid\QrCode\QrCode' ),
+				'destination_url'             => $destination_url,
+			)
+		);
 
 		if ( function_exists( 'qrc_generate_qr_code' ) ) {
-			// Debug logging for QR code generation.
-			error_log( sprintf( 'QR Trackr: Generating QR code for URL: %s', $destination_url ) );
+			// Log QR code generation attempt.
+			qr_trackr_log( 'Starting QR code generation', 'info', array( 'destination_url' => $destination_url ) );
 
 			// Generate QR code with consistent parameters.
 			$qr_code_url = qrc_generate_qr_code(
@@ -71,31 +101,44 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 				)
 			);
 
-			error_log( 'QR Trackr: Initial QR generation result: ' . ( is_wp_error( $qr_code_url ) ? 'ERROR: ' . $qr_code_url->get_error_message() : $qr_code_url ) );
-
 			if ( is_wp_error( $qr_code_url ) ) {
 				$error_message = $qr_code_url->get_error_message();
-				error_log( sprintf( 'QR Trackr: QR code generation failed: %s', $error_message ) );
+				qr_trackr_log(
+					'QR code generation failed',
+					'error',
+					array(
+						'error_message'   => $error_message,
+						'destination_url' => $destination_url,
+					)
+				);
 				// Don't set error message here, just log it and continue with empty URL.
 				$qr_code_url = '';
 			} else {
-				error_log( sprintf( 'QR Trackr: QR code generated successfully: %s', $qr_code_url ) );
+				qr_trackr_log(
+					'QR code generated successfully',
+					'info',
+					array(
+						'qr_code_url'     => $qr_code_url,
+						'destination_url' => $destination_url,
+					)
+				);
 
-				// Debug: Check if the generated URL is accessible.
+				// Check if the generated URL is accessible.
 				$upload_dir = wp_upload_dir();
 				$qr_dir     = $upload_dir['basedir'] . '/qr-codes';
-				error_log(
-					sprintf(
-						'QR Trackr: Upload directory: %s, QR directory: %s, QR directory exists: %s, QR directory writable: %s',
-						$upload_dir['basedir'],
-						$qr_dir,
-						file_exists( $qr_dir ) ? 'YES' : 'NO',
-						is_writable( $qr_dir ) ? 'YES' : 'NO'
+				qr_trackr_log(
+					'QR code file system check',
+					'info',
+					array(
+						'upload_dir'      => $upload_dir['basedir'],
+						'qr_dir'          => $qr_dir,
+						'qr_dir_exists'   => file_exists( $qr_dir ),
+						'qr_dir_writable' => is_writable( $qr_dir ),
 					)
 				);
 			}
 		} else {
-			error_log( 'QR Trackr: qrc_generate_qr_code function not found' );
+			qr_trackr_log( 'QR code generation function not found', 'warning', array( 'destination_url' => $destination_url ) );
 			$qr_code_url = '';
 		}
 
@@ -103,8 +146,15 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-		// Debug: Log the QR code URL before insertion.
-		error_log( 'QR Trackr: QR code URL before insertion: ' . $qr_code_url );
+		// Log the QR code URL before insertion.
+		qr_trackr_log(
+			'Preparing database insertion',
+			'info',
+			array(
+				'qr_code_url' => $qr_code_url,
+				'qr_code'     => $qr_code,
+			)
+		);
 
 		$result = $wpdb->insert(
 			$table_name,
@@ -125,7 +175,15 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 			$qr_id           = $wpdb->insert_id;
 			$success_message = __( 'QR code created successfully!', 'wp-qr-trackr' );
 
-			error_log( 'QR Trackr: Database insert successful, ID: ' . $qr_id );
+			qr_trackr_log_db_operation(
+				'insert',
+				$table_name,
+				array(
+					'qr_id'   => $qr_id,
+					'qr_code' => $qr_code,
+				),
+				true
+			);
 
 			// Clear relevant caches after successful creation.
 			wp_cache_delete( 'qr_trackr_all_links_admin', 'qr_trackr' );
@@ -140,17 +198,46 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 				ARRAY_A
 			);
 
-			// Debug: Log the created QR code details.
-			error_log( 'QR Trackr: Created QR code details: ' . wp_json_encode( $created_qr ) );
+			// Log the created QR code details.
+			qr_trackr_log(
+				'QR code created successfully',
+				'info',
+				array(
+					'qr_id'           => $qr_id,
+					'qr_code'         => $qr_code,
+					'destination_url' => $destination_url,
+				)
+			);
 
 		} else {
 			$error_message = __( 'Failed to create QR code. Please try again.', 'wp-qr-trackr' );
-			error_log( 'QR Trackr: Database insert failed: ' . $wpdb->last_error );
+			qr_trackr_log_db_operation(
+				'insert',
+				$table_name,
+				array(
+					'qr_code'         => $qr_code,
+					'destination_url' => $destination_url,
+				),
+				false
+			);
+			qr_trackr_log(
+				'Database insert failed',
+				'error',
+				array(
+					'error'   => $wpdb->last_error,
+					'qr_code' => $qr_code,
+				)
+			);
 		}
 	} else {
 		$error_message = __( 'Please either select a post/page or enter a custom URL.', 'wp-qr-trackr' );
 	}
 }
+?>
+
+<?php
+// Log element creation for the add new page.
+qr_trackr_log_element_creation( 'page_wrapper', array( 'page' => 'add-new-page' ), 'template_output' );
 ?>
 
 <div class="wrap">
@@ -236,8 +323,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 								<th scope="row" style="width: 150px;"><?php esc_html_e( 'QR Code:', 'wp-qr-trackr' ); ?></th>
 								<td>
 									<code style="font-size: 14px; background: #f9f9f9; padding: 8px; border-radius: 4px;">
-												<?php echo esc_html( $created_qr['qr_code'] ); ?>
-											</code>
+														<?php echo esc_html( $created_qr['qr_code'] ); ?>
+													</code>
 								</td>
 							</tr>
 
@@ -279,9 +366,9 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 							<tr>
 								<th scope="row"><?php esc_html_e( 'QR URL:', 'wp-qr-trackr' ); ?></th>
 								<td>
-									<a href="<?php echo esc_url( home_url( '/redirect/' . $created_qr['qr_code'] ) ); ?>"
+									<a href="<?php echo esc_url( qr_trackr_get_redirect_url( $created_qr['qr_code'] ) ); ?>"
 										target="_blank" style="word-break: break-all;">
-										<?php echo esc_url( home_url( '/redirect/' . $created_qr['qr_code'] ) ); ?>
+										<?php echo esc_url( qr_trackr_get_redirect_url( $created_qr['qr_code'] ) ); ?>
 									</a>
 								</td>
 							</tr>
@@ -328,6 +415,17 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		<p><?php esc_html_e( 'Create a new QR code that will redirect users to your specified destination URL.', 'wp-qr-trackr' ); ?>
 		</p>
 
+		<?php
+		// Log form element creation.
+		qr_trackr_log_element_creation(
+			'form',
+			array(
+				'form_name' => 'add_new_qr_code',
+				'action'    => 'post',
+			),
+			'template_output'
+		);
+		?>
 		<form method="post" action="">
 			<?php wp_nonce_field( 'qr_trackr_add_new' ); ?>
 
@@ -443,7 +541,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 					placeholder: '<?php echo esc_js( __( 'Search posts and pages...', 'wp-qr-trackr' ) ); ?>',
 					allowClear: true,
 					ajax: {
-						url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+						url: '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 						type: 'POST',
 						dataType: 'json',
 						delay: 250,
@@ -459,9 +557,9 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 							if (data.success && data.data && data.data.posts) {
 								data.data.posts.forEach(function (post) {
 									results.push({
-										id: post.id, // Use post ID as the value
+										id: post.id, // Use post ID as the value.
 										text: post.title + ' (' + post.type + ')',
-										url: post.url // Store URL as data attribute
+										url: post.url // Store URL as data attribute.
 									});
 								});
 							}
@@ -477,26 +575,26 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 					minimumInputLength: 2
 				});
 
-				// Handle post selection from dropdown
+				// Handle post selection from dropdown.
 				$('#destination_url').on('select2:select', function (e) {
 					var data = e.params.data;
-					$('#post_id').val(data.id); // Store the post ID
-					$('#custom_destination_url').val(''); // Clear custom URL
-					$('#url-validation-error').hide(); // Hide validation error
+					$('#post_id').val(data.id); // Store the post ID.
+					$('#custom_destination_url').val(''); // Clear custom URL.
+					$('#url-validation-error').hide(); // Hide validation error.
 				});
 
-				// Handle clearing the dropdown
+				// Handle clearing the dropdown.
 				$('#destination_url').on('select2:clear', function (e) {
-					$('#post_id').val(''); // Clear post ID
-					$('#url-validation-error').hide(); // Hide validation error
+					$('#post_id').val(''); // Clear post ID.
+					$('#url-validation-error').hide(); // Hide validation error.
 				});
 
 				// Handle custom URL input.
 				$('#custom_destination_url').on('input', function () {
 					if ($(this).val()) {
 						$('#destination_url').val('').trigger('change');
-						$('#post_id').val(''); // Clear post ID when custom URL is used
-						$('#url-validation-error').hide(); // Hide validation error
+											$('#post_id').val(''); // Clear post ID when custom URL is used.
+					$('#url-validation-error').hide(); // Hide validation error.
 					}
 				});
 
@@ -504,22 +602,22 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 				$('#destination_url').on('change', function () {
 					if ($(this).val()) {
 						$('#custom_destination_url').val('');
-						$('#url-validation-error').hide(); // Hide validation error
+						$('#url-validation-error').hide(); // Hide validation error.
 					}
 				});
 
-				// Handle form submission
+				// Handle form submission.
 				$('form').on('submit', function (e) {
 					var destinationUrl = $('#destination_url').val();
 					var customUrl = $('#custom_destination_url').val();
 					var postId = $('#post_id').val();
 
 					if (!destinationUrl && !customUrl) {
-						e.preventDefault(); // Prevent form submission
-						$('#url-validation-error').show(); // Show validation error
+											e.preventDefault(); // Prevent form submission.
+					$('#url-validation-error').show(); // Show validation error.
 						return false;
 					} else {
-						$('#url-validation-error').hide(); // Hide validation error
+						$('#url-validation-error').hide(); // Hide validation error.
 					}
 				});
 			});

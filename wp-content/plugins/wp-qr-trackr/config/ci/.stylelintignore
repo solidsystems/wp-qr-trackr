@@ -1,0 +1,12 @@
+# Node and Composer dependencies
+node_modules/
+vendor/
+
+# Dependencies within the plugin directory
+wp-content/plugins/wp-qr-trackr/vendor/
+
+# Build and coverage artifacts
+build/
+dist/
+coverage/
+wp-content/plugins/wp-qr-trackr/coverage/ 

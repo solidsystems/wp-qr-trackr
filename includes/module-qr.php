@@ -68,7 +68,13 @@ function qrc_get_link( $id ) {
 				$link->metadata = wp_json_encode( maybe_unserialize( $link->metadata ) );
 			}
 			wp_cache_set( $cache_key, $link, 'qrc_links', HOUR_IN_SECONDS );
+
+			qr_trackr_log_db_operation( 'select', $wpdb->prefix . 'qr_trackr_links', array( 'id' => $id ), true );
+		} else {
+			qr_trackr_log_db_operation( 'select', $wpdb->prefix . 'qr_trackr_links', array( 'id' => $id ), false );
 		}
+	} else {
+		qr_trackr_log( 'QR code retrieved from cache', 'info', array( 'id' => $id ) );
 	}
 
 	return $link;
@@ -101,7 +107,13 @@ function qrc_get_all_links() {
 				}
 			}
 			set_transient( $cache_key, $links, HOUR_IN_SECONDS );
+
+			qr_trackr_log_db_operation( 'select_all', $wpdb->prefix . 'qr_trackr_links', array( 'count' => count( $links ) ), true );
+		} else {
+			qr_trackr_log_db_operation( 'select_all', $wpdb->prefix . 'qr_trackr_links', array(), false );
 		}
+	} else {
+		qr_trackr_log( 'All QR codes retrieved from cache', 'info', array( 'count' => count( $links ) ) );
 	}
 
 	return $links;
@@ -140,8 +152,19 @@ function qrc_get_all_links() {
  * @return string|WP_Error The URL of the generated QR code, or a WP_Error object on failure.
  */
 function qrc_generate_qr_code( $data, $args = array() ) {
+	// Log QR code generation attempt.
+	qr_trackr_log_element_creation(
+		'qr_code',
+		array(
+			'data_length' => strlen( $data ),
+			'args'        => $args,
+		),
+		'qr_generation'
+	);
+
 	// Validate input data.
 	if ( empty( $data ) ) {
+		qr_trackr_log( 'QR code generation failed - empty data', 'error', array( 'data' => $data ) );
 		return new WP_Error(
 			'qrc_empty_data',
 			esc_html__( 'QR code data cannot be empty.', 'wp-qr-trackr' )
@@ -172,6 +195,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 	// Validate size parameters.
 	$args['size'] = absint( $args['size'] );
 	if ( $args['size'] < 100 || $args['size'] > 1000 ) {
+		qr_trackr_log( 'QR code generation failed - invalid size', 'error', array( 'size' => $args['size'] ) );
 		return new WP_Error(
 			'qrc_invalid_size',
 			esc_html__( 'QR code size must be between 100 and 1000 pixels.', 'wp-qr-trackr' )
@@ -180,6 +204,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 	$args['margin'] = absint( $args['margin'] );
 	if ( $args['margin'] > 50 ) {
+		qr_trackr_log( 'QR code generation failed - invalid margin', 'error', array( 'margin' => $args['margin'] ) );
 		return new WP_Error(
 			'qrc_invalid_margin',
 			esc_html__( 'QR code margin must not exceed 50 pixels.', 'wp-qr-trackr' )
@@ -200,6 +225,14 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 	$color_regex = '/^#[a-f0-9]{6}$/i';
 	foreach ( array( 'foreground_color', 'background_color', 'eye_inner_color', 'eye_outer_color' ) as $color_key ) {
 		if ( ! preg_match( $color_regex, $args[ $color_key ] ) ) {
+			qr_trackr_log(
+				'QR code generation failed - invalid color format',
+				'error',
+				array(
+					'color_key'   => $color_key,
+					'color_value' => $args[ $color_key ],
+				)
+			);
 			return new WP_Error(
 				'qrc_invalid_color',
 				sprintf(
@@ -216,6 +249,8 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 	$qr_url    = get_transient( $cache_key );
 
 	if ( false === $qr_url ) {
+		qr_trackr_log( 'QR code not found in cache, generating new QR code', 'info', array( 'cache_key' => $cache_key ) );
+
 		// Build the query parameters for the QR code API.
 		$api_params = array(
 			'cht'  => 'qr',
@@ -231,6 +266,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 		$response = wp_safe_remote_get( $api_url );
 		if ( is_wp_error( $response ) ) {
 			// Log the error for debugging.
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log(
 				sprintf(
 					'QR Code API Error: %s (URL: %s).',
@@ -239,13 +275,31 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 				)
 			);
 
+			qr_trackr_log(
+				'Primary QR code API failed, trying fallback',
+				'warning',
+				array(
+					'api_url' => $api_url,
+					'error'   => $response->get_error_message(),
+				)
+			);
+
 			// Try fallback API if primary fails.
 			$fallback_url = qrc_generate_fallback_qr( $data, $args );
 			if ( ! is_wp_error( $fallback_url ) ) {
 				set_transient( $cache_key, $fallback_url, DAY_IN_SECONDS );
+				qr_trackr_log( 'QR code generated successfully using fallback API', 'info', array( 'fallback_url' => $fallback_url ) );
 				return $fallback_url;
 			}
 
+			qr_trackr_log(
+				'QR code generation failed - both primary and fallback APIs failed',
+				'error',
+				array(
+					'api_url'        => $api_url,
+					'fallback_error' => $fallback_url->get_error_message(),
+				)
+			);
 			return new WP_Error(
 				'qrc_api_error',
 				esc_html__( 'Failed to generate QR code. Please try again later.', 'wp-qr-trackr' )
@@ -254,6 +308,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 		$response_code = wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $response_code ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log(
 				sprintf(
 					'QR Code API Error: HTTP %d (URL: %s).',
@@ -262,13 +317,32 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 				)
 			);
 
+			qr_trackr_log(
+				'Primary QR code API returned error status, trying fallback',
+				'warning',
+				array(
+					'api_url'       => $api_url,
+					'response_code' => $response_code,
+				)
+			);
+
 			// Try fallback API if primary fails.
 			$fallback_url = qrc_generate_fallback_qr( $data, $args );
 			if ( ! is_wp_error( $fallback_url ) ) {
 				set_transient( $cache_key, $fallback_url, DAY_IN_SECONDS );
+				qr_trackr_log( 'QR code generated successfully using fallback API', 'info', array( 'fallback_url' => $fallback_url ) );
 				return $fallback_url;
 			}
 
+			qr_trackr_log(
+				'QR code generation failed - both primary and fallback APIs failed',
+				'error',
+				array(
+					'api_url'        => $api_url,
+					'response_code'  => $response_code,
+					'fallback_error' => $fallback_url->get_error_message(),
+				)
+			);
 			return new WP_Error(
 				'qrc_api_error',
 				esc_html__( 'Failed to generate QR code. Please try again later.', 'wp-qr-trackr' )
@@ -279,7 +353,15 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 		$upload_dir = wp_upload_dir();
 		$qr_dir     = $upload_dir['basedir'] . '/qr-codes';
 		if ( ! file_exists( $qr_dir ) ) {
-			wp_mkdir_p( $qr_dir );
+			$dir_created = wp_mkdir_p( $qr_dir );
+			qr_trackr_log(
+				'QR codes directory creation attempt',
+				'info',
+				array(
+					'qr_dir'  => $qr_dir,
+					'created' => $dir_created,
+				)
+			);
 		}
 
 		$filename  = sanitize_file_name( 'qr-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
@@ -293,6 +375,8 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 		$image_data = wp_remote_retrieve_body( $response );
 		if ( ! $wp_filesystem->put_contents( $file_path, $image_data, FS_CHMOD_FILE ) ) {
+			qr_trackr_log( 'Failed to save QR code image to file system', 'error', array( 'file_path' => $file_path ) );
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( sprintf( 'Failed to save QR code image to %s.', $file_path ) );
 			return new WP_Error(
 				'qrc_save_error',
@@ -302,6 +386,18 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 
 		// Cache the URL.
 		set_transient( $cache_key, $qr_url, DAY_IN_SECONDS );
+
+		qr_trackr_log(
+			'QR code generated and saved successfully',
+			'info',
+			array(
+				'file_path' => $file_path,
+				'qr_url'    => $qr_url,
+				'file_size' => strlen( $image_data ),
+			)
+		);
+	} else {
+		qr_trackr_log( 'QR code retrieved from cache', 'info', array( 'qr_url' => $qr_url ) );
 	}
 
 	return $qr_url;

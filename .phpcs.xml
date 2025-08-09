@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<ruleset name="QR Trackr WordPress Coding Standards">
+    <description>WordPress Coding Standards for QR Trackr plugin.</description>
+
+    <!-- Configure installed standards paths -->
+    <config name="installed_paths" value="vendor/wp-coding-standards/wpcs,vendor/phpcsstandards/phpcsutils,vendor/phpcsstandards/phpcsextra"/>
+
+    <!-- Memory limit as per project requirements -->
+    <ini name="memory_limit" value="2048M"/>
+
+    <!-- Use WordPress as the base -->
+    <rule ref="WordPress"/>
+
+    <!-- Exclude deprecated sniffs -->
+    <exclude name="Generic.Functions.CallTimePassByReference"/>
+
+    <!-- Exclude patterns - comprehensive vendor exclusions -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>**/vendor/*</exclude-pattern>
+    <exclude-pattern>wp-content/plugins/wp-qr-trackr/vendor/*</exclude-pattern>
+    <exclude-pattern>node_modules/*</exclude-pattern>
+    <exclude-pattern>**/node_modules/*</exclude-pattern>
+    <exclude-pattern>tests/*</exclude-pattern>
+    <exclude-pattern>assets/*.js</exclude-pattern>
+    <exclude-pattern>assets/*.css</exclude-pattern>
+    <exclude-pattern>coverage/*</exclude-pattern>
+    <exclude-pattern>build/*</exclude-pattern>
+    <exclude-pattern>**/composer/*</exclude-pattern>
+    <exclude-pattern>**/autoload.php</exclude-pattern>
+
+    <!-- Ignore specific rules for admin/stats code -->
+    <rule ref="WordPress.DB.DirectDatabaseQuery.DirectQuery">
+        <exclude-pattern>includes/module-*.php</exclude-pattern>
+    </rule>
+
+    <!-- Exclude false positives for table assignments -->
+    <rule ref="WordPress.DB.PreparedSQL.InterpolatedNotPrepared">
+        <exclude-pattern>includes/module-*.php</exclude-pattern>
+    </rule>
+
+    <!-- Exclude documented false positive for dynamic queries in list table -->
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare">
+        <exclude-pattern>includes/class-qrc-links-list-table.php</exclude-pattern>
+    </rule>
+
+    <!-- Exclude specific error codes for the documented false positive -->
+    <rule ref="WordPress.DB.PreparedSQL.InterpolatedNotPrepared">
+        <exclude-pattern>includes/class-qrc-links-list-table.php</exclude-pattern>
+    </rule>
+    <rule ref="WordPress.DB.DirectDatabaseQuery.DirectQuery">
+        <exclude-pattern>includes/class-qrc-links-list-table.php</exclude-pattern>
+    </rule>
+
+    <!-- Enforce Yoda conditions -->
+    <rule ref="WordPress.PHP.YodaConditions"/>
+
+    <!-- Enforce proper escaping -->
+    <rule ref="WordPress.Security.EscapeOutput"/>
+
+    <!-- Enforce proper sanitization -->
+    <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
+</ruleset>
