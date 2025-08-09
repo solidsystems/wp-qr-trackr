@@ -121,13 +121,19 @@ function qrc_generate_qr_code_ajax() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic operation required, caching not applicable for single record lookup.
-	$existing_link = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
-			$post_id
-		)
-	);
+	// Try cache first to avoid repeat lookups by post ID.
+	$cache_key     = 'qr_trackr_link_by_post_' . $post_id;
+	$existing_link = wp_cache_get( $cache_key, 'qr_trackr' );
+	if ( false === $existing_link ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Single-row lookup; result cached immediately below.
+		$existing_link = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
+				$post_id
+			)
+		);
+		wp_cache_set( $cache_key, $existing_link, 'qr_trackr', 300 );
+	}
 
 	if ( null !== $existing_link ) {
 		// Update existing record.
@@ -142,6 +148,9 @@ function qrc_generate_qr_code_ajax() {
 			array( '%s', '%s', '%s' ),
 			array( '%d' )
 		);
+
+		// Invalidate related caches.
+		wp_cache_delete( $cache_key, 'qr_trackr' );
 	} else {
 		// Insert new record.
 		$result = $wpdb->insert(
@@ -208,7 +217,7 @@ function qrc_track_link_click_ajax() {
 	global $wpdb;
 
 	// Increment the access count and get destination URL in one query for efficiency.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic operation required, caching not applicable for tracking.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Write operation for tracking; caching not applicable.
 	$result = $wpdb->query(
 		$wpdb->prepare(
 			"UPDATE {$wpdb->prefix}qr_trackr_links SET access_count = access_count + 1, last_accessed = %s WHERE id = %d RETURNING destination_url AS url",
@@ -229,6 +238,7 @@ function qrc_track_link_click_ajax() {
 	}
 
 	// Get the destination URL from the RETURNING clause.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.Caching.NoCacheObjectCacheFound -- Follows immediately from prior write; not cacheable.
 	$destination_url = $wpdb->get_var( 'SELECT url FROM (' . $wpdb->last_query . ') AS t' );
 
 	if ( $destination_url ) {
