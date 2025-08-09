@@ -98,7 +98,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						$upload_dir['basedir'],
 						$qr_dir,
 						file_exists( $qr_dir ) ? 'YES' : 'NO',
-						is_writable( $qr_dir ) ? 'YES' : 'NO'
+                                            ( function_exists( 'wp_is_writable' ) ? wp_is_writable( $qr_dir ) : is_writable( $qr_dir ) ) ? 'YES' : 'NO' // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_is_writable -- Prefer wp_is_writable when available.
 					)
 				);
 			}
