@@ -1,4 +1,4 @@
-## Unreleased
+## 1.2.45
 
 ### Changed
 - Dev entrypoint no longer runs recursive chown/chmod on `wp-content`; only `uploads` and `upgrade` are adjusted, and bind-mounted plugin `wp-qr-trackr` is skipped to avoid macOS Docker permission errors.
