@@ -29,12 +29,19 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
+# Allow WP-CLI to run as root inside the container to avoid interactive warnings
+ENV WP_CLI_ALLOW_ROOT=1
+
 # Set up WordPress directories and permissions
 RUN mkdir -p /var/www/html/wp-content/plugins \
     && mkdir -p /var/www/html/wp-content/uploads \
     && mkdir -p /var/www/html/wp-content/upgrade \
     && chown -R www-data:www-data /var/www/html/wp-content \
     && chmod -R 755 /var/www/html/wp-content
+
+# Suppress Apache FQDN warning
+RUN echo 'ServerName localhost' > /etc/apache2/conf-available/servername.conf \
+    && a2enconf servername
 
 # Download and install Query Monitor plugin
 RUN cd /var/www/html/wp-content/plugins \

@@ -247,7 +247,7 @@ setup_wordpress_after_restart() {
     fi
 
     # Check if WordPress needs installation
-    if ! docker exec "$wp_container" wp core is-installed --path=/var/www/html 2>/dev/null; then
+    if ! docker exec "$wp_container" wp core is-installed --path=/var/www/html --allow-root 2>/dev/null; then
         log "INFO" "WordPress not installed, running installation..."
 
         # Install WordPress
@@ -258,23 +258,24 @@ setup_wordpress_after_restart() {
             --admin_password=trackr \
             --admin_email=test@example.com \
             --skip-email \
-            --path=/var/www/html
+            --path=/var/www/html \
+            --allow-root
 
         # Set permalink structure
-        docker exec "$wp_container" wp rewrite structure '/%postname%/' --path=/var/www/html
-        docker exec "$wp_container" wp rewrite flush --hard --path=/var/www/html
+        docker exec "$wp_container" wp rewrite structure '/%postname%/' --path=/var/www/html --allow-root
+        docker exec "$wp_container" wp rewrite flush --hard --path=/var/www/html --allow-root
 
         # Activate plugin
-        docker exec "$wp_container" wp plugin activate wp-qr-trackr --path=/var/www/html
+        docker exec "$wp_container" wp plugin activate wp-qr-trackr --path=/var/www/html --allow-root
 
         log "INFO" "WordPress installation completed"
     else
         log "INFO" "WordPress already installed, checking plugin status..."
 
         # Ensure plugin is activated
-        if ! docker exec "$wp_container" wp plugin is-active wp-qr-trackr --path=/var/www/html 2>/dev/null; then
+        if ! docker exec "$wp_container" wp plugin is-active wp-qr-trackr --path=/var/www/html --allow-root 2>/dev/null; then
             log "INFO" "Activating WP QR Trackr plugin..."
-            docker exec "$wp_container" wp plugin activate wp-qr-trackr --path=/var/www/html
+            docker exec "$wp_container" wp plugin activate wp-qr-trackr --path=/var/www/html --allow-root
         fi
     fi
 

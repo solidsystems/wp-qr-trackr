@@ -1,3 +1,13 @@
+## Unreleased
+
+### Changed
+- Dev entrypoint no longer runs recursive chown/chmod on `wp-content`; only `uploads` and `upgrade` are adjusted, and bind-mounted plugin `wp-qr-trackr` is skipped to avoid macOS Docker permission errors.
+- Dev entrypoint now starts the official WordPress entrypoint, waits for core files, then performs setup to improve startup reliability on 8080.
+- Added `WP_CLI_ALLOW_ROOT=1` and Apache `ServerName localhost` in the dev image to suppress WP-CLI root warnings and Apache FQDN notices.
+- Control scripts (`wp-operations.sh`, `manage-containers.sh`, `debug.sh`) pass `--allow-root` for WP-CLI commands.
+
+### Fixed
+- QR rewrite rules confirmed and documented; added troubleshooting steps for 404s on `/qr/<code>`.
 # Changelog
 
 All notable changes to this project will be documented in this file.

@@ -134,15 +134,15 @@ run_diagnose() {
 
     # Check WordPress status
     print_header "WordPress Status:"
-    docker exec "$container" wp core is-installed --path=/var/www/html 2>/dev/null && print_status "WordPress is installed" || print_error "WordPress is not installed"
+    docker exec "$container" wp core is-installed --path=/var/www/html --allow-root 2>/dev/null && print_status "WordPress is installed" || print_error "WordPress is not installed"
 
     # Check plugin status
     print_header "Plugin Status:"
-    docker exec "$container" wp plugin list --name=wp-qr-trackr --path=/var/www/html 2>/dev/null || print_error "Plugin not found or not active"
+    docker exec "$container" wp plugin list --name=wp-qr-trackr --path=/var/www/html --allow-root 2>/dev/null || print_error "Plugin not found or not active"
 
     # Check database connectivity
     print_header "Database Status:"
-    docker exec "$container" wp db check --path=/var/www/html 2>/dev/null && print_status "Database connection OK" || print_error "Database connection failed"
+    docker exec "$container" wp db check --path=/var/www/html --allow-root 2>/dev/null && print_status "Database connection OK" || print_error "Database connection failed"
 
     # Check file permissions
     print_header "File Permissions:"
@@ -157,20 +157,20 @@ check_wordpress() {
     print_header "WordPress Status for $env environment..."
 
     # Check WordPress installation
-    if docker exec "$container" wp core is-installed --path=/var/www/html 2>/dev/null; then
+    if docker exec "$container" wp core is-installed --path=/var/www/html --allow-root 2>/dev/null; then
         print_status "WordPress is installed"
 
         # Get WordPress version
-        local version=$(docker exec "$container" wp core version --path=/var/www/html 2>/dev/null)
+        local version=$(docker exec "$container" wp core version --path=/var/www/html --allow-root 2>/dev/null)
         print_status "WordPress version: $version"
 
         # Check permalink structure
-        local permalinks=$(docker exec "$container" wp option get permalink_structure --path=/var/www/html 2>/dev/null)
+        local permalinks=$(docker exec "$container" wp option get permalink_structure --path=/var/www/html --allow-root 2>/dev/null)
         print_status "Permalink structure: $permalinks"
 
         # Check active plugins
         print_header "Active Plugins:"
-        docker exec "$container" wp plugin list --status=active --path=/var/www/html 2>/dev/null || print_error "Failed to get plugin list"
+        docker exec "$container" wp plugin list --status=active --path=/var/www/html --allow-root 2>/dev/null || print_error "Failed to get plugin list"
 
     else
         print_error "WordPress is not installed"
@@ -198,13 +198,13 @@ enable_verbose_logging() {
     print_header "Enabling verbose logging for nonprod environment..."
 
     # Check if WordPress is accessible
-    if ! docker exec "$container" wp core is-installed --path=/var/www/html 2>/dev/null; then
+    if ! docker exec "$container" wp core is-installed --path=/var/www/html --allow-root 2>/dev/null; then
         print_error "WordPress is not installed or accessible"
         exit 1
     fi
 
     # Enable verbose logging via WordPress option
-    docker exec "$container" wp option update qr_trackr_verbose_logging true --path=/var/www/html 2>/dev/null
+    docker exec "$container" wp option update qr_trackr_verbose_logging true --path=/var/www/html --allow-root 2>/dev/null
     if [[ $? -eq 0 ]]; then
         print_status "Verbose logging enabled successfully"
         print_status "Logs will now show informational messages in addition to errors and warnings"
@@ -227,13 +227,13 @@ disable_verbose_logging() {
     print_header "Disabling verbose logging for nonprod environment..."
 
     # Check if WordPress is accessible
-    if ! docker exec "$container" wp core is-installed --path=/var/www/html 2>/dev/null; then
+    if ! docker exec "$container" wp core is-installed --path=/var/www/html --allow-root 2>/dev/null; then
         print_error "WordPress is not installed or accessible"
         exit 1
     fi
 
     # Disable verbose logging via WordPress option
-    docker exec "$container" wp option delete qr_trackr_verbose_logging --path=/var/www/html 2>/dev/null
+    docker exec "$container" wp option delete qr_trackr_verbose_logging --path=/var/www/html --allow-root 2>/dev/null
     if [[ $? -eq 0 ]]; then
         print_status "Verbose logging disabled successfully"
         print_status "Only errors and warnings will be logged"
@@ -251,15 +251,15 @@ show_logging_status() {
     print_header "Logging Status for $env environment..."
 
     # Check if WordPress is accessible
-    if ! docker exec "$container" wp core is-installed --path=/var/www/html 2>/dev/null; then
+    if ! docker exec "$container" wp core is-installed --path=/var/www/html --allow-root 2>/dev/null; then
         print_error "WordPress is not installed or accessible"
         exit 1
     fi
 
     # Get logging configuration
-    local verbose_logging=$(docker exec "$container" wp option get qr_trackr_verbose_logging --path=/var/www/html 2>/dev/null || echo "false")
-    local wp_debug=$(docker exec "$container" wp config get WP_DEBUG --path=/var/www/html 2>/dev/null || echo "false")
-    local environment_type=$(docker exec "$container" wp config get WP_ENVIRONMENT_TYPE --path=/var/www/html 2>/dev/null || echo "not_set")
+    local verbose_logging=$(docker exec "$container" wp option get qr_trackr_verbose_logging --path=/var/www/html --allow-root 2>/dev/null || echo "false")
+    local wp_debug=$(docker exec "$container" wp config get WP_DEBUG --path=/var/www/html --allow-root 2>/dev/null || echo "false")
+    local environment_type=$(docker exec "$container" wp config get WP_ENVIRONMENT_TYPE --path=/var/www/html --allow-root 2>/dev/null || echo "not_set")
 
     print_status "Environment: $env"
     print_status "WP_DEBUG: $wp_debug"

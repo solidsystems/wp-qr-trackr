@@ -63,7 +63,8 @@ fi
 ENV=$1
 COMMAND=$2
 shift 2
-ARGS="$@"
+# Preserve all remaining args as an array to avoid word-splitting
+ARGS=("$@")
 
 # Validate environment
 case $ENV in
@@ -107,10 +108,10 @@ fi
 
 # Execute WordPress CLI command
 log "INFO" "Executing WordPress CLI command in $ENV environment"
-log "INFO" "Command: wp $COMMAND $ARGS"
+log "INFO" "Command: wp $COMMAND ${ARGS[*]}"
 
 # Run the command
-if docker compose -f "$COMPOSE_FILE" exec -T "$WPCLI_CONTAINER" wp "$COMMAND" $ARGS --path=/var/www/html; then
+if docker compose -f "$COMPOSE_FILE" exec -T "$WPCLI_CONTAINER" wp "$COMMAND" "${ARGS[@]}" --path=/var/www/html --allow-root; then
     log "INFO" "WordPress CLI command executed successfully"
 else
     log "ERROR" "WordPress CLI command failed"

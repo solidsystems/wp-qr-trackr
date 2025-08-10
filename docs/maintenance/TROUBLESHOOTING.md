@@ -1,3 +1,57 @@
+## Dev container attempts to chown/chmod `.git` and fails on macOS bind mounts
+
+Symptoms:
+- `chown: Permission denied` or `chmod: Permission denied` for paths inside `wp-content/plugins/wp-qr-trackr/.git/...` when starting the dev environment.
+
+Cause:
+- Recursive permission fixes were touching the bind-mounted plugin directory, including its `.git` folder. Docker Desktop on macOS prevents containers from changing host-owned files.
+
+Fix (implemented):
+- The dev entrypoint only adjusts `wp-content/uploads` and `wp-content/upgrade` and explicitly skips the bind-mounted `wp-qr-trackr` plugin directory.
+
+Validate:
+- Restart dev and verify no `.git` chown/chmod errors:
+  - `./scripts/manage-containers.sh restart dev`
+  - `./scripts/manage-containers.sh logs dev`
+
+## WordPress on 8080 not accessible after start
+
+Symptoms:
+- Control script reports WordPress not accessible on port 8080 after several attempts.
+
+Fixes and checks:
+- Dev entrypoint now starts the official WordPress entrypoint first, waits for core files, then runs setup.
+- Ensure accessibility with:
+  - `./scripts/manage-containers.sh health dev`
+  - `./scripts/debug.sh dev health`
+
+## `/qr/<code>` returns 404
+
+Checklist:
+- Confirm plugin is active:
+  - `./scripts/wp-operations.sh dev plugin list`
+- Confirm pretty permalinks are enabled:
+  - `./scripts/wp-operations.sh dev option get permalink_structure` → should be `/%postname%/`
+- Flush rewrite rules:
+  - `./scripts/wp-operations.sh dev rewrite flush --hard`
+- Confirm rewrite rules exist for `/qr/`:
+  - `./scripts/wp-operations.sh dev rewrite list | grep -E '^(qr|qrcode)|qr_tracking_code'`
+- Confirm QR code exists in DB (use wp-eval to avoid mysql client issues):
+  - ``./scripts/wp-operations.sh dev eval 'global $wpdb; $t=$wpdb->prefix."qr_trackr_links"; $code="YOURCODE"; $sql="SELECT id FROM {$t} WHERE qr_code=%s"; $row=$wpdb->get_row($wpdb->prepare($sql,$code)); echo $row?"FOUND":"NONE";'``
+
+Notes:
+- External QR redirects intentionally use `wp_redirect( esc_url_raw( $destination_url ), 302 )` per project security policy (external redirects allowed for QR codes).
+
+## WP-CLI root warnings inside containers
+
+Symptoms:
+- `Error: YIKES! It looks like you're running this as root ... add --allow-root`.
+
+Fix (implemented):
+- `WP_CLI_ALLOW_ROOT=1` set in the dev image, and control scripts pass `--allow-root` automatically.
+
+Tip:
+- Prefer `./scripts/wp-operations.sh` for all WP-CLI commands.
 # Troubleshooting & FAQ
 
 This guide covers common issues and solutions for the WP QR Trackr plugin. If you run into a problem not listed here, please open an issue or see CONTRIBUTING.md for more help.

@@ -1,3 +1,30 @@
+## WP-CLI usage
+
+Always use the control script wrapper which handles container selection and `--allow-root`:
+
+```bash
+./scripts/wp-operations.sh dev plugin list
+./scripts/wp-operations.sh dev option get permalink_structure
+./scripts/wp-operations.sh dev rewrite flush --hard
+```
+
+For SQL, prefer `wp eval` to avoid mysql client SSL plugin issues inside containers:
+
+```bash
+./scripts/wp-operations.sh dev eval 'global $wpdb; $t=$wpdb->prefix."qr_trackr_links"; $row=$wpdb->get_row($wpdb->prepare("SELECT id FROM {$t} WHERE qr_code=%s","YOURCODE")); echo $row?"FOUND":"NONE";'
+```
+
+## Container start/health
+
+```bash
+./scripts/manage-containers.sh start dev
+./scripts/manage-containers.sh health dev
+./scripts/debug.sh dev health
+```
+
+Notes:
+- Dev entrypoint avoids changing permissions on bind-mounted plugin directories.
+- Apache `ServerName` and `WP_CLI_ALLOW_ROOT` are configured for smoother startup.
 # Control Scripts Guide
 
 ## Overview
