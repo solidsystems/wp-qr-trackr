@@ -52,6 +52,25 @@ composer install --no-dev --optimize-autoloader --no-scripts 2>/dev/null || {
 }
 cd - > /dev/null
 
+# Ensure admin-page.php template is present (fallback to nested plugin path if missing)
+if [ ! -f "$BUILD_DIR/$PLUGIN_NAME/templates/admin-page.php" ]; then
+  if [ -f "wp-content/plugins/wp-qr-trackr/templates/admin-page.php" ]; then
+    mkdir -p "$BUILD_DIR/$PLUGIN_NAME/templates"
+    cp "wp-content/plugins/wp-qr-trackr/templates/admin-page.php" "$BUILD_DIR/$PLUGIN_NAME/templates/admin-page.php"
+  fi
+fi
+
+# Validate required templates exist
+missing_templates=()
+for f in admin-page.php add-new-page.php settings-page.php; do
+  if [ ! -f "$BUILD_DIR/$PLUGIN_NAME/templates/$f" ]; then
+    missing_templates+=("$f")
+  fi
+done
+if [ ${#missing_templates[@]} -ne 0 ]; then
+  print_warning "Missing templates: ${missing_templates[*]}"
+fi
+
 # Remove any leftover dev files from vendor
 find "$BUILD_DIR/$PLUGIN_NAME/vendor" -type d -name 'tests' -o -name 'test' | xargs rm -rf 2>/dev/null || true
 find "$BUILD_DIR/$PLUGIN_NAME/vendor" -name '*.md' -o -name 'phpunit*' -o -name '.phpcs*' -o -name 'phpcs*' | xargs rm -f 2>/dev/null || true
