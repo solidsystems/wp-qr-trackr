@@ -354,7 +354,7 @@ function qrc_search_posts_ajax() {
 	}
 
 	// Get and validate the search term.
-	$search_term = isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '';
+	$search_term = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : ( isset( $_POST['term'] ) ? sanitize_text_field( wp_unslash( $_POST['term'] ) ) : '' );
 
 	if ( empty( $search_term ) || strlen( $search_term ) < 2 ) {
 		qr_trackr_log(
@@ -551,6 +551,89 @@ function qr_trackr_ajax_get_qr_details() {
 	wp_send_json_success( $response_data );
 }
 add_action( 'wp_ajax_qr_trackr_get_qr_details', 'qr_trackr_ajax_get_qr_details' );
+
+/**
+ * AJAX: Check referral code uniqueness (and basic format) in real-time.
+ *
+ * @since 1.2.49
+ * @return void
+ */
+function qr_trackr_ajax_check_referral_unique() {
+	qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', $_POST, 'started' );
+
+	// Verify nonce.
+	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
+		qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', $_POST, 'security_failed' );
+		wp_send_json_error( array( 'message' => __( 'Security check failed.', 'wp-qr-trackr' ) ) );
+		return;
+	}
+
+	// Cap check.
+	if ( ! current_user_can( 'manage_options' ) ) {
+		qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', $_POST, 'permission_denied' );
+		wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'wp-qr-trackr' ) ) );
+		return;
+	}
+
+	// Get inputs.
+	$referral_code = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+	$current_id    = isset( $_POST['qr_id'] ) ? absint( $_POST['qr_id'] ) : 0;
+
+	// Basic format validation first.
+	if ( '' !== $referral_code && ! preg_match( '/^[a-zA-Z0-9\-_]+$/', $referral_code ) ) {
+		wp_send_json_success(
+			array(
+				'unique'  => false,
+				'message' => __( 'Referral code can only contain letters, numbers, hyphens, and underscores.', 'wp-qr-trackr' ),
+				'reason'  => 'format',
+			)
+		);
+		return;
+	}
+
+	// Empty referral codes are considered valid/no-conflict.
+	if ( '' === $referral_code ) {
+		wp_send_json_success( array( 'unique' => true ) );
+		return;
+	}
+
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+
+	// Cache check by code only; id is used to interpret result.
+	$cache_key = 'qr_trackr_referral_owner_' . md5( $referral_code );
+	$owner_id  = wp_cache_get( $cache_key, 'qr_trackr' );
+	if ( false === $owner_id ) {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Small validation query; cached.
+		$owner_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$table_name} WHERE referral_code = %s",
+				$referral_code
+			)
+		);
+		wp_cache_set( $cache_key, $owner_id, 'qr_trackr', 300 );
+	}
+
+	if ( null === $owner_id ) {
+		wp_send_json_success( array( 'unique' => true ) );
+		return;
+	}
+
+	// If the only owner is the current record, treat as unique for edit context.
+	if ( $current_id > 0 && intval( $owner_id ) === $current_id ) {
+		wp_send_json_success( array( 'unique' => true ) );
+		return;
+	}
+
+	wp_send_json_success(
+		array(
+			'unique'  => false,
+			'message' => __( 'Referral code already exists. Please choose a different one.', 'wp-qr-trackr' ),
+			'reason'  => 'duplicate',
+		)
+	);
+}
+add_action( 'wp_ajax_qr_trackr_check_referral_unique', 'qr_trackr_ajax_check_referral_unique' );
 
 /**
  * Handle AJAX request to update QR code details from modal.

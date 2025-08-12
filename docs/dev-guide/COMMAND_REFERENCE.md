@@ -75,8 +75,11 @@ This guide provides the correct control script usage for all common operations i
 
 ### Code Validation
 ```bash
-# Full validation (linting + tests)
+# Full validation (linting only; E2E skipped by default)
 make validate
+
+# Full validation including Playwright E2E (local only)
+make validate-e2e
 
 # Linting only
 make lint
@@ -158,6 +161,7 @@ docker exec wordpress-dev wp plugin status wp-qr-trackr --path=/var/www/html
 ```bash
 # ✅ Correct way
 make validate
+make validate-e2e  # to include local Playwright E2E
 
 # ❌ Don't do this
 docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcs
@@ -319,6 +323,12 @@ docker compose -f docker/docker-compose.ci.yml run --rm ci-runner
 
 # Run validation script
 docker compose -f docker/docker-compose.ci.yml run --rm ci-runner bash scripts/validate.sh
+
+# Run validation (no E2E) using Playwright runner harness
+make validate
+
+# Run validation + E2E locally
+make validate-e2e
 ```
 
 ### Pre-commit Checks

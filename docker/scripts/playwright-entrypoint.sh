@@ -23,12 +23,23 @@ echo "[Entrypoint] Running validation..."
 cd /usr/src/app
 bash scripts/validate.sh
 
-# Run Playwright tests
+# Conditionally run Playwright E2E
 cd /usr/src/app/wp-content/plugins/wp-qr-trackr
-if [ -f ./node_modules/.bin/playwright ]; then
-  echo "[Entrypoint] Running Playwright tests..."
-  yarn playwright test
-else
-  echo "[Entrypoint] Playwright not found! Did you run 'yarn install'? Exiting."
-  exit 1
+
+# Skip E2E in GitHub Actions or when RUN_E2E!=1
+if [ "${GITHUB_ACTIONS}" = "true" ] || [ "${RUN_E2E}" != "1" ]; then
+  echo "[Entrypoint] Skipping Playwright E2E (GITHUB_ACTIONS=${GITHUB_ACTIONS:-false}, RUN_E2E=${RUN_E2E:-0})."
+  exit 0
 fi
+
+echo "[Entrypoint] Preparing Playwright E2E dependencies..."
+# Install dev deps locally if missing
+if [ ! -d node_modules ]; then
+  yarn install --frozen-lockfile || yarn install
+fi
+
+# Install Playwright browsers and system deps inside the container
+npx playwright install --with-deps || yarn playwright install --with-deps || true
+
+echo "[Entrypoint] Running Playwright tests..."
+yarn test:e2e || yarn playwright test

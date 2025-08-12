@@ -123,7 +123,8 @@ function qr_trackr_validate_qr_id( $qr_id ) {
 	}
 
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_code_links';
+	// Use the correct table name per project standards.
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	$result = $wpdb->get_var(
 		$wpdb->prepare(
@@ -458,29 +459,19 @@ function qr_trackr_get_redirect_url( $qr_code ) {
 		return new WP_Error( 'invalid_qr_code', __( 'QR code cannot be empty.', 'wp-qr-trackr' ) );
 	}
 
-	$cache_key  = 'qr_trackr_redirect_' . md5( $qr_code );
-	$cached_url = wp_cache_get( $cache_key );
+	// Prefer clean rewrite URL for tracking: /qr/{code}/.
+	$qr_code   = sanitize_text_field( $qr_code );
+	$cache_key = 'qr_trackr_redirect_' . md5( $qr_code );
 
+	$cached_url = wp_cache_get( $cache_key );
 	if ( false !== $cached_url ) {
 		return $cached_url;
 	}
 
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_code_links';
+	$url = esc_url_raw( home_url( '/qr/' . rawurlencode( $qr_code ) . '/' ) );
+	wp_cache_set( $cache_key, $url, '', 300 );
 
-	$redirect_url = $wpdb->get_var(
-		$wpdb->prepare(
-			"SELECT redirect_url FROM {$table_name} WHERE qr_code = %s",
-			$qr_code
-		)
-	);
-
-	if ( $redirect_url ) {
-		wp_cache_set( $cache_key, $redirect_url, '', 300 ); // Cache for 5 minutes.
-		return $redirect_url;
-	}
-
-	return new WP_Error( 'qr_code_not_found', __( 'QR code not found.', 'wp-qr-trackr' ) );
+	return $url;
 }
 
 /**
@@ -494,25 +485,8 @@ function qr_trackr_get_redirect_url( $qr_code ) {
  * @return string|WP_Error The redirect URL or WP_Error on failure.
  */
 function qr_trackr_get_redirect_url_alt( $qr_code ) {
-	if ( empty( $qr_code ) ) {
-		return new WP_Error( 'invalid_qr_code', __( 'QR code cannot be empty.', 'wp-qr-trackr' ) );
-	}
-
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_code_links';
-
-	$redirect_url = $wpdb->get_var(
-		$wpdb->prepare(
-			"SELECT redirect_url FROM {$table_name} WHERE qr_code = %s",
-			$qr_code
-		)
-	);
-
-	if ( $redirect_url ) {
-		return $redirect_url;
-	}
-
-	return new WP_Error( 'qr_code_not_found', __( 'QR code not found.', 'wp-qr-trackr' ) );
+	// Alt method mirrors primary: construct clean URL directly.
+	return qr_trackr_get_redirect_url( $qr_code );
 }
 
 /**

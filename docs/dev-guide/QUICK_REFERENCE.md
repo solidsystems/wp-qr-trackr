@@ -12,7 +12,11 @@ Essential commands and prompts for WP QR Trackr development with Cursor.
 # Testing environment (port 8081)
 ./scripts/setup-wordpress.sh nonprod
 
-# Playwright testing environment (port 8087)
+# Playwright testing
+
+- Validation only (skip E2E): `make validate`
+- Validation + E2E locally: `make validate-e2e`
+- CI (GitHub Actions): E2E skipped automatically
 ./scripts/setup-wordpress.sh playwright
 ```
 

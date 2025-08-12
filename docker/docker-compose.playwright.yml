@@ -32,11 +32,21 @@ services:
       MYSQL_DATABASE: wpdb
       MYSQL_USER: wpuser
       MYSQL_PASSWORD: wppass
-      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+      MYSQL_RANDOM_ROOT_PASSWORD: "1"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "wpuser", "--password=wppass"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "wpuser",
+          "--password=wppass",
+        ]
       interval: 3s
       timeout: 5s
       retries: 10
@@ -57,6 +67,7 @@ services:
       - db-playwright
     environment:
       - DEBUG=pw:*
+      - RUN_E2E=${RUN_E2E:-0}
     # No ports exposed; for E2E test execution only
 
 volumes:

@@ -92,9 +92,10 @@ function qr_trackr_handle_clean_urls() {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// Look up the QR code in the database.
+	// Query by QR code only; the table does not include a status column in current schema.
 	$result = $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT * FROM {$table_name} WHERE qr_code = %s AND status = 'active'",
+			"SELECT * FROM {$table_name} WHERE qr_code = %s",
 			$qr_code
 		)
 	);
@@ -111,12 +112,14 @@ function qr_trackr_handle_clean_urls() {
 	// Update the scan count.
 	qr_trackr_update_scan_count_immediate( $result->id );
 
-	// Perform the redirect.
-	wp_safe_redirect( esc_url_raw( $destination_url ), 302 );
+	// Perform the redirect to the destination URL.
+	// For external URLs, project policy requires wp_redirect with esc_url_raw.
+	wp_redirect( esc_url_raw( $destination_url ), 302 );
 	exit;
 }
 
 // Register the template redirect handler.
+// Enable clean URL handling using native WordPress redirects.
 add_action( 'template_redirect', 'qr_trackr_handle_clean_urls' );
 
 /**
@@ -140,7 +143,7 @@ function qr_trackr_ajax_redirect() {
 	// Look up the QR code in the database.
 	$result = $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT * FROM {$table_name} WHERE qr_code = %s AND status = 'active'",
+			"SELECT * FROM {$table_name} WHERE qr_code = %s",
 			$qr_code
 		)
 	);
@@ -155,8 +158,8 @@ function qr_trackr_ajax_redirect() {
 	// Update the scan count.
 	qr_trackr_update_scan_count_immediate( $result->id );
 
-	// Perform the redirect.
-	wp_safe_redirect( esc_url_raw( $destination_url ), 302 );
+	// Perform the redirect per external redirect policy.
+	wp_redirect( esc_url_raw( $destination_url ), 302 );
 	exit;
 }
 

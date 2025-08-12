@@ -9,9 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-// Load Select2 directly in the template.
-wp_enqueue_style( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array(), '4.1.0' );
-wp_enqueue_script( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array( 'jquery' ), '4.1.0', true );
+// Select2 is enqueued via admin enqueue on plugin pages; no CDN fallback here.
 
 // Handle form submission.
 if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'qr_trackr_add_new' ) ) {
@@ -338,6 +336,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 
 		<form method="post" action="">
 			<?php wp_nonce_field( 'qr_trackr_add_new' ); ?>
+			<input type="hidden" id="qr_trackr_nonce" value="<?php echo esc_attr( wp_create_nonce( 'qr_trackr_nonce' ) ); ?>" />
 
 			<!-- Hidden field to store selected post ID -->
 			<input type="hidden" id="post_id" name="post_id" value="" />
@@ -421,6 +420,10 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	(function ($) {
 		$(function () {
 			// Initialize Select2 for the destination URL dropdown.
+			if (typeof $.fn.select2 === 'undefined') {
+				console.error('Select2 not available. Ensure assets are enqueued on QR Trackr admin pages.');
+				return;
+			}
 			$('#destination_url').select2({
 				placeholder: '<?php echo esc_js( __( 'Search posts and pages...', 'wp-qr-trackr' ) ); ?>',
 				allowClear: true,
@@ -433,7 +436,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						return {
 							action: 'qrc_search_posts',
 							search: params.term,
-							nonce: qr_trackr_ajax.nonce
+							nonce: (window.qr_trackr_ajax && qr_trackr_ajax.nonce) ? qr_trackr_ajax.nonce : jQuery('#qr_trackr_nonce').val()
 						};
 					},
 					processResults: function (data) {

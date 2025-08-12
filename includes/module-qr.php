@@ -122,9 +122,8 @@ function qrc_get_all_links() {
 /**
  * Generate a QR code and save it to a file.
  *
- * Uses Google Charts API to generate QR codes with customizable parameters.
- * Implements caching to prevent unnecessary API calls. If the primary API fails,
- * falls back to a secondary QR code generation method.
+ * Generates QR codes locally using the Endroid QR Code library (no third parties).
+ * Images are written to uploads/qr-codes and URLs are returned. Results are cached.
  *
  * @since 1.1.3
  * @param string $data The data to encode in the QR code.
@@ -248,159 +247,77 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 	$cache_key = 'qrc_' . md5( $data . wp_json_encode( $args ) );
 	$qr_url    = get_transient( $cache_key );
 
-	if ( false === $qr_url ) {
-		qr_trackr_log( 'QR code not found in cache, generating new QR code', 'info', array( 'cache_key' => $cache_key ) );
+	if ( false !== $qr_url ) {
+		qr_trackr_log( 'QR code retrieved from cache', 'info', array( 'qr_url' => $qr_url ) );
+		return $qr_url;
+	}
 
-		// Build the query parameters for the QR code API.
-		$api_params = array(
-			'cht'  => 'qr',
-			'chs'  => $args['size'] . 'x' . $args['size'],
-			'chl'  => rawurlencode( wp_kses( $data, array() ) ),
-			'choe' => 'UTF-8',
-			'chld' => $args['error_correction'] . '|' . $args['margin'],
+	// Pure local generation through Endroid.
+	$upload_dir = wp_upload_dir();
+	$qr_dir     = trailingslashit( $upload_dir['basedir'] ) . 'qr-codes';
+	if ( ! file_exists( $qr_dir ) ) {
+		wp_mkdir_p( $qr_dir );
+	}
+
+	$filename  = sanitize_file_name( 'qr-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
+	$file_path = trailingslashit( $qr_dir ) . $filename;
+	$qr_url    = trailingslashit( $upload_dir['baseurl'] ) . 'qr-codes/' . $filename;
+
+	$to_rgb = static function ( $hex ) {
+		$hex = ltrim( $hex, '#' );
+		if ( 6 !== strlen( $hex ) ) {
+			$hex = '000000';
+		}
+		return array(
+			hexdec( substr( $hex, 0, 2 ) ),
+			hexdec( substr( $hex, 2, 2 ) ),
+			hexdec( substr( $hex, 4, 2 ) ),
 		);
+	};
 
-		$api_url = add_query_arg( $api_params, 'https://chart.googleapis.com/chart' );
+	$ec_map   = array(
+		'L' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelLow',
+		'M' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelMedium',
+		'Q' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelQuartile',
+		'H' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelHigh',
+	);
+	$ec_class = isset( $ec_map[ $args['error_correction'] ] ) ? $ec_map[ $args['error_correction'] ] : $ec_map['M'];
 
-		// Verify the API response.
-		$response = wp_safe_remote_get( $api_url );
-		if ( is_wp_error( $response ) ) {
-			// Log the error for debugging.
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-			error_log(
-				sprintf(
-					'QR Code API Error: %s (URL: %s).',
-					$response->get_error_message(),
-					$api_url
-				)
-			);
+	try {
+		$qr_code = \Endroid\QrCode\QrCode::create( $data )
+			->setEncoding( new \Endroid\QrCode\Encoding\Encoding( 'UTF-8' ) )
+			->setErrorCorrectionLevel( new $ec_class() )
+			->setSize( (int) $args['size'] )
+			->setMargin( (int) $args['margin'] );
 
-			qr_trackr_log(
-				'Primary QR code API failed, trying fallback',
-				'warning',
-				array(
-					'api_url' => $api_url,
-					'error'   => $response->get_error_message(),
-				)
-			);
+		list( $fr, $fg, $fb ) = $to_rgb( $args['foreground_color'] );
+		list( $br, $bg, $bb ) = $to_rgb( $args['background_color'] );
 
-			// Try fallback API if primary fails.
-			$fallback_url = qrc_generate_fallback_qr( $data, $args );
-			if ( ! is_wp_error( $fallback_url ) ) {
-				set_transient( $cache_key, $fallback_url, DAY_IN_SECONDS );
-				qr_trackr_log( 'QR code generated successfully using fallback API', 'info', array( 'fallback_url' => $fallback_url ) );
-				return $fallback_url;
-			}
+		$qr_code = $qr_code
+			->setForegroundColor( new \Endroid\QrCode\Color\Color( $fr, $fg, $fb ) )
+			->setBackgroundColor( new \Endroid\QrCode\Color\Color( $br, $bg, $bb ) );
 
-			qr_trackr_log(
-				'QR code generation failed - both primary and fallback APIs failed',
-				'error',
-				array(
-					'api_url'        => $api_url,
-					'fallback_error' => $fallback_url->get_error_message(),
-				)
-			);
-			return new WP_Error(
-				'qrc_api_error',
-				esc_html__( 'Failed to generate QR code. Please try again later.', 'wp-qr-trackr' )
-			);
-		}
+		$writer = new \Endroid\QrCode\Writer\PngWriter();
+		$result = $writer->write( $qr_code );
+		$result->saveToFile( $file_path );
 
-		$response_code = wp_remote_retrieve_response_code( $response );
-		if ( 200 !== $response_code ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-			error_log(
-				sprintf(
-					'QR Code API Error: HTTP %d (URL: %s).',
-					$response_code,
-					$api_url
-				)
-			);
-
-			qr_trackr_log(
-				'Primary QR code API returned error status, trying fallback',
-				'warning',
-				array(
-					'api_url'       => $api_url,
-					'response_code' => $response_code,
-				)
-			);
-
-			// Try fallback API if primary fails.
-			$fallback_url = qrc_generate_fallback_qr( $data, $args );
-			if ( ! is_wp_error( $fallback_url ) ) {
-				set_transient( $cache_key, $fallback_url, DAY_IN_SECONDS );
-				qr_trackr_log( 'QR code generated successfully using fallback API', 'info', array( 'fallback_url' => $fallback_url ) );
-				return $fallback_url;
-			}
-
-			qr_trackr_log(
-				'QR code generation failed - both primary and fallback APIs failed',
-				'error',
-				array(
-					'api_url'        => $api_url,
-					'response_code'  => $response_code,
-					'fallback_error' => $fallback_url->get_error_message(),
-				)
-			);
-			return new WP_Error(
-				'qrc_api_error',
-				esc_html__( 'Failed to generate QR code. Please try again later.', 'wp-qr-trackr' )
-			);
-		}
-
-		// Save the QR code image.
-		$upload_dir = wp_upload_dir();
-		$qr_dir     = $upload_dir['basedir'] . '/qr-codes';
-		if ( ! file_exists( $qr_dir ) ) {
-			$dir_created = wp_mkdir_p( $qr_dir );
-			qr_trackr_log(
-				'QR codes directory creation attempt',
-				'info',
-				array(
-					'qr_dir'  => $qr_dir,
-					'created' => $dir_created,
-				)
-			);
-		}
-
-		$filename  = sanitize_file_name( 'qr-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
-		$file_path = $qr_dir . '/' . $filename;
-		$qr_url    = $upload_dir['baseurl'] . '/qr-codes/' . $filename;
-
-		// Save the image using WP_Filesystem.
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		WP_Filesystem();
-		global $wp_filesystem;
-
-		$image_data = wp_remote_retrieve_body( $response );
-		if ( ! $wp_filesystem->put_contents( $file_path, $image_data, FS_CHMOD_FILE ) ) {
-			qr_trackr_log( 'Failed to save QR code image to file system', 'error', array( 'file_path' => $file_path ) );
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-			error_log( sprintf( 'Failed to save QR code image to %s.', $file_path ) );
-			return new WP_Error(
-				'qrc_save_error',
-				esc_html__( 'Failed to save QR code image.', 'wp-qr-trackr' )
-			);
-		}
-
-		// Cache the URL.
 		set_transient( $cache_key, $qr_url, DAY_IN_SECONDS );
 
 		qr_trackr_log(
-			'QR code generated and saved successfully',
+			'QR code generated and saved successfully (local Endroid)',
 			'info',
 			array(
 				'file_path' => $file_path,
 				'qr_url'    => $qr_url,
-				'file_size' => strlen( $image_data ),
 			)
 		);
-	} else {
-		qr_trackr_log( 'QR code retrieved from cache', 'info', array( 'qr_url' => $qr_url ) );
-	}
 
-	return $qr_url;
+		return $qr_url;
+	} catch ( \Throwable $e ) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+		error_log( 'QR local generation failed: ' . $e->getMessage() );
+		return new WP_Error( 'qrc_generation_error', esc_html__( 'Failed to generate QR code.', 'wp-qr-trackr' ) );
+	}
 }
 
 /**
@@ -415,10 +332,61 @@ function qrc_generate_qr_code( $data, $args = array() ) {
  * @return string|WP_Error The URL of the generated QR code, or a WP_Error object on failure.
  */
 function qrc_generate_fallback_qr( $data, $args ) {
-	// Implementation of fallback QR code generation.
-	// This is a placeholder that should be replaced with actual fallback logic.
-	return new WP_Error(
-		'qrc_no_fallback',
-		esc_html__( 'Fallback QR code generation not implemented.', 'wp-qr-trackr' )
+	// Build uploads target paths.
+	$upload_dir = wp_upload_dir();
+	$qr_dir     = $upload_dir['basedir'] . '/qr-codes';
+	if ( ! file_exists( $qr_dir ) ) {
+		wp_mkdir_p( $qr_dir );
+	}
+
+	$filename  = sanitize_file_name( 'qr-' . md5( $data . wp_json_encode( $args ) ) . '.png' );
+	$file_path = $qr_dir . '/' . $filename;
+	$qr_url    = $upload_dir['baseurl'] . '/qr-codes/' . $filename;
+
+	// Convert hex color (e.g. #aabbcc) to RGB triplet using Endroid\QrCode\Color\Color.
+	$to_rgb = static function ( $hex ) {
+		$hex = ltrim( $hex, '#' );
+		if ( 6 !== strlen( $hex ) ) {
+			$hex = '000000';
+		}
+		return array(
+			hexdec( substr( $hex, 0, 2 ) ),
+			hexdec( substr( $hex, 2, 2 ) ),
+			hexdec( substr( $hex, 4, 2 ) ),
+		);
+	};
+
+	// Map error correction.
+	$ec_map   = array(
+		'L' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelLow',
+		'M' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelMedium',
+		'Q' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelQuartile',
+		'H' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelHigh',
 	);
+	$ec_class = isset( $ec_map[ $args['error_correction'] ] ) ? $ec_map[ $args['error_correction'] ] : $ec_map['M'];
+
+	try {
+		$qr_code = \Endroid\QrCode\QrCode::create( $data )
+			->setEncoding( new \Endroid\QrCode\Encoding\Encoding( 'UTF-8' ) )
+			->setErrorCorrectionLevel( new $ec_class() )
+			->setSize( (int) $args['size'] )
+			->setMargin( (int) $args['margin'] );
+
+		list( $fr, $fg, $fb ) = $to_rgb( $args['foreground_color'] );
+		list( $br, $bg, $bb ) = $to_rgb( $args['background_color'] );
+
+		$qr_code = $qr_code
+			->setForegroundColor( new \Endroid\QrCode\Color\Color( $fr, $fg, $fb ) )
+			->setBackgroundColor( new \Endroid\QrCode\Color\Color( $br, $bg, $bb ) );
+
+		$writer = new \Endroid\QrCode\Writer\PngWriter();
+		$result = $writer->write( $qr_code );
+		$result->saveToFile( $file_path );
+
+		return $qr_url;
+	} catch ( \Throwable $e ) {
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+		error_log( 'QR fallback generation failed: ' . $e->getMessage() );
+		return new WP_Error( 'qrc_fallback_error', esc_html__( 'Failed to generate QR code (local).', 'wp-qr-trackr' ) );
+	}
 }

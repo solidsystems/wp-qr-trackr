@@ -10,7 +10,11 @@ fix:
 	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner ./vendor/bin/phpcbf --standard=WordPress --extensions=php --ignore=node_modules,vendor wp-content/plugins/wp-qr-trackr/
 
 validate:
-	docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner bash scripts/validate.sh
+	RUN_E2E=0 docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner bash scripts/validate.sh
+
+.PHONY: validate-e2e
+validate-e2e:
+	RUN_E2E=1 docker compose -f docker/docker-compose.playwright.yml run --rm playwright-runner
 
 test:
 	docker compose -f docker/docker-compose.dev.yml run --rm ci-runner vendor/bin/phpunit
