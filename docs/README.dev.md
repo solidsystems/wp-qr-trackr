@@ -47,7 +47,9 @@ Use the launch script:
 
 ## Playwright Automation & User Flow Testing
 
-- Playwright is installed in the dev container for automated UI testing and screenshot capture.
+- Playwright is available for local E2E via the Playwright runner container.
+- Run lint-only validation: `make validate`.
+- Run validation + E2E locally: `make validate-e2e`.
 - To run the full user flow and capture screenshots:
 
 ```sh

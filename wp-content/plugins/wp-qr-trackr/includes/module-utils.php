@@ -158,11 +158,11 @@ function qr_trackr_generate_unique_qr_code( $length = 8 ) {
 }
 
 /**
- * Generate QR code image URL for a given tracking code.
+ * Generate QR code image URL for a given tracking code (local generation).
  *
- * Creates the visual QR code image using the QR Server API and stores it
- * in the WordPress uploads directory. Uses caching to avoid regenerating
- * existing QR codes.
+ * Uses the Endroid QR Code library to generate images locally and stores
+ * them in the WordPress uploads directory. Uses caching to avoid
+ * regenerating existing QR codes. No third-party services are invoked.
  *
  * @since 1.0.0
  * @param string $tracking_code The QR code tracking identifier.
@@ -215,51 +215,46 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 		return $image_url;
 	}
 
-	// Generate QR code using QR Server API (modern replacement for deprecated Google Charts API).
-	$api_params = array(
-		'size'    => absint( $args['size'] ) . 'x' . absint( $args['size'] ),
-		'data'    => rawurlencode( $redirect_url ),
-		'format'  => 'png',
-		'ecc'     => sanitize_text_field( strtoupper( $args['error_correction'] ) ),
-		'margin'  => absint( $args['margin'] ),
-		'color'   => '000000',
-		'bgcolor' => 'ffffff',
+	// Generate QR code locally with Endroid.
+	$to_rgb = static function ( $hex ) {
+		$hex = ltrim( $hex, '#' );
+		if ( 6 !== strlen( $hex ) ) {
+			$hex = '000000';
+		}
+		return array(
+			hexdec( substr( $hex, 0, 2 ) ),
+			hexdec( substr( $hex, 2, 2 ) ),
+			hexdec( substr( $hex, 4, 2 ) ),
+		);
+	};
+
+	$ec_map = array(
+		'L' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelLow',
+		'M' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelMedium',
+		'Q' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelQuartile',
+		'H' => '\\Endroid\\QrCode\\ErrorCorrectionLevel\\ErrorCorrectionLevelHigh',
 	);
+	$ec     = strtoupper( $args['error_correction'] );
+	$ec_cl  = isset( $ec_map[ $ec ] ) ? $ec_map[ $ec ] : $ec_map['M'];
 
-	$api_url = add_query_arg( $api_params, 'https://api.qrserver.com/v1/create-qr-code/' );
+	try {
+		$qr = \Endroid\QrCode\QrCode::create( esc_url_raw( $redirect_url ) )
+			->setEncoding( new \Endroid\QrCode\Encoding\Encoding( 'UTF-8' ) )
+			->setErrorCorrectionLevel( new $ec_cl() )
+			->setSize( (int) $args['size'] )
+			->setMargin( (int) $args['margin'] );
 
-	// Get the QR code image.
-	$response = wp_safe_remote_get( $api_url, array( 'timeout' => 30 ) );
+		list( $fr, $fg, $fb ) = $to_rgb( '#000000' );
+		list( $br, $bg, $bb ) = $to_rgb( '#ffffff' );
 
-	if ( is_wp_error( $response ) ) {
-		qr_trackr_debug_log( sprintf( 'QR Code API Error: %s', $response->get_error_message() ) );
-		return new WP_Error(
-			'qr_trackr_api_error',
-			esc_html__( 'Failed to generate QR code image.', 'wp-qr-trackr' )
-		);
-	}
+		$qr = $qr->setForegroundColor( new \Endroid\QrCode\Color\Color( $fr, $fg, $fb ) )
+				->setBackgroundColor( new \Endroid\QrCode\Color\Color( $br, $bg, $bb ) );
 
-	$response_code = wp_remote_retrieve_response_code( $response );
-	if ( 200 !== $response_code ) {
-		qr_trackr_debug_log( sprintf( 'QR Code API Error: HTTP %d', $response_code ) );
-		return new WP_Error(
-			'qr_trackr_api_error',
-			esc_html__( 'Failed to generate QR code image.', 'wp-qr-trackr' )
-		);
-	}
-
-	// Save the image.
-	require_once ABSPATH . 'wp-admin/includes/file.php';
-	WP_Filesystem();
-	global $wp_filesystem;
-
-	$image_data = wp_remote_retrieve_body( $response );
-	if ( ! $wp_filesystem->put_contents( $file_path, $image_data, FS_CHMOD_FILE ) ) {
-		qr_trackr_debug_log( sprintf( 'Failed to save QR code image to %s', $file_path ) );
-		return new WP_Error(
-			'qr_trackr_save_error',
-			esc_html__( 'Failed to save QR code image.', 'wp-qr-trackr' )
-		);
+		$writer = new \Endroid\QrCode\Writer\PngWriter();
+		$result = $writer->write( $qr );
+		$result->saveToFile( $file_path );
+	} catch ( \Throwable $e ) {
+		return new WP_Error( 'qr_trackr_local_error', esc_html__( 'Failed to generate QR code image.', 'wp-qr-trackr' ) );
 	}
 
 	// Return the image URL.

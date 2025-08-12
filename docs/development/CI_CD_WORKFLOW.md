@@ -8,7 +8,7 @@ The WP QR Trackr project uses a robust, containerized CI/CD pipeline that ensure
 
 ### CI Environment Components
 
-- **CI Runner Container:** Self-contained testing environment with PHP and Composer (Node present, no Playwright in CI).
+- **CI Runner Container:** Self-contained testing environment with PHP and Composer (Node present; Playwright E2E is disabled in CI).
 - **MariaDB Service:** Database for WordPress test suite (ARM64 compatible).
 - **WordPress Test Suite:** Automated WordPress environment setup.
 - **PHPUnit Integration:** WordPress plugin testing framework (skipped when no tests present).
@@ -299,7 +299,7 @@ Regularly update:
 
 ### Planned Enhancements
 
-1. **Re-enable Playwright Tests locally only:** E2E testing remains local by project policy.
+1. **Playwright E2E local-only:** E2E testing runs locally via `make validate-e2e` and is skipped in GitHub Actions. `make validate` always skips E2E.
 2. **Performance Optimization:** Cache dependencies and test artifacts.
 3. **Multi-Platform Testing:** Test on different architectures.
 4. **Security Scanning:** Add vulnerability scanning to CI pipeline.

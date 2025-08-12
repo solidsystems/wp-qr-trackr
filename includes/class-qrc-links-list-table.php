@@ -323,6 +323,20 @@ class QRC_Links_List_Table extends WP_List_Table {
 
 		if ( ! empty( $qr_code ) ) {
 			$tracking_url = qr_trackr_get_redirect_url( $qr_code );
+			if ( is_wp_error( $tracking_url ) ) {
+				// Log the error and fall back to no URL to avoid passing WP_Error to esc_url().
+				if ( function_exists( 'qr_trackr_log' ) ) {
+					qr_trackr_log(
+						'QR redirect URL generation failed in list table.',
+						'error',
+						array(
+							'qr_code'       => $qr_code,
+							'error_message' => $tracking_url->get_error_message(),
+						)
+					);
+				}
+				$tracking_url = '';
+			}
 		}
 
 		// Show QR code identifier and tracking URL without image (image is in qr_image column).
@@ -392,7 +406,17 @@ class QRC_Links_List_Table extends WP_List_Table {
 			$order = sanitize_text_field( wp_unslash( $_GET['order'] ) );
 		}
 
-		$result = strcmp( $a[ $orderby ], $b[ $orderby ] );
+		// Ensure numeric compare for numeric fields; fallback to string compare.
+		$numeric_fields = array( 'id', 'scans' );
+		if ( in_array( $orderby, $numeric_fields, true ) ) {
+			$a_val  = isset( $a[ $orderby ] ) ? (int) $a[ $orderby ] : 0;
+			$b_val  = isset( $b[ $orderby ] ) ? (int) $b[ $orderby ] : 0;
+			$result = $a_val <=> $b_val;
+		} else {
+			$a_val  = isset( $a[ $orderby ] ) ? (string) $a[ $orderby ] : '';
+			$b_val  = isset( $b[ $orderby ] ) ? (string) $b[ $orderby ] : '';
+			$result = strcmp( $a_val, $b_val );
+		}
 
 		if ( 'asc' === $order ) {
 			return $result;

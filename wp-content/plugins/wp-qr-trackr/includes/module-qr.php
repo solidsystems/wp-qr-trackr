@@ -108,7 +108,7 @@ function qrc_get_all_links() {
 /**
  * Generate a QR code and save it to a file.
  *
- * Uses Google Charts API to generate QR codes with customizable parameters.
+ * Generates QR codes locally using the Endroid QR Code library (no third parties).
  * Implements caching to prevent unnecessary API calls. If the primary API fails,
  * falls back to a secondary QR code generation method.
  *
@@ -214,7 +214,7 @@ function qrc_generate_qr_code( $data, $args = array() ) {
 	$qr_url    = get_transient( $cache_key );
 
 	if ( false === $qr_url ) {
-		// Use QR Server API (modern, reliable, free).
+		// Local Endroid implementation is used in primary module; this copy should match policy.
 		$api_params = array(
 			'data'    => rawurlencode( $data ),
 			'size'    => $args['size'] . 'x' . $args['size'],

@@ -71,16 +71,15 @@ $scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 							</td>
 						</tr>
 
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Destination URL', 'wp-qr-trackr' ); ?></th>
-							<td>
-								<input type="url" value="<?php echo $destination_url; ?>" class="regular-text"
-									readonly />
-								<p class="description">
-									<?php esc_html_e( 'The destination URL cannot be changed.', 'wp-qr-trackr' ); ?>
-								</p>
-							</td>
-						</tr>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Destination URL', 'wp-qr-trackr' ); ?></th>
+			<td>
+				<input type="url" name="destination_url" value="<?php echo $destination_url; ?>" class="regular-text" />
+				<p class="description">
+					<?php esc_html_e( 'Update the destination URL for this QR code. External URLs are allowed.', 'wp-qr-trackr' ); ?>
+				</p>
+			</td>
+		</tr>
 
 						<tr>
 							<th scope="row"><?php esc_html_e( 'QR Code', 'wp-qr-trackr' ); ?></th>

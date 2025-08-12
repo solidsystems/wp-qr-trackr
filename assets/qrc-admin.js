@@ -80,13 +80,13 @@ jQuery(document).ready(function ($) {
 	function searchPosts(searchTerm) {
 		$postResults.html('<div style="padding: 10px; text-align: center;"><em>Searching...</em></div>').show();
 
-		$.ajax({
-			url: qrcAjax.ajaxurl,
+    $.ajax({
+            url: (window.qrcAjax && qrcAjax.ajaxurl) ? qrcAjax.ajaxurl : (window.ajaxurl || ''),
 			type: 'POST',
 			data: {
 				action: 'qrc_search_posts',
 				search: searchTerm,
-				nonce: qrcAjax.nonce
+                nonce: (window.qrcAjax && qrcAjax.nonce) ? qrcAjax.nonce : (jQuery('#qr_trackr_nonce').val() || '')
 			},
 			success: function (response) {
 				if (response.success && response.data.posts) {
@@ -482,13 +482,54 @@ jQuery(document).ready(function ($) {
 		}
 
 		if (/^[a-zA-Z0-9\-_]+$/.test(code)) {
-			$field.addClass('valid-code');
-			$description.text('✓ Valid referral code format').css('color', '#28a745');
+			// First pass format success, then check uniqueness via AJAX (debounced)
+			$description.text('Checking availability…').css('color', '#666');
+			checkReferralUniquenessDebounced(code, $field, $description);
 		} else {
 			$field.addClass('invalid-code');
 			$description.text('✗ Referral code can only contain letters, numbers, hyphens, and underscores').css('color', '#dc3545');
 		}
 	});
+
+  // Debounce helper
+  let checkReferralTimer;
+  function checkReferralUniquenessDebounced(code, $field, $description) {
+    clearTimeout(checkReferralTimer);
+    checkReferralTimer = setTimeout(function () {
+      checkReferralUniqueness(code, $field, $description);
+    }, 300);
+  }
+
+  // AJAX uniqueness check
+  function checkReferralUniqueness(code, $field, $description) {
+    const qrId = $('#qr-modal-id').val() || '';
+    $.post((window.qrcAdmin && qrcAdmin.ajaxUrl) ? qrcAdmin.ajaxUrl : (window.ajaxurl || ''), {
+      action: 'qr_trackr_check_referral_unique',
+      referral_code: code,
+      qr_id: qrId,
+      nonce: (window.qrcAdmin && qrcAdmin.nonce) ? qrcAdmin.nonce : (jQuery('#qr_trackr_nonce').val() || '')
+    })
+    .done(function (response) {
+      if (response && response.success && typeof response.data === 'object') {
+        if (response.data.unique) {
+          $field.removeClass('invalid-code').addClass('valid-code');
+          $description.text('✓ Referral code is available').css('color', '#28a745');
+        } else {
+          $field.removeClass('valid-code').addClass('invalid-code');
+          const msg = response.data.message || 'Referral code is not available.';
+          $description.text('✗ ' + msg).css('color', '#dc3545');
+        }
+      } else {
+        // Fallback message on unexpected response
+        $field.removeClass('valid-code').addClass('invalid-code');
+        $description.text('✗ Could not validate referral code. Try again.').css('color', '#dc3545');
+      }
+    })
+    .fail(function () {
+      $field.removeClass('valid-code').addClass('invalid-code');
+      $description.text('✗ Could not validate referral code. Network error.').css('color', '#dc3545');
+    });
+  }
 
 	// ESC key to close modal
 	$(document).on('keydown', function (e) {
@@ -507,10 +548,10 @@ jQuery(document).ready(function ($) {
 		$('.qr-modal-message').hide();
 
 		// Fetch QR code details
-		$.post(qrcAdmin.ajaxUrl, {
+        $.post((window.qrcAdmin && qrcAdmin.ajaxUrl) ? qrcAdmin.ajaxUrl : (window.ajaxurl || ''), {
 			action: 'qr_trackr_get_qr_details',
 			qr_id: qrId,
-			nonce: qrcAdmin.nonce
+            nonce: (window.qrcAdmin && qrcAdmin.nonce) ? qrcAdmin.nonce : (jQuery('#qr_trackr_nonce').val() || '')
 		})
 			.done(function (response) {
 				if (response.success) {
@@ -605,13 +646,13 @@ jQuery(document).ready(function ($) {
 		$('#qr-modal-save').prop('disabled', true).text(qrcAdmin.strings.saving);
 		$('.qr-modal-message').hide();
 
-		$.post(qrcAdmin.ajaxUrl, {
+        $.post((window.qrcAdmin && qrcAdmin.ajaxUrl) ? qrcAdmin.ajaxUrl : (window.ajaxurl || ''), {
 			action: 'qr_trackr_update_qr_details',
 			qr_id: qrId,
 			common_name: commonName,
 			referral_code: referralCode,
 			destination_url: destinationUrl,
-			nonce: qrcAdmin.nonce
+            nonce: (window.qrcAdmin && qrcAdmin.nonce) ? qrcAdmin.nonce : (jQuery('#qr_trackr_nonce').val() || '')
 		})
 			.done(function (response) {
 				if (response.success) {
@@ -797,4 +838,100 @@ jQuery(document).ready(function ($) {
 		const urlRegex = /^https?:\/\/.+/;
 		return urlRegex.test(trimmedString);
 	}
+
+  // Initialize Select2 for add-new page if present
+  (function initSelect2IfPresent() {
+    // Only initialize on Add New page to avoid rogue select2 on listing pages
+    if (window.qrcAdmin && window.qrcAdmin.currentPage && window.qrcAdmin.currentPage !== 'qr-code-add-new') {
+      return;
+    }
+    const $destinationSelect = $('#destination_url');
+    if (!$destinationSelect.length) {
+      return;
+    }
+    if (typeof $.fn.select2 === 'undefined') {
+      // Select2 not available; log and bail.
+      console.error('Select2 not available. Ensure assets are enqueued on QR Trackr admin pages.');
+      return;
+    }
+
+    $destinationSelect.select2({
+      placeholder: 'Search posts and pages...',
+      allowClear: true,
+      ajax: {
+        url: (window.qrcAjax && qrcAjax.ajaxurl) ? qrcAjax.ajaxurl : (window.ajaxurl || ''),
+        type: 'POST',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+          return {
+            action: 'qrc_search_posts',
+            search: params.term,
+            nonce: (window.qr_trackr_ajax && qr_trackr_ajax.nonce) ? qr_trackr_ajax.nonce : ($('#qr_trackr_nonce').val() || '')
+          };
+        },
+        processResults: function (data) {
+          var results = [];
+          if (data.success && data.data && data.data.posts) {
+            data.data.posts.forEach(function (post) {
+              results.push({
+                id: post.id,
+                text: post.title + ' (' + post.type + ')',
+                url: post.url
+              });
+            });
+          }
+          return { results: results };
+        },
+        error: function (xhr, status, error) {
+          console.error('Select2 AJAX error:', { xhr: xhr, status: status, error: error });
+        },
+        cache: true
+      },
+      minimumInputLength: 2
+    });
+
+    // Sync hidden post_id and clear custom URL when selecting
+    $destinationSelect.on('select2:select', function (e) {
+      var data = e.params.data;
+      $('#post_id').val(data.id);
+      $('#custom_destination_url').val('');
+      $('#url-validation-error').hide();
+    });
+
+    // Handle clearing the dropdown
+    $destinationSelect.on('select2:clear', function () {
+      $('#post_id').val('');
+      $('#url-validation-error').hide();
+    });
+
+    // When typing a custom URL, clear the select
+    $('#custom_destination_url').on('input', function () {
+      if ($(this).val()) {
+        $destinationSelect.val('').trigger('change');
+        $('#post_id').val('');
+        $('#url-validation-error').hide();
+      }
+    });
+
+    // Keep validation message tidy on change
+    $destinationSelect.on('change', function () {
+      if ($(this).val()) {
+        $('#custom_destination_url').val('');
+        $('#url-validation-error').hide();
+      }
+    });
+
+    // Validate before submit
+    $('form').on('submit', function (e) {
+      var destinationVal = $destinationSelect.val();
+      var customVal = $('#custom_destination_url').val();
+      if (!destinationVal && !customVal) {
+        e.preventDefault();
+        $('#url-validation-error').show();
+        return false;
+      }
+      $('#url-validation-error').hide();
+    });
+  })();
 });

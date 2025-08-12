@@ -383,23 +383,34 @@ function qrc_add_new_page() {
  * @return void
  */
 function qrc_admin_enqueue_scripts( $hook ) {
-	// Check if we're on a QR Trackr page by looking at the hook.
-	$qr_trackr_hooks = array( 'toplevel_page_qr-code-links', 'qr-code-links_page_qr-code-add-new', 'qr-code-links_page_qr-code-settings' );
+	// Temporary logging to confirm enqueue in production.
+    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug only.
+	error_log( 'QR Trackr: admin_enqueue_scripts hook: ' . $hook );
 
-	// For debugging, load on any page that might be related.
+	// Only enqueue on our pages.
+	$qr_trackr_hooks = array( 'toplevel_page_qr-code-links', 'qr-code-links_page_qr-code-add-new', 'qr-code-links_page_qr-code-settings', 'qr-code-links_page_qr-code-edit' );
 	if ( ! in_array( $hook, $qr_trackr_hooks, true ) && strpos( $hook, 'qr-code' ) === false ) {
 		return;
 	}
 
-	wp_enqueue_script(
+	// Local Select2 assets.
+	wp_enqueue_style( 'select2', QR_TRACKR_PLUGIN_URL . 'assets/select2.min.css', array(), '4.1.0' );
+	wp_enqueue_script( 'select2', QR_TRACKR_PLUGIN_URL . 'assets/select2.min.js', array( 'jquery' ), '4.1.0', true );
+
+	// Admin JS.
+	wp_enqueue_script( 'qr-trackr-admin', QR_TRACKR_PLUGIN_URL . 'assets/qrc-admin.js', array( 'jquery' ), QR_TRACKR_VERSION, true );
+
+	// Localize AJAX params and strings.
+	wp_localize_script(
 		'qr-trackr-admin',
-		QR_TRACKR_PLUGIN_URL . 'assets/qrc-admin.js',
-		array( 'jquery' ),
-		QR_TRACKR_VERSION,
-		true
+		'qrcAjax',
+		array(
+			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'qr_trackr_nonce' ),
+		)
 	);
 
-	// Localize the script with AJAX data.
+	// Back-compat alias used by inline scripts.
 	wp_localize_script(
 		'qr-trackr-admin',
 		'qr_trackr_ajax',
@@ -409,7 +420,6 @@ function qrc_admin_enqueue_scripts( $hook ) {
 		)
 	);
 
-	// Localize script for admin strings.
 	wp_localize_script(
 		'qr-trackr-admin',
 		'qrcAdmin',
