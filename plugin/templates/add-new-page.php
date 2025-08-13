@@ -32,7 +32,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 
 	// Use custom URL if provided, otherwise use dropdown selection.
 	if ( ! empty( $custom_url ) ) {
-		$destination_url = $custom_url;
+		$destination_url  = $custom_url;
 		$selected_post_id = 0; // Clear post ID if custom URL is used.
 		qr_trackr_log( 'Using custom URL for QR code generation', 'info', array( 'custom_url' => $custom_url ) );
 	} elseif ( ! empty( $selected_post_id ) ) {
@@ -65,7 +65,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	if ( ! empty( $referral_code ) ) {
 		global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table name is trusted internal identifier; value uses placeholder.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table name is trusted internal identifier; value uses placeholder.
 		$referral_conflict = (int) $wpdb->get_var(
 			$wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ' WHERE referral_code = %s', $referral_code )
 		);
