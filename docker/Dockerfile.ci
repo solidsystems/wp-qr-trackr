@@ -12,10 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-install zip
 
-# Install Yarn (official method)
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && apt-get update && apt-get install -y yarn
+# NOTE: Yarn is not required in CI (no JS/E2E here). Skip Yarn install to avoid apt-key on Debian bookworm.
 
 # Install Composer globally
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
