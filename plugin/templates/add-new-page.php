@@ -32,8 +32,8 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 
 	// Use custom URL if provided, otherwise use dropdown selection.
 	if ( ! empty( $custom_url ) ) {
-		$destination_url   = $custom_url;
-		$selected_post_id = 0; // Clear post ID if custom URL is used.
+		$destination_url	= $custom_url;
+		$selected_post_id	= 0; // Clear post ID if custom URL is used.
 		qr_trackr_log( 'Using custom URL for QR code generation', 'info', array( 'custom_url' => $custom_url ) );
 	} elseif ( ! empty( $selected_post_id ) ) {
 		// If post ID is provided, get the post URL.
@@ -65,12 +65,9 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	if ( ! empty( $referral_code ) ) {
 		global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Single-row existence check prior to insert.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table name is a trusted internal identifier; value uses placeholder.
 		$referral_conflict = (int) $wpdb->get_var(
-			$wpdb->prepare(
-				sprintf( 'SELECT COUNT(*) FROM %s WHERE referral_code = %%s', $table_name ),
-				$referral_code
-			)
+			$wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ' WHERE referral_code = %s', $referral_code )
 		);
 		if ( $referral_conflict > 0 ) {
 			$error_message = __( 'Referral code is already in use. Please choose another.', 'wp-qr-trackr' );
