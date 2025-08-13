@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'qr_trackr_add_new' ) ) {
 	$destination_url = isset( $_POST['destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['destination_url'] ) ) : '';
 	$custom_url      = isset( $_POST['custom_destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['custom_destination_url'] ) ) : '';
-	$post_id         = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+    $selected_post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
 	$common_name     = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
 	$referral_code   = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
 
@@ -23,7 +23,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		array(
 			'destination_url' => $destination_url,
 			'custom_url'      => $custom_url,
-			'post_id'         => $post_id,
+            'post_id'         => $selected_post_id,
 			'common_name'     => $common_name,
 			'referral_code'   => $referral_code,
 		),
@@ -35,16 +35,16 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		$destination_url = $custom_url;
 		$post_id         = 0; // Clear post ID if custom URL is used.
 		qr_trackr_log( 'Using custom URL for QR code generation', 'info', array( 'custom_url' => $custom_url ) );
-	} elseif ( ! empty( $post_id ) ) {
+    } elseif ( ! empty( $selected_post_id ) ) {
 		// If post ID is provided, get the post URL.
-		$post = get_post( $post_id );
-		if ( $post ) {
-			$destination_url = get_permalink( $post_id );
+        $linked_post = get_post( $selected_post_id );
+        if ( $linked_post ) {
+            $destination_url = get_permalink( $selected_post_id );
 			qr_trackr_log(
 				'Using post URL for QR code generation',
 				'info',
 				array(
-					'post_id'  => $post_id,
+                    'post_id'  => $selected_post_id,
 					'post_url' => $destination_url,
 				)
 			);
@@ -183,7 +183,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 				'destination_url' => $destination_url,
 				'qr_code'         => $qr_code,
 				'qr_code_url'     => $qr_code_url,
-				'post_id'         => $post_id,
+                'post_id'         => $selected_post_id,
 				'common_name'     => $common_name,
 				'referral_code'   => $referral_code,
 				'created_at'      => current_time( 'mysql' ),
