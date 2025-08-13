@@ -61,7 +61,24 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		)
 	);
 
-	if ( ! empty( $destination_url ) ) {
+	// Enforce unique referral code if provided.
+	if ( ! empty( $referral_code ) ) {
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Single-row existence check prior to insert.
+		$referral_conflict = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table_name} WHERE referral_code = %s",
+				$referral_code
+			)
+		);
+		if ( $referral_conflict > 0 ) {
+			$error_message = __( 'Referral code is already in use. Please choose another.', 'wp-qr-trackr' );
+			qr_trackr_log( 'Referral code duplicate prevented on create', 'warning', array( 'referral_code' => $referral_code ) );
+		}
+	}
+
+	if ( ! empty( $destination_url ) && empty( $error_message ) ) {
 		// Generate unique QR code.
 		if ( function_exists( 'qr_trackr_generate_unique_qr_code' ) ) {
 			$qr_code = qr_trackr_generate_unique_qr_code();
@@ -111,7 +128,11 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						'destination_url' => $destination_url,
 					)
 				);
-				// Don't set error message here, just log it and continue with empty URL.
+				// Soft-fail: allow record creation but show one notice only.
+				if ( empty( $error_message ) ) {
+					$error_message = __( 'Failed to generate QR code. Please try again later.', 'wp-qr-trackr' );
+				}
+				// Leave $qr_code_url empty so UI can display placeholder.
 				$qr_code_url = '';
 			} else {
 				qr_trackr_log(
@@ -172,8 +193,11 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		);
 
 		if ( $result ) {
-			$qr_id           = $wpdb->insert_id;
-			$success_message = __( 'QR code created successfully!', 'wp-qr-trackr' );
+			$qr_id = $wpdb->insert_id;
+			// Only show success message if there is no generation error.
+			if ( empty( $error_message ) ) {
+				$success_message = __( 'QR code created successfully!', 'wp-qr-trackr' );
+			}
 
 			qr_trackr_log_db_operation(
 				'insert',
@@ -366,10 +390,26 @@ qr_trackr_log_element_creation( 'page_wrapper', array( 'page' => 'add-new-page' 
 							<tr>
 								<th scope="row"><?php esc_html_e( 'QR URL:', 'wp-qr-trackr' ); ?></th>
 								<td>
-									<a href="<?php echo esc_url( qr_trackr_get_redirect_url( $created_qr['qr_code'] ) ); ?>"
-										target="_blank" style="word-break: break-all;">
-										<?php echo esc_url( qr_trackr_get_redirect_url( $created_qr['qr_code'] ) ); ?>
-									</a>
+									<?php
+									$qr_code_value   = isset( $created_qr['qr_code'] ) ? sanitize_text_field( $created_qr['qr_code'] ) : '';
+									$qr_redirect_url = $qr_code_value ? qr_trackr_get_redirect_url( $qr_code_value ) : '';
+
+									if ( is_wp_error( $qr_redirect_url ) || empty( $qr_redirect_url ) ) {
+										// Fallback to clean rewrite URL to ensure link is shown even if helper errs.
+										$qr_redirect_url = home_url( '/qr/' . $qr_code_value . '/' );
+									}
+
+									if ( ! empty( $qr_redirect_url ) ) {
+										?>
+										<a href="<?php echo esc_url( $qr_redirect_url ); ?>"
+											target="_blank" style="word-break: break-all;">
+											<?php echo esc_url( $qr_redirect_url ); ?>
+										</a>
+										<?php
+									} else {
+										echo '<em>' . esc_html__( 'QR URL is not available yet. Try refreshing this page, or scan will generate it on first use.', 'wp-qr-trackr' ) . '</em>';
+									}
+									?>
 								</td>
 							</tr>
 
@@ -508,6 +548,10 @@ qr_trackr_log_element_creation( 'page_wrapper', array( 'page' => 'add-new-page' 
 	</div>
 </div>
 
+<<<<<<<< HEAD:plugin/templates/add-new-page.php.bak
 <script type="text/javascript">
     // Select2 is initialized from the enqueued admin script now.
 </script>
+========
+<script type="text/javascript"></script>
+>>>>>>>> origin/main:templates/add-new-page.php
