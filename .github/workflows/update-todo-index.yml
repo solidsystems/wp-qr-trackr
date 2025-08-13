@@ -1,3 +1,42 @@
+name: Maintenance - Update TODO Index
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-todo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run update script
+        run: ./scripts/update-todo-index.sh
+
+      - name: Push changes
+        env:
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -e
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          git checkout "$BRANCH"
+          git add -A
+          git commit -m "chore(ci): update TODO and STATUS via automation" || echo "No changes to commit"
+          git push origin "HEAD:$BRANCH"
+
 name: Update TODO Index
 
 on:
