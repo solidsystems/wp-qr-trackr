@@ -455,15 +455,46 @@ function qrc_edit_page() {
 		if ( $referral_conflict > 0 ) {
 			$error_message = __( 'Referral code is already in use. Please choose another.', 'wp-qr-trackr' );
 		} else {
+			// If referral code changed, append the previous value to metadata history.
+			$metadata_array = array();
+			$metadata_json  = '';
+			try {
+				if ( isset( $qr_code->metadata ) && ! empty( $qr_code->metadata ) ) {
+					$decoded = json_decode( (string) $qr_code->metadata, true );
+					if ( is_array( $decoded ) ) {
+						$metadata_array = $decoded;
+					}
+				}
+			} catch ( Exception $e ) {
+				// Ignore malformed metadata and replace with a clean structure.
+				$metadata_array = array();
+			}
+
+			$previous_referral_codes = isset( $metadata_array['previous_referral_codes'] ) && is_array( $metadata_array['previous_referral_codes'] ) ? $metadata_array['previous_referral_codes'] : array();
+
+			$old_referral_code = isset( $qr_code->referral_code ) ? (string) $qr_code->referral_code : '';
+			if ( $old_referral_code && $old_referral_code !== $referral_code ) {
+				$previous_referral_codes[] = array(
+					'code'       => $old_referral_code,
+					'changed_at' => current_time( 'mysql', true ),
+				);
+				// Keep the list reasonably small.
+				$previous_referral_codes = array_slice( $previous_referral_codes, -10 );
+			}
+
+			$metadata_array['previous_referral_codes'] = $previous_referral_codes;
+			$metadata_json                             = wp_json_encode( $metadata_array );
+
 			$result = $wpdb->update(
 				$table_name,
 				array(
 					'common_name'     => $common_name,
 					'referral_code'   => $referral_code,
 					'destination_url' => $destination_url,
+					'metadata'        => $metadata_json,
 				),
 				array( 'id' => $qr_id ),
-				array( '%s', '%s', '%s' ),
+				array( '%s', '%s', '%s', '%s' ),
 				array( '%d' )
 			);
 

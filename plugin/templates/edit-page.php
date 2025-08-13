@@ -18,12 +18,19 @@ if ( ! $qr_code ) {
 }
 
 // Get current values.
-$common_name     = esc_attr( $qr_code->common_name ?? '' );
-$referral_code   = esc_attr( $qr_code->referral_code ?? '' );
-$destination_url = esc_url( $qr_code->destination_url ?? '' );
-$qr_code_id      = esc_attr( $qr_code->qr_code ?? '' );
-$created_at      = esc_html( $qr_code->created_at ?? '' );
-$scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
+$common_name             = esc_attr( $qr_code->common_name ?? '' );
+$referral_code           = esc_attr( $qr_code->referral_code ?? '' );
+$destination_url         = esc_url( $qr_code->destination_url ?? '' );
+$qr_code_id              = esc_attr( $qr_code->qr_code ?? '' );
+$created_at              = esc_html( $qr_code->created_at ?? '' );
+$scans                   = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
+$previous_referral_codes = array();
+if ( ! empty( $qr_code->metadata ) ) {
+	$decoded = json_decode( (string) $qr_code->metadata, true );
+	if ( is_array( $decoded ) && isset( $decoded['previous_referral_codes'] ) && is_array( $decoded['previous_referral_codes'] ) ) {
+		$previous_referral_codes = $decoded['previous_referral_codes'];
+	}
+}
 ?>
 
 <div class="wrap">
@@ -68,6 +75,21 @@ $scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 								<p class="description">
 									<?php esc_html_e( 'A referral code for tracking and analytics.', 'wp-qr-trackr' ); ?>
 								</p>
+								<?php if ( ! empty( $previous_referral_codes ) ) : ?>
+									<p class="description" style="margin-top:8px;">
+										<strong><?php esc_html_e( 'Previous referral codes:', 'wp-qr-trackr' ); ?></strong>
+									</p>
+									<ul style="margin:4px 0 0 0; padding-left:18px;">
+										<?php foreach ( array_reverse( $previous_referral_codes ) as $prev ) : ?>
+											<li>
+												<code><?php echo esc_html( $prev['code'] ?? '' ); ?></code>
+												<?php if ( ! empty( $prev['changed_at'] ) ) : ?>
+													<small style="color:#666;">&nbsp;<?php echo esc_html( $prev['changed_at'] ); ?></small>
+												<?php endif; ?>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+								<?php endif; ?>
 							</td>
 						</tr>
 
