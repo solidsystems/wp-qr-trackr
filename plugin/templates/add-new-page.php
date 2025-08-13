@@ -11,11 +11,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Handle form submission.
 if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'qr_trackr_add_new' ) ) {
-	$destination_url = isset( $_POST['destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['destination_url'] ) ) : '';
-	$custom_url      = isset( $_POST['custom_destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['custom_destination_url'] ) ) : '';
-	$post_id         = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
-	$common_name     = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
-	$referral_code   = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
+	$destination_url  = isset( $_POST['destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['destination_url'] ) ) : '';
+	$custom_url       = isset( $_POST['custom_destination_url'] ) ? esc_url_raw( wp_unslash( $_POST['custom_destination_url'] ) ) : '';
+	$selected_post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+	$common_name      = isset( $_POST['common_name'] ) ? sanitize_text_field( wp_unslash( $_POST['common_name'] ) ) : '';
+	$referral_code    = isset( $_POST['referral_code'] ) ? sanitize_text_field( wp_unslash( $_POST['referral_code'] ) ) : '';
 
 	// Log form submission with new logging system.
 	qr_trackr_log_form_submission(
@@ -23,7 +23,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		array(
 			'destination_url' => $destination_url,
 			'custom_url'      => $custom_url,
-			'post_id'         => $post_id,
+			'post_id'         => $selected_post_id,
 			'common_name'     => $common_name,
 			'referral_code'   => $referral_code,
 		),
@@ -32,19 +32,19 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 
 	// Use custom URL if provided, otherwise use dropdown selection.
 	if ( ! empty( $custom_url ) ) {
-		$destination_url = $custom_url;
-		$post_id         = 0; // Clear post ID if custom URL is used.
+		$destination_url  = $custom_url;
+		$selected_post_id = 0; // Clear post ID if custom URL is used.
 		qr_trackr_log( 'Using custom URL for QR code generation', 'info', array( 'custom_url' => $custom_url ) );
-	} elseif ( ! empty( $post_id ) ) {
+	} elseif ( ! empty( $selected_post_id ) ) {
 		// If post ID is provided, get the post URL.
-		$post = get_post( $post_id );
-		if ( $post ) {
-			$destination_url = get_permalink( $post_id );
+		$linked_post = get_post( $selected_post_id );
+		if ( $linked_post ) {
+			$destination_url = get_permalink( $selected_post_id );
 			qr_trackr_log(
 				'Using post URL for QR code generation',
 				'info',
 				array(
-					'post_id'  => $post_id,
+					'post_id'  => $selected_post_id,
 					'post_url' => $destination_url,
 				)
 			);
@@ -61,7 +61,21 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		)
 	);
 
-	if ( ! empty( $destination_url ) ) {
+	// Enforce unique referral code if provided.
+	if ( ! empty( $referral_code ) ) {
+		global $wpdb;
+		$table_name        = $wpdb->prefix . 'qr_trackr_links';
+		$referral_conflict = (int) $wpdb->get_var(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table name is trusted internal identifier; value uses placeholder.
+			$wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ' WHERE referral_code = %s', $referral_code )
+		);
+		if ( $referral_conflict > 0 ) {
+			$error_message = __( 'Referral code is already in use. Please choose another.', 'wp-qr-trackr' );
+			qr_trackr_log( 'Referral code duplicate prevented on create', 'warning', array( 'referral_code' => $referral_code ) );
+		}
+	}
+
+	if ( ! empty( $destination_url ) && empty( $error_message ) ) {
 		// Generate unique QR code.
 		if ( function_exists( 'qr_trackr_generate_unique_qr_code' ) ) {
 			$qr_code = qr_trackr_generate_unique_qr_code();
@@ -111,7 +125,11 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						'destination_url' => $destination_url,
 					)
 				);
-				// Don't set error message here, just log it and continue with empty URL.
+				// Soft-fail: allow record creation but show one notice only.
+				if ( empty( $error_message ) ) {
+					$error_message = __( 'Failed to generate QR code. Please try again later.', 'wp-qr-trackr' );
+				}
+				// Leave $qr_code_url empty so UI can display placeholder.
 				$qr_code_url = '';
 			} else {
 				qr_trackr_log(
@@ -133,7 +151,13 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						'upload_dir'      => $upload_dir['basedir'],
 						'qr_dir'          => $qr_dir,
 						'qr_dir_exists'   => file_exists( $qr_dir ),
-						'qr_dir_writable' => is_writable( $qr_dir ),
+						// Use WP_Filesystem for write checks when available; omit direct is_writable fallback to satisfy PHPCS.
+						'qr_dir_writable' => ( function () use ( $qr_dir ) {
+							require_once ABSPATH . 'wp-admin/includes/file.php';
+							WP_Filesystem();
+							global $wp_filesystem;
+							return $wp_filesystem ? $wp_filesystem->is_writable( $qr_dir ) : null;
+						} )(),
 					)
 				);
 			}
@@ -162,7 +186,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 				'destination_url' => $destination_url,
 				'qr_code'         => $qr_code,
 				'qr_code_url'     => $qr_code_url,
-				'post_id'         => $post_id,
+				'post_id'         => $selected_post_id,
 				'common_name'     => $common_name,
 				'referral_code'   => $referral_code,
 				'created_at'      => current_time( 'mysql' ),
@@ -172,8 +196,11 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		);
 
 		if ( $result ) {
-			$qr_id           = $wpdb->insert_id;
-			$success_message = __( 'QR code created successfully!', 'wp-qr-trackr' );
+			$qr_id = $wpdb->insert_id;
+			// Only show success message if there is no generation error.
+			if ( empty( $error_message ) ) {
+				$success_message = __( 'QR code created successfully!', 'wp-qr-trackr' );
+			}
 
 			qr_trackr_log_db_operation(
 				'insert',
@@ -366,10 +393,26 @@ qr_trackr_log_element_creation( 'page_wrapper', array( 'page' => 'add-new-page' 
 							<tr>
 								<th scope="row"><?php esc_html_e( 'QR URL:', 'wp-qr-trackr' ); ?></th>
 								<td>
-									<a href="<?php echo esc_url( qr_trackr_get_redirect_url( $created_qr['qr_code'] ) ); ?>"
-										target="_blank" style="word-break: break-all;">
-										<?php echo esc_url( qr_trackr_get_redirect_url( $created_qr['qr_code'] ) ); ?>
-									</a>
+									<?php
+									$qr_code_value   = isset( $created_qr['qr_code'] ) ? sanitize_text_field( $created_qr['qr_code'] ) : '';
+									$qr_redirect_url = $qr_code_value ? qr_trackr_get_redirect_url( $qr_code_value ) : '';
+
+									if ( is_wp_error( $qr_redirect_url ) || empty( $qr_redirect_url ) ) {
+										// Fallback to clean rewrite URL to ensure link is shown even if helper errs.
+										$qr_redirect_url = home_url( '/qr/' . $qr_code_value . '/' );
+									}
+
+									if ( ! empty( $qr_redirect_url ) ) {
+										?>
+										<a href="<?php echo esc_url( $qr_redirect_url ); ?>"
+											target="_blank" style="word-break: break-all;">
+											<?php echo esc_url( $qr_redirect_url ); ?>
+										</a>
+										<?php
+									} else {
+										echo '<em>' . esc_html__( 'QR URL is not available yet. Try refreshing this page, or scan will generate it on first use.', 'wp-qr-trackr' ) . '</em>';
+									}
+									?>
 								</td>
 							</tr>
 
@@ -508,6 +551,4 @@ qr_trackr_log_element_creation( 'page_wrapper', array( 'page' => 'add-new-page' 
 	</div>
 </div>
 
-<script type="text/javascript">
-    // Select2 is initialized from the enqueued admin script now.
-</script>
+<script type="text/javascript"></script>

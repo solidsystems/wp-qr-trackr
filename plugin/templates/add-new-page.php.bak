@@ -548,4 +548,10 @@ qr_trackr_log_element_creation( 'page_wrapper', array( 'page' => 'add-new-page' 
 	</div>
 </div>
 
+<<<<<<<< HEAD:plugin/templates/add-new-page.php.bak
+<script type="text/javascript">
+    // Select2 is initialized from the enqueued admin script now.
+</script>
+========
 <script type="text/javascript"></script>
+>>>>>>>> origin/main:templates/add-new-page.php

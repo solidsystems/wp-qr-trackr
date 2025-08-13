@@ -91,19 +91,26 @@ function qr_trackr_handle_clean_urls() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// Look up the QR code in the database.
+	// Look up the QR code in the database with object cache.
 	// Query by QR code only; the table does not include a status column in current schema.
-	$result = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$table_name} WHERE qr_code = %s",
-			$qr_code
-		)
-	);
+	$cache_key = 'qr_trackr_link_by_code_' . md5( $qr_code );
+	$result    = wp_cache_get( $cache_key, 'qr_trackr' );
+	if ( false === $result ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately below.
+		$result = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table_name} WHERE qr_code = %s",
+				$qr_code
+			)
+		);
+		if ( $result ) {
+			wp_cache_set( $cache_key, $result, 'qr_trackr', 300 );
+		}
+	}
 
 	if ( ! $result ) {
-		// QR code not found or inactive, redirect to 404.
-		wp_redirect( home_url( '/404/' ) );
-		exit;
+		// QR code not found: use 404 handler instead of redirect.
+		qr_trackr_handle_404();
 	}
 
 	// Get the destination URL.
@@ -114,6 +121,7 @@ function qr_trackr_handle_clean_urls() {
 
 	// Perform the redirect to the destination URL.
 	// For external URLs, project policy requires wp_redirect with esc_url_raw.
+	// phpcs:ignore WordPress.Security.SafeRedirect.wp_safe_redirect -- External redirects allowed per project policy; URL sanitized with esc_url_raw().
 	wp_redirect( esc_url_raw( $destination_url ), 302 );
 	exit;
 }
@@ -130,6 +138,7 @@ add_action( 'template_redirect', 'qr_trackr_handle_clean_urls' );
  */
 function qr_trackr_ajax_redirect() {
 	// Get QR code from AJAX request.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public redirect endpoint; read-only input, sanitized below.
 	$qr_code = isset( $_GET['qr'] ) ? sanitize_text_field( wp_unslash( $_GET['qr'] ) ) : '';
 
 	if ( empty( $qr_code ) ) {
@@ -140,13 +149,21 @@ function qr_trackr_ajax_redirect() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// Look up the QR code in the database.
-	$result = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$table_name} WHERE qr_code = %s",
-			$qr_code
-		)
-	);
+	// Look up the QR code in the database with caching for performance.
+	$cache_key = 'qr_trackr_link_by_code_' . md5( $qr_code );
+	$result    = wp_cache_get( $cache_key, 'qr_trackr' );
+	if ( false === $result ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately below.
+		$result = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table_name} WHERE qr_code = %s",
+				$qr_code
+			)
+		);
+		if ( $result ) {
+			wp_cache_set( $cache_key, $result, 'qr_trackr', 300 );
+		}
+	}
 
 	if ( ! $result ) {
 		wp_die( esc_html__( 'QR code not found.', 'wp-qr-trackr' ) );
@@ -159,6 +176,7 @@ function qr_trackr_ajax_redirect() {
 	qr_trackr_update_scan_count_immediate( $result->id );
 
 	// Perform the redirect per external redirect policy.
+	// phpcs:ignore WordPress.Security.SafeRedirect.wp_safe_redirect -- External redirects allowed per project policy; URL sanitized.
 	wp_redirect( esc_url_raw( $destination_url ), 302 );
 	exit;
 }

@@ -18,7 +18,7 @@ services:
         define('WP_HOME', 'http://wordpress-playwright');
         define('WP_SITEURL', 'http://wordpress-playwright');
     volumes:
-      - ../wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - ../plugin:/var/www/html/wp-content/plugins/wp-qr-trackr
       - wordpress_data:/var/www/html
     depends_on:
       db-playwright:
@@ -60,7 +60,7 @@ services:
     entrypoint: ["/usr/src/app/docker/scripts/playwright-entrypoint.sh"]
     command: []
     volumes:
-      - ../wp-content/plugins/wp-qr-trackr:/usr/src/app/wp-content/plugins/wp-qr-trackr
+      - ../plugin:/usr/src/app/wp-content/plugins/wp-qr-trackr
       - ../:/usr/src/app
     depends_on:
       - wordpress-playwright

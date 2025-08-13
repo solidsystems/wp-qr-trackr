@@ -5,8 +5,6 @@
  * @package WP_QR_TRACKR
  */
 
-
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
@@ -395,6 +393,7 @@ function qrc_edit_page() {
 	}
 
 	// Get QR code ID from URL.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page load with capability check; no state change occurs here.
 	$qr_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
 	if ( 0 === $qr_id ) {
 		qr_trackr_log( 'Invalid QR code ID in edit page', 'error', array( 'qr_id' => $qr_id ) );
@@ -405,12 +404,21 @@ function qrc_edit_page() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	$qr_code = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$table_name} WHERE id = %d",
-			$qr_id
-		)
-	);
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Single record fetch for edit; cached by ID below.
+	$cache_key = 'qr_trackr_edit_qr_' . absint( $qr_id );
+	$qr_code   = wp_cache_get( $cache_key, 'qr_trackr' );
+	if ( false === $qr_code ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+		$qr_code = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$table_name} WHERE id = %d",
+				$qr_id
+			)
+		);
+		if ( $qr_code ) {
+			wp_cache_set( $cache_key, $qr_code, 'qr_trackr', 300 );
+		}
+	}
 
 	if ( ! $qr_code ) {
 		qr_trackr_log( 'QR code not found in edit page', 'error', array( 'qr_id' => $qr_id ) );
@@ -624,6 +632,7 @@ function qrc_admin_enqueue_scripts( $hook ) {
 			'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
 			'nonce'       => wp_create_nonce( 'qr_trackr_nonce' ),
 			'currentHook' => $hook,
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only exposure of current page to JS for UI behavior; no state change.
 			'currentPage' => isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '',
 			'strings'     => array(
 				'qrCodeDetails'       => __( 'QR Code Details', 'wp-qr-trackr' ),
@@ -765,6 +774,7 @@ function qrc_register_admin_hooks() {
  */
 function qrc_handle_delete_action() {
 	// Check if we're on the QR codes page and action is delete.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a routing check prior to nonce verification.
 	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== sanitize_text_field( wp_unslash( $_GET['page'] ) ) || ! isset( $_GET['action'] ) || 'delete' !== sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
 		return;
 	}
@@ -790,6 +800,7 @@ function qrc_handle_delete_action() {
 	}
 
 	// Get and validate QR code ID.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- ID is validated and nonce-verified immediately after.
 	$qr_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
 	if ( 0 === $qr_id ) {
 		qr_trackr_log( 'Invalid QR code ID in delete action', 'error', array( 'qr_id' => $qr_id ) );
@@ -876,7 +887,8 @@ function qrc_handle_delete_action() {
 		$qr_file_path = str_replace( $upload_dir['baseurl'], $upload_dir['basedir'], $qr_code->qr_code_url );
 
 		if ( file_exists( $qr_file_path ) ) {
-			$file_deleted = unlink( $qr_file_path );
+			// Use WordPress file deletion helper for compatibility.
+			$file_deleted = wp_delete_file( $qr_file_path );
 			qr_trackr_log(
 				'QR code image file deletion attempt',
 				'info',

@@ -48,7 +48,7 @@ $scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 							</th>
 							<td>
 								<input type="text" id="common_name" name="common_name"
-									value="<?php echo $common_name; ?>" class="regular-text"
+									value="<?php echo esc_attr( $common_name ); ?>" class="regular-text"
 									placeholder="<?php esc_attr_e( 'Enter a friendly name', 'wp-qr-trackr' ); ?>" />
 								<p class="description">
 									<?php esc_html_e( 'A friendly name to help you identify this QR code.', 'wp-qr-trackr' ); ?>
@@ -63,7 +63,7 @@ $scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 							</th>
 							<td>
 								<input type="text" id="referral_code" name="referral_code"
-									value="<?php echo $referral_code; ?>" class="regular-text"
+									value="<?php echo esc_attr( $referral_code ); ?>" class="regular-text"
 									placeholder="<?php esc_attr_e( 'Enter a referral code', 'wp-qr-trackr' ); ?>" />
 								<p class="description">
 									<?php esc_html_e( 'A referral code for tracking and analytics.', 'wp-qr-trackr' ); ?>
@@ -74,7 +74,7 @@ $scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 		<tr>
 			<th scope="row"><?php esc_html_e( 'Destination URL', 'wp-qr-trackr' ); ?></th>
 			<td>
-				<input type="url" name="destination_url" value="<?php echo $destination_url; ?>" class="regular-text" />
+				<input type="url" name="destination_url" value="<?php echo esc_attr( $destination_url ); ?>" class="regular-text" />
 				<p class="description">
 					<?php esc_html_e( 'Update the destination URL for this QR code. External URLs are allowed.', 'wp-qr-trackr' ); ?>
 				</p>
@@ -84,7 +84,7 @@ $scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 						<tr>
 							<th scope="row"><?php esc_html_e( 'QR Code', 'wp-qr-trackr' ); ?></th>
 							<td>
-								<code><?php echo $qr_code_id; ?></code>
+								<code><?php echo esc_html( $qr_code_id ); ?></code>
 								<p class="description">
 									<?php esc_html_e( 'The unique QR code identifier.', 'wp-qr-trackr' ); ?>
 								</p>
@@ -94,7 +94,7 @@ $scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 						<tr>
 							<th scope="row"><?php esc_html_e( 'Created', 'wp-qr-trackr' ); ?></th>
 							<td>
-								<?php echo $created_at; ?>
+								<?php echo esc_html( $created_at ); ?>
 							</td>
 						</tr>
 
@@ -136,7 +136,7 @@ $scans           = absint( $qr_code->scans ?? $qr_code->access_count ?? 0 );
 				<code><?php echo esc_url( qr_trackr_get_redirect_url( $qr_code_id ) ); ?></code>
 
 				<p><strong><?php esc_html_e( 'Destination URL:', 'wp-qr-trackr' ); ?></strong></p>
-				<code><?php echo $destination_url; ?></code>
+				<code><?php echo esc_url( $destination_url ); ?></code>
 			</div>
 		</div>
 	</div>
