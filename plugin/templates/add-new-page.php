@@ -64,7 +64,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	// Enforce unique referral code if provided.
 	if ( ! empty( $referral_code ) ) {
 		global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_trackr_links';
+		$table_name     = $wpdb->prefix . 'qr_trackr_links';
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table name is trusted internal identifier; value uses placeholder.
 		$referral_conflict = (int) $wpdb->get_var(
 			$wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ' WHERE referral_code = %s', $referral_code )
