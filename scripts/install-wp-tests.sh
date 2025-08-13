@@ -154,7 +154,7 @@ install_db() {
 	local PARTS=(${DB_HOST//\:/ })
 	local DB_HOSTNAME=${PARTS[0]};
 	local DB_SOCK_OR_PORT=${PARTS[1]};
-	local EXTRA=""
+    local EXTRA=""
 
 	if ! [ -z $DB_HOSTNAME ] ; then
 		if [ $(echo $DB_SOCK_OR_PORT | grep -e '^[0-9]\{1,\}$') ]; then
@@ -166,7 +166,11 @@ install_db() {
 		fi
 	fi
 
-	# create database
+    # Force-disable TLS for local Docker DBs where server TLS is not configured.
+    # Use legacy-compatible client flag.
+    EXTRA="$EXTRA --skip-ssl"
+
+    # create database
 	create_db
 }
 

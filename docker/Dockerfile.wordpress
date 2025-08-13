@@ -9,7 +9,7 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && mv wp-cli.phar /usr/local/bin/wp
 
 # Install less for WP-CLI
-RUN apt-get update && apt-get install -y less && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y less gnupg ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Set up wp-cli configuration
 RUN mkdir -p /var/www/.wp-cli/cache \

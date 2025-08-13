@@ -1,6 +1,6 @@
 # QR Trackr Plugin Template (Development)
 
-A modern, production-ready WordPress plugin template—featuring QR Trackr as an example. This version of the documentation is focused on local development, debugging, and contributing.
+A modern, production-ready WordPress plugin template—featuring QR Trackr as an example. This version of the documentation is focused on local development, debugging, and contributing. The philosophy is security-first, standards-driven, with clean URLs and native redirects, local asset bundling, and Docker control scripts for everything.
 
 ## Table of Contents
 1. Project Overview
