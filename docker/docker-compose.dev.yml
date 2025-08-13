@@ -26,7 +26,7 @@ services:
     volumes:
       - wordpress_data:/var/www/html
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
-      - ../wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - ../plugin:/var/www/html/wp-content/plugins/wp-qr-trackr
 
   wpcli-dev:
     image: wordpress:cli
@@ -44,7 +44,7 @@ services:
       WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
     volumes:
       - wordpress_data:/var/www/html
-      - ../wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - ../plugin:/var/www/html/wp-content/plugins/wp-qr-trackr
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     entrypoint: ["tail", "-f", "/dev/null"]
 

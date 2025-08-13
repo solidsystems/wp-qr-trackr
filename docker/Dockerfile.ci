@@ -38,16 +38,17 @@ RUN yarn --version >/dev/null 2>&1 || true
 RUN composer install --prefer-dist --no-scripts
 
 # Copy only the necessary project files (excluding vendor directory)
-# Copy core plugin files
-COPY wp-qr-trackr.php ./
-COPY includes/ ./includes/
-COPY templates/ ./templates/
+# Copy core plugin files from plugin/
+COPY plugin/wp-qr-trackr.php ./
+COPY plugin/includes/ ./includes/
+COPY plugin/templates/ ./templates/
 COPY config/ ./config/
 COPY scripts/ ./scripts/
 COPY ci.sh ./
 
-# Copy wp-content directory (excluding vendor)
-COPY wp-content/ ./wp-content/
+# Create plugin path for working dir consistency
+RUN mkdir -p wp-content/plugins/wp-qr-trackr && \
+    cp -r includes templates wp-qr-trackr.php wp-content/plugins/wp-qr-trackr/
 
 # Skip E2E dependencies in CI. Playwright and JS deps are dev-only and installed via local control scripts.
 WORKDIR /usr/src/app

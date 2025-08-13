@@ -5,7 +5,7 @@ set -e
 
 # Configuration
 PLUGIN_NAME="wp-qr-trackr"
-PLUGIN_DIR="."
+PLUGIN_DIR="plugin"
 VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' "wp-qr-trackr.php" | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
 BUILD_DIR="build"
 DIST_DIR="dist"
@@ -35,14 +35,14 @@ rm -rf "$BUILD_DIR" "$DIST_DIR"
 mkdir -p "$BUILD_DIR/$PLUGIN_NAME" "$DIST_DIR"
 
 # Copy essential plugin files to the correct folder structure
-cp wp-qr-trackr.php "$BUILD_DIR/$PLUGIN_NAME/"
-cp -r includes "$BUILD_DIR/$PLUGIN_NAME/"
-cp -r assets "$BUILD_DIR/$PLUGIN_NAME/"
-cp -r templates "$BUILD_DIR/$PLUGIN_NAME/"
+cp "$PLUGIN_DIR/wp-qr-trackr.php" "$BUILD_DIR/$PLUGIN_NAME/"
+cp -r "$PLUGIN_DIR/includes" "$BUILD_DIR/$PLUGIN_NAME/"
+cp -r "$PLUGIN_DIR/assets" "$BUILD_DIR/$PLUGIN_NAME/"
+cp -r "$PLUGIN_DIR/templates" "$BUILD_DIR/$PLUGIN_NAME/"
 cp LICENSE "$BUILD_DIR/$PLUGIN_NAME/"
-cp composer.json "$BUILD_DIR/$PLUGIN_NAME/"
-if [ -f composer.lock ]; then
-  cp composer.lock "$BUILD_DIR/$PLUGIN_NAME/"
+cp "$PLUGIN_DIR/composer.json" "$BUILD_DIR/$PLUGIN_NAME/"
+if [ -f "$PLUGIN_DIR/composer.lock" ]; then
+  cp "$PLUGIN_DIR/composer.lock" "$BUILD_DIR/$PLUGIN_NAME/"
 fi
 
 # Install only production dependencies in the plugin directory

@@ -32,14 +32,13 @@ services:
       CI: 1
     volumes:
       # Only mount specific files needed for CI, not the entire directory
-      - ../composer.json:/usr/src/app/composer.json:ro
-      - ../composer.lock:/usr/src/app/composer.lock:ro
+      - ../plugin/composer.json:/usr/src/app/composer.json:ro
+      - ../plugin/composer.lock:/usr/src/app/composer.lock:ro
       - ../package.json:/usr/src/app/package.json:ro
       - ../yarn.lock:/usr/src/app/yarn.lock:ro
-      - ../wp-content:/usr/src/app/wp-content:ro
-      - ../includes:/usr/src/app/includes:ro
-      - ../templates:/usr/src/app/templates:ro
-      - ../wp-qr-trackr.php:/usr/src/app/wp-qr-trackr.php:ro
+      - ../plugin/includes:/usr/src/app/includes:ro
+      - ../plugin/templates:/usr/src/app/templates:ro
+      - ../plugin/wp-qr-trackr.php:/usr/src/app/wp-qr-trackr.php:ro
       - ../config:/usr/src/app/config:ro
       - ../scripts:/usr/src/app/scripts:ro
       - ../ci.sh:/usr/src/app/ci.sh:ro

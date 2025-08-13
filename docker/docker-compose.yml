@@ -22,7 +22,7 @@ services:
     volumes:
       - wordpress_data_nonprod:/var/www/html # Mount WordPress files
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
-      - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr # Mount plugin for testing
+      - ./plugin:/var/www/html/wp-content/plugins/wp-qr-trackr # Mount plugin for testing
 
   # Sidecar WP-CLI container for setup and automation
   wpcli-nonprod:
@@ -41,7 +41,7 @@ services:
       WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
     volumes:
       - wordpress_data_nonprod:/var/www/html # Mount WordPress files
-      - ./wp-content/plugins/wp-qr-trackr:/var/www/html/wp-content/plugins/wp-qr-trackr
+      - ./plugin:/var/www/html/wp-content/plugins/wp-qr-trackr
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
     entrypoint: ["tail", "-f", "/dev/null"] # Idle by default; run commands with 'docker compose exec wpcli-nonprod ...'
 
