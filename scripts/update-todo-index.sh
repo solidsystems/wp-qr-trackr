@@ -237,13 +237,11 @@ validate_files() {
 # Main execution
 main() {
     log "Starting TODO index update..."
-
-	# Check if we're in the project root (support legacy and restructured layouts)
-	if [ ! -f "$PROJECT_ROOT/wp-qr-trackr.php" ] && [ ! -f "$PROJECT_ROOT/plugin/wp-qr-trackr.php" ]; then
-		error "Not in project root. Please run from project directory."
-		exit 1
-	fi
-
+    # Check if we're in the project root (support legacy and restructured layouts)
+    if [ ! -f "$PROJECT_ROOT/wp-qr-trackr.php" ] && [ ! -f "$PROJECT_ROOT/plugin/wp-qr-trackr.php" ]; then
+        error "Not in project root. Please run from project directory."
+        exit 1
+    fi
     # Create backup
     create_backup
 
