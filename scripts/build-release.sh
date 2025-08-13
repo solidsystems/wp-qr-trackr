@@ -6,7 +6,8 @@ set -e
 # Configuration
 PLUGIN_NAME="wp-qr-trackr"
 PLUGIN_DIR="plugin"
-VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' "wp-qr-trackr.php" | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
+# Read version from plugin main file in restructured layout
+VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' "$PLUGIN_DIR/wp-qr-trackr.php" | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
 BUILD_DIR="build"
 DIST_DIR="dist"
 ZIP_NAME="$DIST_DIR/$PLUGIN_NAME-v$VERSION.zip"
