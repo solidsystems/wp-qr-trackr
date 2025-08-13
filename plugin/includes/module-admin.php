@@ -5,8 +5,6 @@
  * @package WP_QR_TRACKR
  */
 
-
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
