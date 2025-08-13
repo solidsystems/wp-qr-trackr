@@ -189,7 +189,6 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 
 	$defaults = array(
 		'size'   => 200,
-		'margin' => 2,
 		'format' => 'png',
 		'ecc'    => 'M',
 		'margin' => 2,
@@ -200,8 +199,8 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 	$filename = sanitize_file_name( $tracking_code . '.' . $args['format'] );
 	$filepath = wp_normalize_path( trailingslashit( $qr_code_dir ) . $filename );
 
-	// Check if file already exists and is writable.
-	if ( file_exists( $filepath ) && is_writable( $filepath ) ) {
+	// Return existing file if it already exists.
+	if ( file_exists( $filepath ) ) {
 		return $filepath;
 	}
 
@@ -215,11 +214,20 @@ function qr_trackr_generate_qr_image( $tracking_code, $args = array() ) {
 		'color'  => $args['color'],
 	);
 
-	// For now, create a simple placeholder file.
+	// For now, create a simple placeholder file using WP_Filesystem API.
 	$content = 'QR Code for: ' . $tracking_code;
-	$result  = file_put_contents( $filepath, $content );
 
-	if ( false === $result ) {
+	// Initialize WP_Filesystem for safe file operations.
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	$fs_initialized = WP_Filesystem();
+
+	global $wp_filesystem;
+	if ( ! $fs_initialized || ! $wp_filesystem ) {
+		return new WP_Error( 'fs_init_failed', __( 'Failed to initialize filesystem API.', 'wp-qr-trackr' ) );
+	}
+
+	$written = $wp_filesystem->put_contents( $filepath, $content, FS_CHMOD_FILE );
+	if ( ! $written ) {
 		return new WP_Error( 'file_creation_failed', __( 'Failed to create QR code image file.', 'wp-qr-trackr' ) );
 	}
 
@@ -321,6 +329,8 @@ function qr_trackr_log_element_creation( $element_type, $element_data, $context_
 		'user_ip'   => qr_trackr_get_user_ip(),
 		'timestamp' => current_time( 'mysql' ),
 		'data_keys' => array_keys( $element_data ),
+		'element'   => sanitize_text_field( $element_type ),
+		'location'  => sanitize_text_field( $context_location ),
 	);
 
 	qr_trackr_log( 'Element creation logged', 'info', $log_data );
@@ -344,6 +354,7 @@ function qr_trackr_log_ajax_request( $action, $request_data, $response_status ) 
 		'user_ip'   => qr_trackr_get_user_ip(),
 		'timestamp' => current_time( 'mysql' ),
 		'data_keys' => array_keys( $request_data ),
+		'status'    => sanitize_text_field( $response_status ),
 	);
 
 	qr_trackr_log( 'AJAX request logged', 'info', $log_data );
@@ -387,6 +398,7 @@ function qr_trackr_log_page_load( $page_name, $page_data = array() ) {
 		'user_id'   => get_current_user_id(),
 		'user_ip'   => qr_trackr_get_user_ip(),
 		'timestamp' => current_time( 'mysql' ),
+		'data_keys' => is_array( $page_data ) ? array_keys( $page_data ) : array(),
 	);
 
 	qr_trackr_log( 'Page load logged', 'info', $log_data );
@@ -406,7 +418,8 @@ function qr_trackr_get_user_ip() {
 
 	foreach ( $ip_keys as $key ) {
 		if ( array_key_exists( $key, $_SERVER ) === true ) {
-			foreach ( explode( ',', $_SERVER[ $key ] ) as $ip ) {
+			$raw_value = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) );
+			foreach ( explode( ',', $raw_value ) as $ip ) {
 				$ip = trim( $ip );
 				if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) !== false ) {
 					return $ip;

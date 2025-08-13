@@ -151,7 +151,13 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 						'upload_dir'      => $upload_dir['basedir'],
 						'qr_dir'          => $qr_dir,
 						'qr_dir_exists'   => file_exists( $qr_dir ),
-						'qr_dir_writable' => is_writable( $qr_dir ),
+						// Use WP_Filesystem for write checks when available; omit direct is_writable fallback to satisfy PHPCS.
+						'qr_dir_writable' => ( function () use ( $qr_dir ) {
+							require_once ABSPATH . 'wp-admin/includes/file.php';
+							WP_Filesystem();
+							global $wp_filesystem;
+							return $wp_filesystem ? $wp_filesystem->is_writable( $qr_dir ) : null;
+						} )(),
 					)
 				);
 			}

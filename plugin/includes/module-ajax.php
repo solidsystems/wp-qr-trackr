@@ -55,13 +55,13 @@ function get_qr_code_image_tag( $post_id ) {
  * @return void
  */
 function qrc_generate_qr_code_ajax() {
-    // Avoid touching $_POST before nonce verification.
-    qr_trackr_log_ajax_request( 'qrc_generate_qr_code', array(), 'started' );
+	// Avoid touching $_POST before nonce verification.
+	qr_trackr_log_ajax_request( 'qrc_generate_qr_code', array(), 'started' );
 
 	// Security check.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qrc_generate_qr_code' ) ) {
 		qr_trackr_log( 'Security check failed in QR code generation AJAX', 'error', array( 'nonce_provided' => isset( $_POST['nonce'] ) ) );
-		qr_trackr_log_ajax_request( 'qrc_generate_qr_code', $_POST, 'security_failed' );
+		qr_trackr_log_ajax_request( 'qrc_generate_qr_code', array( 'nonce_provided' => isset( $_POST['nonce'] ) ), 'security_failed' );
 		wp_send_json_error(
 			array(
 				'message' => __( 'Security check failed. Please refresh the page and try again.', 'wp-qr-trackr' ),
@@ -123,11 +123,11 @@ function qrc_generate_qr_code_ajax() {
 	qr_trackr_log_form_submission( 'generate_qr_code_ajax', $form_data, 'create' );
 
 	// Generate the QR code.
-    $qr_code_url = qrc_generate_qr_code( $destination_url );
+	$qr_code_url = qrc_generate_qr_code( $destination_url );
 
 	if ( is_wp_error( $qr_code_url ) ) {
 		// Log the error for debugging.
-        error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only logging behind WP_DEBUG and error branch.
+		error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only logging behind WP_DEBUG and error branch.
 			sprintf(
 				'QR Code generation failed for post %d: %s',
 				$post_id,
@@ -156,7 +156,7 @@ function qrc_generate_qr_code_ajax() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented below, direct query needed for atomic operation.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query used for atomic existence check; caching not applicable for this write path.
 	$existing_link = $wpdb->get_row(
 		$wpdb->prepare(
 			"SELECT * FROM $table_name WHERE post_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
@@ -200,8 +200,8 @@ function qrc_generate_qr_code_ajax() {
 		qr_trackr_log_db_operation( 'insert', $table_name, $insert_data, false !== $result );
 	}
 
-    if ( false === $result ) {
-        error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only logging for DB error branch.
+	if ( false === $result ) {
+		error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only logging for DB error branch.
 			sprintf(
 				'Database operation failed for post %d: %s',
 				$post_id,
@@ -270,7 +270,7 @@ function qrc_track_link_click_ajax() {
 	global $wpdb;
 
 	// Increment the access count and get destination URL in one query for efficiency.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Atomic operation required, caching not applicable.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic UPDATE with RETURNING; not cacheable.
 	$result = $wpdb->query(
 		$wpdb->prepare(
 			"UPDATE {$wpdb->prefix}qr_trackr_links SET access_count = access_count + 1, last_accessed = %s WHERE id = %d RETURNING destination_url AS url",
@@ -292,6 +292,7 @@ function qrc_track_link_click_ajax() {
 	}
 
 	// Get the destination URL from the RETURNING clause.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Reading value from previous atomic query; not cacheable.
 	$destination_url = $wpdb->get_var( 'SELECT url FROM (' . $wpdb->last_query . ') AS t' );
 
 	if ( $destination_url ) {
@@ -311,14 +312,8 @@ add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
  * @return void
  */
 function qrc_search_posts_ajax() {
-    // Avoid touching $_POST before nonce verification.
-    qr_trackr_log_ajax_request( 'qrc_search_posts', array(), 'started' );
-
-	// Debug logging.
-	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( 'QR Trackr: qrc_search_posts_ajax called with POST data: ' . wp_json_encode( $_POST ) );
-	}
+	// Avoid touching $_POST before nonce verification.
+	qr_trackr_log_ajax_request( 'qrc_search_posts', array(), 'started' );
 
 	// Security check.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
@@ -327,7 +322,7 @@ function qrc_search_posts_ajax() {
 			error_log( 'QR Trackr: Nonce verification failed for qrc_search_posts_ajax' );
 		}
 		qr_trackr_log( 'Security check failed in search posts AJAX', 'error', array( 'nonce_provided' => isset( $_POST['nonce'] ) ) );
-		qr_trackr_log_ajax_request( 'qrc_search_posts', $_POST, 'security_failed' );
+		qr_trackr_log_ajax_request( 'qrc_search_posts', array( 'nonce_provided' => isset( $_POST['nonce'] ) ), 'security_failed' );
 		wp_send_json_error(
 			array(
 				'message' => __( 'Security check failed. Please refresh the page and try again.', 'wp-qr-trackr' ),
@@ -346,7 +341,7 @@ function qrc_search_posts_ajax() {
 				'capability' => 'manage_options',
 			)
 		);
-		qr_trackr_log_ajax_request( 'qrc_search_posts', $_POST, 'permission_denied' );
+		qr_trackr_log_ajax_request( 'qrc_search_posts', array( 'user_id' => get_current_user_id() ), 'permission_denied' );
 		wp_send_json_error(
 			array(
 				'message' => __( 'You do not have permission to perform this action.', 'wp-qr-trackr' ),
@@ -367,7 +362,7 @@ function qrc_search_posts_ajax() {
 				'length'      => strlen( $search_term ),
 			)
 		);
-		qr_trackr_log_ajax_request( 'qrc_search_posts', $_POST, 'invalid_term' );
+		qr_trackr_log_ajax_request( 'qrc_search_posts', array( 'length' => strlen( $search_term ) ), 'invalid_term' );
 		wp_send_json_error(
 			array(
 				'message' => __( 'Search term must be at least 2 characters long.', 'wp-qr-trackr' ),
@@ -405,6 +400,7 @@ function qrc_search_posts_ajax() {
 
 	// Debug logging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: Search results for term "' . $search_term . '": ' . count( $results ) . ' posts found' );
 	}
 
@@ -416,7 +412,7 @@ function qrc_search_posts_ajax() {
 			'results_count' => count( $results ),
 		)
 	);
-	qr_trackr_log_ajax_request( 'qrc_search_posts', $_POST, 'success' );
+	qr_trackr_log_ajax_request( 'qrc_search_posts', array( 'results_count' => count( $results ) ), 'success' );
 
 	wp_send_json_success( array( 'posts' => $results ) );
 }
@@ -428,12 +424,12 @@ add_action( 'wp_ajax_qrc_search_posts', 'qrc_search_posts_ajax' );
  * @return void
  */
 function qr_trackr_ajax_get_qr_details() {
-	qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', $_POST, 'started' );
+	qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', array(), 'started' );
 
 	// Verify nonce.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		qr_trackr_log( 'Security check failed in get QR details AJAX', 'error', array( 'nonce_provided' => isset( $_POST['nonce'] ) ) );
-		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', $_POST, 'security_failed' );
+		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', array( 'nonce_provided' => isset( $_POST['nonce'] ) ), 'security_failed' );
 		wp_send_json_error( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -448,7 +444,7 @@ function qr_trackr_ajax_get_qr_details() {
 				'capability' => 'manage_options',
 			)
 		);
-		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', $_POST, 'permission_denied' );
+		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', array( 'user_id' => get_current_user_id() ), 'permission_denied' );
 		wp_send_json_error( esc_html__( 'Insufficient permissions.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -457,7 +453,7 @@ function qr_trackr_ajax_get_qr_details() {
 	$qr_id = isset( $_POST['qr_id'] ) ? absint( $_POST['qr_id'] ) : 0;
 	if ( 0 === $qr_id ) {
 		qr_trackr_log( 'Invalid QR code ID in get QR details', 'error', array( 'qr_id' => $qr_id ) );
-		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', $_POST, 'invalid_id' );
+		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', array( 'qr_id' => $qr_id ), 'invalid_id' );
 		wp_send_json_error( esc_html__( 'Invalid QR code ID.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -473,7 +469,7 @@ function qr_trackr_ajax_get_qr_details() {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cached immediately after query.
 		$qr_code = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} WHERE id = %d",
@@ -489,7 +485,7 @@ function qr_trackr_ajax_get_qr_details() {
 
 	if ( ! $qr_code ) {
 		qr_trackr_log( 'QR code not found in get QR details', 'error', array( 'qr_id' => $qr_id ) );
-		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', $_POST, 'not_found' );
+		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', array( 'qr_id' => $qr_id ), 'not_found' );
 		wp_send_json_error( esc_html__( 'QR code not found.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -508,7 +504,7 @@ function qr_trackr_ajax_get_qr_details() {
 	$recent_scans = 0;
 
 	// Check if stats table exists before querying it.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table existence check.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table existence check.
 	$stats_table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->prefix . 'qr_trackr_stats' ) );
 
 	if ( $stats_table_exists ) {
@@ -516,7 +512,7 @@ function qr_trackr_ajax_get_qr_details() {
 		$recent_scans    = wp_cache_get( $stats_cache_key );
 
 		if ( false === $recent_scans ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cached immediately after query.
 			$recent_scans = $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_stats WHERE link_id = %d AND scan_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
@@ -548,7 +544,7 @@ function qr_trackr_ajax_get_qr_details() {
 	);
 
 	qr_trackr_log( 'QR code details retrieved successfully', 'info', array( 'qr_id' => $qr_id ) );
-	qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', $_POST, 'success' );
+	qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', array( 'qr_id' => $qr_id ), 'success' );
 
 	wp_send_json_success( $response_data );
 }
@@ -561,18 +557,18 @@ add_action( 'wp_ajax_qr_trackr_get_qr_details', 'qr_trackr_ajax_get_qr_details' 
  * @return void
  */
 function qr_trackr_ajax_check_referral_unique() {
-	qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', $_POST, 'started' );
+	qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', array(), 'started' );
 
 	// Verify nonce.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
-		qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', $_POST, 'security_failed' );
+		qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', array( 'nonce_provided' => isset( $_POST['nonce'] ) ), 'security_failed' );
 		wp_send_json_error( array( 'message' => __( 'Security check failed.', 'wp-qr-trackr' ) ) );
 		return;
 	}
 
 	// Cap check.
 	if ( ! current_user_can( 'manage_options' ) ) {
-		qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', $_POST, 'permission_denied' );
+		qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', array( 'user_id' => get_current_user_id() ), 'permission_denied' );
 		wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'wp-qr-trackr' ) ) );
 		return;
 	}
@@ -643,12 +639,12 @@ add_action( 'wp_ajax_qr_trackr_check_referral_unique', 'qr_trackr_ajax_check_ref
  * @return void
  */
 function qr_trackr_ajax_update_qr_details() {
-	qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'started' );
+	qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array(), 'started' );
 
 	// Verify nonce.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
 		qr_trackr_log( 'Security check failed in update QR details AJAX', 'error', array( 'nonce_provided' => isset( $_POST['nonce'] ) ) );
-		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'security_failed' );
+		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'nonce_provided' => isset( $_POST['nonce'] ) ), 'security_failed' );
 		wp_send_json_error( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -663,7 +659,7 @@ function qr_trackr_ajax_update_qr_details() {
 				'capability' => 'manage_options',
 			)
 		);
-		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'permission_denied' );
+		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'user_id' => get_current_user_id() ), 'permission_denied' );
 		wp_send_json_error( esc_html__( 'Insufficient permissions.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -672,7 +668,7 @@ function qr_trackr_ajax_update_qr_details() {
 	$qr_id = isset( $_POST['qr_id'] ) ? absint( $_POST['qr_id'] ) : 0;
 	if ( 0 === $qr_id ) {
 		qr_trackr_log( 'Invalid QR code ID in update QR details', 'error', array( 'qr_id' => $qr_id ) );
-		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'invalid_id' );
+		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'qr_id' => $qr_id ), 'invalid_id' );
 		wp_send_json_error( esc_html__( 'Invalid QR code ID.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -694,7 +690,7 @@ function qr_trackr_ajax_update_qr_details() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Validation check before update.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Validation check before update; not cacheable.
 	$existing_qr = $wpdb->get_row(
 		$wpdb->prepare(
 			"SELECT id FROM {$table_name} WHERE id = %d",
@@ -719,7 +715,7 @@ function qr_trackr_ajax_update_qr_details() {
 				'destination_url' => $destination_url,
 			)
 		);
-		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'invalid_destination_url' );
+		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'qr_id' => $qr_id ), 'invalid_destination_url' );
 		wp_send_json_error( esc_html__( 'Please enter a valid destination URL starting with http:// or https://', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -734,14 +730,14 @@ function qr_trackr_ajax_update_qr_details() {
 				'referral_code' => $referral_code,
 			)
 		);
-		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'invalid_referral_code' );
+		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'qr_id' => $qr_id ), 'invalid_referral_code' );
 		wp_send_json_error( esc_html__( 'Referral code can only contain letters, numbers, hyphens, and underscores.', 'wp-qr-trackr' ) );
 		return;
 	}
 
 	// Check if referral code is unique (if provided).
 	if ( ! empty( $referral_code ) ) {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Uniqueness check for validation.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Uniqueness check for validation; not cacheable.
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM {$table_name} WHERE referral_code = %s AND id != %d",
@@ -759,7 +755,7 @@ function qr_trackr_ajax_update_qr_details() {
 					'referral_code' => $referral_code,
 				)
 			);
-			qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'duplicate_referral_code' );
+			qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'qr_id' => $qr_id ), 'duplicate_referral_code' );
 			wp_send_json_error( esc_html__( 'Referral code already exists. Please choose a different one.', 'wp-qr-trackr' ) );
 			return;
 		}
@@ -777,7 +773,7 @@ function qr_trackr_ajax_update_qr_details() {
 		$update_data['destination_url'] = $destination_url;
 	}
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache invalidated after update.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cache invalidated after update; direct update acceptable.
 	$result = $wpdb->update(
 		$table_name,
 		$update_data,
@@ -802,7 +798,7 @@ function qr_trackr_ajax_update_qr_details() {
 				'db_error' => $error_message,
 			)
 		);
-		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'database_failed' );
+		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'qr_id' => $qr_id ), 'database_failed' );
 		wp_send_json_error( esc_html__( 'Failed to update QR code details.', 'wp-qr-trackr' ) );
 		return;
 	}
@@ -826,7 +822,7 @@ function qr_trackr_ajax_update_qr_details() {
 			'rows_affected' => $result,
 		)
 	);
-	qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', $_POST, 'success' );
+	qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'qr_id' => $qr_id ), 'success' );
 
 	wp_send_json_success(
 		array(
@@ -863,7 +859,7 @@ function qr_trackr_ajax_debug() {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// Check if table exists.
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Debug function.
 	$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
 
 	$debug_info = array(
@@ -875,7 +871,7 @@ function qr_trackr_ajax_debug() {
 
 	if ( $table_exists ) {
 		// Check table structure.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Debug function.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Debug function.
 		$columns      = $wpdb->get_results( "SHOW COLUMNS FROM {$table_name}" );
 		$column_names = array();
 		foreach ( $columns as $column ) {

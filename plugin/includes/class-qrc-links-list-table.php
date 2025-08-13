@@ -95,14 +95,20 @@ class QRC_Links_List_Table extends WP_List_Table {
 	protected function referral_filter_dropdown() {
 		global $wpdb;
 
-		$table_name     = $wpdb->prefix . 'qr_trackr_links';
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter for list table; no state change.
 		$current_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
 
-		// Get unique referral codes.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Admin filter dropdown, results cached.
-		$referral_codes = $wpdb->get_col(
-			"SELECT DISTINCT referral_code FROM {$table_name} WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
-		);
+		// Get unique referral codes with caching to avoid repeat queries.
+		$cache_key      = 'qr_trackr_referral_codes_dropdown';
+		$referral_codes = wp_cache_get( $cache_key, 'qr_trackr' );
+		if ( false === $referral_codes ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately after query.
+			$referral_codes = $wpdb->get_col(
+				"SELECT DISTINCT referral_code FROM {$table_name} WHERE referral_code IS NOT NULL AND referral_code != '' ORDER BY referral_code"
+			);
+			wp_cache_set( $cache_key, $referral_codes, 'qr_trackr', HOUR_IN_SECONDS );
+		}
 
 		if ( ! empty( $referral_codes ) ) {
 			echo '<div class="alignleft actions" style="margin-left: 10px;">';
@@ -184,6 +190,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$where_values = array();
 
 		// Handle search.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter input for admin table; no state change occurs.
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
 		if ( ! empty( $search ) ) {
 			$search_like   = '%' . $wpdb->esc_like( $search ) . '%';
@@ -192,6 +199,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 		}
 
 		// Handle referral code filter.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter input for admin table; no state change occurs.
 		$referral_filter = isset( $_REQUEST['referral_filter'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['referral_filter'] ) ) : '';
 		if ( ! empty( $referral_filter ) ) {
 			if ( ! empty( $where_clause ) ) {
@@ -397,11 +405,13 @@ class QRC_Links_List_Table extends WP_List_Table {
 		$order   = 'desc';
 
 		// If orderby is set, use this as the sort column.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sorting parameters are read-only and do not modify state.
 		if ( ! empty( $_GET['orderby'] ) ) {
 			$orderby = sanitize_text_field( wp_unslash( $_GET['orderby'] ) );
 		}
 
 		// If order is set use this as the order.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sorting parameters are read-only and do not modify state.
 		if ( ! empty( $_GET['order'] ) ) {
 			$order = sanitize_text_field( wp_unslash( $_GET['order'] ) );
 		}
