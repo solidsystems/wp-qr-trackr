@@ -55,7 +55,8 @@ function get_qr_code_image_tag( $post_id ) {
  * @return void
  */
 function qrc_generate_qr_code_ajax() {
-	qr_trackr_log_ajax_request( 'qrc_generate_qr_code', $_POST, 'started' );
+    // Avoid touching $_POST before nonce verification.
+    qr_trackr_log_ajax_request( 'qrc_generate_qr_code', array(), 'started' );
 
 	// Security check.
 	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qrc_generate_qr_code' ) ) {
@@ -122,11 +123,11 @@ function qrc_generate_qr_code_ajax() {
 	qr_trackr_log_form_submission( 'generate_qr_code_ajax', $form_data, 'create' );
 
 	// Generate the QR code.
-	$qr_code_url = qrc_generate_qr_code( $destination_url );
+    $qr_code_url = qrc_generate_qr_code( $destination_url );
 
 	if ( is_wp_error( $qr_code_url ) ) {
 		// Log the error for debugging.
-		error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional debug logging.
+        error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only logging behind WP_DEBUG and error branch.
 			sprintf(
 				'QR Code generation failed for post %d: %s',
 				$post_id,
@@ -199,8 +200,8 @@ function qrc_generate_qr_code_ajax() {
 		qr_trackr_log_db_operation( 'insert', $table_name, $insert_data, false !== $result );
 	}
 
-	if ( false === $result ) {
-		error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional debug logging.
+    if ( false === $result ) {
+        error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only logging for DB error branch.
 			sprintf(
 				'Database operation failed for post %d: %s',
 				$post_id,
@@ -310,7 +311,8 @@ add_action( 'wp_ajax_nopriv_qrc_track_link', 'qrc_track_link_click_ajax' );
  * @return void
  */
 function qrc_search_posts_ajax() {
-	qr_trackr_log_ajax_request( 'qrc_search_posts', $_POST, 'started' );
+    // Avoid touching $_POST before nonce verification.
+    qr_trackr_log_ajax_request( 'qrc_search_posts', array(), 'started' );
 
 	// Debug logging.
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
