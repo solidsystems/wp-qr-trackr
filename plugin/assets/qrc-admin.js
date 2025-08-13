@@ -491,6 +491,30 @@ jQuery(document).ready(function ($) {
 		}
 	});
 
+	// Add New page: real-time validation for referral code field
+	(function initAddNewReferralValidation() {
+		const $field = $('#referral_code');
+		if (!$field.length) {
+			return;
+		}
+		const $description = $field.siblings('.description');
+		$field.on('input', function () {
+			const code = $(this).val().trim();
+			$field.removeClass('valid-code invalid-code');
+			if (code === '') {
+				$description.text('A referral code for tracking and analytics.').css('color', '#666');
+				return;
+			}
+			if (/^[a-zA-Z0-9\-_]+$/.test(code)) {
+				$description.text('Checking availability…').css('color', '#666');
+				checkReferralUniquenessDebounced(code, $field, $description);
+			} else {
+				$field.addClass('invalid-code');
+				$description.text('✗ Referral code can only contain letters, numbers, hyphens, and underscores').css('color', '#dc3545');
+			}
+		});
+	})();
+
   // Debounce helper
   let checkReferralTimer;
   function checkReferralUniquenessDebounced(code, $field, $description) {

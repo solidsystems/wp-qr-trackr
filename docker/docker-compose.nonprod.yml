@@ -24,6 +24,7 @@ services:
     volumes:
       - wordpress_data_nonprod:/var/www/html
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+      - ../plugin:/var/www/html/wp-content/plugins/wp-qr-trackr:cached
 
   wpcli-nonprod:
     image: wordpress:cli
@@ -42,6 +43,7 @@ services:
     volumes:
       - wordpress_data_nonprod:/var/www/html
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
+      - ../plugin:/var/www/html/wp-content/plugins/wp-qr-trackr:cached
     entrypoint: ["tail", "-f", "/dev/null"]
 
   db-nonprod:

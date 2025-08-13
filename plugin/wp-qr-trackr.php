@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP QR Trackr
  * Description: A comprehensive QR code generation and tracking plugin for WordPress with analytics, custom styling, and advanced management features.
- * Version: 1.2.59
+ * Version: 1.2.60
  * Author: Solid Systems
  * Author URI: https://solidsystems.io
  * Plugin URI: https://github.com/solidsystems/wp-qr-trackr
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'QR_TRACKR_VERSION', '1.2.59' );
+define( 'QR_TRACKR_VERSION', '1.2.60' );
 define( 'QR_TRACKR_PLUGIN_FILE', __FILE__ );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -228,6 +228,33 @@ remove_action( 'plugins_loaded', 'qr_trackr_init_plugin' );
 
 // Add initialization on plugins_loaded with high priority.
 add_action( 'plugins_loaded', 'qr_trackr_init_plugin', 5 );
+
+/**
+ * Flush rewrite rules after version updates when needed.
+ *
+ * Runs late on init so that rewrite rules have been registered by modules.
+ *
+ * @since 1.2.60
+ * @return void
+ */
+function qr_trackr_flush_rewrites_if_needed() {
+	$needs_flush = get_option( 'qr_trackr_needs_flush', false );
+	if ( $needs_flush ) {
+		// Ensure our rewrite rules are registered before flushing.
+		if ( function_exists( 'qr_trackr_add_rewrite_rules' ) ) {
+			qr_trackr_add_rewrite_rules();
+		}
+
+		flush_rewrite_rules();
+		delete_option( 'qr_trackr_needs_flush' );
+
+		if ( QR_TRACKR_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+			error_log( 'QR Trackr: Flushed rewrite rules after version change.' );
+		}
+	}
+}
+add_action( 'init', 'qr_trackr_flush_rewrites_if_needed', 20 );
 
 // Register activation and deactivation hooks.
 register_activation_hook( QR_TRACKR_PLUGIN_FILE, 'qr_trackr_activate_plugin' );

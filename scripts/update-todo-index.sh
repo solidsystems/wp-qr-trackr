@@ -40,12 +40,12 @@ success() {
 create_backup() {
     mkdir -p "$BACKUP_DIR"
     local timestamp=$(date '+%Y%m%d_%H%M%S')
-    
+
     if [ -f "$TODO_FILE" ]; then
         cp "$TODO_FILE" "$BACKUP_DIR/TODO_${timestamp}.md"
         log "Backed up TODO.md to $BACKUP_DIR/TODO_${timestamp}.md"
     fi
-    
+
     if [ -f "$STATUS_FILE" ]; then
         cp "$STATUS_FILE" "$BACKUP_DIR/STATUS_${timestamp}.md"
         log "Backed up STATUS.md to $BACKUP_DIR/STATUS_${timestamp}.md"
@@ -55,7 +55,7 @@ create_backup() {
 # Update TODO.md with current status
 update_todo_markdown() {
     log "Updating TODO.md with current project status..."
-    
+
     # Create updated TODO.md
     cat > "$TODO_FILE" << 'EOF'
 # TODO List
@@ -123,7 +123,7 @@ update_todo_markdown() {
 
 ---
 
-**Note:** This file is automatically updated by `scripts/update-todo-index.sh`. 
+**Note:** This file is automatically updated by `scripts/update-todo-index.sh`.
 For active development tasks, use Cursor's structured todo system which provides:
 - Dependency tracking
 - Status management (pending, in_progress, completed, cancelled)
@@ -139,10 +139,10 @@ EOF
 # Update STATUS.md with latest information
 update_status_markdown() {
     log "Updating STATUS.md with latest project status..."
-    
+
     # Get current date
     local current_date=$(date '+%B %d, %Y')
-    
+
     # Update the last updated date in STATUS.md
     if [ -f "$STATUS_FILE" ]; then
         sed -i.bak "s/\*\*Last Updated:\*\* .*/\*\*Last Updated:\*\* $current_date/" "$STATUS_FILE"
@@ -156,7 +156,7 @@ update_status_markdown() {
 # Add todo automation completion to STATUS.md
 add_todo_automation_completion() {
     log "Adding TODO automation completion to STATUS.md..."
-    
+
     if [ -f "$STATUS_FILE" ]; then
         # Add the todo automation to the recent fixes section
         local temp_file=$(mktemp)
@@ -171,7 +171,7 @@ add_todo_automation_completion() {
         }
         { print }
         ' "$STATUS_FILE" > "$temp_file"
-        
+
         mv "$temp_file" "$STATUS_FILE"
         success "Added TODO automation completion to STATUS.md"
     fi
@@ -180,18 +180,18 @@ add_todo_automation_completion() {
 # Generate project summary
 generate_project_summary() {
     log "Generating project summary..."
-    
+
     local total_tasks=0
     local completed_tasks=0
     local active_tasks=0
-    
+
     # Count tasks from TODO.md
     if [ -f "$TODO_FILE" ]; then
         total_tasks=$(grep -c "^- \[" "$TODO_FILE" 2>/dev/null || echo "0")
         completed_tasks=$(grep -c "^- \[x\]" "$TODO_FILE" 2>/dev/null || echo "0")
         active_tasks=$((total_tasks - completed_tasks))
     fi
-    
+
     echo ""
     echo "📊 Project Summary:"
     echo "  Total Tasks: $total_tasks"
@@ -204,9 +204,9 @@ generate_project_summary() {
 # Validate files
 validate_files() {
     log "Validating updated files..."
-    
+
     local errors=0
-    
+
     # Check TODO.md
     if [ ! -f "$TODO_FILE" ]; then
         error "TODO.md not found"
@@ -215,7 +215,7 @@ validate_files() {
         error "TODO.md is empty"
         errors=$((errors + 1))
     fi
-    
+
     # Check STATUS.md
     if [ ! -f "$STATUS_FILE" ]; then
         error "STATUS.md not found"
@@ -224,7 +224,7 @@ validate_files() {
         error "STATUS.md is empty"
         errors=$((errors + 1))
     fi
-    
+
     if [ $errors -eq 0 ]; then
         success "All files validated successfully"
         return 0
@@ -237,26 +237,24 @@ validate_files() {
 # Main execution
 main() {
     log "Starting TODO index update..."
-    
-	# Check if we're in the project root (support legacy and restructured layouts)
-	if [ ! -f "$PROJECT_ROOT/wp-qr-trackr.php" ] && [ ! -f "$PROJECT_ROOT/plugin/wp-qr-trackr.php" ]; then
-		error "Not in project root. Please run from project directory."
-		exit 1
-	fi
-    
+    # Check if we're in the project root (support legacy and restructured layouts)
+    if [ ! -f "$PROJECT_ROOT/wp-qr-trackr.php" ] && [ ! -f "$PROJECT_ROOT/plugin/wp-qr-trackr.php" ]; then
+        error "Not in project root. Please run from project directory."
+        exit 1
+    fi
     # Create backup
     create_backup
-    
+
     # Update files
     update_todo_markdown
     update_status_markdown
     add_todo_automation_completion
-    
+
     # Validate
     if validate_files; then
         generate_project_summary
         success "TODO index update completed successfully!"
-        
+
         # Show next steps
         echo ""
         echo "🚀 Next Steps:"
@@ -272,4 +270,4 @@ main() {
 }
 
 # Run main function
-main "$@" 
+main "$@"
