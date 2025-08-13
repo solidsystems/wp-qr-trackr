@@ -167,7 +167,8 @@ install_db() {
 	fi
 
     # Force-disable TLS for local Docker DBs where server TLS is not configured.
-    EXTRA="$EXTRA --ssl-mode=DISABLED"
+    # Use legacy-compatible client flag.
+    EXTRA="$EXTRA --skip-ssl"
 
     # create database
 	create_db
