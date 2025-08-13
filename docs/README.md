@@ -1,11 +1,25 @@
 # WP QR Trackr Documentation
 
+## Philosophy
+
+The repository serves two equal purposes: a production-ready WordPress plugin (QR Trackr) and a modern, enforceable template for building new plugins.
+
+- Security-first, standards-driven WordPress development (PHPCS enforced).
+- Modular architecture with single-responsibility modules under `includes/` and clear separation of templates (`templates/`) and assets (`assets/`).
+- Clean tracking URLs handled by rewrites on `init` and redirects on `template_redirect` using native WordPress functions.
+- Redirect policy: `wp_redirect( esc_url_raw(...) )` for external destinations; `wp_safe_redirect()` for internal/admin.
+- Local-only dependencies where possible (e.g., Endroid QR generation; local Select2 bundling; no CDNs).
+- Data integrity guarantees (e.g., referral code uniqueness) and robust input/output sanitization and escaping.
+- Docker-only environments with control scripts; no direct Docker/WP-CLI commands in docs or workflows.
+- Testing and CI that default to linting and validation everywhere, with E2E enabled locally on demand, not in GitHub Actions.
+
 ## User Guide
 - [Features and Usage](user-guide/FEATURES.md) - Complete guide to plugin features
 - [Installation Guide](user-guide/INSTALLATION.md) - How to install and configure the plugin
 
 ## Developer Guide
 - [Getting Started](dev-guide/GETTING_STARTED.md) - Complete development setup guide
+- [Build a New Plugin Using This Template](dev-guide/NEW_PLUGIN.md) - Accurate, step-by-step transformation guide
 - [Quick Reference](dev-guide/QUICK_REFERENCE.md) - Common development tasks and commands
 - [Cross-Platform Development](dev-guide/CROSS_PLATFORM.md) - Setup guide for different platforms
 - [Onboarding](dev-guide/ONBOARDING.md) - New developer onboarding process
