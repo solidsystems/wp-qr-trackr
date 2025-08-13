@@ -31,9 +31,9 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	);
 
 	// Use custom URL if provided, otherwise use dropdown selection.
-    if ( ! empty( $custom_url ) ) {
-        $destination_url   = $custom_url;
-        $selected_post_id = 0; // Clear post ID if custom URL is used.
+	if ( ! empty( $custom_url ) ) {
+		$destination_url   = $custom_url;
+		$selected_post_id = 0; // Clear post ID if custom URL is used.
 		qr_trackr_log( 'Using custom URL for QR code generation', 'info', array( 'custom_url' => $custom_url ) );
 	} elseif ( ! empty( $selected_post_id ) ) {
 		// If post ID is provided, get the post URL.
@@ -68,7 +68,6 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Single-row existence check prior to insert.
 		$referral_conflict = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				// Safe table name usage by injecting only the identifier portion.
 				sprintf( 'SELECT COUNT(*) FROM %s WHERE referral_code = %%s', $table_name ),
 				$referral_code
 			)
