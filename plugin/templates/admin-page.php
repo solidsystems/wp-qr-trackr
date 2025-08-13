@@ -29,13 +29,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 			$table_html = ob_get_clean();
 		?>
 		<?php
-			// Extract the default displaying-num markup and re-render it below filters.
-			$count_text = '';
-			if ( preg_match( '/<span class="displaying-num">([^<]+)<\/span>/i', $table_html, $m ) ) {
-				$count_text = trim( wp_strip_all_tags( $m[1] ) );
-				// Remove all original displaying-num to avoid duplicates (handles top and bottom navs).
-				$table_html = preg_replace( '/<span class="displaying-num">[^<]+<\/span>/i', '', $table_html );
-			}
+		// Extract the default displaying-num markup and re-render it below filters.
+		$count_text = '';
+		if ( preg_match( '/<span class="displaying-num">([^<]+)<\/span>/i', $table_html, $m ) ) {
+			$count_text = trim( wp_strip_all_tags( $m[1] ) );
+			// Remove all original displaying-num to avoid duplicates (handles top and bottom navs).
+			$table_html = preg_replace( '/<span class="displaying-num">[^<]+<\/span>/i', '', $table_html );
+		}
 		?>
 		<?php if ( $count_text ) : ?>
 			<div class="qrc-display-count"><?php echo esc_html( $count_text ); ?></div>
