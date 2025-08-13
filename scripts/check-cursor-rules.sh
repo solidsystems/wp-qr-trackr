@@ -13,8 +13,6 @@ if ! grep -q 'yarn' package.json; then
   exit 1
 fi
 
-# Placeholder: Add more .cursorrules checks here as needed
-
 # Required files for Cursor project rules
 REQUIRED_FILES=(".cursorrules" "config/editor/.editorconfig" "Makefile" "config/ci/lefthook.yml" ".github/PULL_REQUEST_TEMPLATE.md")
 
@@ -27,8 +25,11 @@ for file in "${REQUIRED_FILES[@]}"; do
   # Optionally, add content checks here
   # e.g., grep for key sections in .cursorrules
   if [ "$file" = ".cursorrules" ]; then
-    grep -q 'PHPCS & WordPress Coding Standards Guardrails' .cursorrules || {
-      echo "[ERROR] .cursorrules missing guardrails section."; exit 1; }
+    # Verify key enforced policies exist in .cursorrules
+    grep -q 'WordPress Redirect Handling Standards' .cursorrules || { echo "[ERROR] .cursorrules missing Redirect Handling Standards."; exit 1; }
+    grep -q 'Clean Tracking URLs Policy' .cursorrules || { echo "[ERROR] .cursorrules missing Clean Tracking URLs Policy."; exit 1; }
+    grep -q 'Admin Asset Policy: Select2' .cursorrules || { echo "[ERROR] .cursorrules missing Admin Asset Policy: Select2."; exit 1; }
+    grep -q 'Data Integrity Policy: Referral Codes' .cursorrules || { echo "[ERROR] .cursorrules missing Referral Codes policy."; exit 1; }
   fi
   # Check .editorconfig for PHP tab rule
   if [ "$file" = "config/editor/.editorconfig" ]; then
