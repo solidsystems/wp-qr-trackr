@@ -1,3 +1,100 @@
+## 1.2.64 - 2025-08-17
+
+### Fixed
+
+- **SCAN COUNTER ISSUE**: Fixed critical bug where QR code scan counters were not incrementing in the database
+- **DATABASE STRUCTURE**: Added automatic database upgrade to ensure required columns exist
+- **PRODUCTION COMPATIBILITY**: Scan counter fix will be automatically applied when plugin is updated
+
+### Technical
+
+- Enhanced `qr_trackr_maybe_upgrade_database()` function to check for and add missing scan counter columns
+- Added automatic detection and creation of `scans`, `access_count`, and `last_accessed` columns
+- Improved database upgrade logging for scan counter fix operations
+- Created diagnostic and fix scripts for scan counter issues
+
+### User Experience
+
+- **Before**: QR code scanning worked but scan counters didn't increment, causing analytics to be inaccurate
+- **After**: Scan counters automatically increment when QR codes are scanned, providing accurate analytics
+- **Result**: Users get reliable scan tracking without manual database intervention
+
+## 1.2.63
+
+### Added
+
+- **WORDPRESS.ORG SUBMISSION PACKAGE**: Complete preparation for WordPress.org plugin repository
+- **SCREENSHOTS**: All 5 required screenshots captured using Playwright automation
+- **SUBMISSION DOCUMENTATION**: Comprehensive WordPress.org submission guide
+- **AUTOMATED SCREENSHOT CAPTURE**: Playwright scripts for consistent screenshot generation
+
+### Enhanced
+
+- **PLUGIN READY**: All WordPress.org requirements met (readme.txt, license.txt, screenshots)
+- **DOCUMENTATION**: Complete submission process documentation
+- **QUALITY ASSURANCE**: High-quality PNG screenshots at 2400x1626px resolution
+
+### Technical
+
+- Created `plugin/readme.txt` - WordPress.org-compliant readme file
+- Created `plugin/license.txt` - GPL v2 license file
+- Created `docs/development/WORDPRESS_ORG_SUBMISSION.md` - Complete submission guide
+- Created `scripts/prepare-wordpress-org.sh` - Automated submission preparation
+- Created `scripts/capture-screenshots.sh` - Screenshot capture automation
+- Added 5 professional screenshots for WordPress.org submission
+
+### User Experience
+
+- **Before**: Plugin ready for GitHub releases only
+- **After**: Plugin ready for both GitHub and WordPress.org releases
+- **Result**: Complete WordPress.org submission package with all required assets
+
+### Files Added
+
+- `plugin/readme.txt`: WordPress.org-compliant readme
+- `plugin/license.txt`: GPL v2 license
+- `docs/development/WORDPRESS_ORG_SUBMISSION.md`: Submission guide
+- `scripts/prepare-wordpress-org.sh`: Preparation script
+- `scripts/capture-screenshots.sh`: Screenshot automation
+- `wp-qr-trackr-submission/screenshots/`: All 5 required screenshots
+
+## 1.2.47
+
+### Added
+
+- **AUTOMATED RELEASE WORKFLOW**: Complete automated release management system for WordPress plugin
+- **AUTO RELEASE WORKFLOW**: Automatically creates releases when code is merged to main branch
+- **VERSION BUMP WORKFLOW**: Manual workflow for version bumping with patch/minor/major support
+- **RELEASE DOCUMENTATION**: Comprehensive documentation for release workflow system
+
+### Enhanced
+
+- **CI/CD PIPELINE**: Integrated automated release workflow with existing GitHub Actions
+- **VERSION MANAGEMENT**: Automated version extraction and updating from plugin files
+- **RELEASE PROCESS**: Streamlined release process with automatic zip creation and GitHub release
+- **ERROR HANDLING**: Graceful failure handling and duplicate release checking
+
+### Technical
+
+- Created `.github/workflows/auto-release.yml` for automatic release creation
+- Created `.github/workflows/version-bump.yml` for version bumping workflow
+- Added comprehensive documentation in `docs/development/RELEASE_WORKFLOW.md`
+- Integrated with existing `scripts/build-release.sh` for plugin building
+- Added automatic CHANGELOG updates with release dates
+- Implemented duplicate release checking to prevent conflicts
+
+### User Experience
+
+- **Before**: Manual release process requiring zip creation and GitHub release setup
+- **After**: Fully automated release process triggered by merging to main branch
+- **Result**: Developers can focus on code while releases are handled automatically
+
+### Files Added
+
+- `.github/workflows/auto-release.yml`: Auto-release workflow
+- `.github/workflows/version-bump.yml`: Version bump workflow
+- `docs/development/RELEASE_WORKFLOW.md`: Complete workflow documentation
+
 ## 1.2.46
 
 ### Fixed

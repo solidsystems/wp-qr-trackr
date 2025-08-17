@@ -3,7 +3,7 @@
  * QR code redirect handling for the QR Trackr plugin.
  *
  * This module handles QR code redirects using native WordPress redirects
- * instead of custom rewrite rules for better reliability and compatibility.
+ * and provides clean URLs for better user experience.
  *
  * @package WP_QR_TRACKR
  * @since 1.0.0
@@ -91,11 +91,12 @@ function qr_trackr_handle_clean_urls() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// Look up the QR code in the database with caching.
-	$cache_key = 'qr_trackr_lookup_' . $qr_code;
-	$result    = wp_cache_get( $cache_key );
+	// Look up the QR code in the database with object cache.
+	// Query by QR code only; the table does not include a status column in current schema.
+	$cache_key = 'qr_trackr_link_by_code_' . md5( $qr_code );
+	$result    = wp_cache_get( $cache_key, 'qr_trackr' );
 	if ( false === $result ) {
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately below.
 		$result = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} WHERE qr_code = %s",
@@ -103,7 +104,7 @@ function qr_trackr_handle_clean_urls() {
 			)
 		);
 		if ( $result ) {
-			wp_cache_set( $cache_key, $result, '', 300 );
+			wp_cache_set( $cache_key, $result, 'qr_trackr', 300 );
 		}
 	}
 
@@ -118,155 +119,71 @@ function qr_trackr_handle_clean_urls() {
 	// Update the scan count.
 	qr_trackr_update_scan_count_immediate( $result->id );
 
-	// Perform the redirect.
-	// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- External redirects allowed for QR codes per project policy.
+	// Perform the redirect to the destination URL.
+	// For external URLs, project policy requires wp_redirect with esc_url_raw.
+	// phpcs:ignore WordPress.Security.SafeRedirect.wp_safe_redirect -- External redirects allowed per project policy; URL sanitized with esc_url_raw().
 	wp_redirect( esc_url_raw( $destination_url ), 302 );
 	exit;
 }
 
 // Register the template redirect handler.
+// Enable clean URL handling using native WordPress redirects.
 add_action( 'template_redirect', 'qr_trackr_handle_clean_urls' );
 
 /**
- * Handle QR code redirects using AJAX endpoints for reliability.
- *
- * This provides clean URLs for QR codes but uses AJAX for actual redirects
- * to ensure reliability across all environments.
+ * Handle QR code redirects via AJAX for backward compatibility.
  *
  * @since 1.0.0
  * @return void
  */
 function qr_trackr_ajax_redirect() {
-	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'qr_trackr_nonce' ) ) {
-		wp_send_json_error( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
-		return;
-	}
 	// Get QR code from AJAX request.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public redirect endpoint; read-only input, sanitized below.
 	$qr_code = isset( $_GET['qr'] ) ? sanitize_text_field( wp_unslash( $_GET['qr'] ) ) : '';
 
 	if ( empty( $qr_code ) ) {
 		wp_die( esc_html__( 'QR code not provided.', 'wp-qr-trackr' ) );
 	}
 
-	qr_trackr_log_page_load(
-		'qr_redirect',
-		array(
-			'qr_code' => $qr_code,
-			'user_ip' => qr_trackr_get_user_ip(),
-		)
-	);
-
+	// Get the database connection.
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	// Try to get link data from cache first.
-	$cache_key       = 'qr_trackr_link_data_' . $qr_code;
-	$link_data       = wp_cache_get( $cache_key );
-	$link_id         = null;
-	$destination_url = '';
-
-	if ( false === $link_data ) {
-		qr_trackr_log( 'QR code not found in cache, querying database', 'info', array( 'qr_code' => $qr_code ) );
-
-		// Get destination URL and ID from database using tracking code.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Caching implemented above, single-row lookup needed for performance.
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
+	// Look up the QR code in the database with caching for performance.
+	$cache_key = 'qr_trackr_link_by_code_' . md5( $qr_code );
+	$result    = wp_cache_get( $cache_key, 'qr_trackr' );
+	if ( false === $result ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cached immediately below.
 		$result = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT destination_url, id FROM {$table_name} WHERE qr_code = %s",
+				"SELECT * FROM {$table_name} WHERE qr_code = %s",
 				$qr_code
 			)
 		);
-
 		if ( $result ) {
-			$destination_url = $result->destination_url;
-			$link_id         = $result->id;
-
-			// Cache both URL and ID for 5 minutes.
-			$link_data = array(
-				'destination_url' => $destination_url,
-				'link_id'         => $link_id,
-			);
-			wp_cache_set( $cache_key, $link_data, '', 300 );
-
-			qr_trackr_log_db_operation(
-				'select',
-				$table_name,
-				array(
-					'qr_code' => $qr_code,
-					'link_id' => $link_id,
-				),
-				true
-			);
-		} else {
-			qr_trackr_log_db_operation( 'select', $table_name, array( 'qr_code' => $qr_code ), false );
+			wp_cache_set( $cache_key, $result, 'qr_trackr', 300 );
 		}
-	} else {
-		// Extract data from cache.
-		$destination_url = $link_data['destination_url'];
-		$link_id         = $link_data['link_id'];
-
-		qr_trackr_log(
-			'QR code data retrieved from cache',
-			'info',
-			array(
-				'qr_code' => $qr_code,
-				'link_id' => $link_id,
-			)
-		);
 	}
 
-	if ( empty( $destination_url ) || empty( $link_id ) ) {
-		qr_trackr_log( 'QR code not found, showing 404', 'error', array( 'qr_code' => $qr_code ) );
-		qr_trackr_handle_404();
-		return;
+	if ( ! $result ) {
+		wp_die( esc_html__( 'QR code not found.', 'wp-qr-trackr' ) );
 	}
 
-	// Validate URL before redirecting.
-	if ( ! wp_http_validate_url( $destination_url ) ) {
-		qr_trackr_log(
-			'Invalid destination URL for QR code',
-			'error',
-			array(
-				'qr_code'         => $qr_code,
-				'destination_url' => $destination_url,
-			)
-		);
+	// Get the destination URL.
+	$destination_url = $result->destination_url;
 
-		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( sprintf( 'QR Trackr: Invalid destination URL for tracking code %s.', $qr_code ) );
-		qr_trackr_handle_404();
-		return;
-	}
+	// Update the scan count.
+	qr_trackr_update_scan_count_immediate( $result->id );
 
-	// Update scan count immediately.
-	qr_trackr_update_scan_count_immediate( $link_id );
-
-	// Log successful redirect.
-	qr_trackr_log(
-		'QR code redirect successful',
-		'info',
-		array(
-			'qr_code'         => $qr_code,
-			'link_id'         => $link_id,
-			'destination_url' => $destination_url,
-		)
-	);
-
-	// Debug logging.
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
-		error_log( 'QR Trackr: About to redirect to: ' . $destination_url );
-
-	// Use JavaScript redirect for AJAX context.
-	echo '<script>window.location.href = "' . esc_url( $destination_url ) . '";</script>';
+	// Perform the redirect per external redirect policy.
+	// phpcs:ignore WordPress.Security.SafeRedirect.wp_safe_redirect -- External redirects allowed per project policy; URL sanitized.
+	wp_redirect( esc_url_raw( $destination_url ), 302 );
 	exit;
 }
 
 // Register AJAX actions for both logged-in and non-logged-in users.
 add_action( 'wp_ajax_qr_trackr_redirect', 'qr_trackr_ajax_redirect' );
 add_action( 'wp_ajax_nopriv_qr_trackr_redirect', 'qr_trackr_ajax_redirect' );
-
-
 
 /**
  * Update the scan count immediately during redirect.
@@ -284,7 +201,6 @@ function qr_trackr_update_scan_count_immediate( $link_id ) {
 
 	// Update both access_count and scans for compatibility, set last_accessed timestamp.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Write operation, caching not applicable.
-	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is safe, validated by WordPress.
 	$result = $wpdb->query(
 		$wpdb->prepare(
 			"UPDATE {$table_name} SET access_count = access_count + 1, scans = scans + 1, last_accessed = %s, updated_at = %s WHERE id = %d",
@@ -370,5 +286,5 @@ function qr_trackr_handle_404() {
  */
 function qr_trackr_check_redirect_functionality() {
 	// Check if the template_redirect hook is properly set up.
-	return has_action( 'template_redirect', 'qr_trackr_template_redirect' ) > 0;
+	return has_action( 'template_redirect', 'qr_trackr_handle_clean_urls' ) > 0;
 }

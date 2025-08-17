@@ -159,3 +159,4 @@ phpunit.xml
 .Trashes
 ehthumbs.db
 Thumbs.db
+plugin/vendor/

@@ -2,6 +2,23 @@
 
 A WordPress plugin for QR code generation and tracking that demonstrates what can be achieved through strict coding standards and automated quality guardrails.
 
+## 🎯 Primary Purpose: Plugin Development Template
+
+**This project serves as a comprehensive template for building production-ready WordPress plugins.** The primary goal is to provide a foundation that enforces best practices, coding standards, and automated quality control.
+
+### 📖 [Build a New Plugin Using This Template](docs/dev-guide/NEW_PLUGIN.md)
+
+This guide shows you how to use this repository as a foundation for your own WordPress plugin, with:
+
+- Complete plugin identity customization
+- Database schema management
+- Admin UI and routing setup
+- Security and data integrity patterns
+- Coding standards enforcement
+- Documentation and release workflows
+
+**Start here if you want to build your own plugin using this template!**
+
 ## Project Philosophy
 
 This project is a thought exercise in **standards compliance and best practices**. It aims to show what's possible when someone with an idea and understanding of how something might work—but who doesn't necessarily know how to code—can create a robust, production-ready WordPress plugin.
@@ -18,24 +35,28 @@ The key insight is that **strict guardrails and automated quality enforcement ca
 This project enforces the following standards and practices:
 
 ### Code Quality Standards
+
 - **WordPress Coding Standards**: Full compliance with PHPCS WordPress-Extra and WordPress-Docs standards
 - **Security Best Practices**: Nonce verification, input sanitization, output escaping, SQL injection prevention
 - **Performance Standards**: Database query optimization, caching implementation, memory management
 - **Documentation Requirements**: Complete docblocks, inline comments, README maintenance
 
 ### Development Workflow Standards
+
 - **Containerized Development**: All development happens in Docker containers for consistency
 - **Automated Testing**: PHPUnit tests, E2E tests with Playwright, code coverage requirements
 - **Pre-commit Validation**: Automated checks before code is committed or pushed
 - **Code Review Standards**: Structured PR templates, automated validation requirements
 
 ### Quality Enforcement Mechanisms
+
 - **Automated Linting**: PHPCS and PHPCBF run automatically on all code changes
 - **Style Enforcement**: EditorConfig, automated formatting, consistent indentation
 - **Security Scanning**: Automated detection of common security vulnerabilities
 - **Performance Monitoring**: Automated performance regression detection
 
 ### Documentation Standards
+
 - **Living Documentation**: All changes require documentation updates
 - **API Documentation**: Complete documentation for all public functions and hooks
 - **User Guides**: Comprehensive guides for both developers and end users
@@ -44,10 +65,12 @@ This project enforces the following standards and practices:
 ## Quick Start
 
 1. **Requirements**
+
    - Docker Desktop
    - Git
 
 2. **Development Setup**
+
    ```bash
    # Clone the repository
    git clone https://github.com/yourusername/wp-qr-trackr.git
@@ -75,14 +98,25 @@ This project enforces the following standards and practices:
 
 ## Documentation
 
-- [Plugin User Guide](docs/USER_GUIDE.md)
-- [Developer Guide](docs/DEVELOPER_GUIDE.md)
+### User Documentation
+
+- [Plugin Features](docs/user-guide/FEATURES.md)
+- [Installation Guide](docs/user-guide/INSTALLATION.md)
+
+### Developer Documentation
+
+- [Development Guide](docs/development/README.dev.md)
 - [Editor Setup](docs/development/EDITOR_SETUP.md) - VS Code and Cursor setup with LLM integration
-- [Contributing Guide](docs/CONTRIBUTING.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Changelog](docs/CHANGELOG.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Container Management](docs/development/CONTAINER_MANAGEMENT.md)
+- [CI/CD Workflow](docs/development/CI_CD_WORKFLOW.md)
+- [Architecture Overview](docs/architecture/ARCHITECTURE.md)
+- [PHPCS Compliance Guide](docs/architecture/PHPCS_COMPLIANCE.md)
+
+### Project Documentation
+
+- [Contributing Guide](docs/CONTRIBUTING.md)
+- [Changelog](docs/CHANGELOG.md)
+- [Project Reflections](docs/REFLECTIONS-FROM-THE-CREATOR.md)
 
 ## Features
 
@@ -97,12 +131,14 @@ This project enforces the following standards and practices:
 This project includes advanced container management capabilities that automatically detect and resolve issues:
 
 ### Automatic Issue Detection & Recovery
+
 - **Health Monitoring**: Continuous monitoring of container status and WordPress accessibility
 - **Auto-Recovery**: Automatic restart and reinstallation when issues are detected
 - **Comprehensive Logging**: Detailed logs for troubleshooting and debugging
 - **Retry Logic**: Intelligent retry mechanisms with configurable attempts
 
 ### Container Management Commands
+
 ```bash
 # Enhanced setup with auto-recovery
 ./scripts/setup-wordpress-enhanced.sh dev
@@ -115,6 +151,7 @@ This project includes advanced container management capabilities that automatica
 ```
 
 ### Benefits
+
 - **Reduced Downtime**: Automatic recovery minimizes development interruptions
 - **Better Debugging**: Comprehensive logging and diagnostic tools
 - **Consistent Environments**: Ensures reliable development and testing environments
@@ -176,6 +213,7 @@ This project uses a comprehensive, container-based "belt and suspenders" code qu
 - **Consistent codebase:** Over time, your codebase remains clean, readable, and secure, regardless of who (or what) wrote the code.
 
 ### Workflow
+
 - Use `make fix` to auto-fix code style issues (PHPCBF).
 - Use `make lint` to check for PHPCS errors.
 - Use `make validate` to run the full suite (PHPCS, Playwright, etc.).
@@ -183,14 +221,17 @@ This project uses a comprehensive, container-based "belt and suspenders" code qu
 - All rules and best practices are documented in `.cursorrules`.
 
 ### Editor Integration
+
 - EditorConfig and VSCode settings ensure tabs, line endings, and inline PHPCS feedback.
 
 ### PR Requirements
+
 - All PRs must pass container-based validation and comply with `.cursorrules`.
 
 See `.cursorrules` and the Makefile for details.
 
 ### Lefthook & Git Hooks
+
 - Lefthook is installed and runs only in the container/CI environment. Contributors do not need to install Lefthook locally.
 - All pre-commit and pre-push hooks are enforced in the container and CI workflows.
 - For local checks, use `make fix`, `make lint`, and `make validate`.
@@ -204,6 +245,7 @@ When troubleshooting issues on production WordPress sites, the **WP Query Monito
 #### Installing WP Query Monitor
 
 1. **Install from WordPress.org:**
+
    - Go to Plugins → Add New
    - Search for "Query Monitor"
    - Install and activate the plugin
@@ -218,16 +260,19 @@ When troubleshooting issues on production WordPress sites, the **WP Query Monito
 **Key Areas to Monitor:**
 
 1. **Database Queries:**
+
    - Look for queries to the `wp_qr_trackr_links` table
    - Check for slow queries or missing indexes
    - Verify proper use of `$wpdb->prepare()` for security
 
 2. **Hooks & Actions:**
+
    - Monitor `admin_menu` hook execution
    - Check `admin_init` and `admin_enqueue_scripts` hooks
    - Verify AJAX action hooks are firing correctly
 
 3. **Template Loading:**
+
    - Check if template files are being included correctly
    - Monitor file path resolution issues
    - Verify template hierarchy and fallbacks
@@ -240,33 +285,39 @@ When troubleshooting issues on production WordPress sites, the **WP Query Monito
 #### Common Production Issues & Solutions
 
 **Issue: "Failed opening template file"**
+
 ```
 include(): Failed opening '/path/to/wp-content/plugins/wp-qr-trackr/templates/admin-page.php'
 ```
 
 **Solution:**
+
 - Check file permissions on production server
 - Verify template files are included in plugin package
 - Use Query Monitor to check file path resolution
 - Ensure `QR_TRACKR_PLUGIN_DIR` constant is set correctly
 
 **Issue: "Sorry, you are not allowed to access this page"**
+
 ```
 WordPress Error: Sorry, you are not allowed to access this page
 ```
 
 **Solution:**
+
 - Check user capabilities with Query Monitor
 - Verify `current_user_can('manage_options')` checks
 - Monitor admin menu registration
 - Check for conflicting plugins or themes
 
 **Issue: Blank admin pages**
+
 ```
 Admin page loads but shows blank content
 ```
 
 **Solution:**
+
 - Use Query Monitor to check for PHP errors
 - Monitor template inclusion in "Files" tab
 - Check for JavaScript errors in browser console
@@ -275,6 +326,7 @@ Admin page loads but shows blank content
 #### Query Monitor Configuration for QR Trackr
 
 **Recommended Settings:**
+
 - Enable "Database Queries" panel
 - Enable "Hooks & Actions" panel
 - Enable "Files" panel for template debugging
@@ -282,6 +334,7 @@ Admin page loads but shows blank content
 - Set "Minimum Query Time" to 0.1 seconds for performance monitoring
 
 **Custom Filters:**
+
 ```php
 // Add to wp-config.php for QR Trackr specific debugging
 define('QM_DISABLED', false);
@@ -304,6 +357,7 @@ define('QM_DISPLAY_ERRORS', true);
 #### Performance Monitoring
 
 **Key Metrics to Track:**
+
 - Database query count and execution time
 - Template file inclusion time
 - AJAX request response times
@@ -311,6 +365,7 @@ define('QM_DISPLAY_ERRORS', true);
 - Hook execution time for admin functions
 
 **Optimization Targets:**
+
 - Keep database queries under 50ms
 - Maintain template loading under 100ms
 - Ensure AJAX responses under 500ms
@@ -319,6 +374,7 @@ define('QM_DISPLAY_ERRORS', true);
 #### Security Monitoring
 
 **Security Checks with Query Monitor:**
+
 - Verify all database queries use `$wpdb->prepare()`
 - Check for proper nonce validation in AJAX requests
 - Monitor user capability checks
@@ -343,6 +399,7 @@ define('QM_DISPLAY_ERRORS', true);
 The project uses a robust, containerized CI/CD pipeline that ensures consistent testing across all environments:
 
 #### **CI Environment Features:**
+
 - **Containerized Testing:** All tests run in Docker containers with no local dependencies
 - **WordPress Test Suite Integration:** Automated WordPress test environment setup
 - **Database Integration:** MariaDB service for reliable database testing
@@ -350,6 +407,7 @@ The project uses a robust, containerized CI/CD pipeline that ensures consistent 
 - **Robust Error Handling:** Comprehensive debugging and fallback mechanisms
 
 #### **CI Pipeline Steps:**
+
 1. **Build CI Image:** Creates a self-contained testing environment
 2. **Install Dependencies:** Composer and Yarn packages installed in container
 3. **Setup WordPress Test Suite:** Downloads and configures WordPress test environment
@@ -358,6 +416,7 @@ The project uses a robust, containerized CI/CD pipeline that ensures consistent 
 6. **Code Quality Checks:** PHPCS validation (when enabled)
 
 #### **Key Improvements Made:**
+
 - **Fixed WordPress Bootstrap:** Resolved `add_action()` undefined function error
 - **Database Host Configuration:** Updated to use `db` service instead of `localhost`
 - **PHPUnit Detection:** Added robust fallback mechanisms for PHPUnit location
@@ -397,4 +456,4 @@ If you encounter CI failures:
 4. **WordPress Test Suite:** Check that test files are properly installed
 5. **PHPUnit Issues:** Verify PHPUnit is installed and accessible
 
-See the [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for more detailed solutions.
+See the [Troubleshooting Guide](docs/maintenance/TROUBLESHOOTING.md) for more detailed solutions.

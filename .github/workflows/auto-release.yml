@@ -1,0 +1,132 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - 'TODO.md'
+      - '.github/workflows/update-todo-index.yml'
+      - 'run/**'
+
+jobs:
+  auto-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Extract version from plugin
+        id: version
+        run: |
+          VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' "plugin/wp-qr-trackr.php" | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Check if release already exists
+        id: check-release
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release v${{ steps.version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Release v${{ steps.version.outputs.version }} does not exist"
+          fi
+
+      - name: Build plugin
+        if: steps.check-release.outputs.exists == 'false'
+        run: |
+          chmod +x scripts/build-release.sh
+          ./scripts/build-release.sh
+
+      - name: Generate release notes
+        if: steps.check-release.outputs.exists == 'false'
+        id: release-notes
+        run: |
+          # Get the previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # First release - get all commits
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --reverse)
+          else
+            # Get commits since last tag
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
+          fi
+          
+          # Create release notes
+          RELEASE_NOTES="## What's New in v${{ steps.version.outputs.version }}
+          
+          ### Changes
+          $CHANGELOG
+          
+          ### Installation
+          Download the plugin zip file and install it through your WordPress admin panel.
+          
+          ### Support
+          For support and documentation, visit: https://github.com/solidsystems/wp-qr-trackr"
+          
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        if: steps.check-release.outputs.exists == 'false'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          release_name: WP QR Trackr v${{ steps.version.outputs.version }}
+          body: ${{ steps.release-notes.outputs.release_notes }}
+          draft: false
+          prerelease: false
+
+      - name: Upload release assets
+        if: steps.check-release.outputs.exists == 'false'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./dist/wp-qr-trackr-v${{ steps.version.outputs.version }}.zip
+          asset_name: wp-qr-trackr-v${{ steps.version.outputs.version }}.zip
+          asset_content_type: application/zip
+
+      - name: Update CHANGELOG with release date
+        if: steps.check-release.outputs.exists == 'false'
+        run: |
+          # Add release date to the latest version in CHANGELOG.md
+          RELEASE_DATE=$(date +"%Y-%m-%d")
+          sed -i "s/## ${{ steps.version.outputs.version }}/## [${{ steps.version.outputs.version }}] - $RELEASE_DATE/" docs/CHANGELOG.md
+          
+          # Commit and push the updated CHANGELOG
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/CHANGELOG.md
+          git commit -m "docs: add release date for v${{ steps.version.outputs.version }}" || echo "No changes to commit"
+          git push origin main
+
+      - name: Skip release if already exists
+        if: steps.check-release.outputs.exists == 'true'
+        run: |
+          echo "Release v${{ steps.version.outputs.version }} already exists, skipping..."
+          echo "This is normal if the workflow was re-run or if the version wasn't incremented"
