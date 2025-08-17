@@ -1,3 +1,22 @@
+## 1.2.67 - 2025-08-17
+
+### Fixed: Delete QR Code Functionality
+- **Delete Button Working**: Fixed nonce action mismatch that prevented QR code deletion
+- **Security Validation**: Proper nonce verification now works for delete operations
+- **Admin Interface**: Delete functionality fully operational in admin panel
+- **User Experience**: Users can now properly delete unwanted QR codes
+
+### Fixed: Google Fonts SSL Certificate Issues
+- **Development Environment**: Eliminated SSL certificate warnings for Google Fonts
+- **Browser Compatibility**: No more certificate errors in development mode
+- **Production Unaffected**: Google Fonts continue to work normally in production
+- **Clean Development**: Development environment now runs without browser warnings
+
+### Technical Details
+- **Nonce Action Fix**: Updated from `qrc_delete_qr_code_` to `delete_qr_code_` in list table
+- **Google Fonts Filter**: Added development environment filter to disable Google Fonts
+- **SSL Certificate**: Resolved HTTPS certificate validation issues in development
+
 ## 1.2.66 - 2025-08-17
 
 ### Critical Fix: QR Code Scan Tracking
