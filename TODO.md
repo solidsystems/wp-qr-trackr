@@ -14,7 +14,8 @@
 
 ## 🚀 Current Active Tasks (Cursor Managed)
 - [x] **MCP TODO Automation** - Syncing between Cursor todos and markdown files
-- [ ] **GitHub Projects Integration** - Connect with GitHub Projects for live tracking
+- [x] **GitHub Projects Integration** - Connect with GitHub Projects for live tracking
+- [x] **Auto Release Workflow** - Automated release creation when merging to main
 - [ ] **Context7 Documentation Access** - Make docs accessible via Context7 MCP
 - [ ] **Cursor MCP Integration** - Auto-detect MCP servers in dev tools
 - [ ] **Command Palette Actions** - Expose MCP actions in Cursor/VSCode

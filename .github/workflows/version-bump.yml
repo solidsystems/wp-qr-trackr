@@ -1,0 +1,165 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: 'Dry run (no actual changes)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  version-bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' "plugin/wp-qr-trackr.php" | awk -F'Version:' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Calculate new version
+        id: new-version
+        run: |
+          IFS='.' read -ra VERSION_PARTS <<< "${{ steps.current-version.outputs.current_version }}"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          case "${{ github.event.inputs.bump_type }}" in
+            "major")
+              NEW_MAJOR=$((MAJOR + 1))
+              NEW_MINOR=0
+              NEW_PATCH=0
+              ;;
+            "minor")
+              NEW_MAJOR=$MAJOR
+              NEW_MINOR=$((MINOR + 1))
+              NEW_PATCH=0
+              ;;
+            "patch")
+              NEW_MAJOR=$MAJOR
+              NEW_MINOR=$MINOR
+              NEW_PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="$NEW_MAJOR.$NEW_MINOR.$NEW_PATCH"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Create version bump branch
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          BRANCH_NAME="version-bump/v${{ steps.new-version.outputs.new_version }}"
+          git checkout -b "$BRANCH_NAME"
+          echo "Created branch: $BRANCH_NAME"
+
+      - name: Update plugin version
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          # Update plugin header version
+          sed -i "s/Version: ${{ steps.current-version.outputs.current_version }}/Version: ${{ steps.new-version.outputs.new_version }}/" plugin/wp-qr-trackr.php
+          
+          # Update QR_TRACKR_VERSION constant
+          sed -i "s/define( 'QR_TRACKR_VERSION', '${{ steps.current-version.outputs.current_version }}' );/define( 'QR_TRACKR_VERSION', '${{ steps.new-version.outputs.new_version }}' );/" plugin/wp-qr-trackr.php
+          
+          echo "Updated version from ${{ steps.current-version.outputs.current_version }} to ${{ steps.new-version.outputs.new_version }}"
+
+      - name: Update CHANGELOG
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          # Add new version entry to CHANGELOG.md
+          TODAY=$(date +"%Y-%m-%d")
+          NEW_ENTRY="## ${{ steps.new-version.outputs.new_version }}
+          
+          ### Added
+          
+          - Initial release
+          
+          ### Changed
+          
+          - None
+          
+          ### Fixed
+          
+          - None
+          
+          ### Technical
+          
+          - Version bump to ${{ steps.new-version.outputs.new_version }}
+          
+          "
+          
+          # Insert at the top of the file (after the title)
+          sed -i "3i\\$NEW_ENTRY" docs/CHANGELOG.md
+          
+          echo "Added new version entry to CHANGELOG.md"
+
+      - name: Commit and push changes
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add plugin/wp-qr-trackr.php docs/CHANGELOG.md
+          git commit -m "chore: bump version to ${{ steps.new-version.outputs.new_version }}"
+          git push origin "version-bump/v${{ steps.new-version.outputs.new_version }}"
+
+      - name: Create pull request
+        if: github.event.inputs.dry_run == 'false'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: version-bump/v${{ steps.new-version.outputs.new_version }}
+          title: "chore: bump version to ${{ steps.new-version.outputs.new_version }}"
+          body: |
+            ## Version Bump
+            
+            This PR bumps the version from **${{ steps.current-version.outputs.current_version }}** to **${{ steps.new-version.outputs.new_version }}**.
+            
+            ### Changes
+            - Updated plugin header version in `plugin/wp-qr-trackr.php`
+            - Updated `QR_TRACKR_VERSION` constant
+            - Added new version entry to `docs/CHANGELOG.md`
+            
+            ### Next Steps
+            After merging this PR to main, the auto-release workflow will:
+            1. Build the plugin
+            2. Create a GitHub release
+            3. Upload the plugin zip file
+            4. Update the CHANGELOG with release date
+            
+            **Bump Type**: ${{ github.event.inputs.bump_type }}
+          delete-branch: true
+
+      - name: Dry run output
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "=== DRY RUN ==="
+          echo "Current version: ${{ steps.current-version.outputs.current_version }}"
+          echo "New version: ${{ steps.new-version.outputs.new_version }}"
+          echo "Bump type: ${{ github.event.inputs.bump_type }}"
+          echo "Files that would be modified:"
+          echo "- plugin/wp-qr-trackr.php (version header and constant)"
+          echo "- docs/CHANGELOG.md (new version entry)"
+          echo "Branch that would be created: version-bump/v${{ steps.new-version.outputs.new_version }}"
