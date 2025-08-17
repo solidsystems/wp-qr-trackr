@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="wrap">
 	<h1 class="wp-heading-inline"><?php esc_html_e( 'QR Code Links', 'wp-qr-trackr' ); ?></h1>
 	<a href="<?php echo esc_url( admin_url( 'admin.php?page=qr-code-add-new' ) ); ?>" class="page-title-action"><?php esc_html_e( 'Add New', 'wp-qr-trackr' ); ?></a>
+	<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=qr-code-links&action=regenerate' ), 'regenerate_qr_codes' ) ); ?>" class="page-title-action" onclick="return confirm('<?php echo esc_js( __( 'This will regenerate all QR codes with tracking URLs. Continue?', 'wp-qr-trackr' ) ); ?>');"><?php esc_html_e( 'Regenerate QR Codes', 'wp-qr-trackr' ); ?></a>
 	<hr class="wp-header-end" />
 
 	<style>

@@ -1,3 +1,17 @@
+## 1.2.70 - 2025-08-17
+
+### New Feature: QR Code Regeneration Tool
+- **Regenerate QR Codes**: Added admin tool to regenerate existing QR codes with tracking URLs
+- **Bulk Regeneration**: Regenerate all QR codes at once to ensure they use tracking URLs
+- **Admin Interface**: Added "Regenerate QR Codes" button to admin page
+- **User Experience**: Easy way to fix QR codes that were generated before tracking URL fixes
+
+### Technical Details
+- **Regeneration Handler**: Added `qr_trackr_regenerate_qr_codes()` function for bulk QR code regeneration
+- **Admin Integration**: Added regeneration button and success/error notices
+- **Tracking URL Fix**: Ensures all QR codes use tracking URLs instead of destination URLs
+- **Backward Compatibility**: Fixes existing QR codes without requiring manual regeneration
+
 ## 1.2.69 - 2025-08-17
 
 ### Critical Fix: Delete Functionality Hook Missing

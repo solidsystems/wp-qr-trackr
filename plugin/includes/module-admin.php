@@ -1012,8 +1012,115 @@ function qrc_admin_notices() {
 			do_action( 'qr_trackr_updated_notice_rendered' );
 		}
 	}
+
+	// Display success message for regenerated QR codes.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only, no state modification.
+	if ( isset( $_GET['regenerated'] ) && isset( $_GET['errors'] ) ) {
+		$regenerated = absint( $_GET['regenerated'] );
+		$errors = absint( $_GET['errors'] );
+		
+		if ( $regenerated > 0 ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . 
+				sprintf( 
+					esc_html__( 'Successfully regenerated %d QR codes with tracking URLs.', 'wp-qr-trackr' ), 
+					$regenerated 
+				) . '</p></div>';
+		}
+		
+		if ( $errors > 0 ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . 
+				sprintf( 
+					esc_html__( 'Failed to regenerate %d QR codes. Please try again.', 'wp-qr-trackr' ), 
+					$errors 
+				) . '</p></div>';
+		}
+	}
 }
 add_action( 'admin_notices', 'qrc_admin_notices' );
+
+/**
+ * Regenerate QR codes for existing entries to use tracking URLs.
+ *
+ * @since 1.2.69
+ * @return void
+ */
+function qr_trackr_regenerate_qr_codes() {
+	// Check if we're on the QR codes page and action is regenerate.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a routing check prior to nonce verification.
+	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== sanitize_text_field( wp_unslash( $_GET['page'] ) ) || ! isset( $_GET['action'] ) || 'regenerate' !== sanitize_text_field( wp_unslash( $_GET['action'] ) ) ) {
+		return;
+	}
+
+	// Check user capabilities.
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'You do not have sufficient permissions to regenerate QR codes.', 'wp-qr-trackr' ) );
+	}
+
+	// Verify nonce.
+	if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'regenerate_qr_codes' ) ) {
+		wp_die( esc_html__( 'Security check failed.', 'wp-qr-trackr' ) );
+	}
+
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'qr_trackr_links';
+
+	// Get all QR codes that need regeneration.
+	$qr_codes = $wpdb->get_results( "SELECT id, qr_code, destination_url, qr_code_url FROM {$table_name}" );
+
+	$regenerated = 0;
+	$errors = 0;
+
+	foreach ( $qr_codes as $qr_code ) {
+		// Generate the tracking URL for the QR code.
+		$tracking_url = qr_trackr_get_redirect_url( $qr_code->qr_code );
+
+		// Generate new QR code with tracking URL.
+		$new_qr_code_url = qrc_generate_qr_code(
+			$tracking_url,
+			array(
+				'size'             => 200,
+				'margin'           => 10,
+				'error_correction' => 'M',
+				'foreground_color' => '#000000',
+				'background_color' => '#ffffff',
+			)
+		);
+
+		if ( is_wp_error( $new_qr_code_url ) ) {
+			$errors++;
+			continue;
+		}
+
+		// Update the database with the new QR code URL.
+		$result = $wpdb->update(
+			$table_name,
+			array( 'qr_code_url' => $new_qr_code_url ),
+			array( 'id' => $qr_code->id ),
+			array( '%s' ),
+			array( '%d' )
+		);
+
+		if ( false !== $result ) {
+			$regenerated++;
+		} else {
+			$errors++;
+		}
+	}
+
+	// Redirect back with success/error message.
+	$redirect_url = add_query_arg(
+		array(
+			'page'        => 'qr-code-links',
+			'regenerated' => $regenerated,
+			'errors'      => $errors,
+		),
+		admin_url( 'admin.php' )
+	);
+
+	wp_safe_redirect( $redirect_url );
+	exit;
+}
+add_action( 'admin_init', 'qr_trackr_regenerate_qr_codes' );
 
 // Register hooks on init to ensure WordPress is ready.
 add_action( 'init', 'qrc_register_admin_hooks' );
