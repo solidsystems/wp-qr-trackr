@@ -795,6 +795,13 @@ function qrc_register_admin_hooks() {
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( 'QR Trackr: Added admin_enqueue_scripts action' );
 	}
+
+	// Handle delete action for QR codes.
+	add_action( 'admin_init', 'qrc_handle_delete_action' );
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+		error_log( 'QR Trackr: Added admin_init action for delete handler' );
+	}
 }
 
 /**

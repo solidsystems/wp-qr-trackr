@@ -1,3 +1,17 @@
+## 1.2.69 - 2025-08-17
+
+### Critical Fix: Delete Functionality Hook Missing
+- **Delete Handler Hook**: Fixed missing WordPress action hook for delete functionality
+- **Admin Init Hook**: Added proper `admin_init` hook for delete action handler
+- **Function Registration**: Delete handler now properly registered with WordPress
+- **User Experience**: Delete functionality now works in both development and production
+
+### Technical Details
+- **Action Hook**: Added `add_action( 'admin_init', 'qrc_handle_delete_action' )` to register delete handler
+- **WordPress Integration**: Delete handler now properly integrated with WordPress admin system
+- **Function Registration**: Ensured delete handler is called when delete URLs are accessed
+- **Cross-Environment**: Fix applies to both development and production environments
+
 ## 1.2.68 - 2025-08-17
 
 ### Enhanced: Google Fonts SSL Certificate Fix
