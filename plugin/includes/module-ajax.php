@@ -122,8 +122,14 @@ function qrc_generate_qr_code_ajax() {
 	);
 	qr_trackr_log_form_submission( 'generate_qr_code_ajax', $form_data, 'create' );
 
-	// Generate the QR code.
-	$qr_code_url = qrc_generate_qr_code( $destination_url );
+	// Generate unique QR code for tracking.
+	$qr_code = qr_trackr_generate_unique_qr_code();
+	
+	// Generate the tracking URL for the QR code.
+	$tracking_url = qr_trackr_get_redirect_url( $qr_code );
+	
+	// Generate the QR code with tracking URL (not destination URL).
+	$qr_code_url = qrc_generate_qr_code( $tracking_url );
 
 	if ( is_wp_error( $qr_code_url ) ) {
 		// Log the error for debugging.
@@ -168,6 +174,7 @@ function qrc_generate_qr_code_ajax() {
 		// Update existing record.
 		$update_data = array(
 			'destination_url' => $destination_url,
+			'qr_code'         => $qr_code,
 			'qr_code_url'     => $qr_code_url,
 			'updated_at'      => current_time( 'mysql' ),
 		);
@@ -186,6 +193,7 @@ function qrc_generate_qr_code_ajax() {
 		$insert_data = array(
 			'post_id'         => $post_id,
 			'destination_url' => $destination_url,
+			'qr_code'         => $qr_code,
 			'qr_code_url'     => $qr_code_url,
 			'created_at'      => current_time( 'mysql' ),
 			'updated_at'      => current_time( 'mysql' ),
