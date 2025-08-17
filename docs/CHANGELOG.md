@@ -1,3 +1,30 @@
+## 1.2.65 - 2025-08-17
+
+### Added
+
+- **AUTOMATIC BRANCH CLEANUP**: New GitHub workflow to automatically delete merged branches
+- **VENDOR DIRECTORY FIX**: Resolved vendor directory accidentally committed to repository
+- **ENHANCED GITIGNORE**: Improved .gitignore to prevent vendor directory commits
+
+### Fixed
+
+- **REPOSITORY CLEANUP**: Removed 3,834 vendor files from repository tracking
+- **PR SIZE REDUCTION**: Reduced PR from 3,900 files to 54 meaningful files
+- **BRANCH MANAGEMENT**: Deleted stale merged branches (chore/restructure-plugin, initial-commit)
+
+### Technical
+
+- Created `.github/workflows/cleanup-branches.yml` for automatic branch cleanup
+- Updated `.gitignore` with `plugin/vendor/` exclusion
+- Enhanced repository maintenance and cleanup processes
+- Improved development workflow with automatic branch management
+
+### User Experience
+
+- **Before**: Large PRs with thousands of vendor files, manual branch cleanup required
+- **After**: Clean PRs with only meaningful changes, automatic branch cleanup
+- **Result**: Streamlined development process with better repository hygiene
+
 ## 1.2.64 - 2025-08-17
 
 ### Fixed
