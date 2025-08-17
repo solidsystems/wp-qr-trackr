@@ -1,3 +1,40 @@
+## 1.2.47
+
+### Added
+
+- **AUTOMATED RELEASE WORKFLOW**: Complete automated release management system for WordPress plugin
+- **AUTO RELEASE WORKFLOW**: Automatically creates releases when code is merged to main branch
+- **VERSION BUMP WORKFLOW**: Manual workflow for version bumping with patch/minor/major support
+- **RELEASE DOCUMENTATION**: Comprehensive documentation for release workflow system
+
+### Enhanced
+
+- **CI/CD PIPELINE**: Integrated automated release workflow with existing GitHub Actions
+- **VERSION MANAGEMENT**: Automated version extraction and updating from plugin files
+- **RELEASE PROCESS**: Streamlined release process with automatic zip creation and GitHub release
+- **ERROR HANDLING**: Graceful failure handling and duplicate release checking
+
+### Technical
+
+- Created `.github/workflows/auto-release.yml` for automatic release creation
+- Created `.github/workflows/version-bump.yml` for version bumping workflow
+- Added comprehensive documentation in `docs/development/RELEASE_WORKFLOW.md`
+- Integrated with existing `scripts/build-release.sh` for plugin building
+- Added automatic CHANGELOG updates with release dates
+- Implemented duplicate release checking to prevent conflicts
+
+### User Experience
+
+- **Before**: Manual release process requiring zip creation and GitHub release setup
+- **After**: Fully automated release process triggered by merging to main branch
+- **Result**: Developers can focus on code while releases are handled automatically
+
+### Files Added
+
+- `.github/workflows/auto-release.yml`: Auto-release workflow
+- `.github/workflows/version-bump.yml`: Version bump workflow
+- `docs/development/RELEASE_WORKFLOW.md`: Complete workflow documentation
+
 ## 1.2.46
 
 ### Fixed

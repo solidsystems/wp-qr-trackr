@@ -171,6 +171,51 @@ The legacy `release.yml` workflow is still available for manual releases, but th
 - **Efficiency**: No manual zip file creation
 - **Documentation**: Automatic CHANGELOG updates
 
+## Testing the Workflow
+
+### Testing Auto Release Workflow
+To test the auto-release workflow:
+1. **Create a test branch** with version changes
+2. **Update plugin version** in `plugin/wp-qr-trackr.php`
+3. **Create PR to main** and merge it
+4. **Monitor the workflow** in GitHub Actions
+5. **Verify release creation** in GitHub Releases
+
+### Testing Version Bump Workflow
+To test the version bump workflow:
+1. **Go to Actions** → **Version Bump**
+2. **Set dry_run to `true`** for testing
+3. **Select bump type** (patch/minor/major)
+4. **Run workflow** and check output
+5. **Verify version calculation** is correct
+
+### Dry Run Testing
+Both workflows support dry run testing:
+- **Auto Release**: Will show what would happen without creating actual release
+- **Version Bump**: Will show version changes without creating PR
+
+## Current Implementation Status
+
+### ✅ Completed Features
+- **Auto Release Workflow**: Fully implemented and tested
+- **Version Bump Workflow**: Fully implemented with dry run support
+- **Documentation**: Comprehensive guides and examples
+- **Error Handling**: Graceful failure handling and duplicate checking
+- **Version Management**: Automated version extraction and updating
+
+### 🔄 Workflow Integration
+- **CI/CD Pipeline**: Integrated with existing GitHub Actions
+- **Build Process**: Uses existing `scripts/build-release.sh`
+- **Release Management**: Automated GitHub release creation
+- **Documentation Updates**: Automatic CHANGELOG updates
+
+### 📋 File Dependencies
+The workflows depend on these files:
+- `plugin/wp-qr-trackr.php` - Version extraction
+- `scripts/build-release.sh` - Plugin building
+- `docs/CHANGELOG.md` - Release documentation
+- `.github/workflows/` - Workflow definitions
+
 ## Support
 
 For issues with the release workflow:
@@ -178,3 +223,26 @@ For issues with the release workflow:
 2. Review this documentation
 3. Check the workflow files for configuration
 4. Create an issue if problems persist
+
+### Common Issues and Solutions
+
+#### Release Already Exists
+**Problem**: Workflow reports "Release already exists"
+**Solution**: 
+- Check if version was already released
+- Increment version number if needed
+- Use version bump workflow to create new version
+
+#### Build Failures
+**Problem**: Plugin build fails during release
+**Solution**:
+- Check build logs for specific errors
+- Verify all dependencies are installed
+- Test build script locally first
+
+#### Permission Issues
+**Problem**: Workflow fails with permission errors
+**Solution**:
+- Ensure workflow has `contents: write` permission
+- Check GitHub token permissions
+- Verify repository settings allow workflow actions
