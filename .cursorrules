@@ -166,6 +166,22 @@ if ( false === $result ) {
 - **Implement caching via transients/object cache to avoid redundant regeneration**
 - **Ensure generation failures degrade gracefully without fatal errors**
 
+### Critical QR Code URL Embedding Requirements
+
+- **QR codes MUST embed tracking URLs, NEVER destination URLs**
+- **Tracking URL format**: `{site}/qr/{code}/` where `{code}` is the unique QR identifier
+- **File naming convention**: `qr-{hash}.png` where hash is `md5(tracking_url + generation_parameters)`
+- **URL embedding determines entire user journey** - wrong URL = complete tracking bypass
+- **Always verify QR codes embed tracking URLs before deployment**
+
+### QR Code Regeneration Standards
+
+- **Provide user-friendly admin tools for fixing existing QR codes**
+- **Simplified regeneration is more reliable than complex detection logic**
+- **When in doubt, regenerate all QR codes rather than attempting selective detection**
+- **Include progress feedback and clear success/error messaging**
+- **Ensure dependencies are available in all execution contexts (CLI, web, admin)**
+
 ---
 
 # Security and Input/Output Handling
@@ -315,6 +331,29 @@ if ( false === $result ) {
         $wpdb->last_error
     ) );
     return new WP_Error( 'db_error', __( 'Database operation failed.', 'wp-qr-trackr' ) );
+}
+```
+
+## WordPress Hook Registration Standards
+
+- **ALWAYS verify WordPress hooks are properly registered and called**
+- **Common issue**: Functions defined but not hooked to WordPress actions
+- **Critical hooks**: `admin_init`, `init`, `wp_loaded`, `template_redirect`
+- **Verify hook registration in module initialization functions**
+- **Test functionality in both development and production environments**
+
+### Example Hook Registration
+
+```php
+function qrc_register_admin_hooks() {
+    // Always hook critical functions
+    add_action( 'admin_init', 'qrc_handle_delete_action' );
+    add_action( 'admin_init', 'qrc_handle_other_actions' );
+    
+    // Log hook registration for debugging
+    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+        error_log( 'QR Trackr: Admin hooks registered successfully' );
+    }
 }
 ```
 
@@ -751,6 +790,22 @@ wp_cache_set( $cache_key, $value, '', 300 ); // Cache for 5 minutes
 - **If tests fail, ensure running in ci-runner container**
 - **If rewrite rules don't work, verify pretty permalinks are enabled**
 
+### QR Code Specific Issues
+
+- **QR code scans not updating counters**: Use regeneration tool in admin
+- **Delete functionality failing**: Check WordPress hook registration (`admin_init`)
+- **SSL certificate errors**: Disable external dependencies (Google Fonts)
+- **Vendor directory issues**: Ensure proper .gitignore configuration
+- **QR code generation failing**: Check Endroid QR Code library availability in all contexts
+
+### Critical Issue Prevention
+
+- **Always test QR code generation with tracking URLs**
+- **Verify WordPress hooks are properly registered**
+- **Test functionality in both development and production**
+- **Include vendor dependencies in plugin distribution**
+- **Provide user-friendly admin tools for fixing issues**
+
 ## Prohibited Practices
 
 - **Manual plugin installation through WordPress admin**
@@ -758,6 +813,14 @@ wp_cache_set( $cache_key, $value, '', 300 ); // Cache for 5 minutes
 - **Local tool installation**
 - **Manual container configuration**
 - **Direct wp-config.php modification**
+
+### QR Code Generation Prohibitions
+
+- **NEVER embed destination URLs directly in QR codes**
+- **NEVER use third-party QR generation services**
+- **NEVER skip tracking URL generation in favor of direct destination URLs**
+- **NEVER assume QR code images are correct without verification**
+- **NEVER implement complex detection logic when simple regeneration is more reliable**
 
 ---
 
@@ -846,6 +909,43 @@ make validate
 3. **Dependency Minimization**: No local tools required
 4. **Maintainability**: Centralized command logic
 5. **Documentation**: Clear usage examples and help text
+
+---
+
+## Lessons Learned from Recent Issues
+
+### QR Code Scan Counter Issue (v1.2.66 - v1.2.72)
+
+**Key Lessons**:
+1. **QR Code URL Embedding is Critical**: The URL embedded in QR codes determines the entire user journey
+2. **File Naming Consistency is Essential**: Predictable file naming prevents detection issues
+3. **Complex Detection Logic is Fragile**: Simplified approaches are more reliable
+4. **Dependencies Matter in All Contexts**: Ensure dependencies are available in all execution contexts
+5. **User Experience for Fixes is Important**: Provide clear, easy-to-use tools for fixing issues
+
+**Prevention Strategies**:
+- Automated testing for QR code generation
+- Validation checks for URL embedding
+- Monitoring for tracking bypass patterns
+- Comprehensive documentation and troubleshooting guides
+
+### Delete Functionality Issue
+
+**Lesson**: Always verify WordPress hooks are properly registered and called.
+
+**Solution**: Added `add_action('admin_init', 'qrc_handle_delete_action')` to ensure delete handler is called.
+
+### Google Fonts SSL Certificate Errors
+
+**Lesson**: External dependencies can cause SSL issues in production environments.
+
+**Solution**: Disabled Google Fonts loading universally to prevent SSL warnings.
+
+### Vendor Directory Bloat
+
+**Lesson**: Proper .gitignore configuration prevents dependency bloat.
+
+**Solution**: Added vendor directory to .gitignore and removed from Git tracking.
 
 ---
 
