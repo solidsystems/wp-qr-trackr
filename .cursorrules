@@ -520,7 +520,8 @@ await type("username", "admin");
 await type("password", "password");
 await click("Submit");
 ```
-```
+
+````
 
 ### MCP Integration Testing
 
@@ -567,7 +568,7 @@ gh pr create --title 'My PR Title' --body 'Line 1
 Line 2
 
 Line 3' --base main --head my-feature-branch
-```
+````
 
 ## Date and Time Standards
 
