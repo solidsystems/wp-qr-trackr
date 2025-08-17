@@ -63,7 +63,7 @@
 
 ---
 
-**Note:** This file is automatically updated by `scripts/update-todo-index.sh`. 
+**Note:** This file is automatically updated by `scripts/update-todo-index.sh`.
 For active development tasks, use Cursor's structured todo system which provides:
 - Dependency tracking
 - Status management (pending, in_progress, completed, cancelled)
