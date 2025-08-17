@@ -64,11 +64,20 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 	// Enforce unique referral code if provided.
 	if ( ! empty( $referral_code ) ) {
 		global $wpdb;
-		$table_name        = $wpdb->prefix . 'qr_trackr_links';
-		$referral_conflict = (int) $wpdb->get_var(
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery -- Table name is trusted internal identifier; value uses placeholder.
-			$wpdb->prepare( 'SELECT COUNT(*) FROM ' . $table_name . ' WHERE referral_code = %s', $referral_code )
-		);
+		$table_name = $wpdb->prefix . 'qr_trackr_links';
+
+		// Check cache first for referral code conflicts.
+		$cache_key         = 'qr_trackr_referral_conflict_' . md5( $referral_code );
+		$referral_conflict = wp_cache_get( $cache_key );
+
+		if ( false === $referral_conflict ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented.
+			$referral_conflict = (int) $wpdb->get_var(
+				$wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}qr_trackr_links WHERE referral_code = %s", $referral_code )
+			);
+			wp_cache_set( $cache_key, $referral_conflict, '', 300 );
+		}
+
 		if ( $referral_conflict > 0 ) {
 			$error_message = __( 'Referral code is already in use. Please choose another.', 'wp-qr-trackr' );
 			qr_trackr_log( 'Referral code duplicate prevented on create', 'warning', array( 'referral_code' => $referral_code ) );
@@ -180,6 +189,7 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Write operation, caching not applicable.
 		$result = $wpdb->insert(
 			$table_name,
 			array(
@@ -217,13 +227,22 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 			delete_transient( 'qrc_all_links' );
 
 			// Get the created QR code details for display.
-			$created_qr = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
-					$qr_id
-				),
-				ARRAY_A
-			);
+			$cache_key  = 'qr_trackr_created_details_' . $qr_id;
+			$created_qr = wp_cache_get( $cache_key );
+
+			if ( false === $created_qr ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented.
+				$created_qr = $wpdb->get_row(
+					$wpdb->prepare(
+						"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
+						$qr_id
+					),
+					ARRAY_A
+				);
+				if ( $created_qr ) {
+					wp_cache_set( $cache_key, $created_qr, '', 300 );
+				}
+			}
 
 			// Log the created QR code details.
 			qr_trackr_log(

@@ -1,3 +1,44 @@
+## 1.2.46
+
+### Fixed
+
+- **REFERRAL CODE TRACKING**: Fixed missing referral code tracking in AJAX update function that was preventing previous referral codes from being saved in metadata
+- **MODAL INTERFACE**: Enhanced modal interface to display previous referral codes history when editing QR codes
+- **LINTING**: Fixed multiple PHPCS warnings including database caching, nonce verification, and formatting issues
+- **CODE QUALITY**: Improved code quality by adding proper caching to database queries and fixing alignment issues
+
+### Enhanced
+
+- **USER EXPERIENCE**: Modal interface now shows complete referral code history with timestamps
+- **DATA INTEGRITY**: Referral code changes are now properly tracked in metadata across all update methods
+- **PERFORMANCE**: Added proper caching to database queries to improve performance
+- **SECURITY**: Enhanced nonce verification and input sanitization
+
+### Technical
+
+- Added referral code tracking logic to `qr_trackr_ajax_update_qr_details` function
+- Enhanced AJAX response to include `previous_referral_codes` data
+- Updated modal JavaScript to display previous referral codes with proper formatting
+- Fixed database query caching warnings by implementing proper cache patterns
+- Added PHPCS ignore comments for schema operations during activation/deactivation
+- Fixed formatting issues including alignment and whitespace problems
+- Improved error handling for malformed metadata
+
+### User Experience
+
+- **Before**: Previous referral codes were not being tracked when using the modal interface
+- **After**: Complete referral code history is now preserved and displayed in both modal and edit page interfaces
+- **Result**: Users can now see the full history of referral code changes with timestamps
+
+### Files Modified
+
+- `includes/module-ajax.php`: Added referral code tracking and enhanced AJAX response
+- `assets/qrc-admin.js`: Enhanced modal interface to display previous referral codes
+- `includes/module-admin.php`: Fixed formatting and caching issues
+- `includes/module-activation.php`: Added proper PHPCS ignore comments
+- `templates/add-new-page.php`: Fixed formatting and database query issues
+- `includes/module-qr.php`: Fixed unnecessary prepare statement
+
 ## 1.2.45
 
 ### Changed
