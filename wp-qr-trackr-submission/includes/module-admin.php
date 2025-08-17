@@ -98,6 +98,25 @@ function qrc_admin_menu() {
 		'admin_menu'
 	);
 
+	// Add regenerate QR codes page.
+	$regenerate = add_submenu_page(
+		'qr-code-links',
+		__( 'Regenerate QR Codes', 'wp-qr-trackr' ),
+		__( 'Regenerate QR Codes', 'wp-qr-trackr' ),
+		'manage_options',
+		'qr-code-regenerate',
+		'qrc_regenerate_page'
+	);
+
+	qr_trackr_log_element_creation(
+		'submenu_page',
+		array(
+			'hook' => $regenerate,
+			'page' => 'qr-code-regenerate',
+		),
+		'admin_menu'
+	);
+
 	// Add settings page under main plugin slug for direct access.
 	$main_settings = add_submenu_page(
 		null, // No parent menu.

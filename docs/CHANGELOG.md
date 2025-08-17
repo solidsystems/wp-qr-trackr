@@ -1,3 +1,17 @@
+## 1.2.71 - 2025-08-17
+
+### Enhanced: QR Code Regeneration Tool
+- **Admin Menu Integration**: Moved "Regenerate QR Codes" to dedicated admin menu page
+- **Smart Regeneration**: Only regenerates QR codes that don't already use tracking URLs
+- **Statistics Dashboard**: Shows total QR codes, those needing regeneration, and already fixed
+- **Improved UX**: Better interface with detailed statistics and progress feedback
+
+### Technical Details
+- **Menu Integration**: Added "Regenerate QR Codes" as submenu under QR Codes
+- **Smart Detection**: Added logic to detect which QR codes need regeneration
+- **Statistics Function**: Added `qr_trackr_count_qr_codes_needing_regeneration()` for analytics
+- **Efficient Processing**: Skips QR codes that already use tracking URLs
+
 ## 1.2.70 - 2025-08-17
 
 ### New Feature: QR Code Regeneration Tool
