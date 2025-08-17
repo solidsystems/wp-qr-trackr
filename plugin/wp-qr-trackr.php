@@ -203,6 +203,23 @@ function qr_trackr_load_modules() {
 	}
 
 	$loaded = true;
+
+	// Disable Google Fonts in development environment to prevent SSL certificate issues.
+	if ( defined( 'WP_ENVIRONMENT_TYPE' ) && 'development' === WP_ENVIRONMENT_TYPE ) {
+		add_filter( 'wp_resource_hints', function( $hints, $relation_type ) {
+			if ( 'dns-prefetch' === $relation_type ) {
+				$hints = array_filter( $hints, function( $hint ) {
+					return ! str_contains( $hint, 'fonts.googleapis.com' );
+				} );
+			}
+			return $hints;
+		}, 10, 2 );
+
+		add_filter( 'wp_enqueue_scripts', function() {
+			wp_dequeue_style( 'google-fonts' );
+			wp_deregister_style( 'google-fonts' );
+		}, 999 );
+	}
 }
 
 // Only load modules on plugins_loaded hook with high priority.

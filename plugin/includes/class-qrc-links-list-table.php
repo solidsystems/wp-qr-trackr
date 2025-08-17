@@ -370,7 +370,7 @@ class QRC_Links_List_Table extends WP_List_Table {
 	 */
 	public function column_actions( $item ) {
 		$edit_url   = esc_url( admin_url( 'admin.php?page=qr-code-edit&id=' . absint( $item['id'] ) ) );
-		$delete_url = esc_url( wp_nonce_url( admin_url( 'admin.php?page=qr-code-links&action=delete&id=' . absint( $item['id'] ) ), 'qrc_delete_qr_code_' . absint( $item['id'] ) ) );
+		$delete_url = esc_url( wp_nonce_url( admin_url( 'admin.php?page=qr-code-links&action=delete&id=' . absint( $item['id'] ) ), 'delete_qr_code_' . absint( $item['id'] ) ) );
 		$actions    = array();
 		$actions[]  = '<a href="' . $edit_url . '">' . esc_html__( 'Edit', 'wp-qr-trackr' ) . '</a>';
 		$actions[]  = '<a href="' . $delete_url . '" onclick="return confirm(\'' . esc_js( __( 'Are you sure you want to delete this QR code?', 'wp-qr-trackr' ) ) . '\');">' . esc_html__( 'Delete', 'wp-qr-trackr' ) . '</a>';
