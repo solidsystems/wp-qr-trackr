@@ -1150,20 +1150,8 @@ function qr_trackr_count_qr_codes_needing_regeneration() {
 	$qr_codes = $wpdb->get_results( "SELECT id, qr_code, destination_url FROM {$table_name}" );
 	$needs_regeneration = 0;
 
-	foreach ( $qr_codes as $qr_code ) {
-		// Generate the tracking URL for the QR code.
-		$tracking_url = qr_trackr_get_redirect_url( $qr_code->qr_code );
-		
-		// Check if the QR code image contains the destination URL instead of tracking URL.
-		// We'll check if the QR code image file exists and analyze its content.
-		$upload_dir = wp_upload_dir();
-		$qr_file_path = $upload_dir['basedir'] . '/qr-codes/qr-' . md5( $qr_code->destination_url ) . '.png';
-		
-		// If the QR code image was generated with the destination URL, it needs regeneration.
-		if ( file_exists( $qr_file_path ) ) {
-			$needs_regeneration++;
-		}
-	}
+	// For now, assume all QR codes need regeneration to ensure they use tracking URLs.
+	$needs_regeneration = count( $qr_codes );
 
 	return $needs_regeneration;
 }
@@ -1189,14 +1177,12 @@ function qr_trackr_regenerate_qr_codes() {
 		// Generate the tracking URL for the QR code.
 		$tracking_url = qr_trackr_get_redirect_url( $qr_code->qr_code );
 
-		// Check if the QR code already uses the tracking URL.
-		// We'll check if the QR code image file was generated with the destination URL.
-		$upload_dir = wp_upload_dir();
-		$destination_qr_file = $upload_dir['basedir'] . '/qr-codes/qr-' . md5( $qr_code->destination_url ) . '.png';
-		$tracking_qr_file = $upload_dir['basedir'] . '/qr-codes/qr-' . md5( $tracking_url ) . '.png';
-
+		// For now, regenerate all QR codes to ensure they use tracking URLs.
+		// This is more reliable than trying to detect which ones need regeneration.
+		$needs_regeneration = true;
+		
 		// If the QR code image was generated with the destination URL, regenerate it.
-		if ( file_exists( $destination_qr_file ) && ! file_exists( $tracking_qr_file ) ) {
+		if ( $needs_regeneration ) {
 			// Generate new QR code with tracking URL.
 			$new_qr_code_url = qrc_generate_qr_code(
 				$tracking_url,

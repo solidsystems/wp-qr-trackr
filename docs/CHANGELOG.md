@@ -1,3 +1,17 @@
+## 1.2.72 - 2025-08-17
+
+### Fixed: QR Code Regeneration Tool
+- **Simplified Regeneration**: Regenerate all QR codes to ensure tracking URL usage
+- **Dependency Issue**: Fixed issue with missing Endroid QR Code library in CLI context
+- **Reliable Detection**: Simplified logic to avoid complex hash detection issues
+- **Force Regeneration**: Ensures all QR codes use tracking URLs for proper scan counting
+
+### Technical Details
+- **Simplified Logic**: Removed complex hash detection that was failing
+- **Force Regeneration**: All QR codes are regenerated to ensure tracking URL usage
+- **Dependency Handling**: Better handling of missing vendor dependencies
+- **Scan Counter Fix**: Ensures QR code scans properly update visit counters
+
 ## 1.2.71 - 2025-08-17
 
 ### Enhanced: QR Code Regeneration Tool
