@@ -1,3 +1,24 @@
+## 1.2.64
+
+### Fixed
+
+- **SCAN COUNTER ISSUE**: Fixed critical bug where QR code scan counters were not incrementing in the database
+- **DATABASE STRUCTURE**: Added automatic database upgrade to ensure required columns exist
+- **PRODUCTION COMPATIBILITY**: Scan counter fix will be automatically applied when plugin is updated
+
+### Technical
+
+- Enhanced `qr_trackr_maybe_upgrade_database()` function to check for and add missing scan counter columns
+- Added automatic detection and creation of `scans`, `access_count`, and `last_accessed` columns
+- Improved database upgrade logging for scan counter fix operations
+- Created diagnostic and fix scripts for scan counter issues
+
+### User Experience
+
+- **Before**: QR code scanning worked but scan counters didn't increment, causing analytics to be inaccurate
+- **After**: Scan counters automatically increment when QR codes are scanned, providing accurate analytics
+- **Result**: Users get reliable scan tracking without manual database intervention
+
 ## 1.2.63
 
 ### Added

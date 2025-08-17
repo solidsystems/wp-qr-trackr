@@ -108,9 +108,8 @@ function qr_trackr_handle_clean_urls() {
 	}
 
 	if ( ! $result ) {
-		// QR code not found or inactive, redirect to 404.
-		wp_safe_redirect( home_url( '/404/' ) );
-		exit;
+		// QR code not found: use 404 handler instead of redirect.
+		qr_trackr_handle_404();
 	}
 
 	// Get the destination URL.

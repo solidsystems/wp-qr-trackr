@@ -114,6 +114,9 @@ function qr_trackr_maybe_upgrade_database() {
 
 	$has_common_name   = false;
 	$has_referral_code = false;
+	$has_scans         = false;
+	$has_access_count  = false;
+	$has_last_accessed = false;
 
 	foreach ( $columns as $column ) {
 		if ( 'common_name' === $column->field ) {
@@ -121,6 +124,15 @@ function qr_trackr_maybe_upgrade_database() {
 		}
 		if ( 'referral_code' === $column->field ) {
 			$has_referral_code = true;
+		}
+		if ( 'scans' === $column->field ) {
+			$has_scans = true;
+		}
+		if ( 'access_count' === $column->field ) {
+			$has_access_count = true;
+		}
+		if ( 'last_accessed' === $column->field ) {
+			$has_last_accessed = true;
 		}
 	}
 
@@ -146,6 +158,45 @@ function qr_trackr_maybe_upgrade_database() {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 			error_log( 'QR Trackr: Added referral_code column to database' );
+		}
+	}
+
+	// Add scan counter columns if missing (fix for scan counter issues).
+	if ( ! $has_scans ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema upgrade during activation, caching not applicable for schema operations.
+		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN scans int(11) DEFAULT 0 NOT NULL AFTER referral_code" );
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+			error_log( 'QR Trackr: Added scans column to database (scan counter fix)' );
+		}
+	}
+
+	if ( ! $has_access_count ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema upgrade during activation, caching not applicable for schema operations.
+		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN access_count int(11) DEFAULT 0 NOT NULL AFTER scans" );
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+			error_log( 'QR Trackr: Added access_count column to database (scan counter fix)' );
+		}
+	}
+
+	if ( ! $has_last_accessed ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema upgrade during activation, caching not applicable for schema operations.
+		$wpdb->query( "ALTER TABLE {$table_name} ADD COLUMN last_accessed datetime DEFAULT NULL AFTER access_count" );
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+			error_log( 'QR Trackr: Added last_accessed column to database (scan counter fix)' );
+		}
+	}
+
+	// Log scan counter fix completion if any columns were added.
+	if ( ! $has_scans || ! $has_access_count || ! $has_last_accessed ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
+			error_log( 'QR Trackr: Scan counter database fix completed successfully' );
 		}
 	}
 }
