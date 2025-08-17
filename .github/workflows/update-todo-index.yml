@@ -1,45 +1,7 @@
-name: Maintenance - Update TODO Index
-
-on:
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
-jobs:
-  update-todo:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref || github.ref_name }}
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Run update script
-        run: ./scripts/update-todo-index.sh
-
-      - name: Push changes
-        env:
-          GITHUB_HEAD_REF: ${{ github.head_ref }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-        run: |
-          set -e
-          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
-          git checkout "$BRANCH"
-          git add -A
-          git commit -m "chore(ci): update TODO and STATUS via automation" || echo "No changes to commit"
-          git push origin "HEAD:$BRANCH"
-
 name: Update TODO Index
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, "feature/*"]
   pull_request:
@@ -57,20 +19,31 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
-      - name: Set up Git
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Configure git
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Make script executable
         run: chmod +x scripts/update-todo-index.sh
+
       - name: Run TODO index update script
         run: ./scripts/update-todo-index.sh
+
       - name: Commit and push if TODO.md changed
+        env:
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
-          if git diff --quiet TODO.md; then
-            echo "No changes to TODO.md."
+          set -e
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          git checkout "$BRANCH"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
           else
-            git add TODO.md
-            git commit -m "chore: update TODO index [ci skip]"
-            git push origin HEAD
+            git commit -m "chore(ci): update TODO and STATUS via automation"
+            git push origin "HEAD:$BRANCH"
           fi

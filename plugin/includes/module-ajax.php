@@ -708,7 +708,7 @@ function qr_trackr_ajax_update_qr_details() {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Validation check before update; not cacheable.
 	$existing_qr = $wpdb->get_row(
 		$wpdb->prepare(
-			"SELECT id FROM {$table_name} WHERE id = %d",
+			"SELECT id, referral_code, metadata FROM {$table_name} WHERE id = %d",
 			$qr_id
 		)
 	);
