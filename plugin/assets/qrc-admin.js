@@ -222,6 +222,12 @@ jQuery(document).ready(function ($) {
 										<label for="qr-modal-referral-code"><strong>${qrcAdmin.strings.referralCode}:</strong></label>
 										<input type="text" id="qr-modal-referral-code" name="referral_code" class="regular-text" placeholder="${qrcAdmin.strings.enterReferralCode}" />
 										<p class="description">${qrcAdmin.strings.referralCodeDesc}</p>
+										<div id="qr-modal-previous-referral-codes" style="display: none; margin-top: 8px;">
+											<p class="description" style="margin-top:8px;">
+												<strong>Previous referral codes:</strong>
+											</p>
+											<ul id="qr-modal-previous-codes-list" style="margin:4px 0 0 0; padding-left:18px;"></ul>
+										</div>
 									</div>
 
 									<div class="qr-field-group">
@@ -630,6 +636,30 @@ jQuery(document).ready(function ($) {
 			$('#qr-modal-image').attr('src', data.qr_code_url).show();
 		} else {
 			$('#qr-modal-image').hide();
+		}
+
+		// Previous referral codes
+		const $previousCodesContainer = $('#qr-modal-previous-referral-codes');
+		const $previousCodesList = $('#qr-modal-previous-codes-list');
+
+		if (data.previous_referral_codes && data.previous_referral_codes.length > 0) {
+			$previousCodesList.empty();
+			// Display in reverse order (most recent first)
+			data.previous_referral_codes.reverse().forEach(function(prev) {
+				const listItem = $('<li></li>');
+				const codeSpan = $('<code></code>').text(prev.code || '');
+				listItem.append(codeSpan);
+
+				if (prev.changed_at) {
+					const timeSpan = $('<small style="color:#666;"></small>').text(' ' + prev.changed_at);
+					listItem.append(timeSpan);
+				}
+
+				$previousCodesList.append(listItem);
+			});
+			$previousCodesContainer.show();
+		} else {
+			$previousCodesContainer.hide();
 		}
 
 		// Clear validation states and trigger validation for populated fields

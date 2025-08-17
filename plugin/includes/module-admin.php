@@ -856,12 +856,20 @@ function qrc_handle_delete_action() {
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
 	// Get QR code details before deletion for logging.
-	$qr_code = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
-			$qr_id
-		)
-	);
+	$cache_key = 'qr_trackr_details_' . $qr_id;
+	$qr_code   = wp_cache_get( $cache_key );
+	if ( false === $qr_code ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented.
+		$qr_code = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}qr_trackr_links WHERE id = %d",
+				$qr_id
+			)
+		);
+		if ( $qr_code ) {
+			wp_cache_set( $cache_key, $qr_code, '', 300 );
+		}
+	}
 
 	if ( ! $qr_code ) {
 		qr_trackr_log( 'QR code not found for deletion', 'error', array( 'qr_id' => $qr_id ) );
@@ -970,16 +978,19 @@ function qrc_handle_delete_action() {
  */
 function qrc_admin_notices() {
 	// Check if we're on the QR codes page.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing check, nonce verified in action handlers.
 	if ( ! isset( $_GET['page'] ) || 'qr-code-links' !== sanitize_text_field( wp_unslash( $_GET['page'] ) ) ) {
 		return;
 	}
 
 	// Display success message for deleted QR code.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only, no state modification.
 	if ( isset( $_GET['deleted'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['deleted'] ) ) ) {
 		echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'QR code deleted successfully.', 'wp-qr-trackr' ) . '</p></div>';
 	}
 
 	// Display success message for updated QR code (single-source notice).
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only, no state modification.
 	if ( isset( $_GET['updated'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['updated'] ) ) ) {
 		if ( ! did_action( 'qr_trackr_updated_notice_rendered' ) ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'QR code updated successfully.', 'wp-qr-trackr' ) . '</p></div>';

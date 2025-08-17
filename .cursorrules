@@ -16,6 +16,7 @@
 10. [Tooling and Automation](#tooling-and-automation)
 11. [Control Script Enforcement](#control-script-enforcement)
 12. [WordPress Redirect Handling Standards](#wordpress-redirect-handling-standards)
+13. [MCP Integration Guidelines](#mcp-integration-guidelines)
 
 ---
 
@@ -419,17 +420,124 @@ When the command "create plugin release for [plugin-name]" is issued, automatica
 
 # Tooling and Automation
 
+## MCP Integration Guidelines
+
+### Core MCP Principles
+
+- **When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), use MCP APIs by default**
+- **This ensures consistent, secure, and agent-friendly workflows**
+- **Use for documentation, repository, and cloud operations**
+
+### MCP Server Usage Standards
+
+#### **Context7 Documentation Server**
+- **Use for up-to-date library documentation and code examples**
+- **Resolve library IDs before fetching documentation**
+- **Specify topics and token limits for focused documentation**
+- **Preferred over web searches for technical documentation**
+
+#### **GitHub MCP Server**
+- **Use for repository operations, PR creation, and issue management**
+- **Create releases and manage repository content**
+- **Handle authentication and permissions automatically**
+- **Preferred over manual GitHub CLI operations**
+
+#### **Playwright MCP Server**
+- **Use for automated browser testing and UI validation**
+- **Test functionality in real browser environments**
+- **Capture screenshots and verify user interactions**
+- **Only available in dev environment (port 8080)**
+
+#### **DigitalOcean MCP Server**
+- **Use for cloud infrastructure management**
+- **Deploy applications and manage resources**
+- **Handle authentication and billing operations**
+- **Preferred over manual cloud console operations**
+
+### MCP Integration Best Practices
+
+#### **Server Selection Priority**
+1. **Context7**: For documentation and library information
+2. **GitHub**: For repository and release management
+3. **Playwright**: For browser testing and UI validation
+4. **DigitalOcean**: For cloud infrastructure operations
+
+#### **Error Handling**
+- **Always check if MCP servers are available before using**
+- **Provide fallback methods when MCP servers are unavailable**
+- **Handle authentication errors gracefully**
+- **Log MCP operations for debugging purposes**
+
+#### **Performance Considerations**
+- **Use appropriate token limits for documentation requests**
+- **Cache MCP responses when possible**
+- **Avoid redundant MCP calls**
+- **Optimize requests for specific use cases**
+
+#### **Security Guidelines**
+- **Never expose MCP credentials in code or logs**
+- **Use environment variables for sensitive configuration**
+- **Validate MCP responses before processing**
+- **Implement proper error handling for failed operations**
+
+### MCP Usage Examples
+
+#### **Documentation Retrieval**
+```javascript
+// Use Context7 for library documentation
+const libraryId = await resolveLibraryId('react');
+const docs = await getLibraryDocs(libraryId, 'hooks', 5000);
+```
+
+#### **Repository Operations**
+```javascript
+// Use GitHub MCP for PR creation
+const pr = await createPullRequest({
+  title: 'Feature: Add new functionality',
+  body: 'Detailed description...',
+  base: 'main',
+  head: 'feature-branch'
+});
+```
+
+#### **Browser Testing**
+```javascript
+// Use Playwright MCP for UI testing
+await navigate('http://localhost:8080/wp-admin');
+await click('Login button');
+await type('username', 'admin');
+await type('password', 'password');
+await click('Submit');
+```
+
+### MCP Integration Testing
+
+#### **Development Environment**
+- **Test MCP functionality in dev environment first**
+- **Verify all MCP servers are accessible**
+- **Validate authentication and permissions**
+- **Test error handling and fallback scenarios**
+
+#### **Production Considerations**
+- **Ensure MCP servers are available in production**
+- **Monitor MCP usage and performance**
+- **Implement proper logging and monitoring**
+- **Have fallback procedures for MCP failures**
+
+### MCP Documentation Requirements
+
+- **Document all MCP integrations in project documentation**
+- **Include MCP usage examples in development guides**
+- **Provide troubleshooting guides for MCP issues**
+- **Keep MCP configuration up to date**
+
+---
+
 ## Package Management
 
 - **Only Yarn is allowed as the package manager for this project**
 - **npm, npx, pnpm, and other package managers are prohibited**
 - **All dependency installation and script execution must use Yarn exclusively**
-
-## MCP Integration
-
-- **When MCP servers are present (Context7, GitHub, DigitalOcean, etc.), use MCP APIs by default**
-- **This ensures consistent, secure, and agent-friendly workflows**
-- **Use for documentation, repository, and cloud operations**
 
 ## PR Creation Standards
 

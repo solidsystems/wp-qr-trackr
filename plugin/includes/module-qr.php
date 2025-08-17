@@ -92,11 +92,9 @@ function qrc_get_all_links() {
 	$links     = get_transient( $cache_key );
 
 	if ( false === $links ) {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Cache implemented, direct query needed for performance.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Cache implemented with transients, direct query needed for performance.
 		$links = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` ORDER BY created_at DESC"
-			)
+			"SELECT * FROM `{$wpdb->prefix}qr_trackr_links` ORDER BY created_at DESC"
 		);
 
 		if ( $links ) {

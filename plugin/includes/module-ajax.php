@@ -499,6 +499,20 @@ function qr_trackr_ajax_get_qr_details() {
 		}
 	}
 
+	// Get previous referral codes from metadata.
+	$previous_referral_codes = array();
+	if ( ! empty( $qr_code['metadata'] ) ) {
+		try {
+			$decoded = json_decode( (string) $qr_code['metadata'], true );
+			if ( is_array( $decoded ) && isset( $decoded['previous_referral_codes'] ) && is_array( $decoded['previous_referral_codes'] ) ) {
+				$previous_referral_codes = $decoded['previous_referral_codes'];
+			}
+		} catch ( Exception $e ) {
+			// Ignore malformed metadata.
+			$previous_referral_codes = array();
+		}
+	}
+
 	// Get recent scan statistics (simplified - use access_count for now).
 	// Note: The qr_trackr_stats table may not exist in all installations.
 	$recent_scans = 0;
@@ -529,18 +543,19 @@ function qr_trackr_ajax_get_qr_details() {
 	}
 
 	$response_data = array(
-		'id'              => absint( $qr_code['id'] ),
-		'qr_code'         => esc_html( $qr_code['qr_code'] ),
-		'common_name'     => esc_html( $qr_code['common_name'] ?? '' ),
-		'referral_code'   => esc_html( $qr_code['referral_code'] ?? '' ),
-		'destination_url' => esc_url( $qr_code['destination_url'] ),
-		'qr_code_url'     => esc_url( $qr_code['qr_code_url'] ?? '' ),
-		'post_title'      => esc_html( $post_title ),
-		'access_count'    => absint( $qr_code['access_count'] ),
-		'recent_scans'    => absint( $recent_scans ?? 0 ),
-		'created_at'      => esc_html( $qr_code['created_at'] ),
-		'last_accessed'   => esc_html( $qr_code['last_accessed'] ?? __( 'Never', 'wp-qr-trackr' ) ),
-		'qr_url'          => esc_url( qr_trackr_get_redirect_url( $qr_code['qr_code'] ) ),
+		'id'                      => absint( $qr_code['id'] ),
+		'qr_code'                 => esc_html( $qr_code['qr_code'] ),
+		'common_name'             => esc_html( $qr_code['common_name'] ?? '' ),
+		'referral_code'           => esc_html( $qr_code['referral_code'] ?? '' ),
+		'destination_url'         => esc_url( $qr_code['destination_url'] ),
+		'qr_code_url'             => esc_url( $qr_code['qr_code_url'] ?? '' ),
+		'post_title'              => esc_html( $post_title ),
+		'access_count'            => absint( $qr_code['access_count'] ),
+		'recent_scans'            => absint( $recent_scans ?? 0 ),
+		'created_at'              => esc_html( $qr_code['created_at'] ),
+		'last_accessed'           => esc_html( $qr_code['last_accessed'] ?? __( 'Never', 'wp-qr-trackr' ) ),
+		'qr_url'                  => esc_url( qr_trackr_get_redirect_url( $qr_code['qr_code'] ) ),
+		'previous_referral_codes' => $previous_referral_codes,
 	);
 
 	qr_trackr_log( 'QR code details retrieved successfully', 'info', array( 'qr_id' => $qr_id ) );
@@ -761,11 +776,42 @@ function qr_trackr_ajax_update_qr_details() {
 		}
 	}
 
+	// If referral code changed, append the previous value to metadata history.
+	$metadata_array = array();
+	$metadata_json  = '';
+	try {
+		if ( isset( $existing_qr->metadata ) && ! empty( $existing_qr->metadata ) ) {
+			$decoded = json_decode( (string) $existing_qr->metadata, true );
+			if ( is_array( $decoded ) ) {
+				$metadata_array = $decoded;
+			}
+		}
+	} catch ( Exception $e ) {
+		// Ignore malformed metadata and replace with a clean structure.
+		$metadata_array = array();
+	}
+
+	$previous_referral_codes = isset( $metadata_array['previous_referral_codes'] ) && is_array( $metadata_array['previous_referral_codes'] ) ? $metadata_array['previous_referral_codes'] : array();
+
+	$old_referral_code = isset( $existing_qr->referral_code ) ? (string) $existing_qr->referral_code : '';
+	if ( $old_referral_code && $old_referral_code !== $referral_code ) {
+		$previous_referral_codes[] = array(
+			'code'       => $old_referral_code,
+			'changed_at' => current_time( 'mysql', true ),
+		);
+		// Keep the list reasonably small.
+		$previous_referral_codes = array_slice( $previous_referral_codes, -10 );
+	}
+
+	$metadata_array['previous_referral_codes'] = $previous_referral_codes;
+	$metadata_json                             = wp_json_encode( $metadata_array );
+
 	// Update the database.
 	$update_data = array(
 		'common_name'   => $common_name,
 		'referral_code' => $referral_code,
 		'updated_at'    => current_time( 'mysql', true ),
+		'metadata'      => $metadata_json,
 	);
 
 	// Only update destination URL if provided.
@@ -778,7 +824,7 @@ function qr_trackr_ajax_update_qr_details() {
 		$table_name,
 		$update_data,
 		array( 'id' => $qr_id ),
-		array( '%s', '%s', '%s' ),
+		array( '%s', '%s', '%s', '%s' ),
 		array( '%d' )
 	);
 
