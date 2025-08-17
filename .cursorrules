@@ -520,6 +520,7 @@ await type("username", "admin");
 await type("password", "password");
 await click("Submit");
 ```
+```
 
 ### MCP Integration Testing
 
