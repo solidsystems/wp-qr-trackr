@@ -1,3 +1,23 @@
+## 1.2.68 - 2025-08-17
+
+### Enhanced: Google Fonts SSL Certificate Fix
+- **Production Environment**: Extended Google Fonts SSL fix to production environments
+- **Domain Mapping**: Resolves SSL certificate issues on mapped domains
+- **Comprehensive Filtering**: Added multiple layers of Google Fonts removal
+- **Browser Compatibility**: Eliminates SSL certificate warnings across all environments
+
+### Enhanced: Delete Functionality Debugging
+- **Production Debugging**: Added comprehensive logging for delete operations in production
+- **Error Tracking**: Better visibility into delete operation failures
+- **Troubleshooting**: Enhanced logging helps identify production-specific issues
+- **User Experience**: Improved debugging capabilities for production environments
+
+### Technical Details
+- **Google Fonts Removal**: Enhanced filtering for both development and production
+- **Output Buffering**: Added wp_head output filtering for direct Google Fonts links
+- **Delete Logging**: Added production-ready logging for delete operation debugging
+- **SSL Certificate**: Comprehensive fix for Google Fonts SSL issues across all environments
+
 ## 1.2.67 - 2025-08-17
 
 ### Fixed: Delete QR Code Functionality

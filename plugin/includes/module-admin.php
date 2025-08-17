@@ -823,6 +823,14 @@ function qrc_handle_delete_action() {
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set', isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'not set' ) );
 	}
+	
+	// Always log delete attempts for production debugging.
+	error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s, ID: %s, Nonce: %s', 
+		isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set', 
+		isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'not set',
+		isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 'not set',
+		isset( $_GET['_wpnonce'] ) ? 'present' : 'missing'
+	) );
 
 	// Check user capabilities.
 	if ( ! current_user_can( 'manage_options' ) ) {
