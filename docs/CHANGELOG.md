@@ -1,3 +1,17 @@
+## 1.2.66 - 2025-08-17
+
+### Critical Fix: QR Code Scan Tracking
+- **QR Code URL Generation**: Fixed critical bug where QR codes were generated with destination URLs instead of tracking URLs
+- **Scan Counter Update**: QR codes now properly update scan counters when scanned
+- **Tracking System**: QR codes now go through the tracking system before redirecting to destination
+- **User Experience**: Scan analytics now accurately reflect actual QR code usage
+
+### Technical Details
+- **QR Code Generation**: Updated `qrc_generate_qr_code()` calls to use tracking URLs
+- **Database Tracking**: Ensured QR codes are properly stored with tracking codes
+- **URL Processing**: Fixed both form-based and AJAX-based QR code generation
+- **Backward Compatibility**: Existing QR codes continue to work, new ones will track properly
+
 ## 1.2.65 - 2025-08-17
 
 ### Added
