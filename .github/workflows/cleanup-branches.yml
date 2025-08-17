@@ -1,0 +1,48 @@
+name: Cleanup Merged Branches
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup-branches:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete merged branch
+        run: |
+          # Get the branch name from the PR
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          
+          # Delete the branch if it's not main or master
+          if [ "$BRANCH_NAME" != "main" ] && [ "$BRANCH_NAME" != "master" ]; then
+            echo "Deleting merged branch: $BRANCH_NAME"
+            git push origin --delete "$BRANCH_NAME"
+            echo "Successfully deleted branch: $BRANCH_NAME"
+          else
+            echo "Skipping deletion of main/master branch: $BRANCH_NAME"
+          fi
+
+      - name: Cleanup stale branches
+        run: |
+          # Get list of remote branches
+          git fetch --prune
+          
+          # List all remote branches except main/master
+          REMOTE_BRANCHES=$(git branch -r | grep -v "origin/main\|origin/master\|origin/HEAD" | sed 's/origin\///')
+          
+          for branch in $REMOTE_BRANCHES; do
+            # Check if branch has been merged to main
+            if git branch --merged origin/main | grep -q "$branch"; then
+              echo "Deleting stale merged branch: $branch"
+              git push origin --delete "$branch" || echo "Failed to delete $branch (may not exist on remote)"
+            fi
+          done
