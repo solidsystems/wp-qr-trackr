@@ -111,9 +111,16 @@ if ( isset( $_POST['submit'] ) && isset( $_POST['_wpnonce'] ) && wp_verify_nonce
 		if ( function_exists( 'qrc_generate_qr_code' ) ) {
 			// Generate the tracking URL for the QR code.
 			$tracking_url = qr_trackr_get_redirect_url( $qr_code );
-			
+
 			// Log QR code generation attempt.
-			qr_trackr_log( 'Starting QR code generation', 'info', array( 'tracking_url' => $tracking_url, 'destination_url' => $destination_url ) );
+			qr_trackr_log(
+				'Starting QR code generation',
+				'info',
+				array(
+					'tracking_url'    => $tracking_url,
+					'destination_url' => $destination_url,
+				)
+			);
 
 			// Generate QR code with tracking URL (not destination URL).
 			$qr_code_url = qrc_generate_qr_code(

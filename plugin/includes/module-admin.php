@@ -1042,11 +1042,12 @@ function qrc_admin_notices() {
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only, no state modification.
 	if ( isset( $_GET['regenerated'] ) && isset( $_GET['errors'] ) ) {
 		$regenerated = absint( $_GET['regenerated'] );
-		$errors = absint( $_GET['errors'] );
+		$errors      = absint( $_GET['errors'] );
 
 		if ( $regenerated > 0 ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' .
 				sprintf(
+					/* translators: %d: number of QR codes regenerated */
 					esc_html__( 'Successfully regenerated %d QR codes with tracking URLs.', 'wp-qr-trackr' ),
 					$regenerated
 				) . '</p></div>';
@@ -1055,6 +1056,7 @@ function qrc_admin_notices() {
 		if ( $errors > 0 ) {
 			echo '<div class="notice notice-error is-dismissible"><p>' .
 				sprintf(
+					/* translators: %d: number of QR codes that failed to regenerate */
 					esc_html__( 'Failed to regenerate %d QR codes. Please try again.', 'wp-qr-trackr' ),
 					$errors
 				) . '</p></div>';
@@ -1076,15 +1078,15 @@ function qrc_regenerate_page() {
 	}
 
 	// Handle form submission.
-	if ( isset( $_POST['regenerate_qr_codes'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['regenerate_nonce'] ) ), 'regenerate_qr_codes_action' ) ) {
-		$result = qr_trackr_regenerate_qr_codes();
+	if ( isset( $_POST['regenerate_qr_codes'] ) && isset( $_POST['regenerate_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['regenerate_nonce'] ) ), 'regenerate_qr_codes_action' ) ) {
+		$result     = qr_trackr_regenerate_qr_codes();
 		$regenerated = $result['regenerated'];
-		$errors = $result['errors'];
-		$skipped = $result['skipped'];
+		$errors      = $result['errors'];
+		$skipped     = $result['skipped'];
 	} else {
 		$regenerated = 0;
-		$errors = 0;
-		$skipped = 0;
+		$errors      = 0;
+		$skipped     = 0;
 	}
 
 	// Get QR code statistics.
@@ -1202,7 +1204,7 @@ function qr_trackr_regenerate_qr_codes() {
 			);
 
 			if ( is_wp_error( $new_qr_code_url ) ) {
-				$errors++;
+				++$errors;
 				continue;
 			}
 
@@ -1216,13 +1218,13 @@ function qr_trackr_regenerate_qr_codes() {
 			);
 
 			if ( false !== $result ) {
-				$regenerated++;
+				++$regenerated;
 			} else {
-				$errors++;
+				++$errors;
 			}
 		} else {
 			// QR code already uses tracking URL, skip it.
-			$skipped++;
+			++$skipped;
 		}
 	}
 
