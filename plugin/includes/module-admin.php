@@ -857,12 +857,15 @@ function qrc_handle_delete_action() {
 	}
 
 	// Always log delete attempts for production debugging.
-	error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s, ID: %s, Nonce: %s',
-		isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set',
-		isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'not set',
-		isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 'not set',
-		isset( $_GET['_wpnonce'] ) ? 'present' : 'missing'
-	) );
+	error_log(
+		sprintf(
+			'QR Trackr: Delete action handler called. Page: %s, Action: %s, ID: %s, Nonce: %s',
+			isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set',
+			isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'not set',
+			isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 'not set',
+			isset( $_GET['_wpnonce'] ) ? 'present' : 'missing'
+		)
+	);
 
 	// Check user capabilities.
 	if ( ! current_user_can( 'manage_options' ) ) {
@@ -1103,13 +1106,13 @@ function qrc_regenerate_page() {
 			<div class="notice notice-info is-dismissible">
 				<p>
 					<?php if ( $regenerated > 0 ) : ?>
-						<strong><?php echo esc_html( sprintf( __( 'Successfully regenerated %d QR codes.', 'wp-qr-trackr' ), $regenerated ) ); ?></strong><br>
+						<strong><?php echo esc_html( sprintf( /* translators: %d: number of QR codes regenerated */ __( 'Successfully regenerated %d QR codes.', 'wp-qr-trackr' ), $regenerated ) ); ?></strong><br>
 					<?php endif; ?>
 					<?php if ( $skipped > 0 ) : ?>
-						<?php echo esc_html( sprintf( __( 'Skipped %d QR codes (already using tracking URLs).', 'wp-qr-trackr' ), $skipped ) ); ?><br>
+						<?php echo esc_html( sprintf( /* translators: %d: number of QR codes skipped */ __( 'Skipped %d QR codes (already using tracking URLs).', 'wp-qr-trackr' ), $skipped ) ); ?><br>
 					<?php endif; ?>
 					<?php if ( $errors > 0 ) : ?>
-						<strong><?php echo esc_html( sprintf( __( 'Failed to regenerate %d QR codes.', 'wp-qr-trackr' ), $errors ) ); ?></strong>
+						<strong><?php echo esc_html( sprintf( /* translators: %d: number of QR codes that failed to regenerate */ __( 'Failed to regenerate %d QR codes.', 'wp-qr-trackr' ), $errors ) ); ?></strong>
 					<?php endif; ?>
 				</p>
 			</div>
@@ -1122,9 +1125,9 @@ function qrc_regenerate_page() {
 			<div class="qr-stats">
 				<p><strong><?php esc_html_e( 'Statistics:', 'wp-qr-trackr' ); ?></strong></p>
 				<ul>
-					<li><?php echo esc_html( sprintf( __( 'Total QR codes: %d', 'wp-qr-trackr' ), $total_qr_codes ) ); ?></li>
-					<li><?php echo esc_html( sprintf( __( 'Need regeneration: %d', 'wp-qr-trackr' ), $needs_regeneration ) ); ?></li>
-					<li><?php echo esc_html( sprintf( __( 'Already using tracking URLs: %d', 'wp-qr-trackr' ), $total_qr_codes - $needs_regeneration ) ); ?></li>
+					<li><?php echo esc_html( sprintf( /* translators: %d: total number of QR codes */ __( 'Total QR codes: %d', 'wp-qr-trackr' ), $total_qr_codes ) ); ?></li>
+					<li><?php echo esc_html( sprintf( /* translators: %d: number of QR codes needing regeneration */ __( 'Need regeneration: %d', 'wp-qr-trackr' ), $needs_regeneration ) ); ?></li>
+					<li><?php echo esc_html( sprintf( /* translators: %d: number of QR codes already using tracking URLs */ __( 'Already using tracking URLs: %d', 'wp-qr-trackr' ), $total_qr_codes - $needs_regeneration ) ); ?></li>
 				</ul>
 			</div>
 
