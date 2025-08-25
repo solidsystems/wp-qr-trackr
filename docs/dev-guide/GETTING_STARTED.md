@@ -35,8 +35,26 @@ A comprehensive guide for Cursor users on how to use the **WP QR Trackr** projec
    ./scripts/setup-wordpress.sh nonprod
    ```
 4. **Access your development environment**:
-   - Dev environment: http://localhost:8080 (username: `trackr`, password: `trackr`)
-   - Nonprod environment: http://localhost:8081 (for testing)
+   - Dev environment: http://localhost:8080
+   - Nonprod environment: http://localhost:8081
+
+### **Available User Accounts**
+
+Both environments are configured with two user accounts for testing different permission levels:
+
+**Administrator Account** (Full Access):
+- **Username**: `trackr`
+- **Password**: `trackr`
+- **Role**: Administrator
+- **Capabilities**: Full plugin access, settings management, system configuration
+
+**Editor Account** (QR Code Management):
+- **Username**: `editor`
+- **Password**: `editor`
+- **Role**: Editor
+- **Capabilities**: Create, edit, and delete QR codes (limited to `edit_posts` capability)
+
+> 💡 **Testing Tip**: Use the editor account to test QR code management functionality with restricted permissions, ensuring your plugin works correctly for users with different role levels.
 
 > ⚠️ **Critical**: The setup script automatically applies essential configurations including:
 > - Directory permissions for plugin updates

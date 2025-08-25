@@ -93,8 +93,10 @@ This project enforces the following standards and practices:
 3. **Access**
    - Development: http://localhost:8080/wp-admin
    - Testing: http://localhost:8081/wp-admin
-   - Username: trackr
-   - Password: trackr
+   
+   **Available User Accounts:**
+   - **Administrator**: `trackr` / `trackr` (full access)
+   - **Editor**: `editor` / `editor` (QR code management only)
 
 ## Documentation
 

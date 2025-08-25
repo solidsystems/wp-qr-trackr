@@ -20,6 +20,9 @@ services:
       WORDPRESS_ADMIN_USER: trackr
       WORDPRESS_ADMIN_PASSWORD: trackr
       WORDPRESS_ADMIN_EMAIL: dev@example.com
+      WORDPRESS_EDITOR_USER: editor
+      WORDPRESS_EDITOR_PASSWORD: editor
+      WORDPRESS_EDITOR_EMAIL: editor@example.com
       WORDPRESS_HOME: http://localhost:8080
     depends_on:
       - db-dev

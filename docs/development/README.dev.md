@@ -111,6 +111,23 @@ All tools run inside the container, ensuring a consistent, reproducible environm
 - DB Password: `wppass`
 - MySQL Root Password: `rootpass`
 
+### User Accounts
+Both development and nonprod environments are configured with two user accounts for testing different permission levels:
+
+**Administrator Account** (Full Access):
+- **Username**: `trackr`
+- **Password**: `trackr`
+- **Role**: Administrator
+- **Capabilities**: Full plugin access, settings management, system configuration
+
+**Editor Account** (QR Code Management):
+- **Username**: `editor`
+- **Password**: `editor`
+- **Role**: Editor
+- **Capabilities**: Create, edit, and delete QR codes (limited to `edit_posts` capability)
+
+> 💡 **Testing Tip**: Use the editor account to test QR code management functionality with restricted permissions, ensuring your plugin works correctly for users with different role levels.
+
 ### Notes
 - The plugin code is **not live-mounted**; changes require re-uploading the ZIP.
 - Database data persists between runs via Docker volume `db_data`.

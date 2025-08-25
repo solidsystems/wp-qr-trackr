@@ -1,3 +1,25 @@
+## 1.2.73 - 2025-08-24
+
+### New Feature: Editor User Configuration
+- **Editor User Accounts**: Added editor user accounts to both dev and nonprod environments
+- **Permission Testing**: Editor users can test QR code management with restricted permissions
+- **User Credentials**: 
+  - **Administrator**: `trackr` / `trackr` (full access)
+  - **Editor**: `editor` / `editor` (QR code management only)
+- **Environment Support**: Both development (port 8080) and nonprod (port 8081) environments configured
+
+### Enhanced: Plugin Permission Structure
+- **Editor Access**: Updated plugin permissions to allow editors to create, edit, and delete QR codes
+- **Capability Management**: Uses `edit_posts` capability for QR code management functions
+- **Security Maintained**: System-level functions still require `manage_options` (administrator only)
+- **Role-Based Testing**: Enables testing of plugin functionality with different user role levels
+
+### Technical Details
+- **Docker Configuration**: Added environment variables for editor user credentials
+- **Entrypoint Scripts**: Updated both dev and nonprod entrypoint scripts to create editor users
+- **Permission Updates**: Modified admin menu, AJAX handlers, and page functions to use `edit_posts`
+- **Documentation**: Updated all documentation to include editor user information
+
 ## 1.2.72 - 2025-08-17
 
 ### Fixed: QR Code Regeneration Tool

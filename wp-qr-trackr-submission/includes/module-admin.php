@@ -27,7 +27,7 @@ function qrc_admin_menu() {
 	$hook = add_menu_page(
 		__( 'QR Code Links', 'wp-qr-trackr' ),
 		__( 'QR Codes', 'wp-qr-trackr' ),
-		'manage_options',
+		'edit_posts',
 		'qr-code-links',
 		'qrc_admin_page',
 		'dashicons-admin-links'
@@ -47,7 +47,7 @@ function qrc_admin_menu() {
 		'qr-code-links',
 		__( 'Add New QR Code', 'wp-qr-trackr' ),
 		__( 'Add New', 'wp-qr-trackr' ),
-		'manage_options',
+		'edit_posts',
 		'qr-code-add-new',
 		'qrc_add_new_page'
 	);
@@ -66,7 +66,7 @@ function qrc_admin_menu() {
 		null, // No parent menu.
 		__( 'Edit QR Code', 'wp-qr-trackr' ),
 		__( 'Edit QR Code', 'wp-qr-trackr' ),
-		'manage_options',
+		'edit_posts',
 		'qr-code-edit',
 		'qrc_edit_page'
 	);
@@ -102,7 +102,7 @@ function qrc_admin_menu() {
 	$regenerate = add_submenu_page(
 		'qr-code-links',
 		__( 'Regenerate QR Codes', 'wp-qr-trackr' ),
-		__( 'Regenerate QR Codes', 'wp-qr-trackr' ),
+		__( 'Regenerate', 'wp-qr-trackr' ),
 		'manage_options',
 		'qr-code-regenerate',
 		'qrc_regenerate_page'
@@ -257,7 +257,7 @@ function qrc_admin_page() {
 	}
 
 	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		qr_trackr_log( 'Access denied to admin page - insufficient permissions', 'warning', array( 'user_id' => get_current_user_id() ) );
 		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
 	}
@@ -356,6 +356,12 @@ function qrc_add_new_page() {
 		qr_trackr_debug_log( 'QR Trackr: qrc_add_new_page() called' );
 	}
 
+	// Check user capabilities.
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		qr_trackr_log( 'Access denied to add new page - insufficient permissions', 'warning', array( 'user_id' => get_current_user_id() ) );
+		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
+	}
+
 	// Include the add new page template with multiple fallback paths.
 	$possible_paths = array(
 		QR_TRACKR_PLUGIN_DIR . 'templates/add-new-page.php',
@@ -406,7 +412,7 @@ function qrc_edit_page() {
 	}
 
 	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		qr_trackr_log( 'Access denied to edit page - insufficient permissions', 'warning', array( 'user_id' => get_current_user_id() ) );
 		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
 	}

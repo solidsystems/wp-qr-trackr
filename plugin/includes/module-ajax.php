@@ -124,10 +124,10 @@ function qrc_generate_qr_code_ajax() {
 
 	// Generate unique QR code for tracking.
 	$qr_code = qr_trackr_generate_unique_qr_code();
-	
+
 	// Generate the tracking URL for the QR code.
 	$tracking_url = qr_trackr_get_redirect_url( $qr_code );
-	
+
 	// Generate the QR code with tracking URL (not destination URL).
 	$qr_code_url = qrc_generate_qr_code( $tracking_url );
 
@@ -340,13 +340,13 @@ function qrc_search_posts_ajax() {
 	}
 
 	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		qr_trackr_log(
 			'Insufficient permissions for search posts',
 			'warning',
 			array(
 				'user_id'    => get_current_user_id(),
-				'capability' => 'manage_options',
+				'capability' => 'edit_posts',
 			)
 		);
 		qr_trackr_log_ajax_request( 'qrc_search_posts', array( 'user_id' => get_current_user_id() ), 'permission_denied' );
@@ -443,13 +443,13 @@ function qr_trackr_ajax_get_qr_details() {
 	}
 
 	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		qr_trackr_log(
 			'Insufficient permissions for get QR details',
 			'warning',
 			array(
 				'user_id'    => get_current_user_id(),
-				'capability' => 'manage_options',
+				'capability' => 'edit_posts',
 			)
 		);
 		qr_trackr_log_ajax_request( 'qr_trackr_get_qr_details', array( 'user_id' => get_current_user_id() ), 'permission_denied' );
@@ -590,7 +590,7 @@ function qr_trackr_ajax_check_referral_unique() {
 	}
 
 	// Cap check.
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		qr_trackr_log_ajax_request( 'qr_trackr_check_referral_unique', array( 'user_id' => get_current_user_id() ), 'permission_denied' );
 		wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'wp-qr-trackr' ) ) );
 		return;
@@ -673,13 +673,13 @@ function qr_trackr_ajax_update_qr_details() {
 	}
 
 	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		qr_trackr_log(
 			'Insufficient permissions for update QR details',
 			'warning',
 			array(
 				'user_id'    => get_current_user_id(),
-				'capability' => 'manage_options',
+				'capability' => 'edit_posts',
 			)
 		);
 		qr_trackr_log_ajax_request( 'qr_trackr_update_qr_details', array( 'user_id' => get_current_user_id() ), 'permission_denied' );

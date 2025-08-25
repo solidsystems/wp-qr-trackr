@@ -27,7 +27,7 @@ function qrc_admin_menu() {
 	$hook = add_menu_page(
 		__( 'QR Code Links', 'wp-qr-trackr' ),
 		__( 'QR Codes', 'wp-qr-trackr' ),
-		'manage_options',
+		'edit_posts',
 		'qr-code-links',
 		'qrc_admin_page',
 		'dashicons-admin-links'
@@ -47,7 +47,7 @@ function qrc_admin_menu() {
 		'qr-code-links',
 		__( 'Add New QR Code', 'wp-qr-trackr' ),
 		__( 'Add New', 'wp-qr-trackr' ),
-		'manage_options',
+		'edit_posts',
 		'qr-code-add-new',
 		'qrc_add_new_page'
 	);
@@ -66,7 +66,7 @@ function qrc_admin_menu() {
 		null, // No parent menu.
 		__( 'Edit QR Code', 'wp-qr-trackr' ),
 		__( 'Edit QR Code', 'wp-qr-trackr' ),
-		'manage_options',
+		'edit_posts',
 		'qr-code-edit',
 		'qrc_edit_page'
 	);
@@ -102,7 +102,7 @@ function qrc_admin_menu() {
 	$regenerate = add_submenu_page(
 		'qr-code-links',
 		__( 'Regenerate QR Codes', 'wp-qr-trackr' ),
-		__( 'Regenerate QR Codes', 'wp-qr-trackr' ),
+		__( 'Regenerate', 'wp-qr-trackr' ),
 		'manage_options',
 		'qr-code-regenerate',
 		'qrc_regenerate_page'
@@ -257,7 +257,7 @@ function qrc_admin_page() {
 	}
 
 	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		qr_trackr_log( 'Access denied to admin page - insufficient permissions', 'warning', array( 'user_id' => get_current_user_id() ) );
 		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
 	}
@@ -356,6 +356,12 @@ function qrc_add_new_page() {
 		qr_trackr_debug_log( 'QR Trackr: qrc_add_new_page() called' );
 	}
 
+	// Check user capabilities.
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		qr_trackr_log( 'Access denied to add new page - insufficient permissions', 'warning', array( 'user_id' => get_current_user_id() ) );
+		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
+	}
+
 	// Include the add new page template with multiple fallback paths.
 	$possible_paths = array(
 		QR_TRACKR_PLUGIN_DIR . 'templates/add-new-page.php',
@@ -406,7 +412,7 @@ function qrc_edit_page() {
 	}
 
 	// Check user capabilities.
-	if ( ! current_user_can( 'manage_options' ) ) {
+	if ( ! current_user_can( 'edit_posts' ) ) {
 		qr_trackr_log( 'Access denied to edit page - insufficient permissions', 'warning', array( 'user_id' => get_current_user_id() ) );
 		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wp-qr-trackr' ) );
 	}
@@ -849,10 +855,10 @@ function qrc_handle_delete_action() {
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug logging only.
 		error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s', isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set', isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'not set' ) );
 	}
-	
+
 	// Always log delete attempts for production debugging.
-	error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s, ID: %s, Nonce: %s', 
-		isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set', 
+	error_log( sprintf( 'QR Trackr: Delete action handler called. Page: %s, Action: %s, ID: %s, Nonce: %s',
+		isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'not set',
 		isset( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : 'not set',
 		isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 'not set',
 		isset( $_GET['_wpnonce'] ) ? 'present' : 'missing'
@@ -1037,20 +1043,20 @@ function qrc_admin_notices() {
 	if ( isset( $_GET['regenerated'] ) && isset( $_GET['errors'] ) ) {
 		$regenerated = absint( $_GET['regenerated'] );
 		$errors = absint( $_GET['errors'] );
-		
+
 		if ( $regenerated > 0 ) {
-			echo '<div class="notice notice-success is-dismissible"><p>' . 
-				sprintf( 
-					esc_html__( 'Successfully regenerated %d QR codes with tracking URLs.', 'wp-qr-trackr' ), 
-					$regenerated 
+			echo '<div class="notice notice-success is-dismissible"><p>' .
+				sprintf(
+					esc_html__( 'Successfully regenerated %d QR codes with tracking URLs.', 'wp-qr-trackr' ),
+					$regenerated
 				) . '</p></div>';
 		}
-		
+
 		if ( $errors > 0 ) {
-			echo '<div class="notice notice-error is-dismissible"><p>' . 
-				sprintf( 
-					esc_html__( 'Failed to regenerate %d QR codes. Please try again.', 'wp-qr-trackr' ), 
-					$errors 
+			echo '<div class="notice notice-error is-dismissible"><p>' .
+				sprintf(
+					esc_html__( 'Failed to regenerate %d QR codes. Please try again.', 'wp-qr-trackr' ),
+					$errors
 				) . '</p></div>';
 		}
 	}
@@ -1090,7 +1096,7 @@ function qrc_regenerate_page() {
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Regenerate QR Codes', 'wp-qr-trackr' ); ?></h1>
-		
+
 		<?php if ( $regenerated > 0 || $errors > 0 || $skipped > 0 ) : ?>
 			<div class="notice notice-info is-dismissible">
 				<p>
@@ -1110,7 +1116,7 @@ function qrc_regenerate_page() {
 		<div class="card">
 			<h2><?php esc_html_e( 'QR Code Regeneration', 'wp-qr-trackr' ); ?></h2>
 			<p><?php esc_html_e( 'This tool will regenerate QR codes that are not using tracking URLs. QR codes that already use tracking URLs will be skipped.', 'wp-qr-trackr' ); ?></p>
-			
+
 			<div class="qr-stats">
 				<p><strong><?php esc_html_e( 'Statistics:', 'wp-qr-trackr' ); ?></strong></p>
 				<ul>
@@ -1146,7 +1152,7 @@ function qrc_regenerate_page() {
 function qr_trackr_count_qr_codes_needing_regeneration() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	
+
 	$qr_codes = $wpdb->get_results( "SELECT id, qr_code, destination_url FROM {$table_name}" );
 	$needs_regeneration = 0;
 
@@ -1180,7 +1186,7 @@ function qr_trackr_regenerate_qr_codes() {
 		// For now, regenerate all QR codes to ensure they use tracking URLs.
 		// This is more reliable than trying to detect which ones need regeneration.
 		$needs_regeneration = true;
-		
+
 		// If the QR code image was generated with the destination URL, regenerate it.
 		if ( $needs_regeneration ) {
 			// Generate new QR code with tracking URL.

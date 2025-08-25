@@ -116,6 +116,20 @@ setup_plugin() {
     fi
 }
 
+# Function to create editor user
+create_editor_user() {
+    echo "Setting up editor user..."
+
+    # Use environment variables with defaults
+    local editor_user="${WORDPRESS_EDITOR_USER:-editor}"
+    local editor_password="${WORDPRESS_EDITOR_PASSWORD:-editor}"
+    local editor_email="${WORDPRESS_EDITOR_EMAIL:-editor@example.com}"
+
+    # Always try to create the editor user (will fail gracefully if already exists)
+    echo "Creating editor user: $editor_user"
+    wp user create "$editor_user" "$editor_email" --role=editor --user_pass="$editor_password" --path=/var/www/html --allow-root 2>/dev/null || echo "Editor user already exists or could not be created."
+}
+
 # Function to fix permissions
 fix_permissions() {
     echo "Fixing permissions for writable directories..."
@@ -140,6 +154,9 @@ setup_wordpress || true
 
 # Setup plugin if mounted
 setup_plugin || true
+
+# Create editor user
+create_editor_user || true
 
 # Keep container running tied to Apache process.
 wait

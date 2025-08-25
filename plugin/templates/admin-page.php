@@ -1,12 +1,19 @@
 <?php
 /**
- * Admin list page template for QR Code Links.
+ * Admin page template for QR Trackr plugin.
  *
- * @package WP_QR_TRACKR
+ * @package WP_QR_Trackr
+ * @since 1.0.0
  */
 
+// Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly.
+	exit;
+}
+
+	// Debug logging using Query Monitor.
+if ( function_exists( 'do_action' ) ) {
+	do_action( 'qm_debug', 'QR Trackr: Admin page template loaded' );
 }
 
 // Expect $list_table to be prepared by caller (qrc_admin_page()).
