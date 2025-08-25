@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP QR Trackr
  * Description: A comprehensive QR code generation and tracking plugin for WordPress with analytics, custom styling, and advanced management features.
- * Version: 1.2.72
+ * Version: 1.2.73
  * Author: Solid Systems
  * Author URI: https://solidsystems.io
  * Plugin URI: https://github.com/solidsystems/wp-qr-trackr
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'QR_TRACKR_VERSION', '1.2.72' );
+define( 'QR_TRACKR_VERSION', '1.2.73' );
 define( 'QR_TRACKR_PLUGIN_FILE', __FILE__ );
 define( 'QR_TRACKR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QR_TRACKR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -205,32 +205,52 @@ function qr_trackr_load_modules() {
 	$loaded = true;
 
 	// Disable Google Fonts to prevent SSL certificate issues in development and production.
-// This prevents SSL certificate warnings when loading fonts from Google Fonts.
-add_filter( 'wp_resource_hints', function( $hints, $relation_type ) {
-	if ( 'dns-prefetch' === $relation_type ) {
-		$hints = array_filter( $hints, function( $hint ) {
-			return ! str_contains( $hint, 'fonts.googleapis.com' );
-		} );
-	}
-	return $hints;
-}, 10, 2 );
+	// This prevents SSL certificate warnings when loading fonts from Google Fonts.
+	add_filter(
+		'wp_resource_hints',
+		function ( $hints, $relation_type ) {
+			if ( 'dns-prefetch' === $relation_type ) {
+				$hints = array_filter(
+					$hints,
+					function ( $hint ) {
+						return ! str_contains( $hint, 'fonts.googleapis.com' );
+					}
+				);
+			}
+			return $hints;
+		},
+		10,
+		2
+	);
 
-add_filter( 'wp_enqueue_scripts', function() {
-	wp_dequeue_style( 'google-fonts' );
-	wp_deregister_style( 'google-fonts' );
-}, 999 );
+	add_filter(
+		'wp_enqueue_scripts',
+		function () {
+			wp_dequeue_style( 'google-fonts' );
+			wp_deregister_style( 'google-fonts' );
+		},
+		999
+	);
 
-// Also remove Google Fonts from wp_head if they're being added directly.
-add_action( 'wp_head', function() {
-	ob_start();
-}, 0 );
+	// Also remove Google Fonts from wp_head if they're being added directly.
+	add_action(
+		'wp_head',
+		function () {
+			ob_start();
+		},
+		0
+	);
 
-add_action( 'wp_head', function() {
-	$content = ob_get_clean();
-	// Remove Google Fonts links from wp_head output.
-	$content = preg_replace( '/<link[^>]*fonts\.googleapis\.com[^>]*>/i', '', $content );
-	echo $content;
-}, 999 );
+	add_action(
+		'wp_head',
+		function () {
+			$content = ob_get_clean();
+			// Remove Google Fonts links from wp_head output.
+			$content = preg_replace( '/<link[^>]*fonts\.googleapis\.com[^>]*>/i', '', $content );
+			echo esc_html( $content );
+		},
+		999
+	);
 }
 
 // Only load modules on plugins_loaded hook with high priority.
