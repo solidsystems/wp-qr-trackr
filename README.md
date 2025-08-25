@@ -111,6 +111,7 @@ This project enforces the following standards and practices:
 - [Editor Setup](docs/development/EDITOR_SETUP.md) - VS Code and Cursor setup with LLM integration
 - [Container Management](docs/development/CONTAINER_MANAGEMENT.md)
 - [CI/CD Workflow](docs/development/CI_CD_WORKFLOW.md)
+- [Branch Protection & Workflow](docs/development/BRANCH_PROTECTION.md) - Development workflow and branch protection rules
 - [Architecture Overview](docs/architecture/ARCHITECTURE.md)
 - [PHPCS Compliance Guide](docs/architecture/PHPCS_COMPLIANCE.md)
 
