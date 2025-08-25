@@ -1052,7 +1052,7 @@ function qrc_admin_notices() {
 				sprintf(
 					/* translators: %d: number of QR codes regenerated */
 					esc_html__( 'Successfully regenerated %d QR codes with tracking URLs.', 'wp-qr-trackr' ),
-					$regenerated
+					absint( $regenerated )
 				) . '</p></div>';
 		}
 
@@ -1061,7 +1061,7 @@ function qrc_admin_notices() {
 				sprintf(
 					/* translators: %d: number of QR codes that failed to regenerate */
 					esc_html__( 'Failed to regenerate %d QR codes. Please try again.', 'wp-qr-trackr' ),
-					$errors
+					absint( $errors )
 				) . '</p></div>';
 		}
 	}
@@ -1082,7 +1082,7 @@ function qrc_regenerate_page() {
 
 	// Handle form submission.
 	if ( isset( $_POST['regenerate_qr_codes'] ) && isset( $_POST['regenerate_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['regenerate_nonce'] ) ), 'regenerate_qr_codes_action' ) ) {
-		$result     = qr_trackr_regenerate_qr_codes();
+		$result      = qr_trackr_regenerate_qr_codes();
 		$regenerated = $result['regenerated'];
 		$errors      = $result['errors'];
 		$skipped     = $result['skipped'];
@@ -1094,8 +1094,8 @@ function qrc_regenerate_page() {
 
 	// Get QR code statistics.
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'qr_trackr_links';
-	$total_qr_codes = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
+	$table_name         = $wpdb->prefix . 'qr_trackr_links';
+	$total_qr_codes     = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
 	$needs_regeneration = qr_trackr_count_qr_codes_needing_regeneration();
 
 	?>
@@ -1158,7 +1158,7 @@ function qr_trackr_count_qr_codes_needing_regeneration() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'qr_trackr_links';
 
-	$qr_codes = $wpdb->get_results( "SELECT id, qr_code, destination_url FROM {$table_name}" );
+	$qr_codes           = $wpdb->get_results( "SELECT id, qr_code, destination_url FROM {$table_name}" );
 	$needs_regeneration = 0;
 
 	// For now, assume all QR codes need regeneration to ensure they use tracking URLs.
@@ -1181,8 +1181,8 @@ function qr_trackr_regenerate_qr_codes() {
 	$qr_codes = $wpdb->get_results( "SELECT id, qr_code, destination_url, qr_code_url FROM {$table_name}" );
 
 	$regenerated = 0;
-	$errors = 0;
-	$skipped = 0;
+	$errors      = 0;
+	$skipped     = 0;
 
 	foreach ( $qr_codes as $qr_code ) {
 		// Generate the tracking URL for the QR code.
