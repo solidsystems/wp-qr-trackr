@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'TODO.md'
-      - '.github/workflows/update-todo-index.yml'
-      - 'run/**'
+      - "docs/**"
+      - "README.md"
+      - "TODO.md"
+      - ".github/workflows/update-todo-index.yml"
+      - "run/**"
 
 jobs:
   auto-release:
@@ -27,7 +27,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: "8.2"
           tools: composer
 
       - name: Install dependencies
@@ -47,10 +47,10 @@ jobs:
         run: |
           if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Release v${{ steps.version.outputs.version }} already exists"
+            echo "✅ Release v${{ steps.version.outputs.version }} already exists - skipping build and release"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Release v${{ steps.version.outputs.version }} does not exist"
+            echo "🆕 Release v${{ steps.version.outputs.version }} does not exist - proceeding with build and release"
           fi
 
       - name: Build plugin
@@ -65,7 +65,7 @@ jobs:
         run: |
           # Get the previous tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
+
           if [ -z "$PREVIOUS_TAG" ]; then
             # First release - get all commits
             CHANGELOG=$(git log --pretty=format:"- %s (%h)" --reverse)
@@ -73,19 +73,19 @@ jobs:
             # Get commits since last tag
             CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
           fi
-          
+
           # Create release notes
           RELEASE_NOTES="## What's New in v${{ steps.version.outputs.version }}
-          
+
           ### Changes
           $CHANGELOG
-          
+
           ### Installation
           Download the plugin zip file and install it through your WordPress admin panel.
-          
+
           ### Support
           For support and documentation, visit: https://github.com/solidsystems/wp-qr-trackr"
-          
+
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -120,7 +120,7 @@ jobs:
           # Add release date to the latest version in CHANGELOG.md
           RELEASE_DATE=$(date +"%Y-%m-%d")
           sed -i "s/## ${{ steps.version.outputs.version }}/## [${{ steps.version.outputs.version }}] - $RELEASE_DATE/" docs/CHANGELOG.md
-          
+
           # Commit and push the updated CHANGELOG
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -131,5 +131,16 @@ jobs:
       - name: Skip release if already exists
         if: steps.check-release.outputs.exists == 'true'
         run: |
-          echo "Release v${{ steps.version.outputs.version }} already exists, skipping..."
-          echo "This is normal if the workflow was re-run or if the version wasn't incremented"
+          echo "✅ Release v${{ steps.version.outputs.version }} already exists"
+          echo "📋 This is normal and expected behavior when:"
+          echo "   • The workflow was re-run after a successful release"
+          echo "   • The version number wasn't incremented since the last release"
+          echo "   • Multiple pushes occurred with the same version"
+          echo ""
+          echo "🎯 To create a new release:"
+          echo "   1. Update the version in plugin/wp-qr-trackr.php"
+          echo "   2. Commit and push the changes"
+          echo "   3. The workflow will automatically create a new release"
+          echo ""
+          echo "✨ Workflow completed successfully - no action needed"
+          echo "🟢 This workflow run is considered successful"
