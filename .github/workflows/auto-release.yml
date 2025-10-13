@@ -92,6 +92,7 @@ jobs:
 
       - name: Create GitHub release
         if: steps.check-release.outputs.exists == 'false'
+        id: create-release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
